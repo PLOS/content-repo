@@ -70,13 +70,14 @@ public class HsqlService {
     return rs.getInt(1);
   }
 
-  public boolean assetExists(String key, String checksum, Integer bucketId) throws SQLException {
+  public boolean assetExists(String key, String checksum, Integer bucketId, long fileSize) throws SQLException {
 
-    PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM assets WHERE key=? AND checksum=? AND bucketId=?");
+    PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM assets WHERE key=? AND checksum=? AND bucketId=? AND size=?");
 
     preparedStatement.setString(1, key);
     preparedStatement.setString(2, checksum);
     preparedStatement.setInt(3, bucketId);
+    preparedStatement.setLong(4, fileSize);
 
     log.info(preparedStatement.toString());
 
@@ -206,24 +207,24 @@ public class HsqlService {
     return convertResultSetToList(rs);
   }
 
-  public List<Asset> listAssets(String bucketName) throws Exception {
-
-    ArrayList<Asset> assets = new ArrayList<>();
-
-    // query from the db
-    ResultSet rs = connection.prepareStatement("SELECT * FROM assets a, buckets b WHERE b.bucketId = a.bucketId").executeQuery();
-
-    while (rs.next()) {
-      Asset asset = new Asset();
-      asset.checksum = rs.getString("checksum");  // TODO: move field names to constants
-      asset.key = rs.getString("key");
-      asset.timestamp = rs.getDate("timestamp");
-      asset.id = rs.getString("a.id");
-
-      assets.add(asset);
-    }
-
-    return assets;
-  }
+//  public List<Asset> listAssets(String bucketName) throws Exception {
+//
+//    ArrayList<Asset> assets = new ArrayList<>();
+//
+//    // query from the db
+//    ResultSet rs = connection.prepareStatement("SELECT * FROM assets a, buckets b WHERE b.bucketId = a.bucketId").executeQuery();
+//
+//    while (rs.next()) {
+//      Asset asset = new Asset();
+//      asset.checksum = rs.getString("checksum");  // TODO: move field names to constants
+//      asset.key = rs.getString("key");
+//      asset.timestamp = rs.getDate("timestamp");
+//      asset.id = rs.getString("a.id");
+//
+//      assets.add(asset);
+//    }
+//
+//    return assets;
+//  }
 
 }

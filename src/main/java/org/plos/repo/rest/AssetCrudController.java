@@ -93,7 +93,7 @@ public class AssetCrudController {
         response.setContentType(asset.get("CONTENTTYPE").toString());
         response.setHeader("Content-Disposition", "inline; filename=" + exportFileName);
 
-        InputStream is = new FileInputStream(fileSystemStoreService.getAssetLocationString(bucketName, checksum));
+        InputStream is = new FileInputStream(fileSystemStoreService.getAssetLocationString(bucketName, checksum,  (Date)(asset.get("TIMESTAMP"))));
         IOUtils.copy(is, response.getOutputStream());
         response.flushBuffer();
       } catch (IOException ex) {
@@ -107,10 +107,13 @@ public class AssetCrudController {
                                      @PathVariable String key,
                                      @PathVariable String checksum) throws Exception {
 
+    HashMap<String, Object> asset = hsqlService.getAsset(bucketName, key, checksum);
+    Date timestamp = (Date)(asset.get("TIMESTAMP"));
+
     if (hsqlService.removeAsset(key, checksum, bucketName) == 0)
       return "Error: can not find asset in database";
 
-    if (!fileSystemStoreService.deleteFile(fileSystemStoreService.getAssetLocationString(bucketName, checksum)))
+    if (!fileSystemStoreService.deleteFile(fileSystemStoreService.getAssetLocationString(bucketName, checksum, timestamp)))
       return "Error: there was a problem deleting the asset from the filesystem";
 
     return checksum + " deleted";
@@ -138,12 +141,13 @@ public class AssetCrudController {
     File tempFile = new File(tempFileLocation);
     long fileSize = tempFile.length();
 
-    if (hsqlService.assetExists(key, checksum, bucketId)) {
+    if (hsqlService.assetExists(key, checksum, bucketId, fileSize)) { // TODO: check file content as well
       fileSystemStoreService.deleteFile(tempFileLocation);
       log.info("skipping insert since asset already exists");
     } else {
-      fileSystemStoreService.saveUploaded(bucketName, checksum, tempFileLocation);
-      log.info("insert: " + hsqlService.insertAsset(key, checksum, bucketId, contentType, contentDisposition, fileSize, new Date()));
+      Date timestamp = new Date();
+      fileSystemStoreService.saveUploaded(bucketName, checksum, tempFileLocation, timestamp);
+      log.info("insert: " + hsqlService.insertAsset(key, checksum, bucketId, contentType, contentDisposition, fileSize, timestamp));
     }
 
     return checksum;

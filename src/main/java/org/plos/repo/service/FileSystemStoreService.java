@@ -14,6 +14,7 @@ import java.nio.channels.WritableByteChannel;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.util.AbstractMap;
+import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -38,8 +39,8 @@ public class FileSystemStoreService {
     return data_dir + "/" + bucketName + "/";
   }
 
-  public String getAssetLocationString(String bucketName, String checksum) {
-    return getBucketLocationString(bucketName) + checksum + ".md5";
+  public String getAssetLocationString(String bucketName, String checksum, Date timestamp) {
+    return getBucketLocationString(bucketName) + checksum + "-" + timestamp.getTime() + ".md5";
   }
 
   private static String checksumToString(byte[] checksum) {
@@ -73,10 +74,10 @@ public class FileSystemStoreService {
     return dir.delete();
   }
 
-  public boolean saveUploaded(String bucketName, String checksum, String tempFileLocation)
+  public boolean saveUploaded(String bucketName, String checksum, String tempFileLocation, Date timestamp)
   throws Exception {
     File tempFile = new File(tempFileLocation);
-    return tempFile.renameTo(new File(getAssetLocationString(bucketName, checksum)));
+    return tempFile.renameTo(new File(getAssetLocationString(bucketName, checksum, timestamp)));
   }
 
   public boolean deleteFile(String fileLocation) {
