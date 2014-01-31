@@ -1,5 +1,6 @@
 package org.plos.repo.rest;
 
+import org.plos.repo.service.FileSystemStoreService;
 import org.plos.repo.service.HsqlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -14,6 +15,9 @@ import java.util.List;
 @Controller
 @RequestMapping("/buckets")
 public class BucketController {
+
+  @Autowired
+  private FileSystemStoreService fileSystemStoreService;
 
   @Autowired
   private HsqlService hsqlService;
@@ -31,9 +35,18 @@ public class BucketController {
   }
 
   @RequestMapping(method = RequestMethod.POST)
-  public @ResponseBody Boolean create(@RequestParam String name)
+  public @ResponseBody String create(@RequestParam String name,
+                                     @RequestParam(required = false) Integer id)
       throws Exception {
-    // TODO: sanitize bucket name to be filesystem acceptable
-    return hsqlService.insertBucket(name);
+
+    if (!fileSystemStoreService.createBucket(name))
+      return "Unable to create bucket " + name;
+
+    if (!hsqlService.insertBucket(name, id)) {
+      fileSystemStoreService.deleteBucket(name);
+      return "Unable to create bucket " + name;
+    }
+
+    return "Created bucket " + name;
   }
 }

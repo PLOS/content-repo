@@ -63,7 +63,7 @@ public class HsqlService {
   }
 
   public Integer getBucketId(String bucketName) throws Exception {
-    ResultSet rs = connection.prepareStatement("SELECT id FROM buckets WHERE name='"+bucketName+"'").executeQuery();
+    ResultSet rs = connection.prepareStatement("SELECT bucketId FROM buckets WHERE bucketName='"+bucketName+"'").executeQuery();
 
     if (!rs.next())
       return null;
@@ -106,12 +106,12 @@ public class HsqlService {
     PreparedStatement preparedStatement = null;
 
     if (checksum == null) {
-      preparedStatement = connection.prepareStatement("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.id AND key=? AND b.name=? ORDER BY a.timestamp DESC");
+      preparedStatement = connection.prepareStatement("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND key=? AND b.bucketName=? ORDER BY a.timestamp DESC");
 
       preparedStatement.setString(1, key);
       preparedStatement.setString(2, bucketName);
     } else {
-      preparedStatement = connection.prepareStatement("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.id AND key=? AND checksum=? AND b.name=?");
+      preparedStatement = connection.prepareStatement("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND key=? AND checksum=? AND b.bucketName=?");
 
       preparedStatement.setString(1, key);
       preparedStatement.setString(2, checksum);
@@ -130,14 +130,17 @@ public class HsqlService {
     return null;
   }
 
-  public Integer insertAsset(String key, String checksum, Integer bucketId, Date timestamp) throws SQLException {
+  public Integer insertAsset(String key, String checksum, Integer bucketId, String contentType, String contentDisposition, long contentSize, Date timestamp) throws SQLException {
 
-    PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO assets (key, checksum, timestamp, bucketId) VALUES (?,?,?,?)");
+    PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO assets (key, checksum, timestamp, bucketId, contentType, contentDisposition, size) VALUES (?,?,?,?,?,?,?)");
 
     preparedStatement.setString(1, key);
     preparedStatement.setString(2, checksum);
     preparedStatement.setTimestamp(3, new Timestamp(timestamp.getTime()));
     preparedStatement.setInt(4, bucketId);
+    preparedStatement.setString(5, contentType);
+    preparedStatement.setString(6, contentDisposition);
+    preparedStatement.setLong(7, contentSize);
 
     log.info(preparedStatement.toString());
 
@@ -169,15 +172,26 @@ public class HsqlService {
     return rs.getInt(1);
   }
 
-  public Boolean insertBucket(String name) throws Exception {
+  public Boolean insertBucket(String name, Integer id) throws Exception {
 
-    PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO buckets (id, name) VALUES (NULL,?)");
-    preparedStatement.setString(1, name);
+    PreparedStatement preparedStatement;
+
+    if (id == null) {
+      preparedStatement = connection.prepareStatement("MERGE INTO buckets USING (VALUES(NULL,?)) AS vals(bucketId,bucketName) on buckets.bucketId = vals.bucketId WHEN NOT MATCHED THEN INSERT VALUES vals.bucketId, vals.bucketName");
+      preparedStatement.setString(1, name);
+    } else {
+      preparedStatement = connection.prepareStatement("MERGE INTO buckets USING (VALUES(?,?)) AS vals(bucketId,bucketName) on buckets.bucketId = vals.bucketId WHEN NOT MATCHED THEN INSERT VALUES vals.bucketId, vals.bucketName");
+      preparedStatement.setInt(1, id);
+      preparedStatement.setString(2, name);
+    }
 
     log.info(preparedStatement.toString());
 
     Integer result = preparedStatement.executeUpdate();
     connection.commit();
+
+    if (result == 0)
+      log.error("Error while creating bucket: database update failed");
 
     return (result > 0);
   }
@@ -188,7 +202,7 @@ public class HsqlService {
   }
 
   public List<HashMap<String, Object>> listAssets() throws Exception {
-    ResultSet rs = connection.prepareStatement("SELECT * FROM assets").executeQuery();
+    ResultSet rs = connection.prepareStatement("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId").executeQuery();
     return convertResultSetToList(rs);
   }
 
@@ -197,7 +211,7 @@ public class HsqlService {
     ArrayList<Asset> assets = new ArrayList<>();
 
     // query from the db
-    ResultSet rs = connection.prepareStatement("SELECT * FROM assets a, buckets b WHERE b.bucketId = b.id").executeQuery();
+    ResultSet rs = connection.prepareStatement("SELECT * FROM assets a, buckets b WHERE b.bucketId = a.bucketId").executeQuery();
 
     while (rs.next()) {
       Asset asset = new Asset();

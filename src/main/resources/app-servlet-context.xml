@@ -68,7 +68,10 @@
     <beans:property name="preferences" ref="prefs" />
   </beans:bean>
 
-  <beans:bean id="fileSystemStoreService" class="org.plos.repo.service.FileSystemStoreService" />
+  <beans:bean id="fileSystemStoreService" class="org.plos.repo.service.FileSystemStoreService" >
+    <beans:property name="preferences" ref="prefs" />
+  </beans:bean>
+
 
   <context:component-scan base-package="org.plos.repo"/>
 

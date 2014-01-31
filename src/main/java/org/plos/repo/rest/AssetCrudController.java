@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,11 +53,14 @@ public class AssetCrudController {
   @Autowired
   private HsqlService hsqlService;
 
+//  private final static String defaultContentType = "application/octet-stream";
+
 
 
   // TODO: figure out what is meant by an "UPDATE"
 
 
+  // TODO: check at startup that db is in sync with assetStore
 
 
   @RequestMapping(method=RequestMethod.GET)
@@ -64,60 +68,39 @@ public class AssetCrudController {
     return hsqlService.listAssets();
   }
 
-  @RequestMapping(value="{bucketName}/{key}/{checksum}", method=RequestMethod.GET)
+  @RequestMapping(value="{bucketName}", method=RequestMethod.GET)
   public @ResponseBody
-  void readVersion(@PathVariable String bucketName,
-                   @PathVariable String key,
-                   @PathVariable String checksum,
-                   HttpServletResponse response) throws Exception {
+  void read(@PathVariable String bucketName,
+            @RequestParam(required = true) String key,
+            @RequestParam(required = false) String checksum,
+            HttpServletResponse response) throws Exception {
 
-    if (hsqlService.getAsset(bucketName, key, checksum) != null) {
-      try {
-        InputStream is = new FileInputStream(fileSystemStoreService.getAssetLocationString(bucketName, checksum));
-        IOUtils.copy(is, response.getOutputStream());
-        response.flushBuffer();
-      } catch (IOException ex) {
-        log.info("Error writing file to output stream.");
-      }
-    }
-  }
-
-  @RequestMapping(value="{bucketName}/{key:.*}", method=RequestMethod.GET)
-  public @ResponseBody
-  void readLatest(@PathVariable String bucketName,
-                  @PathVariable String key,
-                  HttpServletResponse response) throws Exception {
-
-    log.info("searching for key " + key);
-
-    HashMap<String, Object> asset = hsqlService.getAsset(bucketName, key, null);
+    HashMap<String, Object> asset = hsqlService.getAsset(bucketName, key, checksum);
 
     if (asset != null) {
 
-      String checksum = asset.get("CHECKSUM").toString();   // TODO: understand capitalization
+      if (checksum == null)
+        checksum = asset.get("CHECKSUM").toString();   // TODO: understand HSQL capitalization
+
+      String exportFileName = "content";
+
+      if (asset.get("CONTENTDISPOSITION") != null)
+        exportFileName = asset.get("CONTENTDISPOSITION").toString();
+      else if (FileSystemStoreService.isValidFileName(asset.get("KEY").toString()))
+        exportFileName = asset.get("KEY").toString();
+
       try {
+        response.setContentType(asset.get("CONTENTTYPE").toString());
+        response.setHeader("Content-Disposition", "inline; filename=" + exportFileName);
+
         InputStream is = new FileInputStream(fileSystemStoreService.getAssetLocationString(bucketName, checksum));
         IOUtils.copy(is, response.getOutputStream());
         response.flushBuffer();
       } catch (IOException ex) {
-        log.info("Error writing file to output stream.");
+        log.info("Error writing file to output stream.", ex);
       }
     }
   }
-
-
-//  @RequestMapping(value="{bucketName}/{key}/{checksum}", method=RequestMethod.GET)
-//  public @ResponseBody
-//  FileSystemResource readVersion(@PathVariable String bucketName,
-//                                          @PathVariable String key,
-//                                          @PathVariable String checksum) throws Exception {
-//
-//      // TODO: set content type so it gets downloaded unstead of turned to text output
-//    if (hsqlService.getAsset(bucketName, key, checksum) != null)
-//      return new FileSystemResource(fileSystemStoreService.getAssetLocationString(bucketName, checksum));
-//
-//    return null;
-//  }
 
   @RequestMapping(value="{bucketName}/{key}/{checksum}", method=RequestMethod.DELETE)
   public @ResponseBody String delete(@PathVariable String bucketName,
@@ -136,6 +119,8 @@ public class AssetCrudController {
   @RequestMapping(method=RequestMethod.POST)
   public @ResponseBody String create(@RequestParam String key,
                                      @RequestParam String bucketName,
+                                     @RequestParam String contentType,
+                                     @RequestParam(required = false) String contentDisposition,
                                      @RequestParam MultipartFile file)
   throws Exception {
 
@@ -150,13 +135,15 @@ public class AssetCrudController {
     Map.Entry<String, String> uploadResult = fileSystemStoreService.uploadFile(file);  // TODO: make sure this is successful
     String tempFileLocation = uploadResult.getKey();
     String checksum = uploadResult.getValue();
+    File tempFile = new File(tempFileLocation);
+    long fileSize = tempFile.length();
 
     if (hsqlService.assetExists(key, checksum, bucketId)) {
       fileSystemStoreService.deleteFile(tempFileLocation);
       log.info("skipping insert since asset already exists");
     } else {
       fileSystemStoreService.saveUploaded(bucketName, checksum, tempFileLocation);
-      log.info("insert: " + hsqlService.insertAsset(key, checksum, bucketId, new Date()));
+      log.info("insert: " + hsqlService.insertAsset(key, checksum, bucketId, contentType, contentDisposition, fileSize, new Date()));
     }
 
     return checksum;
