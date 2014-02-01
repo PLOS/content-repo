@@ -99,8 +99,6 @@ public class FileSystemStoreService {
       buffer.clear();
     }
 
-    // TODO: check to make sure it does not overwrite existing file, append timestamp for conflict?
-
     String checksum = checksumToString(md5Digest.digest());
 
     return new AbstractMap.SimpleEntry<>(tempFileLocation, checksum);

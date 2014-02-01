@@ -15,11 +15,11 @@ CREATE TABLE IF NOT EXISTS assets (
   checksum VARCHAR (1000) NOT NULL,
   timestamp timestamp NOT NULL,
   url VARCHAR (1000), -- servable path to asset
-  contentDisposition VARCHAR (1000),  -- the name of the file when downloaded
+  downloadName VARCHAR (1000),  -- the name of the file when downloaded
   contentType VARCHAR (200) NOT NULL, -- the mime type
   size INTEGER NOT NULL,  -- the file size in bytes
   tag VARCHAR (200)
 );
 
 DROP INDEX keysum IF EXISTS;
-CREATE UNIQUE INDEX keysum ON assets(bucketId, key, checksum);
+CREATE UNIQUE INDEX keysum ON assets(bucketId, key, checksum, size);

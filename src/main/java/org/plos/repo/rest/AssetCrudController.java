@@ -17,7 +17,9 @@
 
 package org.plos.repo.rest;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.plos.repo.models.Asset;
 import org.plos.repo.service.FileSystemStoreService;
 import org.plos.repo.service.HsqlService;
 import org.slf4j.Logger;
@@ -37,7 +39,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -60,11 +61,14 @@ public class AssetCrudController {
   // TODO: figure out what is meant by an "UPDATE"
 
 
+  // create: only if a key does not exist
+  // update: only if a key exists, add version to key
+
   // TODO: check at startup that db is in sync with assetStore
 
 
   @RequestMapping(method=RequestMethod.GET)
-  public @ResponseBody List<HashMap<String, Object>> list() throws Exception {
+  public @ResponseBody List<Asset> list() throws Exception {
     return hsqlService.listAssets();
   }
 
@@ -75,25 +79,29 @@ public class AssetCrudController {
             @RequestParam(required = false) String checksum,
             HttpServletResponse response) throws Exception {
 
-    HashMap<String, Object> asset = hsqlService.getAsset(bucketName, key, checksum);
+    Asset asset;
+    if (checksum == null)
+      asset = hsqlService.getAsset(bucketName, key);
+    else
+      asset = hsqlService.getAsset(bucketName, key, checksum);
 
     if (asset != null) {
 
       if (checksum == null)
-        checksum = asset.get("CHECKSUM").toString();   // TODO: understand HSQL capitalization
+        checksum = asset.checksum;
 
       String exportFileName = "content";
 
-      if (asset.get("CONTENTDISPOSITION") != null)
-        exportFileName = asset.get("CONTENTDISPOSITION").toString();
-      else if (FileSystemStoreService.isValidFileName(asset.get("KEY").toString()))
-        exportFileName = asset.get("KEY").toString();
+      if (asset.downloadName != null)
+        exportFileName = asset.downloadName;
+      else if (FileSystemStoreService.isValidFileName(asset.key))
+        exportFileName = asset.key;
 
       try {
-        response.setContentType(asset.get("CONTENTTYPE").toString());
+        response.setContentType(asset.contentType);
         response.setHeader("Content-Disposition", "inline; filename=" + exportFileName);
 
-        InputStream is = new FileInputStream(fileSystemStoreService.getAssetLocationString(bucketName, checksum,  (Date)(asset.get("TIMESTAMP"))));
+        InputStream is = new FileInputStream(fileSystemStoreService.getAssetLocationString(bucketName, checksum,  asset.timestamp));
         IOUtils.copy(is, response.getOutputStream());
         response.flushBuffer();
       } catch (IOException ex) {
@@ -107,8 +115,8 @@ public class AssetCrudController {
                                      @PathVariable String key,
                                      @PathVariable String checksum) throws Exception {
 
-    HashMap<String, Object> asset = hsqlService.getAsset(bucketName, key, checksum);
-    Date timestamp = (Date)(asset.get("TIMESTAMP"));
+    Asset asset = hsqlService.getAsset(bucketName, key, checksum);
+    Date timestamp = asset.timestamp;
 
     if (hsqlService.removeAsset(key, checksum, bucketName) == 0)
       return "Error: can not find asset in database";
@@ -123,7 +131,7 @@ public class AssetCrudController {
   public @ResponseBody String create(@RequestParam String key,
                                      @RequestParam String bucketName,
                                      @RequestParam String contentType,
-                                     @RequestParam(required = false) String contentDisposition,
+                                     @RequestParam(required = false) String downloadName,
                                      @RequestParam MultipartFile file)
   throws Exception {
 
@@ -141,13 +149,21 @@ public class AssetCrudController {
     File tempFile = new File(tempFileLocation);
     long fileSize = tempFile.length();
 
-    if (hsqlService.assetExists(key, checksum, bucketId, fileSize)) { // TODO: check file content as well
-      fileSystemStoreService.deleteFile(tempFileLocation);
-      log.info("skipping insert since asset already exists");
+    Asset existingAsset = hsqlService.getAsset(bucketName, key, checksum, fileSize);
+
+    if (existingAsset != null) {
+
+      File existingFile = new File(fileSystemStoreService.getAssetLocationString(bucketName, checksum,
+          existingAsset.timestamp));
+
+      if (FileUtils.contentEquals(tempFile, existingFile)) {
+        fileSystemStoreService.deleteFile(tempFileLocation);
+        log.info("skipping insert since asset already exists");
+      }
     } else {
       Date timestamp = new Date();
       fileSystemStoreService.saveUploaded(bucketName, checksum, tempFileLocation, timestamp);
-      log.info("insert: " + hsqlService.insertAsset(key, checksum, bucketId, contentType, contentDisposition, fileSize, timestamp));
+      log.info("insert: " + hsqlService.insertAsset(key, checksum, bucketId, contentType, downloadName, fileSize, timestamp));
     }
 
     return checksum;

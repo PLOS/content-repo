@@ -45,7 +45,7 @@ r = requests.post(baseUrl + 'assets/', files=files, data=values)
 print (r.text)
 
 files = {'file': open('/home/jfinger/looseFiles/DH3.8_DeveloperGuide.pdf', 'rb')}
-values = {'key': 'contentDisposition', 'bucketName' : 'production', 'contentType' : 'application/pdf', 'contentDisposition' : 'disTest.pdf'}
+values = {'key': 'downloadName', 'bucketName' : 'production', 'contentType' : 'application/pdf', 'downloadName' : 'disTest.pdf'}
 r = requests.post(baseUrl + 'assets/', files=files, data=values)
 print (r.text)
 

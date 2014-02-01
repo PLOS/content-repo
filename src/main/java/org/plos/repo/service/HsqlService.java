@@ -30,6 +30,8 @@ public class HsqlService {
   private String directory = "";
 
 
+  // TODO: use pooling?
+
   private void execSQLScript(String sqlScriptResource) throws Exception {
 
     String sqlText = FileUtils.readFileToString(new File(getClass().getResource(sqlScriptResource).toURI()));
@@ -101,46 +103,71 @@ public class HsqlService {
     return preparedStatement.executeUpdate();
   }
 
-  public HashMap<String, Object> getAsset(String bucketName, String key, String checksum)
-  throws Exception {
 
-    PreparedStatement preparedStatement = null;
+  public Asset getAsset(String bucketName, String key)
+      throws Exception {
 
-    if (checksum == null) {
-      preparedStatement = connection.prepareStatement("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND key=? AND b.bucketName=? ORDER BY a.timestamp DESC");
+    PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND key=?");
 
-      preparedStatement.setString(1, key);
-      preparedStatement.setString(2, bucketName);
-    } else {
-      preparedStatement = connection.prepareStatement("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND key=? AND checksum=? AND b.bucketName=?");
-
-      preparedStatement.setString(1, key);
-      preparedStatement.setString(2, checksum);
-      preparedStatement.setString(3, bucketName);
-    }
+    preparedStatement.setString(1, bucketName);
+    preparedStatement.setString(2, key);
 
     ResultSet rs = preparedStatement.executeQuery();
-    List<HashMap<String,Object>> results = convertResultSetToList(rs);
 
     log.info(preparedStatement.toString());
-    log.info("results: " + results.size());
 
-    if (results.size() > 0)
-      return results.get(0);
-
+    if (rs.next())
+      return convertResultToAsset(rs);
     return null;
   }
 
-  public Integer insertAsset(String key, String checksum, Integer bucketId, String contentType, String contentDisposition, long contentSize, Date timestamp) throws SQLException {
+  public Asset getAsset(String bucketName, String key, String checksum)
+      throws Exception {
 
-    PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO assets (key, checksum, timestamp, bucketId, contentType, contentDisposition, size) VALUES (?,?,?,?,?,?,?)");
+    PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND key=? AND checksum=?");
+
+    preparedStatement.setString(1, bucketName);
+    preparedStatement.setString(2, key);
+    preparedStatement.setString(3, checksum);
+
+    ResultSet rs = preparedStatement.executeQuery();
+
+    log.info(preparedStatement.toString());
+
+    if (rs.next())
+      return convertResultToAsset(rs);
+    return null;
+  }
+
+  public Asset getAsset(String bucketName, String key, String checksum, Long fileSize)
+      throws Exception {
+
+    PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND key=? AND checksum=? AND size=?");
+
+    preparedStatement.setString(1, bucketName);
+    preparedStatement.setString(2, key);
+    preparedStatement.setString(3, checksum);
+    preparedStatement.setLong(4, fileSize);
+
+    ResultSet rs = preparedStatement.executeQuery();
+
+    log.info(preparedStatement.toString());
+
+    if (rs.next())
+      return convertResultToAsset(rs);
+    return null;
+  }
+
+  public Integer insertAsset(String key, String checksum, Integer bucketId, String contentType, String downloadName, long contentSize, Date timestamp) throws SQLException {
+
+    PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO assets (key, checksum, timestamp, bucketId, contentType, downloadName, size) VALUES (?,?,?,?,?,?,?)");
 
     preparedStatement.setString(1, key);
     preparedStatement.setString(2, checksum);
     preparedStatement.setTimestamp(3, new Timestamp(timestamp.getTime()));
     preparedStatement.setInt(4, bucketId);
     preparedStatement.setString(5, contentType);
-    preparedStatement.setString(6, contentDisposition);
+    preparedStatement.setString(6, downloadName);
     preparedStatement.setLong(7, contentSize);
 
     log.info(preparedStatement.toString());
@@ -149,6 +176,27 @@ public class HsqlService {
     connection.commit();
 
     return result;
+  }
+
+  private Asset convertResultToAsset(ResultSet rs) throws SQLException {
+
+    Asset asset = new Asset();
+
+    asset.id = rs.getInt("ID"); // TODO: move field names to constants
+    asset.timestamp = rs.getTimestamp("TIMESTAMP");
+    asset.key = rs.getString("KEY");
+    asset.checksum = rs.getString("CHECKSUM");
+    asset.downloadName = rs.getString("DOWNLOADNAME");
+    asset.contentType = rs.getString("CONTENTTYPE");
+    asset.size = rs.getLong("SIZE");
+    asset.tag = rs.getString("TAG");
+    asset.url = rs.getString("URL");
+    asset.bucketId = rs.getInt("BUCKETID");
+    asset.bucketName = rs.getString("BUCKETNAME");
+
+    log.info("returning asset " + asset.id);
+
+    return asset;
   }
 
   private List<HashMap<String,Object>> convertResultSetToList(ResultSet rs) throws SQLException {
@@ -202,29 +250,15 @@ public class HsqlService {
     return convertResultSetToList(rs);
   }
 
-  public List<HashMap<String, Object>> listAssets() throws Exception {
+  public List<Asset> listAssets() throws Exception {
     ResultSet rs = connection.prepareStatement("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId").executeQuery();
-    return convertResultSetToList(rs);
-  }
 
-//  public List<Asset> listAssets(String bucketName) throws Exception {
-//
-//    ArrayList<Asset> assets = new ArrayList<>();
-//
-//    // query from the db
-//    ResultSet rs = connection.prepareStatement("SELECT * FROM assets a, buckets b WHERE b.bucketId = a.bucketId").executeQuery();
-//
-//    while (rs.next()) {
-//      Asset asset = new Asset();
-//      asset.checksum = rs.getString("checksum");  // TODO: move field names to constants
-//      asset.key = rs.getString("key");
-//      asset.timestamp = rs.getDate("timestamp");
-//      asset.id = rs.getString("a.id");
-//
-//      assets.add(asset);
-//    }
-//
-//    return assets;
-//  }
+    ArrayList<Asset> assets = new ArrayList<>();
+
+    while (rs.next())
+      assets.add(convertResultToAsset(rs));
+
+    return assets;
+  }
 
 }
