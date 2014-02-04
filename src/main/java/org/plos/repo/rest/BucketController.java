@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/buckets")
@@ -24,7 +24,7 @@ public class BucketController {
 
   @RequestMapping(method = RequestMethod.GET)
   public @ResponseBody
-  List<HashMap<String, Object>> list() throws Exception {
+  List<Map<String, Object>> list() throws Exception {
     return hsqlService.listBuckets();
   }
 
