@@ -14,51 +14,22 @@ public class Preferences {
 
   private static Logger log = LoggerFactory.getLogger(Preferences.class);
 
-  private static final String FIELD_THRESHOLD = "score_threshold";
   private static final String FIELD_DATADIR = "data_directory";
-  private static final String FIELD_THESAURUS = "taxonomy_thesaurus";
-  private static final String FIELD_TAXONOMY_SERVER = "taxonomy_service_url";
-
-  private static final String FIELD_EDITORS_CSV = "editors_csv";
-  private static final String FIELD_MANUSCRIPTS_CSV = "manuscripts_csv";
-  private static final String FIELD_ABSTRACTS_CSV = "abstracts_csv";
 
   private String[] configFiles;
-
-
-  public String getDataDirectory() {
-    return loadConfigs().getProperty(FIELD_DATADIR);
-  }
-
-  public float getThreshold() {
-    return Float.parseFloat(loadConfigs().getProperty(FIELD_THRESHOLD));
-  }
-
-  public String getThesaurus() {
-    return loadConfigs().getProperty(FIELD_THESAURUS);
-  }
-
-  public String getTaxonomyServer() {
-    return loadConfigs().getProperty(FIELD_TAXONOMY_SERVER);
-  }
-
-  public String getEditorsCsv() {
-    return loadConfigs().getProperty(FIELD_EDITORS_CSV);
-  }
-
-  public String getFieldManuscriptsCsv() {
-    return loadConfigs().getProperty(FIELD_MANUSCRIPTS_CSV);
-  }
-
-  public String getFieldAbstractsCsv() {
-    return loadConfigs().getProperty(FIELD_ABSTRACTS_CSV);
-  }
-
 
   @Required
   public void setConfigFiles(String[] configFiles) {
     this.configFiles = configFiles;
     log.info("using configs: " + getConfigs());
+  }
+
+  public String getDataDirectory() {
+    return loadConfigs().getProperty(FIELD_DATADIR);
+  }
+
+  public String getHsqldbConnectionString() {
+    return "jdbc:hsqldb:" + getDataDirectory() + "/" + HsqlService.fileName;
   }
 
   private Properties loadConfigs() {
