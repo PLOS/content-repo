@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -25,7 +26,14 @@ public class Preferences {
   }
 
   public String getDataDirectory() {
-    return loadConfigs().getProperty(FIELD_DATADIR);
+
+    String dir = loadConfigs().getProperty(FIELD_DATADIR);
+
+    File f = new File(dir);
+    if (!f.isDirectory())
+      f.mkdir();
+
+    return dir;
   }
 
   public String getHsqldbConnectionString() {

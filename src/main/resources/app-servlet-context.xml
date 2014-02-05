@@ -60,7 +60,7 @@
   </beans:bean>
 
   <mvc:interceptors>
-      <beans:bean class="org.plos.repo.rest.LoggingInterceptor"/>
+    <beans:bean class="org.plos.repo.rest.LoggingInterceptor"/>
   </mvc:interceptors>
 
   <beans:bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
@@ -76,7 +76,7 @@
     <beans:property name="dataSource" ref="dataSource" />
   </beans:bean>
 
-  <beans:bean id="fileSystemStoreService" class="org.plos.repo.service.FileSystemStoreService" >
+  <beans:bean id="assetStore" class="org.plos.repo.service.FileSystemStoreService" >
     <beans:property name="preferences" ref="prefs" />
   </beans:bean>
 

@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-public class FileSystemStoreService {
+public class FileSystemStoreService implements AssetStore {
 
   private static final Logger log = LoggerFactory.getLogger(FileSystemStoreService.class);
 
@@ -28,7 +28,6 @@ public class FileSystemStoreService {
   @Required
   public void setPreferences(Preferences preferences) {
     data_dir = preferences.getDataDirectory();
-    // TODO: create directory if it does not exist?
   }
 
   public static boolean isValidFileName(String name) {
@@ -74,17 +73,17 @@ public class FileSystemStoreService {
     return dir.delete();
   }
 
-  public boolean saveUploaded(String bucketName, String checksum, String tempFileLocation, Date timestamp)
+  public boolean saveUploadedAsset(String bucketName, String checksum, String tempFileLocation, Date timestamp)
   throws Exception {
     File tempFile = new File(tempFileLocation);
     return tempFile.renameTo(new File(getAssetLocationString(bucketName, checksum, timestamp)));
   }
 
-  public boolean deleteFile(String fileLocation) {
+  public boolean deleteAsset(String fileLocation) {
     return new File(fileLocation).delete();
   }
 
-  public Map.Entry<String, String> uploadFile(MultipartFile file) throws Exception {
+  public Map.Entry<String, String> uploadTempAsset(MultipartFile file) throws Exception {
     String tempFileLocation = data_dir + "/" + UUID.randomUUID().toString() + ".md5.tmp";
 
     ReadableByteChannel in = Channels.newChannel(file.getInputStream());

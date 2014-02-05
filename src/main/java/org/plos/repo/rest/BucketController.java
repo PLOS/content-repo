@@ -1,52 +1,47 @@
 package org.plos.repo.rest;
 
-import org.plos.repo.service.FileSystemStoreService;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.service.AssetStore;
 import org.plos.repo.service.HsqlService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
-import java.util.Map;
 
 @Controller
 @RequestMapping("/buckets")
 public class BucketController {
 
   @Autowired
-  private FileSystemStoreService fileSystemStoreService;
+  private AssetStore assetStore;
 
   @Autowired
   private HsqlService hsqlService;
 
   @RequestMapping(method = RequestMethod.GET)
-  public @ResponseBody
-  List<Map<String, Object>> list() throws Exception {
-    return hsqlService.listBuckets();
-  }
-
-  @RequestMapping(value = "/count", method = RequestMethod.GET)
-  public @ResponseBody
-  Integer count() throws Exception {
-    return hsqlService.listBuckets().size();
+  public ResponseEntity<List<Bucket>> list() throws Exception {
+    return new ResponseEntity<>(hsqlService.listBuckets(), HttpStatus.OK);
   }
 
   @RequestMapping(method = RequestMethod.POST)
-  public @ResponseBody String create(@RequestParam String name,
-                                     @RequestParam(required = false) Integer id)
+  public ResponseEntity<String> create(@RequestParam String name,
+                                       @RequestParam(required = false) Integer id)
       throws Exception {
 
-    if (!fileSystemStoreService.createBucket(name))
-      return "Unable to create bucket " + name;
+    if (!assetStore.createBucket(name))
+      return new ResponseEntity<>("Unable to create bucket " + name, HttpStatus.NOT_MODIFIED);
 
     if (!hsqlService.insertBucket(name, id)) {
-      fileSystemStoreService.deleteBucket(name);
-      return "Unable to create bucket " + name;
+      assetStore.deleteBucket(name);
+      return new ResponseEntity<>("Unable to create bucket " + name, HttpStatus.NOT_MODIFIED);
     }
 
-    return "Created bucket " + name;
+    return new ResponseEntity<>("Created bucket " + name, HttpStatus.CREATED);
   }
+
 }

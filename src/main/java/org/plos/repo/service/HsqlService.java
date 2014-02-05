@@ -2,6 +2,7 @@ package org.plos.repo.service;
 
 import org.hsqldb.types.Types;
 import org.plos.repo.models.Asset;
+import org.plos.repo.models.Bucket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
@@ -15,7 +16,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 public class HsqlService {
 
@@ -24,6 +24,9 @@ public class HsqlService {
   public static final String fileName = "plosrepo-hsqldb";
 
   private JdbcTemplate jdbcTemplate;
+
+  // TODO: should we consider going completely content addressable like sha1 in git? too dangerous?
+  // http://stackoverflow.com/questions/9392365/how-would-git-handle-a-sha-1-collision-on-a-blob
 
   @Required
   public void setDataSource(DriverManagerDataSource dataSource) {
@@ -52,16 +55,28 @@ public class HsqlService {
     return asset;
   }
 
-  public Integer getBucketId(String bucketName) throws Exception {
+  public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
+    Bucket bucket = new Bucket();
+
+    bucket.bucketId = rs.getInt("BUCKETID");
+    bucket.bucketName = rs.getString("BUCKETNAME");
+
+    return bucket;
+  }
+
+  public Integer getBucketId(String bucketName) {
     return jdbcTemplate.queryForObject("SELECT bucketId FROM buckets WHERE bucketName=?", new Object[]{bucketName}, Integer.class);
   }
 
-  public Integer removeAsset(String key, String checksum, String bucketName) throws Exception {
+  public Integer deleteBucket(String bucketName) {
+    return jdbcTemplate.update("DELETE FROM buckets WHERE bucketName=?", new Object[]{bucketName}, new int[]{Types.VARCHAR});
+  }
+
+  public Integer deleteAsset(String key, String checksum, String bucketName) {
     return jdbcTemplate.update("DELETE FROM assets WHERE key=? AND checksum=? AND bucketId=?", new Object[]{key, checksum, getBucketId(bucketName)}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.INTEGER});
   }
 
-  public Asset getAsset(String bucketName, String key)
-      throws Exception {
+  public Asset getAsset(String bucketName, String key) {
 
     try {
       return (Asset) jdbcTemplate.queryForObject("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND key=? ORDER BY a.timestamp DESC LIMIT 1", new Object[]{bucketName, key}, new int[]{Types.VARCHAR, Types.VARCHAR}, new RowMapper<Object>() {
@@ -75,8 +90,7 @@ public class HsqlService {
     }
   }
 
-  public Asset getAsset(String bucketName, String key, String checksum)
-      throws Exception {
+  public Asset getAsset(String bucketName, String key, String checksum) {
 
     try {
       return (Asset)jdbcTemplate.queryForObject("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND key=? AND checksum=?", new Object[]{bucketName, key, checksum}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.VARCHAR}, new RowMapper<Object>() {
@@ -105,10 +119,7 @@ public class HsqlService {
 
   }
 
-  public Integer insertAsset(String key, String checksum, Integer bucketId, String contentType, String downloadName, long contentSize, Date timestamp) throws SQLException {
-
-    // TODO: make sure Asset key does not already exist
-
+  public Integer insertAsset(String key, String checksum, Integer bucketId, String contentType, String downloadName, long contentSize, Date timestamp) {
     return jdbcTemplate.update("INSERT INTO assets (key, checksum, timestamp, bucketId, contentType, downloadName, size) VALUES (?,?,?,?,?,?,?)", new Object[]{key, checksum, new Timestamp(timestamp.getTime()), bucketId, contentType, downloadName, contentSize}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.INTEGER});
 
   }
@@ -117,7 +128,7 @@ public class HsqlService {
     return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM assets", Integer.class);
   }
 
-  public Boolean insertBucket(String name, Integer id) throws Exception {
+  public Boolean insertBucket(String name, Integer id) {
 
     int result;
 
@@ -133,12 +144,18 @@ public class HsqlService {
     return (result > 0);
   }
 
-  public List<Map<String, Object>> listBuckets() throws Exception {
-    // TODO: put this in a Bucket class
-    return  jdbcTemplate.queryForList("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId");
+  public List<Bucket> listBuckets() {
+
+    return jdbcTemplate.query("SELECT * FROM buckets", new RowMapper<Bucket>() {
+      @Override
+      public Bucket mapRow(ResultSet resultSet, int i) throws SQLException {
+        return mapBucketRow(resultSet);
+      }
+    });
+
   }
 
-  public List<Asset> listAssets() throws Exception {
+  public List<Asset> listAssets() {
 
     return jdbcTemplate.query("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId", new RowMapper<Asset>() {
       @Override
