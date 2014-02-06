@@ -17,6 +17,8 @@
 
 package org.plos.repo.rest;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.plos.repo.models.Asset;
@@ -27,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -57,22 +60,23 @@ public class AssetCrudController {
   @Autowired
   private HsqlService hsqlService;
 
-  private final static String defaultContentType = "application/octet-stream";
-
 
   // TODO: check at startup that db is in sync with assetStore ?
 
-  // TODO: make a method for updating metadata ?
-
 
   @RequestMapping(method=RequestMethod.GET)
-  public @ResponseBody List<Asset> list() throws Exception {
-    return hsqlService.listAssets();
+  public @ResponseBody List<Asset> listAllAssets() throws Exception {
+    return hsqlService.listAllAssets();
   }
+
+//  @RequestMapping(value="{bucketName}", method=RequestMethod.GET)
+//  public @ResponseBody List<Asset> listAssetsInBucket(@PathVariable String bucketName) throws Exception {
+//    return hsqlService.listAssetsInBucket(bucketName);
+//  }
 
   @RequestMapping(value = "/count", method = RequestMethod.GET)
   public @ResponseBody Integer count() throws Exception {
-    return hsqlService.listAssets().size();
+    return hsqlService.listAllAssets().size();
   }
 
   @RequestMapping(value="{bucketName}", method=RequestMethod.GET)
@@ -80,7 +84,8 @@ public class AssetCrudController {
   void read(@PathVariable String bucketName,
             @RequestParam(required = true) String key,
             @RequestParam(required = false) String checksum,
-            HttpServletResponse response) {
+            @RequestParam(required = false) Boolean fetchMetadata,
+            HttpServletResponse response) throws IOException {
 
     Asset asset;
     if (checksum == null)
@@ -92,6 +97,25 @@ public class AssetCrudController {
       response.setStatus(HttpServletResponse.SC_NOT_FOUND);
       return;
     }
+
+    if (fetchMetadata != null && fetchMetadata) {
+
+      response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+      Gson gson = new Gson();
+
+      JsonObject jsonObject = gson.toJsonTree(asset).getAsJsonObject();
+
+      // get the list of versions
+      if (checksum == null)
+        jsonObject.add("versions", gson.toJsonTree(hsqlService.listAssetVersions(bucketName, key)).getAsJsonArray());
+
+      response.getWriter().write(jsonObject.toString());
+      response.setStatus(HttpServletResponse.SC_OK);
+
+      return;
+    }
+
+    // if they want the binary data
 
     if (checksum == null)
       checksum = asset.checksum;
@@ -106,7 +130,7 @@ public class AssetCrudController {
     try {
 
       if (asset.contentType == null || asset.contentType.isEmpty())
-        response.setContentType(defaultContentType);
+        response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
       else
         response.setContentType(asset.contentType);
       response.setHeader("Content-Disposition", "inline; filename=" + exportFileName);
@@ -122,83 +146,57 @@ public class AssetCrudController {
 
   }
 
-  @RequestMapping(value="{bucketName}/{key}/{checksum}", method=RequestMethod.DELETE)
-  public @ResponseBody String delete(@PathVariable String bucketName,
-                                     @PathVariable String key,  // TODO: move to request param
-                                     @PathVariable String checksum) throws Exception {
+  @RequestMapping(value="{bucketName}", method=RequestMethod.DELETE)
+  public ResponseEntity<String> delete(@PathVariable String bucketName,
+                                       @RequestParam String key,
+                                       @RequestParam String checksum) throws Exception {
 
     Asset asset = hsqlService.getAsset(bucketName, key, checksum);
+
+    if (asset == null || hsqlService.deleteAsset(key, checksum, bucketName) == 0)
+      return new ResponseEntity<>("Error: Can not find asset in database.", HttpStatus.NOT_FOUND);
+
     Date timestamp = asset.timestamp;
 
-    if (hsqlService.deleteAsset(key, checksum, bucketName) == 0)
-      return "Error: Can not find asset in database.";
-
     if (!assetStore.deleteAsset(assetStore.getAssetLocationString(bucketName, checksum, timestamp)))
-      return "Error: There was a problem deleting the asset from the filesystem.";
+      return new ResponseEntity<>("Error: There was a problem deleting the asset from the filesystem.", HttpStatus.NOT_MODIFIED);
 
-    return checksum + " deleted";
+    return new ResponseEntity<>(checksum + " deleted", HttpStatus.OK);
   }
 
-  /**
-   * Adds an asset if the key does not already exist.
-   *
-   * @param key
-   * @param bucketName
-   * @param contentType
-   * @param downloadName
-   * @param file
-   * @return
-   * @throws Exception
-   */
   @RequestMapping(method=RequestMethod.POST)
-  public ResponseEntity<String> create(@RequestParam String key,
-                                       @RequestParam String bucketName,
-                                       @RequestParam String contentType,
-                                       @RequestParam(required = false) String downloadName,
-                                       @RequestParam MultipartFile file) throws Exception {
-    return addAsset(key, bucketName, contentType, downloadName, file, true);
+  public ResponseEntity<String> createOrUpdate(@RequestParam String key,
+                                               @RequestParam String bucketName,
+                                               @RequestParam(required = false) String contentType,
+                                               @RequestParam(required = false) String downloadName,
+                                               @RequestParam(required = false) MultipartFile file,
+                                               @RequestParam(required = true) boolean newAsset
+  ) throws Exception {
+
+    if (newAsset)
+      return create(key, bucketName, contentType, downloadName, file);
+
+    return update(key, bucketName, contentType, downloadName, file);
   }
 
-  /**
-   * Adds an asset version only if the key already exists.
-   *
-   * @param key
-   * @param bucketName
-   * @param contentType
-   * @param downloadName
-   * @param file
-   * @return
-   * @throws Exception
-   */
-  @RequestMapping(method=RequestMethod.PUT)
-  public ResponseEntity<String> update(@RequestParam String key,
-                                       @RequestParam String bucketName,
-                                       @RequestParam String contentType,
-                                       @RequestParam(required = false) String downloadName,
-                                       @RequestParam MultipartFile file) throws Exception {
-    return addAsset(key, bucketName, contentType, downloadName, file, false);
-  }
-
-  private ResponseEntity<String> addAsset(String key,
+  private ResponseEntity<String> create(String key,
                           String bucketName,
                           String contentType,
                           String downloadName,
-                          MultipartFile file,
-                          boolean newKey) throws Exception {
+                          MultipartFile file) throws Exception {
 
     Integer bucketId = hsqlService.getBucketId(bucketName);
+
+    if (file == null)
+      return new ResponseEntity<>("Error: a file must be specified for uploading", HttpStatus.PRECONDITION_FAILED);
 
     if (bucketId == null)
       return new ResponseEntity<>("Error: Can not find bucket " + bucketName, HttpStatus.INSUFFICIENT_STORAGE);
 
     Asset existingAsset = hsqlService.getAsset(bucketName, key);
 
-    if (newKey) {
-      if (existingAsset != null) // create
-        return new ResponseEntity<>("Error: That key already exist. Perhaps you should use 'update' instead.", HttpStatus.CONFLICT);
-    } else if (existingAsset == null) {  // update
-      return new ResponseEntity<>("Error: That key does not exist. Perhaps you should use 'create' instead.", HttpStatus.NOT_ACCEPTABLE);
-    }
+    if (existingAsset != null)
+      return new ResponseEntity<>("Error: Attempting to create an asset with a key that already exists.", HttpStatus.CONFLICT);
 
     Map.Entry<String, String> uploadResult = assetStore.uploadTempAsset(file);  // TODO: make sure this is successful
     String tempFileLocation = uploadResult.getKey();
@@ -219,11 +217,69 @@ public class AssetCrudController {
       }
     }
 
+    // TODO: should we validate the incoming contentType ?
+
     Date timestamp = new Date();
     assetStore.saveUploadedAsset(bucketName, checksum, tempFileLocation, timestamp);
     log.info("insert: " + hsqlService.insertAsset(key, checksum, bucketId, contentType, downloadName, fileSize, timestamp));
 
     return new ResponseEntity<>(checksum, HttpStatus.CREATED);
+
+  }
+
+  private ResponseEntity<String> update(String key,
+                                        String bucketName,
+                                        String contentType,
+                                        String downloadName,
+                                        MultipartFile file) throws Exception {
+
+    Integer bucketId = hsqlService.getBucketId(bucketName);
+
+    if (bucketId == null)
+      return new ResponseEntity<>("Error: Can not find bucket " + bucketName, HttpStatus.INSUFFICIENT_STORAGE);
+
+    Asset existingAsset = hsqlService.getAsset(bucketName, key);
+
+    if (existingAsset == null)
+      return new ResponseEntity<>("Error: Attempting to create a new version of an non-existing asset.", HttpStatus.NOT_ACCEPTABLE);
+
+    if (contentType == null)
+      contentType = existingAsset.contentType;
+
+    if (downloadName == null)
+      downloadName = existingAsset.downloadName;
+
+    if (file == null) {
+      // TODO: duplicate file?
+      log.info("insert: " + hsqlService.insertAsset(key, existingAsset.checksum, bucketId, contentType, downloadName, existingAsset.size, existingAsset.timestamp));
+
+      return new ResponseEntity<>(existingAsset.checksum, HttpStatus.OK);
+    }
+
+    Map.Entry<String, String> uploadResult = assetStore.uploadTempAsset(file);  // TODO: make sure this is successful
+    String tempFileLocation = uploadResult.getKey();
+    String checksum = uploadResult.getValue();
+    File tempFile = new File(tempFileLocation);
+    long fileSize = tempFile.length();
+
+    Asset existingAssetVersion = hsqlService.getAsset(bucketName, key, checksum, fileSize);
+
+    if (existingAssetVersion != null) {
+
+      File existingFile = new File(assetStore.getAssetLocationString(bucketName, checksum, existingAssetVersion.timestamp));
+
+      if (FileUtils.contentEquals(tempFile, existingFile)) {
+        assetStore.deleteAsset(tempFileLocation);
+        log.info("skipping insert since asset version already exists");
+        return new ResponseEntity<>(checksum, HttpStatus.IM_USED);
+      }
+    }
+
+    Date timestamp = new Date();
+    assetStore.saveUploadedAsset(bucketName, checksum, tempFileLocation, timestamp);
+    log.info("insert: " + hsqlService.insertAsset(key, checksum, bucketId, contentType, downloadName, fileSize, timestamp));
+
+    return new ResponseEntity<>(checksum, HttpStatus.OK); // note we are returning something different then from the create function
   }
 
 }

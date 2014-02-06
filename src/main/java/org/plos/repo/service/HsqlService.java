@@ -160,7 +160,7 @@ public class HsqlService {
 
   }
 
-  public List<Asset> listAssets() {
+  public List<Asset> listAllAssets() {
 
     return jdbcTemplate.query("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId", new RowMapper<Asset>() {
       @Override
@@ -169,6 +169,26 @@ public class HsqlService {
       }
     });
 
+  }
+
+  public List<Asset> listAssetsInBucket(String bucketName) {
+
+    return jdbcTemplate.query("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=?", new Object[]{bucketName}, new int[]{Types.VARCHAR}, new RowMapper<Asset>() {
+      @Override
+      public Asset mapRow(ResultSet resultSet, int i) throws SQLException {
+        return mapAssetRow(resultSet);
+      }
+    });
+  }
+
+  public List<Asset> listAssetVersions(String bucketName, String key) {
+
+    return jdbcTemplate.query("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND key=?", new Object[]{bucketName, key}, new int[]{Types.VARCHAR, Types.VARCHAR}, new RowMapper<Asset>() {
+      @Override
+      public Asset mapRow(ResultSet resultSet, int i) throws SQLException {
+        return mapAssetRow(resultSet);
+      }
+    });
   }
 
 }

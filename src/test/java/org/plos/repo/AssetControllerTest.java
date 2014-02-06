@@ -2,6 +2,10 @@ package org.plos.repo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.plos.repo.models.Asset;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.service.FileSystemStoreService;
@@ -23,10 +27,10 @@ import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.util.List;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -63,7 +67,7 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
   }
 
   private void clearData() {
-    List<Asset> assetList = hsqlService.listAssets();
+    List<Asset> assetList = hsqlService.listAllAssets();
 
     for (Asset asset : assetList) {
       hsqlService.deleteAsset(asset.key, asset.checksum, asset.bucketName);
@@ -105,23 +109,23 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
     // CREATE
 
-    this.mockMvc.perform(fileUpload("/assets").file(file1)
+    this.mockMvc.perform(fileUpload("/assets").file(file1).param("newAsset", "true")
         .param("key", "asset1").param("bucketName", "testbucketAssets").param("contentType", "text/plain"))
         .andExpect(status().isCreated());
 
-    this.mockMvc.perform(fileUpload("/assets").file(file1)
+    this.mockMvc.perform(fileUpload("/assets").file(file1).param("newAsset", "true")
         .param("key", "asset1").param("bucketName", "testbucketAssets").param("contentType", "text/plain"))
         .andExpect(status().isConflict());  // since the key exists
 
-    this.mockMvc.perform(fileUpload("/assets").file(file1)
+    this.mockMvc.perform(fileUpload("/assets").file(file1).param("newAsset", "true")
         .param("key", "asset2").param("bucketName", "testbucketAssets").param("contentType", "text/something").param("downloadName", "asset2.text"))
         .andExpect(status().isCreated()); // since its a new key
 
-    this.mockMvc.perform(fileUpload("/assets").file(file1)
+    this.mockMvc.perform(fileUpload("/assets").file(file1).param("newAsset", "true")
         .param("key", "asset1").param("bucketName", "testbucketAssets2").param("contentType", "text/plain"))
         .andExpect(status().isInsufficientStorage()); // since the bucket does not exist
 
-    this.mockMvc.perform(fileUpload("/assets").file(new MockMultipartFile("file", "".getBytes()))
+    this.mockMvc.perform(fileUpload("/assets").file(new MockMultipartFile("file", "".getBytes())).param("newAsset", "true")
         .param("key", "funky&?#key").param("bucketName", "testbucketAssets").param("contentType", "text/plain"))
         .andExpect(status().isCreated()); // since we accept empty files
 
@@ -159,19 +163,34 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
     // UPDATE
 
-    // TODO: figure out how to fileUpload with PUT
+    this.mockMvc.perform(fileUpload("/assets").file(file2).param("newAsset", "false")
+        .param("key", "asset3").param("bucketName", "testbucketAssets").param("contentType", "text/something").param("downloadName", "asset2.text"))
+        .andExpect(status().isNotAcceptable()); // since key does not exist
 
-//    this.mockMvc.perform(fileUpload("/assets").file(file2)
-//        .param("key", "asset2").param("bucketName", "testbucketAssets").param("contentType", "text/something"))
-//        .andExpect(status().isCreated()); // since its a new version
+    this.mockMvc.perform(fileUpload("/assets").file(file2).param("newAsset", "false")
+        .param("key", "asset2").param("bucketName", "testbucketAssets").param("contentType", "text/something").param("downloadName", "asset2.text"))
+        .andExpect(status().isOk()); // since its a new version
 
-    this.mockMvc.perform(put("/assets")
-        .param("key", "asset2").param("bucketName", "testbucketAssets").param("contentType", "text/something"))
-        .andExpect(status().isCreated()); // since its a new version
+
+    // LIST
+
+    String responseString = this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset2").param("fetchMetadata", "true"))
+        .andExpect(header().string("Content-Type", "application/json"))
+        .andReturn().getResponse().getContentAsString();  // file name assigned by user
+
+    Gson gson = new Gson();
+    JsonObject jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
+    JsonArray jsonArray = jsonObject.getAsJsonArray("versions");
+
+    assert(jsonArray.size() == 2);  // since there should be two versions of this asset
+
 
     // DELETE
 
-    // LIST
+    this.mockMvc.perform(delete("/assets/testbucketAssets").param("key", "asset2").param("checksum", testData2Checksum)).andExpect(status().isOk());
+
+    this.mockMvc.perform(delete("/assets/testbucketAssets").param("key", "asset3").param("checksum", testData2Checksum)).andExpect(status().isNotFound());
+
   }
 
 }

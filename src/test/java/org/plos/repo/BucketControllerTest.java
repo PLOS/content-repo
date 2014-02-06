@@ -2,12 +2,16 @@ package org.plos.repo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import org.plos.repo.models.Asset;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.service.FileSystemStoreService;
 import org.plos.repo.service.HsqlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -21,8 +25,11 @@ import org.testng.annotations.Test;
 import java.nio.charset.Charset;
 import java.util.List;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -58,7 +65,7 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
   }
 
   private void clearData() {
-    List<Asset> assetList = hsqlService.listAssets();
+    List<Asset> assetList = hsqlService.listAllAssets();
 
     for (Asset asset : assetList) {
       hsqlService.deleteAsset(asset.key, asset.checksum, asset.bucketName);
@@ -78,6 +85,9 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
 
     clearData();
 
+
+    // CREATE
+
     this.mockMvc.perform(get("/buckets").accept(APPLICATION_JSON_UTF8))
         .andExpect(status().isOk())
         .andExpect(content().contentType("application/json;charset=UTF-8"))
@@ -85,6 +95,7 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
         .param("name", "testbucket1"))
+        .andDo(print())
         .andExpect(status().isCreated());
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
@@ -99,7 +110,30 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
         .param("name", "bad?&name"))
         .andExpect(status().isPreconditionFailed());
 
-    // TODO: check the list output
+
+    // LIST
+
+    String responseString = this.mockMvc.perform(get("/buckets"))
+//        .andExpect(header().string("Content-Type", "application/json"))
+        .andReturn().getResponse().getContentAsString();  // file name assigned by user
+
+    Gson gson = new Gson();
+    JsonArray jsonArray = gson.fromJson(responseString, JsonElement.class).getAsJsonArray();
+
+    assert(jsonArray.size() == 2);
+
+
+    // DELETE
+
+    this.mockMvc.perform(delete("/buckets/testbucket1")).andExpect(status().isOk());
+
+    this.mockMvc.perform(fileUpload("/assets").file(new MockMultipartFile("file", "test".getBytes())).param("newAsset", "true")
+        .param("key", "asset1").param("bucketName", "testbucket2"))
+        .andExpect(status().isCreated());
+
+    this.mockMvc.perform(delete("/buckets/testbucket2")).andExpect(status().isNotModified());
+
+    this.mockMvc.perform(delete("/buckets/testbucket3")).andExpect(status().isNotFound());
 
   }
 

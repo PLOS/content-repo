@@ -16,38 +16,32 @@ print (r.text)
 
 
 files = {'file': open('/home/jfinger/mounts.log', 'rb')}
-values = {'key': 'testfile.log', 'bucketName' : 'production', 'contentType' : 'text/plain'}
+values = {'key': 'testfile.log', 'bucketName' : 'production', 'contentType' : 'text/plain', 'newAsset' : 'true'}
 r = requests.post(baseUrl + 'assets/', files=files, data=values)
 print (r.text)
 
 files = {'file': open('/home/jfinger/looseFiles/DH3.8_DeveloperGuide.pdf', 'rb')}
-values = {'key': 'devguide.pdf', 'bucketName' : 'production', 'contentType' : 'application/pdf'}
+values = {'key': 'devguide.pdf', 'bucketName' : 'production', 'contentType' : 'application/pdf', 'newAsset' : 'true'}
 r = requests.post(baseUrl + 'assets/', files=files, data=values)
 print (r.text)
 
 files = {'file': open('/home/jfinger/journal.pone.0085647.pdf', 'rb')}
-values = {'key': 'devguide.pdf', 'bucketName' : 'production', 'contentType' : 'application/pdf'}
-#r = requests.put(baseUrl + 'assets/', data=files, params=values)
-r = requests.put(baseUrl + 'assets/', params=values)
-print (r.text)
-
-files = {'file': open('/home/jfinger/looseFiles/DH3.8_DeveloperGuide.pdf', 'rb')}
-values = {'key': 'devguide', 'bucketName' : 'production', 'contentType' : 'application/pdf', 'file':'file'}
-r = requests.post(baseUrl + 'assets/', files=files, data=values)
-print (r.text)
-
-# files = {'file': open('/home/jfinger/looseFiles/DH3.8_DeveloperGuide.pdf', 'rb')}
-# values = {'key': 'devguide', 'bucketName' : 'production', 'contentType' : 'application/pdf'}
-# r = requests.post(baseUrl + 'assets/', files=files, data=values)
-# print (r.text)
-
-files = {'file': open('/home/jfinger/looseFiles/DH3.8_DeveloperGuide.pdf', 'rb')}
-values = {'key': 'badContentType', 'bucketName' : 'production', 'contentType' : 'text/plain'}
+values = {'key': 'devguide.pdf', 'bucketName' : 'production', 'contentType' : 'application/pdf', 'newAsset' : False}
 r = requests.post(baseUrl + 'assets/', files=files, data=values)
 print (r.text)
 
 files = {'file': open('/home/jfinger/looseFiles/DH3.8_DeveloperGuide.pdf', 'rb')}
-values = {'key': 'downloadName', 'bucketName' : 'production', 'contentType' : 'application/pdf', 'downloadName' : 'disTest.pdf'}
+values = {'key': 'devguide', 'bucketName' : 'production', 'contentType' : 'application/pdf', 'file':'file', 'newAsset':True}
+r = requests.post(baseUrl + 'assets/', files=files, data=values)
+print (r.text)
+
+files = {'file': open('/home/jfinger/looseFiles/DH3.8_DeveloperGuide.pdf', 'rb')}
+values = {'key': 'badContentType', 'bucketName' : 'production', 'contentType' : 'text/plain', 'newAsset':True}
+r = requests.post(baseUrl + 'assets/', files=files, data=values)
+print (r.text)
+
+files = {'file': open('/home/jfinger/looseFiles/DH3.8_DeveloperGuide.pdf', 'rb')}
+values = {'key': 'downloadName', 'bucketName' : 'production', 'contentType' : 'application/pdf', 'downloadName' : 'disTest.pdf', 'newAsset':True}
 r = requests.post(baseUrl + 'assets/', files=files, data=values)
 print (r.text)
 
