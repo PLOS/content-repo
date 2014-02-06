@@ -42,7 +42,7 @@ public class FileSystemStoreService implements AssetStore {
     return getBucketLocationString(bucketName) + checksum + "-" + timestamp.getTime() + ".md5";
   }
 
-  private static String checksumToString(byte[] checksum) {
+  public static String checksumToString(byte[] checksum) {
 
     StringBuilder sb = new StringBuilder();
 
@@ -54,16 +54,16 @@ public class FileSystemStoreService implements AssetStore {
 
   public boolean createBucket(String bucketName) {
 
-    if (!isValidFileName(bucketName)) {
-      log.error("Error creating bucket. Name contains illegal file path characters: " + bucketName);
-      return false;
-    }
+//    if (!isValidFileName(bucketName)) {
+//      log.error("Error creating bucket. Name contains illegal file path characters: " + bucketName);
+//      return false;
+//    }
 
     File dir = new File(getBucketLocationString(bucketName));
     boolean result = dir.mkdir();
 
     if (!result)
-      log.error("Error while creating bucket. Directory was not able to be created : " + getBucketLocationString(bucketName));
+      log.debug("Error while creating bucket. Directory was not able to be created : " + getBucketLocationString(bucketName));
 
     return result;
   }

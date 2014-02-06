@@ -26,6 +26,7 @@ public class HsqlService {
   private JdbcTemplate jdbcTemplate;
 
   // TODO: should we consider going completely content addressable like sha1 in git? too dangerous?
+  // would regarding the size as well make me feel any better?
   // http://stackoverflow.com/questions/9392365/how-would-git-handle-a-sha-1-collision-on-a-blob
 
   @Required
@@ -65,7 +66,11 @@ public class HsqlService {
   }
 
   public Integer getBucketId(String bucketName) {
-    return jdbcTemplate.queryForObject("SELECT bucketId FROM buckets WHERE bucketName=?", new Object[]{bucketName}, Integer.class);
+    try {
+      return jdbcTemplate.queryForObject("SELECT bucketId FROM buckets WHERE bucketName=?", new Object[]{bucketName}, Integer.class);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
+    }
   }
 
   public Integer deleteBucket(String bucketName) {

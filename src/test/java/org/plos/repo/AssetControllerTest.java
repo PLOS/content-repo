@@ -20,12 +20,15 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.nio.charset.Charset;
+import java.security.MessageDigest;
 import java.util.List;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebAppConfiguration
@@ -80,6 +83,8 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
     clearData();
 
+    MessageDigest md = MessageDigest.getInstance("MD5");
+
     this.mockMvc.perform(get("/assets").accept(APPLICATION_JSON_UTF8))
         .andExpect(status().isOk())
         .andExpect(content().contentType("application/json;charset=UTF-8"))
@@ -87,18 +92,86 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
         .param("name", "testbucketAssets"))
-        .andDo(print())
         .andExpect(status().isCreated());
 
-    byte[] testData1 = "test data one goes\nhere.".getBytes();
-    MockMultipartFile file = new MockMultipartFile("someFileName.txt", testData1);
 
-//    this.mockMvc.perform(post("/assets").accept(APPLICATION_JSON_UTF8)
-//        .param("key", "asset1").param("bucketName").param("contentType", "text/plain"))
-//        .andExpect(status().isOk());
+    String testData1 = "test data one goes\nhere.";
+    MockMultipartFile file1 = new MockMultipartFile("file", testData1.getBytes());
+    String testData1Checksum = FileSystemStoreService.checksumToString(md.digest(testData1.getBytes()));
 
-    // TODO: figure out upload while posting params
+    String testData2 = "test data two goes\nhere.";
+    MockMultipartFile file2 = new MockMultipartFile("file", testData2.getBytes());
+    String testData2Checksum = FileSystemStoreService.checksumToString(md.digest(testData2.getBytes()));
 
+    // CREATE
+
+    this.mockMvc.perform(fileUpload("/assets").file(file1)
+        .param("key", "asset1").param("bucketName", "testbucketAssets").param("contentType", "text/plain"))
+        .andExpect(status().isCreated());
+
+    this.mockMvc.perform(fileUpload("/assets").file(file1)
+        .param("key", "asset1").param("bucketName", "testbucketAssets").param("contentType", "text/plain"))
+        .andExpect(status().isConflict());  // since the key exists
+
+    this.mockMvc.perform(fileUpload("/assets").file(file1)
+        .param("key", "asset2").param("bucketName", "testbucketAssets").param("contentType", "text/something").param("downloadName", "asset2.text"))
+        .andExpect(status().isCreated()); // since its a new key
+
+    this.mockMvc.perform(fileUpload("/assets").file(file1)
+        .param("key", "asset1").param("bucketName", "testbucketAssets2").param("contentType", "text/plain"))
+        .andExpect(status().isInsufficientStorage()); // since the bucket does not exist
+
+    this.mockMvc.perform(fileUpload("/assets").file(new MockMultipartFile("file", "".getBytes()))
+        .param("key", "funky&?#key").param("bucketName", "testbucketAssets").param("contentType", "text/plain"))
+        .andExpect(status().isCreated()); // since we accept empty files
+
+
+    // READ
+
+    this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset1"))
+        .andExpect(header().string("Content-Type", "text/plain"))
+        .andExpect(header().string("Content-Disposition", "inline; filename=asset1"))
+        .andExpect(content().string(testData1))
+        .andExpect(status().isFound());  // file name assigned by key
+
+    this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset1").param("checksum", testData1Checksum))
+        .andExpect(header().string("Content-Type", "text/plain"))
+        .andExpect(header().string("Content-Disposition", "inline; filename=asset1"))
+        .andExpect(content().string(testData1))
+        .andExpect(status().isFound());  // version accessible
+
+    this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset1").param("checksum", "abc"))
+        .andExpect(status().isNotFound());  // version should not exist
+
+    this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset2"))
+        .andExpect(header().string("Content-Type", "text/something"))
+        .andExpect(header().string("Content-Disposition", "inline; filename=asset2.text"))
+        .andExpect(content().string(testData1));  // file name assigned by user
+
+    this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "funky&?#key"))
+        .andExpect(header().string("Content-Type", "text/plain"))
+        .andExpect(header().string("Content-Disposition", "inline; filename=content"))
+        .andExpect(content().string(""));  // file name can not be set by key or user
+
+    this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "nonAsset"))
+        .andExpect(status().isNotFound());  // asset should not exist
+
+
+    // UPDATE
+
+    // TODO: figure out how to fileUpload with PUT
+
+//    this.mockMvc.perform(fileUpload("/assets").file(file2)
+//        .param("key", "asset2").param("bucketName", "testbucketAssets").param("contentType", "text/something"))
+//        .andExpect(status().isCreated()); // since its a new version
+
+    this.mockMvc.perform(put("/assets")
+        .param("key", "asset2").param("bucketName", "testbucketAssets").param("contentType", "text/something"))
+        .andExpect(status().isCreated()); // since its a new version
+
+    // DELETE
+
+    // LIST
   }
 
 }

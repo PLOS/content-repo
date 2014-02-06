@@ -23,7 +23,6 @@ import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -86,18 +85,19 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
         .param("name", "testbucket1"))
-        .andDo(print())
         .andExpect(status().isCreated());
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
         .param("name", "testbucket1"))
-        .andDo(print())
-        .andExpect(status().isNotModified());
+        .andExpect(status().isConflict());
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
         .param("name", "testbucket2").param("id", "5"))
-        .andDo(print())
         .andExpect(status().isCreated());
+
+    this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
+        .param("name", "bad?&name"))
+        .andExpect(status().isPreconditionFailed());
 
     // TODO: check the list output
 
