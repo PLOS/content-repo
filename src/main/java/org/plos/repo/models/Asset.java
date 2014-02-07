@@ -15,9 +15,9 @@ public class Asset {
   public String tag;
   public Integer bucketId;
   public String bucketName;
+  public Integer versionNumber;
 
-  public Asset(Integer id, String key, String checksum, Timestamp timestamp, String downloadName, String contentType, Long size, String url, String tag, Integer bucketId, String bucketName) {
-
+  public Asset(Integer id, String key, String checksum, Timestamp timestamp, String downloadName, String contentType, Long size, String url, String tag, Integer bucketId, String bucketName, Integer versionNumber) {
     this.id = id;
     this.key = key;
     this.checksum = checksum;
@@ -29,6 +29,7 @@ public class Asset {
     this.tag = tag;
     this.bucketId = bucketId;
     this.bucketName = bucketName;
+    this.versionNumber = versionNumber;
   }
 
 }

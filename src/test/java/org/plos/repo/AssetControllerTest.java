@@ -71,7 +71,8 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
     List<Asset> assetList = hsqlService.listAllAssets();
 
     for (Asset asset : assetList) {
-      hsqlService.deleteAsset(asset.key, asset.checksum, asset.bucketName, asset.timestamp);
+      //hsqlService.markAssetDeleted(asset.key, asset.checksum, asset.bucketName, asset.versionNumber);
+      hsqlService.deleteAsset(asset.key, asset.checksum, asset.bucketName, asset.versionNumber);
       fileSystemStoreService.deleteAsset(fileSystemStoreService.getAssetLocationString(asset.bucketName, asset.checksum));
     }
 
@@ -193,7 +194,7 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
     // DELETE
 
-    this.mockMvc.perform(delete("/assets/testbucketAssets").param("key", "asset1").param("checksum", testData1Checksum).param("timestamp", asset1Timestamp.toString()))
+    this.mockMvc.perform(delete("/assets/testbucketAssets").param("key", "asset1").param("checksum", testData1Checksum).param("versionNumber", "0"))
         .andDo(print())
         .andExpect(status().isOk());
 

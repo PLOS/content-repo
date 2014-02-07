@@ -13,7 +13,6 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.List;
 
 public class HsqlService {
@@ -34,7 +33,7 @@ public class HsqlService {
   }
 
   private static Asset mapAssetRow(ResultSet rs) throws SQLException {
-    return new Asset(rs.getInt("ID"), rs.getString("KEY"), rs.getString("CHECKSUM"), rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"), rs.getLong("SIZE"), rs.getString("URL"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"));
+    return new Asset(rs.getInt("ID"), rs.getString("KEY"), rs.getString("CHECKSUM"), rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"), rs.getLong("SIZE"), rs.getString("URL"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"));
   }
 
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
@@ -58,8 +57,18 @@ public class HsqlService {
     return jdbcTemplate.update("DELETE FROM buckets WHERE bucketName=?", new Object[]{bucketName}, new int[]{Types.VARCHAR});
   }
 
-  public Integer deleteAsset(String key, String checksum, String bucketName, Timestamp timestamp) {
-    return jdbcTemplate.update("DELETE FROM assets WHERE key=? AND checksum=? AND bucketId=? AND timestamp=?", new Object[]{key, checksum, getBucketId(bucketName), timestamp}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.TIMESTAMP});
+//  public Integer deleteAsset(String key, String checksum, String bucketName, Timestamp timestamp) {
+//    return jdbcTemplate.update("DELETE FROM assets WHERE key=? AND checksum=? AND bucketId=? AND timestamp=?", new Object[]{key, checksum, getBucketId(bucketName), timestamp}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.TIMESTAMP});
+//  }
+
+
+  // FOR TESTING ONLY
+  public Integer deleteAsset(String key, String checksum, String bucketName, int versionNumber) {
+    return jdbcTemplate.update("DELETE FROM assets WHERE key=? AND checksum=? AND bucketId=? AND versionNumber=?", new Object[]{key, checksum, getBucketId(bucketName), versionNumber}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.INTEGER});
+  }
+
+  public Integer markAssetDeleted(String key, String checksum, String bucketName, int versionNumber) {
+    return jdbcTemplate.update("UPDATE assets SET tag='deleted' WHERE key=? AND checksum=? AND bucketId=? AND versionNumber=?", new Object[]{key, checksum, getBucketId(bucketName), versionNumber}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.TIMESTAMP});
   }
 
   public boolean assetInUse(String bucketName, String checksum) {
@@ -69,7 +78,7 @@ public class HsqlService {
   public Asset getAsset(String bucketName, String key) {
 
     try {
-      return (Asset) jdbcTemplate.queryForObject("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND key=? ORDER BY a.timestamp DESC LIMIT 1", new Object[]{bucketName, key}, new int[]{Types.VARCHAR, Types.VARCHAR}, new RowMapper<Object>() {
+      return (Asset) jdbcTemplate.queryForObject("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND key=? AND (tag IS NULL OR NOT tag=?) ORDER BY a.timestamp DESC LIMIT 1", new Object[]{bucketName, key, "deleted"}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.VARCHAR}, new RowMapper<Object>() {
         @Override
         public Asset mapRow(ResultSet resultSet, int i) throws SQLException {
           return mapAssetRow(resultSet);
@@ -95,7 +104,7 @@ public class HsqlService {
   }
 
   public Integer insertAsset(Asset asset) {
-    return jdbcTemplate.update("INSERT INTO assets (key, checksum, timestamp, bucketId, contentType, downloadName, size) VALUES (?,?,?,?,?,?,?)", new Object[]{asset.key, asset.checksum, asset.timestamp, asset.bucketId, asset.contentType, asset.downloadName, asset.size}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.INTEGER});
+    return jdbcTemplate.update("INSERT INTO assets (key, checksum, timestamp, bucketId, contentType, downloadName, size, tag, versionNumber) VALUES (?,?,?,?,?,?,?,?,?)", new Object[]{asset.key, asset.checksum, asset.timestamp, asset.bucketId, asset.contentType, asset.downloadName, asset.size, asset.tag, asset.versionNumber}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.VARCHAR, Types.INTEGER});
   }
 
   public Integer assetCount() throws Exception {

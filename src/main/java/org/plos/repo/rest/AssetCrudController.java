@@ -100,6 +100,10 @@ public class AssetCrudController {
             @RequestParam(required = false) Boolean fetchMetadata,
             HttpServletResponse response) throws IOException {
 
+
+    // TODO: figure out if what we should return for deleted entries
+
+
     Asset asset;
     if (checksum == null)
       asset = hsqlService.getAsset(bucketName, key);
@@ -153,14 +157,14 @@ public class AssetCrudController {
   public ResponseEntity<String> delete(@PathVariable String bucketName,
                                        @RequestParam String key,
                                        @RequestParam String checksum,
-                                       @RequestParam long timestamp) throws Exception {
+                                       @RequestParam int versionNumber) throws Exception {
 
-    if (hsqlService.deleteAsset(key, checksum, bucketName, new Timestamp(timestamp)) == 0)
+    if (hsqlService.markAssetDeleted(key, checksum, bucketName, versionNumber) == 0)
       return new ResponseEntity<>("Error: Can not find asset in database.", HttpStatus.NOT_FOUND);
 
     // delete it from the asset store if it is no longer referenced in the database
-    if (!hsqlService.assetInUse(bucketName, checksum) && !assetStore.deleteAsset(assetStore.getAssetLocationString(bucketName, checksum)))
-      return new ResponseEntity<>("Error: There was a problem deleting the asset from the filesystem.", HttpStatus.NOT_MODIFIED);
+//    if (!hsqlService.assetInUse(bucketName, checksum) && !assetStore.deleteAsset(assetStore.getAssetLocationString(bucketName, checksum)))
+//      return new ResponseEntity<>("Error: There was a problem deleting the asset from the filesystem.", HttpStatus.NOT_MODIFIED);
 
     return new ResponseEntity<>(checksum + " deleted", HttpStatus.OK);
   }
@@ -210,6 +214,12 @@ public class AssetCrudController {
     // determine if the asset should be added to the store or not
     if (hsqlService.assetInUse(bucketName, checksum)) {
 
+
+
+      // TODO: figure out how to deal with deleted assets here
+
+
+
       if (FileUtils.contentEquals(tempFile, new File(assetStore.getAssetLocationString(bucketName, checksum)))) {
         log.info("not adding asset to store since content exists");
       } else {
@@ -224,7 +234,7 @@ public class AssetCrudController {
     }
 
     // add a record to the DB
-    Asset asset = new Asset(null, key, checksum, new Timestamp(new Date().getTime()), downloadName, contentType, fileSize, null, null, bucketId, bucketName);
+    Asset asset = new Asset(null, key, checksum, new Timestamp(new Date().getTime()), downloadName, contentType, fileSize, null, null, bucketId, bucketName, 0);
 
     log.info("db asset inserts: " + hsqlService.insertAsset(asset));
 
@@ -255,11 +265,13 @@ public class AssetCrudController {
       asset.downloadName = downloadName;
 
     asset.timestamp = new Timestamp(new Date().getTime());
+    asset.versionNumber++;
+    asset.id = null;  // remove this since it refers to the old asset
 
     if (file == null) {
       log.info("db asset inserts: " + hsqlService.insertAsset(asset));
 
-      return new ResponseEntity<>(asset.checksum, HttpStatus.OK);
+      return new ResponseEntity<>(assetToJsonString(asset, false), HttpStatus.OK);
     }
 
     Map.Entry<String, String> uploadResult = assetStore.uploadTempAsset(file);  // TODO: make sure this is successful

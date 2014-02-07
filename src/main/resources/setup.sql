@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS assets (
   downloadName VARCHAR (1000),  -- the name of the file when downloaded
   contentType VARCHAR (200), -- the mime type
   size INTEGER NOT NULL,  -- the file size in bytes
-  tag VARCHAR (200)
+  tag VARCHAR (200),
+  versionNumber INTEGER NOT NULL
 );
 
 --DROP INDEX keysum IF EXISTS;
