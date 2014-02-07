@@ -21,5 +21,5 @@ CREATE TABLE IF NOT EXISTS assets (
   tag VARCHAR (200)
 );
 
-DROP INDEX keysum IF EXISTS;
-CREATE UNIQUE INDEX keysum ON assets(bucketId, key, checksum, size);
+--DROP INDEX keysum IF EXISTS;
+--CREATE UNIQUE INDEX keysum ON assets(bucketId, key, checksum, size);

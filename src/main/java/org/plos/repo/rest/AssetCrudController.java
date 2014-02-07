@@ -18,6 +18,7 @@
 package org.plos.repo.rest;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -44,6 +45,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -101,13 +103,15 @@ public class AssetCrudController {
     if (fetchMetadata != null && fetchMetadata) {
 
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-      Gson gson = new Gson();
+      //Gson gson = new new Gson();
+      Gson gson = new GsonBuilder().setDateFormat("yyyy").create();
 
       JsonObject jsonObject = gson.toJsonTree(asset).getAsJsonObject();
 
       // get the list of versions
       if (checksum == null)
         jsonObject.add("versions", gson.toJsonTree(hsqlService.listAssetVersions(bucketName, key)).getAsJsonArray());
+
 
       response.getWriter().write(jsonObject.toString());
       response.setStatus(HttpServletResponse.SC_OK);
@@ -135,7 +139,7 @@ public class AssetCrudController {
         response.setContentType(asset.contentType);
       response.setHeader("Content-Disposition", "inline; filename=" + exportFileName);
 
-      InputStream is = new FileInputStream(assetStore.getAssetLocationString(bucketName, checksum,  asset.timestamp));
+      InputStream is = new FileInputStream(assetStore.getAssetLocationString(bucketName, checksum));
       IOUtils.copy(is, response.getOutputStream());
       response.setStatus(HttpServletResponse.SC_FOUND);
       response.flushBuffer();
@@ -149,16 +153,14 @@ public class AssetCrudController {
   @RequestMapping(value="{bucketName}", method=RequestMethod.DELETE)
   public ResponseEntity<String> delete(@PathVariable String bucketName,
                                        @RequestParam String key,
-                                       @RequestParam String checksum) throws Exception {
+                                       @RequestParam String checksum,
+                                       @RequestParam long timestamp) throws Exception {
 
-    Asset asset = hsqlService.getAsset(bucketName, key, checksum);
-
-    if (asset == null || hsqlService.deleteAsset(key, checksum, bucketName) == 0)
+    if (hsqlService.deleteAsset(key, checksum, bucketName, new Timestamp(timestamp)) == 0)
       return new ResponseEntity<>("Error: Can not find asset in database.", HttpStatus.NOT_FOUND);
 
-    Date timestamp = asset.timestamp;
-
-    if (!assetStore.deleteAsset(assetStore.getAssetLocationString(bucketName, checksum, timestamp)))
+    // delete it from the asset store if it is no longer referenced in the database
+    if (!hsqlService.assetInUse(bucketName, checksum) && !assetStore.deleteAsset(assetStore.getAssetLocationString(bucketName, checksum)))
       return new ResponseEntity<>("Error: There was a problem deleting the asset from the filesystem.", HttpStatus.NOT_MODIFIED);
 
     return new ResponseEntity<>(checksum + " deleted", HttpStatus.OK);
@@ -188,7 +190,7 @@ public class AssetCrudController {
     Integer bucketId = hsqlService.getBucketId(bucketName);
 
     if (file == null)
-      return new ResponseEntity<>("Error: a file must be specified for uploading", HttpStatus.PRECONDITION_FAILED);
+      return new ResponseEntity<>("Error: A file must be specified for uploading.", HttpStatus.PRECONDITION_FAILED);
 
     if (bucketId == null)
       return new ResponseEntity<>("Error: Can not find bucket " + bucketName, HttpStatus.INSUFFICIENT_STORAGE);
@@ -204,27 +206,28 @@ public class AssetCrudController {
     File tempFile = new File(tempFileLocation);
     long fileSize = tempFile.length();
 
-    Asset existingAssetVersion = hsqlService.getAsset(bucketName, key, checksum, fileSize);
+    HttpStatus status = HttpStatus.CREATED; // status indicates if it made it to the DB, not the asset store
 
-    if (existingAssetVersion != null) {
+    // determine if the asset should be added to the store or not
+    if (hsqlService.assetInUse(bucketName, checksum)) {
 
-      File existingFile = new File(assetStore.getAssetLocationString(bucketName, checksum, existingAssetVersion.timestamp));
-
-      if (FileUtils.contentEquals(tempFile, existingFile)) {
-        assetStore.deleteAsset(tempFileLocation);
-        log.info("skipping insert since asset version already exists");
-        return new ResponseEntity<>(checksum, HttpStatus.NOT_MODIFIED);
+      if (FileUtils.contentEquals(tempFile, new File(assetStore.getAssetLocationString(bucketName, checksum)))) {
+        log.info("not adding asset to store since content exists");
+      } else {
+        log.info("checksum collision!!");
+        status = HttpStatus.CONFLICT;
       }
+
+      // dont bother storing the file since the data already exists in the system
+      assetStore.deleteAsset(tempFileLocation);
+    } else {
+      assetStore.saveUploadedAsset(bucketName, checksum, tempFileLocation);
     }
 
-    // TODO: should we validate the incoming contentType ?
+    // add a record to the DB
+    log.info("db asset inserts: " + hsqlService.insertAsset(key, checksum, bucketId, contentType, downloadName, fileSize, new Timestamp(new Date().getTime())));
 
-    Date timestamp = new Date();
-    assetStore.saveUploadedAsset(bucketName, checksum, tempFileLocation, timestamp);
-    log.info("insert: " + hsqlService.insertAsset(key, checksum, bucketId, contentType, downloadName, fileSize, timestamp));
-
-    return new ResponseEntity<>(checksum, HttpStatus.CREATED);
-
+    return new ResponseEntity<>(checksum, status);
   }
 
   private ResponseEntity<String> update(String key,
@@ -243,6 +246,7 @@ public class AssetCrudController {
     if (existingAsset == null)
       return new ResponseEntity<>("Error: Attempting to create a new version of an non-existing asset.", HttpStatus.NOT_ACCEPTABLE);
 
+    // copy over values from previous asset, if they are not specified in the request
     if (contentType == null)
       contentType = existingAsset.contentType;
 
@@ -251,7 +255,7 @@ public class AssetCrudController {
 
     if (file == null) {
       // TODO: duplicate file?
-      log.info("insert: " + hsqlService.insertAsset(key, existingAsset.checksum, bucketId, contentType, downloadName, existingAsset.size, existingAsset.timestamp));
+      log.info("db asset inserts: " + hsqlService.insertAsset(key, existingAsset.checksum, bucketId, contentType, downloadName, existingAsset.size, existingAsset.timestamp));
 
       return new ResponseEntity<>(existingAsset.checksum, HttpStatus.OK);
     }
@@ -262,24 +266,28 @@ public class AssetCrudController {
     File tempFile = new File(tempFileLocation);
     long fileSize = tempFile.length();
 
-    Asset existingAssetVersion = hsqlService.getAsset(bucketName, key, checksum, fileSize);
+    HttpStatus status = HttpStatus.OK; // note, different from 'create'
 
-    if (existingAssetVersion != null) {
+    // determine if the asset should be added to the store or not
+    if (hsqlService.assetInUse(bucketName, checksum)) {
 
-      File existingFile = new File(assetStore.getAssetLocationString(bucketName, checksum, existingAssetVersion.timestamp));
-
-      if (FileUtils.contentEquals(tempFile, existingFile)) {
-        assetStore.deleteAsset(tempFileLocation);
-        log.info("skipping insert since asset version already exists");
-        return new ResponseEntity<>(checksum, HttpStatus.IM_USED);
+      if (FileUtils.contentEquals(tempFile, new File(assetStore.getAssetLocationString(bucketName, checksum)))) {
+        log.info("not adding asset to store since content exists");
+      } else {
+        log.info("checksum collision!!");
+        status = HttpStatus.CONFLICT;
       }
+
+      // dont bother storing the file since the data already exists in the system
+      assetStore.deleteAsset(tempFileLocation);
+    } else {
+      assetStore.saveUploadedAsset(bucketName, checksum, tempFileLocation);
     }
 
-    Date timestamp = new Date();
-    assetStore.saveUploadedAsset(bucketName, checksum, tempFileLocation, timestamp);
-    log.info("insert: " + hsqlService.insertAsset(key, checksum, bucketId, contentType, downloadName, fileSize, timestamp));
+    // add a record to the DB
+    log.info("db asset inserts: " + hsqlService.insertAsset(key, checksum, bucketId, contentType, downloadName, fileSize, new Timestamp(new Date().getTime())));
 
-    return new ResponseEntity<>(checksum, HttpStatus.OK); // note we are returning something different then from the create function
+    return new ResponseEntity<>(checksum, status);
   }
 
 }

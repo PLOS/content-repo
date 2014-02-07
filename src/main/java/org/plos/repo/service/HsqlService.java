@@ -14,7 +14,6 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
 
 public class HsqlService {
@@ -77,8 +76,12 @@ public class HsqlService {
     return jdbcTemplate.update("DELETE FROM buckets WHERE bucketName=?", new Object[]{bucketName}, new int[]{Types.VARCHAR});
   }
 
-  public Integer deleteAsset(String key, String checksum, String bucketName) {
-    return jdbcTemplate.update("DELETE FROM assets WHERE key=? AND checksum=? AND bucketId=?", new Object[]{key, checksum, getBucketId(bucketName)}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.INTEGER});
+  public Integer deleteAsset(String key, String checksum, String bucketName, Timestamp timestamp) {
+    return jdbcTemplate.update("DELETE FROM assets WHERE key=? AND checksum=? AND bucketId=? AND timestamp=?", new Object[]{key, checksum, getBucketId(bucketName), timestamp}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.TIMESTAMP});
+  }
+
+  public boolean assetInUse(String bucketName, String checksum) {
+    return (jdbcTemplate.queryForList("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND checksum=? ORDER BY a.timestamp DESC LIMIT 1", new Object[]{bucketName, checksum}, new int[]{Types.VARCHAR, Types.VARCHAR}).size() > 0);
   }
 
   public Asset getAsset(String bucketName, String key) {
@@ -124,8 +127,8 @@ public class HsqlService {
 
   }
 
-  public Integer insertAsset(String key, String checksum, Integer bucketId, String contentType, String downloadName, long contentSize, Date timestamp) {
-    return jdbcTemplate.update("INSERT INTO assets (key, checksum, timestamp, bucketId, contentType, downloadName, size) VALUES (?,?,?,?,?,?,?)", new Object[]{key, checksum, new Timestamp(timestamp.getTime()), bucketId, contentType, downloadName, contentSize}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.INTEGER});
+  public Integer insertAsset(String key, String checksum, Integer bucketId, String contentType, String downloadName, long contentSize, Timestamp timestamp) {
+    return jdbcTemplate.update("INSERT INTO assets (key, checksum, timestamp, bucketId, contentType, downloadName, size) VALUES (?,?,?,?,?,?,?)", new Object[]{key, checksum, timestamp, bucketId, contentType, downloadName, contentSize}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.INTEGER});
 
   }
 

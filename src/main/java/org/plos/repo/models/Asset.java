@@ -1,6 +1,6 @@
 package org.plos.repo.models;
 
-import java.util.Date;
+import java.sql.Timestamp;
 
 public class Asset {
 
@@ -8,7 +8,7 @@ public class Asset {
   public String url; // assigned by the backend storage (S3, Mogile, FS)
   public String key; // what the user specifies
   public String checksum;  // of the file contents
-  public Date timestamp;   // created time
+  public Timestamp timestamp;   // created time
   public String downloadName;
   public String contentType;
   public long size;

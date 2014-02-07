@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import org.plos.repo.models.Asset;
-import org.plos.repo.models.Bucket;
 import org.plos.repo.service.FileSystemStoreService;
 import org.plos.repo.service.HsqlService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,13 +21,11 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.nio.charset.Charset;
-import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -64,26 +60,11 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
     jsonObjectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
   }
 
-  private void clearData() {
-    List<Asset> assetList = hsqlService.listAllAssets();
-
-    for (Asset asset : assetList) {
-      hsqlService.deleteAsset(asset.key, asset.checksum, asset.bucketName);
-      fileSystemStoreService.deleteAsset(fileSystemStoreService.getAssetLocationString(asset.bucketName, asset.checksum, asset.timestamp));
-    }
-
-    List<Bucket> bucketList = hsqlService.listBuckets();
-
-    for (Bucket bucket : bucketList) {
-      hsqlService.deleteBucket(bucket.bucketName);
-      fileSystemStoreService.deleteBucket(bucket.bucketName);
-    }
-  }
 
   @Test
   public void testControllerCrud() throws Exception {
 
-    clearData();
+    AssetControllerTest.clearData(hsqlService, fileSystemStoreService);
 
 
     // CREATE
@@ -95,7 +76,6 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
         .param("name", "testbucket1"))
-        .andDo(print())
         .andExpect(status().isCreated());
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)

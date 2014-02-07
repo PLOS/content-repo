@@ -14,7 +14,6 @@ import java.nio.channels.WritableByteChannel;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.util.AbstractMap;
-import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -22,6 +21,8 @@ import java.util.regex.Pattern;
 public class FileSystemStoreService implements AssetStore {
 
   private static final Logger log = LoggerFactory.getLogger(FileSystemStoreService.class);
+
+  public static final String digestAlgorithm = "SHA-1";
 
   private String data_dir;
 
@@ -38,8 +39,8 @@ public class FileSystemStoreService implements AssetStore {
     return data_dir + "/" + bucketName + "/";
   }
 
-  public String getAssetLocationString(String bucketName, String checksum, Date timestamp) {
-    return getBucketLocationString(bucketName) + checksum + "-" + timestamp.getTime() + ".md5";
+  public String getAssetLocationString(String bucketName, String checksum) {
+    return getBucketLocationString(bucketName) + checksum;
   }
 
   public static String checksumToString(byte[] checksum) {
@@ -53,11 +54,6 @@ public class FileSystemStoreService implements AssetStore {
   }
 
   public boolean createBucket(String bucketName) {
-
-//    if (!isValidFileName(bucketName)) {
-//      log.error("Error creating bucket. Name contains illegal file path characters: " + bucketName);
-//      return false;
-//    }
 
     File dir = new File(getBucketLocationString(bucketName));
     boolean result = dir.mkdir();
@@ -73,10 +69,10 @@ public class FileSystemStoreService implements AssetStore {
     return dir.delete();
   }
 
-  public boolean saveUploadedAsset(String bucketName, String checksum, String tempFileLocation, Date timestamp)
+  public boolean saveUploadedAsset(String bucketName, String checksum, String tempFileLocation)
   throws Exception {
     File tempFile = new File(tempFileLocation);
-    return tempFile.renameTo(new File(getAssetLocationString(bucketName, checksum, timestamp)));
+    return tempFile.renameTo(new File(getAssetLocationString(bucketName, checksum)));
   }
 
   public boolean deleteAsset(String fileLocation) {
@@ -84,12 +80,12 @@ public class FileSystemStoreService implements AssetStore {
   }
 
   public Map.Entry<String, String> uploadTempAsset(MultipartFile file) throws Exception {
-    String tempFileLocation = data_dir + "/" + UUID.randomUUID().toString() + ".md5.tmp";
+    String tempFileLocation = data_dir + "/" + UUID.randomUUID().toString() + ".tmp";
 
     ReadableByteChannel in = Channels.newChannel(file.getInputStream());
-    MessageDigest md5Digest = MessageDigest.getInstance("MD5");
+    MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
     WritableByteChannel out = Channels.newChannel(
-        new DigestOutputStream(new FileOutputStream(tempFileLocation), md5Digest));
+        new DigestOutputStream(new FileOutputStream(tempFileLocation), digest));
     ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
 
     while (in.read(buffer) != -1) {
@@ -98,7 +94,7 @@ public class FileSystemStoreService implements AssetStore {
       buffer.clear();
     }
 
-    String checksum = checksumToString(md5Digest.digest());
+    String checksum = checksumToString(digest.digest());
 
     return new AbstractMap.SimpleEntry<>(tempFileLocation, checksum);
   }
