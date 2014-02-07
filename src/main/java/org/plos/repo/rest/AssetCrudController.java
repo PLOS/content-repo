@@ -18,7 +18,6 @@
 package org.plos.repo.rest;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -65,6 +64,18 @@ public class AssetCrudController {
 
   // TODO: check at startup that db is in sync with assetStore ?
 
+  private static Gson gson = new Gson();
+
+  private String assetToJsonString(Asset asset, boolean includeVersions) {
+    JsonObject jsonObject = gson.toJsonTree(asset).getAsJsonObject();
+    jsonObject.addProperty("timestamp_unixnano", asset.timestamp.getTime());
+
+    // get the list of versions
+    if (includeVersions)
+      jsonObject.add("versions", gson.toJsonTree(hsqlService.listAssetVersions(asset.bucketName, asset.key)).getAsJsonArray());
+
+    return jsonObject.toString();
+  }
 
   @RequestMapping(method=RequestMethod.GET)
   public @ResponseBody List<Asset> listAllAssets() throws Exception {
@@ -101,21 +112,9 @@ public class AssetCrudController {
     }
 
     if (fetchMetadata != null && fetchMetadata) {
-
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-      //Gson gson = new new Gson();
-      Gson gson = new GsonBuilder().setDateFormat("yyyy").create();
-
-      JsonObject jsonObject = gson.toJsonTree(asset).getAsJsonObject();
-
-      // get the list of versions
-      if (checksum == null)
-        jsonObject.add("versions", gson.toJsonTree(hsqlService.listAssetVersions(bucketName, key)).getAsJsonArray());
-
-
-      response.getWriter().write(jsonObject.toString());
+      response.getWriter().write(assetToJsonString(asset, checksum == null));
       response.setStatus(HttpServletResponse.SC_OK);
-
       return;
     }
 
@@ -225,9 +224,11 @@ public class AssetCrudController {
     }
 
     // add a record to the DB
-    log.info("db asset inserts: " + hsqlService.insertAsset(key, checksum, bucketId, contentType, downloadName, fileSize, new Timestamp(new Date().getTime())));
+    Asset asset = new Asset(null, key, checksum, new Timestamp(new Date().getTime()), downloadName, contentType, fileSize, null, null, bucketId, bucketName);
 
-    return new ResponseEntity<>(checksum, status);
+    log.info("db asset inserts: " + hsqlService.insertAsset(asset));
+
+    return new ResponseEntity<>(assetToJsonString(asset, false), status);
   }
 
   private ResponseEntity<String> update(String key,
@@ -241,23 +242,24 @@ public class AssetCrudController {
     if (bucketId == null)
       return new ResponseEntity<>("Error: Can not find bucket " + bucketName, HttpStatus.INSUFFICIENT_STORAGE);
 
-    Asset existingAsset = hsqlService.getAsset(bucketName, key);
+    Asset asset = hsqlService.getAsset(bucketName, key);
 
-    if (existingAsset == null)
+    if (asset == null)
       return new ResponseEntity<>("Error: Attempting to create a new version of an non-existing asset.", HttpStatus.NOT_ACCEPTABLE);
 
     // copy over values from previous asset, if they are not specified in the request
-    if (contentType == null)
-      contentType = existingAsset.contentType;
+    if (contentType != null)
+      asset.contentType = contentType;
 
-    if (downloadName == null)
-      downloadName = existingAsset.downloadName;
+    if (downloadName != null)
+      asset.downloadName = downloadName;
+
+    asset.timestamp = new Timestamp(new Date().getTime());
 
     if (file == null) {
-      // TODO: duplicate file?
-      log.info("db asset inserts: " + hsqlService.insertAsset(key, existingAsset.checksum, bucketId, contentType, downloadName, existingAsset.size, existingAsset.timestamp));
+      log.info("db asset inserts: " + hsqlService.insertAsset(asset));
 
-      return new ResponseEntity<>(existingAsset.checksum, HttpStatus.OK);
+      return new ResponseEntity<>(asset.checksum, HttpStatus.OK);
     }
 
     Map.Entry<String, String> uploadResult = assetStore.uploadTempAsset(file);  // TODO: make sure this is successful
@@ -282,12 +284,14 @@ public class AssetCrudController {
       assetStore.deleteAsset(tempFileLocation);
     } else {
       assetStore.saveUploadedAsset(bucketName, checksum, tempFileLocation);
+      asset.checksum = checksum;
+      asset.size = fileSize;
     }
 
     // add a record to the DB
-    log.info("db asset inserts: " + hsqlService.insertAsset(key, checksum, bucketId, contentType, downloadName, fileSize, new Timestamp(new Date().getTime())));
+    log.info("db asset inserts: " + hsqlService.insertAsset(asset));
 
-    return new ResponseEntity<>(checksum, status);
+    return new ResponseEntity<>(assetToJsonString(asset, false), status);
   }
 
 }

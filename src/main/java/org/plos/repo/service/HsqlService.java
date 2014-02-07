@@ -24,10 +24,6 @@ public class HsqlService {
 
   private JdbcTemplate jdbcTemplate;
 
-  // TODO: should we consider going completely content addressable like sha1 in git? too dangerous?
-  // would regarding the size as well make me feel any better?
-  // http://stackoverflow.com/questions/9392365/how-would-git-handle-a-sha-1-collision-on-a-blob
-
   @Required
   public void setDataSource(DriverManagerDataSource dataSource) {
     try {
@@ -38,27 +34,13 @@ public class HsqlService {
   }
 
   private static Asset mapAssetRow(ResultSet rs) throws SQLException {
-    Asset asset = new Asset();
-
-    asset.id = rs.getInt("ID"); // TODO: move field names to constants
-    asset.timestamp = rs.getTimestamp("TIMESTAMP");
-    asset.key = rs.getString("KEY");
-    asset.checksum = rs.getString("CHECKSUM");
-    asset.downloadName = rs.getString("DOWNLOADNAME");
-    asset.contentType = rs.getString("CONTENTTYPE");
-    asset.size = rs.getLong("SIZE");
-    asset.tag = rs.getString("TAG");
-    asset.url = rs.getString("URL");
-    asset.bucketId = rs.getInt("BUCKETID");
-    asset.bucketName = rs.getString("BUCKETNAME");
-
-    return asset;
+    return new Asset(rs.getInt("ID"), rs.getString("KEY"), rs.getString("CHECKSUM"), rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"), rs.getLong("SIZE"), rs.getString("URL"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"));
   }
 
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
     Bucket bucket = new Bucket();
 
-    bucket.bucketId = rs.getInt("BUCKETID");
+    bucket.bucketId = rs.getInt("BUCKETID");  // TODO: move string to const
     bucket.bucketName = rs.getString("BUCKETNAME");
 
     return bucket;
@@ -112,24 +94,8 @@ public class HsqlService {
     }
   }
 
-  public Asset getAsset(String bucketName, String key, String checksum, Long fileSize) {
-
-    try {
-      return (Asset)jdbcTemplate.queryForObject("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND key=? AND checksum=? AND size=?", new Object[]{bucketName, key, checksum, fileSize}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.VARCHAR, Types.INTEGER}, new RowMapper<Object>() {
-        @Override
-        public Asset mapRow(ResultSet resultSet, int i) throws SQLException {
-          return mapAssetRow(resultSet);
-        }
-      });
-    } catch (EmptyResultDataAccessException e) {
-      return null;
-    }
-
-  }
-
-  public Integer insertAsset(String key, String checksum, Integer bucketId, String contentType, String downloadName, long contentSize, Timestamp timestamp) {
-    return jdbcTemplate.update("INSERT INTO assets (key, checksum, timestamp, bucketId, contentType, downloadName, size) VALUES (?,?,?,?,?,?,?)", new Object[]{key, checksum, timestamp, bucketId, contentType, downloadName, contentSize}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.INTEGER});
-
+  public Integer insertAsset(Asset asset) {
+    return jdbcTemplate.update("INSERT INTO assets (key, checksum, timestamp, bucketId, contentType, downloadName, size) VALUES (?,?,?,?,?,?,?)", new Object[]{asset.key, asset.checksum, asset.timestamp, asset.bucketId, asset.contentType, asset.downloadName, asset.size}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.INTEGER});
   }
 
   public Integer assetCount() throws Exception {
