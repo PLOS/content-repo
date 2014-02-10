@@ -33,7 +33,7 @@ public class HsqlService {
   }
 
   private static Asset mapAssetRow(ResultSet rs) throws SQLException {
-    return new Asset(rs.getInt("ID"), rs.getString("KEY"), rs.getString("CHECKSUM"), rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"), rs.getLong("SIZE"), rs.getString("URL"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"));
+    return new Asset(rs.getInt("ID"), rs.getString("KEY"), rs.getString("CHECKSUM"), rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"), rs.getLong("SIZE"), rs.getString("URL"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"), Asset.STATUS_VALUES.get(rs.getInt("STATUS")));
   }
 
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
@@ -57,58 +57,65 @@ public class HsqlService {
     return jdbcTemplate.update("DELETE FROM buckets WHERE bucketName=?", new Object[]{bucketName}, new int[]{Types.VARCHAR});
   }
 
-//  public Integer deleteAsset(String key, String checksum, String bucketName, Timestamp timestamp) {
-//    return jdbcTemplate.update("DELETE FROM assets WHERE key=? AND checksum=? AND bucketId=? AND timestamp=?", new Object[]{key, checksum, getBucketId(bucketName), timestamp}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.TIMESTAMP});
-//  }
-
-
   // FOR TESTING ONLY
-  public Integer deleteAsset(String key, String checksum, String bucketName, int versionNumber) {
-    return jdbcTemplate.update("DELETE FROM assets WHERE key=? AND checksum=? AND bucketId=? AND versionNumber=?", new Object[]{key, checksum, getBucketId(bucketName), versionNumber}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.INTEGER});
+  public Integer deleteAsset(String key, String bucketName, int versionNumber) {
+    return jdbcTemplate.update("DELETE FROM assets WHERE key=? AND bucketId=? AND versionNumber=?", new Object[]{key, getBucketId(bucketName), versionNumber}, new int[]{Types.VARCHAR, Types.INTEGER, Types.INTEGER});
   }
 
-  public Integer markAssetDeleted(String key, String checksum, String bucketName, int versionNumber) {
-    return jdbcTemplate.update("UPDATE assets SET tag='deleted' WHERE key=? AND checksum=? AND bucketId=? AND versionNumber=?", new Object[]{key, checksum, getBucketId(bucketName), versionNumber}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.TIMESTAMP});
-  }
-
-  public boolean assetInUse(String bucketName, String checksum) {
-    return (jdbcTemplate.queryForList("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND checksum=? ORDER BY a.timestamp DESC LIMIT 1", new Object[]{bucketName, checksum}, new int[]{Types.VARCHAR, Types.VARCHAR}).size() > 0);
+  public Integer markAssetDeleted(String key, String bucketName, int versionNumber) {
+    return jdbcTemplate.update("UPDATE assets SET status=? WHERE key=? AND bucketId=? AND versionNumber=?", new Object[]{Asset.Status.DELETED.getValue(), key, getBucketId(bucketName), versionNumber}, new int[]{Types.TINYINT, Types.VARCHAR, Types.INTEGER, Types.TIMESTAMP});
   }
 
   public Asset getAsset(String bucketName, String key) {
 
     try {
-      return (Asset) jdbcTemplate.queryForObject("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND key=? AND (tag IS NULL OR NOT tag=?) ORDER BY a.timestamp DESC LIMIT 1", new Object[]{bucketName, key, "deleted"}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.VARCHAR}, new RowMapper<Object>() {
+      Asset asset = (Asset) jdbcTemplate.queryForObject("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND key=? AND status=? ORDER BY versionNumber DESC LIMIT 1", new Object[]{bucketName, key, Asset.Status.USED.getValue()}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TINYINT}, new RowMapper<Object>() {
         @Override
         public Asset mapRow(ResultSet resultSet, int i) throws SQLException {
           return mapAssetRow(resultSet);
         }
       });
+
+      if (asset.status == Asset.Status.DELETED) {
+        log.info("searched for asset which has been deleted. id: " + asset.id);
+        return null;
+      }
+
+      return asset;
+
     } catch (EmptyResultDataAccessException e) {
       return null;
     }
   }
 
-  public Asset getAsset(String bucketName, String key, String checksum) {
+  public Asset getAsset(String bucketName, String key, Integer version) {
 
     try {
-      return (Asset)jdbcTemplate.queryForObject("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND key=? AND checksum=?", new Object[]{bucketName, key, checksum}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.VARCHAR}, new RowMapper<Object>() {
+      Asset asset = (Asset)jdbcTemplate.queryForObject("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND key=? AND versionNumber=?", new Object[]{bucketName, key, version}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.INTEGER}, new RowMapper<Object>() {
         @Override
         public Asset mapRow(ResultSet resultSet, int i) throws SQLException {
           return mapAssetRow(resultSet);
         }
       });
+
+      if (asset.status == Asset.Status.DELETED) {
+        log.info("searched for asset which has been deleted. id: " + asset.id);
+        return null;
+      }
+
+      return asset;
+
     } catch (EmptyResultDataAccessException e) {
       return null;
     }
   }
 
   public Integer insertAsset(Asset asset) {
-    return jdbcTemplate.update("INSERT INTO assets (key, checksum, timestamp, bucketId, contentType, downloadName, size, tag, versionNumber) VALUES (?,?,?,?,?,?,?,?,?)", new Object[]{asset.key, asset.checksum, asset.timestamp, asset.bucketId, asset.contentType, asset.downloadName, asset.size, asset.tag, asset.versionNumber}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.VARCHAR, Types.INTEGER});
+    return jdbcTemplate.update("INSERT INTO assets (key, checksum, timestamp, bucketId, contentType, downloadName, size, tag, versionNumber, status) VALUES (?,?,?,?,?,?,?,?,?,?)", new Object[]{asset.key, asset.checksum, asset.timestamp, asset.bucketId, asset.contentType, asset.downloadName, asset.size, asset.tag, asset.versionNumber, asset.status.getValue()}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.VARCHAR, Types.INTEGER, Types.TINYINT});
   }
 
   public Integer assetCount() throws Exception {
-    return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM assets", Integer.class);
+    return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM assets WHERE status="+Asset.Status.USED.getValue(), Integer.class);
   }
 
   public Boolean insertBucket(String name, Integer id) {
@@ -151,7 +158,7 @@ public class HsqlService {
 
   public List<Asset> listAssetsInBucket(String bucketName) {
 
-    return jdbcTemplate.query("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=?", new Object[]{bucketName}, new int[]{Types.VARCHAR}, new RowMapper<Asset>() {
+    return jdbcTemplate.query("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND status=?", new Object[]{bucketName, Asset.Status.USED.getValue()}, new int[]{Types.VARCHAR, Types.TINYINT}, new RowMapper<Asset>() {
       @Override
       public Asset mapRow(ResultSet resultSet, int i) throws SQLException {
         return mapAssetRow(resultSet);
@@ -160,8 +167,7 @@ public class HsqlService {
   }
 
   public List<Asset> listAssetVersions(String bucketName, String key) {
-
-    return jdbcTemplate.query("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND key=?", new Object[]{bucketName, key}, new int[]{Types.VARCHAR, Types.VARCHAR}, new RowMapper<Asset>() {
+    return jdbcTemplate.query("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND key=? AND status=? ORDER BY versionNumber ASC", new Object[]{bucketName, key, Asset.Status.USED.getValue()}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TINYINT}, new RowMapper<Asset>() {
       @Override
       public Asset mapRow(ResultSet resultSet, int i) throws SQLException {
         return mapAssetRow(resultSet);

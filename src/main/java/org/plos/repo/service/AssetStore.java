@@ -8,6 +8,8 @@ public interface AssetStore {
 
   public String getAssetLocationString(String bucketName, String checksum);
 
+  public boolean assetExists(String bucketName, String checksum);
+
   public boolean createBucket(String bucketName);
 
   public boolean deleteBucket(String bucketName);

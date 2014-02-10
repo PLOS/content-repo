@@ -72,13 +72,16 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
     for (Asset asset : assetList) {
       //hsqlService.markAssetDeleted(asset.key, asset.checksum, asset.bucketName, asset.versionNumber);
-      hsqlService.deleteAsset(asset.key, asset.checksum, asset.bucketName, asset.versionNumber);
+      hsqlService.deleteAsset(asset.key, asset.bucketName, asset.versionNumber);
       fileSystemStoreService.deleteAsset(fileSystemStoreService.getAssetLocationString(asset.bucketName, asset.checksum));
     }
+
+//    fileSystemStoreService.deleteAssets(assetList);
 
     List<Bucket> bucketList = hsqlService.listBuckets();
 
     for (Bucket bucket : bucketList) {
+      //hsqlService.expungeAssets(bucket.bucketName);
       hsqlService.deleteBucket(bucket.bucketName);
       fileSystemStoreService.deleteBucket(bucket.bucketName);
     }
@@ -105,21 +108,21 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
     String testData1 = "test data one goes\nhere.";
     MockMultipartFile file1 = new MockMultipartFile("file", testData1.getBytes());
-    String testData1Checksum = FileSystemStoreService.checksumToString(md.digest(testData1.getBytes()));
+//    String testData1Checksum = FileSystemStoreService.checksumToString(md.digest(testData1.getBytes()));
 
     String testData2 = "test data two goes\nhere.";
     MockMultipartFile file2 = new MockMultipartFile("file", testData2.getBytes());
-    String testData2Checksum = FileSystemStoreService.checksumToString(md.digest(testData2.getBytes()));
+//    String testData2Checksum = FileSystemStoreService.checksumToString(md.digest(testData2.getBytes()));
 
     // CREATE
 
-    String responseString =
+//    String responseString =
     this.mockMvc.perform(fileUpload("/assets").file(file1).param("newAsset", "true")
         .param("key", "asset1").param("bucketName", "testbucketAssets").param("contentType", "text/plain"))
-        .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        .andExpect(status().isCreated());
 
-    JsonObject jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
-    Long asset1Timestamp = jsonObject.get("timestamp_unixnano").getAsLong();
+//    JsonObject jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
+//    Long asset1Timestamp = jsonObject.get("timestamp_unixnano").getAsLong();
 
     this.mockMvc.perform(fileUpload("/assets").file(file1).param("newAsset", "true")
         .param("key", "asset1").param("bucketName", "testbucketAssets").param("contentType", "text/plain"))
@@ -146,13 +149,13 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
         .andExpect(content().string(testData1))
         .andExpect(status().isFound());  // file name assigned by key
 
-    this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset1").param("checksum", testData1Checksum))
+    this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset1").param("version", "0"))
         .andExpect(header().string("Content-Type", "text/plain"))
         .andExpect(header().string("Content-Disposition", "inline; filename=asset1"))
         .andExpect(content().string(testData1))
         .andExpect(status().isFound());  // version accessible
 
-    this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset1").param("checksum", "abc"))
+    this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset1").param("version", "10"))
         .andExpect(status().isNotFound());  // version should not exist
 
     this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset2"))
@@ -182,11 +185,11 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
     // LIST
 
-    responseString = this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset2").param("fetchMetadata", "true"))
+    String responseString = this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset2").param("fetchMetadata", "true"))
         .andExpect(header().string("Content-Type", "application/json"))
         .andReturn().getResponse().getContentAsString();  // file name assigned by user
 
-    jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
+    JsonObject jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
     JsonArray jsonArray = jsonObject.getAsJsonArray("versions");
 
     assert(jsonArray.size() == 2);  // since there should be two versions of this asset
@@ -194,7 +197,7 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
     // DELETE
 
-    this.mockMvc.perform(delete("/assets/testbucketAssets").param("key", "asset1").param("checksum", testData1Checksum).param("versionNumber", "0"))
+    this.mockMvc.perform(delete("/assets/testbucketAssets").param("key", "asset1").param("version", "0"))
         .andDo(print())
         .andExpect(status().isOk());
 

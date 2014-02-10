@@ -1,5 +1,5 @@
 
-import requests
+import requests, json
 import re
 from lxml import etree
 
@@ -45,3 +45,18 @@ values = {'key': 'downloadName', 'bucketName' : 'production', 'contentType' : 'a
 r = requests.post(baseUrl + 'assets/', files=files, data=values)
 print (r.text)
 
+
+# deletion test
+files = {'file': open('/home/jfinger/journal.pone.0085647.pdf', 'rb')}
+values = {'key': 'devguide.pdf', 'bucketName' : 'production', 'contentType' : 'application/pdf', 'newAsset' : False}
+r = requests.post(baseUrl + 'assets/', files=files, data=values)
+print (r.text)
+
+files = {'file': open('/home/jfinger/journal.pone.0085647.pdf', 'rb')}
+values = {'key': 'devguide.pdf', 'bucketName' : 'production', 'contentType' : 'application/pdf', 'newAsset' : False}
+r = requests.post(baseUrl + 'assets/', files=files, data=values)
+print (r.text)
+
+values = {'key': 'devguide.pdf', "checksum":"cbfbb2996a395177f841daf481dce9f2ca9cfa3b", 'versionNumber' : '1'}
+r = requests.delete(baseUrl + 'assets/production', params=values)
+print (r.text)

@@ -35,14 +35,6 @@ public class FileSystemStoreService implements AssetStore {
     return !Pattern.compile("[^-_.A-Za-z0-9]").matcher(name).find();
   }
 
-  private String getBucketLocationString(String bucketName) {
-    return data_dir + "/" + bucketName + "/";
-  }
-
-  public String getAssetLocationString(String bucketName, String checksum) {
-    return getBucketLocationString(bucketName) + checksum;
-  }
-
   public static String checksumToString(byte[] checksum) {
 
     StringBuilder sb = new StringBuilder();
@@ -51,6 +43,18 @@ public class FileSystemStoreService implements AssetStore {
       sb.append(Integer.toHexString((b & 0xFF) | 0x100).substring(1,3));
 
     return sb.toString();
+  }
+
+  private String getBucketLocationString(String bucketName) {
+    return data_dir + "/" + bucketName + "/";
+  }
+
+  public String getAssetLocationString(String bucketName, String checksum) {
+    return getBucketLocationString(bucketName) + checksum;
+  }
+
+  public boolean assetExists(String bucketName, String checksum) {
+    return new File(getAssetLocationString(bucketName, checksum)).exists();
   }
 
   public boolean createBucket(String bucketName) {
