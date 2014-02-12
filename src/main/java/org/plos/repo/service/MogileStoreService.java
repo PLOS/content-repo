@@ -1,14 +1,12 @@
 package org.plos.repo.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.guba.mogilefs.MogileFS;
+import com.guba.mogilefs.PooledMogileFSImpl;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -16,23 +14,20 @@ import java.nio.channels.WritableByteChannel;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
-public class FileSystemStoreService implements AssetStore {
-
-  private static final Logger log = LoggerFactory.getLogger(FileSystemStoreService.class);
+public class MogileStoreService implements AssetStore {
 
   public static final String digestAlgorithm = "SHA-1";
 
-  private String data_dir;
+  private MogileFS mfs;
 
   @Required
-  public void setPreferences(Preferences preferences) {
-    data_dir = preferences.getDataDirectory();
-  }
+  public void setPreferences(Preferences preferences) throws Exception {
 
-  public static boolean isValidFileName(String name) {
-    return !Pattern.compile("[^-_.A-Za-z0-9]").matcher(name).find();
+    mfs = null;
+    mfs = new PooledMogileFSImpl("toast", new String[] { "127.0.0.1:7001" }, 0, 1, 10000);
+//    data_dir = preferences.getDataDirectory();
+
   }
 
   public static String checksumToString(byte[] checksum) {
@@ -46,52 +41,46 @@ public class FileSystemStoreService implements AssetStore {
   }
 
   private String getBucketLocationString(String bucketName) {
-    return data_dir + "/" + bucketName + "/";
+    return bucketName + "/";
   }
 
-  // TODO: move to protected and share it. abstract instead of interface ?
   public String getAssetLocationString(String bucketName, String checksum) {
     return getBucketLocationString(bucketName) + checksum;
   }
 
   public boolean assetExists(String bucketName, String checksum) {
-    return new File(getAssetLocationString(bucketName, checksum)).exists();
+    try {
+      InputStream in = mfs.getFileStream(getAssetLocationString(bucketName, checksum));
+
+      if (in == null) {
+        in.close();
+        return false;
+      }
+
+      in.close();
+      return true;
+
+    } catch (Exception e) {
+      return false;
+    }
   }
 
   public InputStream getInputStream(String bucketName, String checksum) throws Exception {
-    return new FileInputStream(getAssetLocationString(bucketName, checksum));
+    return mfs.getFileStream(getAssetLocationString(bucketName, checksum));
   }
 
   public boolean createBucket(String bucketName) {
-
-    File dir = new File(getBucketLocationString(bucketName));
-    boolean result = dir.mkdir();
-
-    if (!result)
-      log.debug("Error while creating bucket. Directory was not able to be created : " + getBucketLocationString(bucketName));
-
-    return result;
+    return true;
   }
 
   public boolean deleteBucket(String bucketName) {
-    File dir = new File(getBucketLocationString(bucketName));
-    return dir.delete();
-  }
-
-  public boolean saveUploadedAsset(String bucketName, String checksum, String tempFileLocation)
-  throws Exception {
-    File tempFile = new File(tempFileLocation);
-    return tempFile.renameTo(new File(getAssetLocationString(bucketName, checksum)));
-  }
-
-  public boolean deleteAsset(String fileLocation) {
-    return new File(fileLocation).delete();
+    return true;
   }
 
   public UploadInfo uploadTempAsset(final MultipartFile file) throws Exception {
-    final String tempFileLocation = data_dir + "/" + UUID.randomUUID().toString() + ".tmp";
+    final String tempFileLocation = UUID.randomUUID().toString() + ".tmp";
 
-    FileOutputStream fos = new FileOutputStream(tempFileLocation);
+    OutputStream fos = mfs.newFile(tempFileLocation, "testclass", file.getSize());
 
     ReadableByteChannel in = Channels.newChannel(file.getInputStream());
     MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
@@ -107,9 +96,10 @@ public class FileSystemStoreService implements AssetStore {
 
     final String checksum = checksumToString(digest.digest());
 
-    in.close();
     out.close();
-    // fos.close();
+    in.close();
+//    fos.close();
+
 
     return new UploadInfo(){
       @Override
@@ -130,4 +120,21 @@ public class FileSystemStoreService implements AssetStore {
 
   }
 
+  public boolean saveUploadedAsset(String bucketName, String checksum, String tempFileLocation) throws Exception {
+    try {
+      mfs.rename(tempFileLocation, getAssetLocationString(bucketName, checksum));
+      return true;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  public boolean deleteAsset(String fileLocation) {
+    try {
+      mfs.delete(fileLocation);
+      return true;
+    } catch (Exception e) {
+      return false;
+    }
+  }
 }

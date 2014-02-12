@@ -34,6 +34,9 @@ public class BucketController {
   public ResponseEntity<String> create(@RequestParam String name,
                                        @RequestParam(required = false) Integer id) {
 
+    if (hsqlService.getBucketId(name) != null)
+      return new ResponseEntity<>("Bucket already exists", HttpStatus.NOT_EXTENDED);
+
     if (!FileSystemStoreService.isValidFileName(name))
       return new ResponseEntity<>("Unable to create bucket. Name contains illegal file path characters: " + name, HttpStatus.PRECONDITION_FAILED);
 

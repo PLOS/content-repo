@@ -19,7 +19,6 @@ package org.plos.repo.rest;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.plos.repo.models.Asset;
 import org.plos.repo.service.AssetStore;
@@ -40,14 +39,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 @Controller
 @RequestMapping("/assets")
@@ -91,7 +87,7 @@ public class AssetCrudController {
             @RequestParam(required = true) String key,
             @RequestParam(required = false) Integer version,
             @RequestParam(required = false) Boolean fetchMetadata,
-            HttpServletResponse response) throws IOException {
+            HttpServletResponse response) {
 
     Asset asset;
     if (version == null)
@@ -108,8 +104,13 @@ public class AssetCrudController {
 
     if (fetchMetadata != null && fetchMetadata) {
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-      response.getWriter().write(assetToJsonString(asset, version == null));
-      response.setStatus(HttpServletResponse.SC_OK);
+      try {
+        response.getWriter().write(assetToJsonString(asset, version == null));
+        response.setStatus(HttpServletResponse.SC_OK);
+      } catch (IOException e) {
+        log.error("Error reading metadata", e);
+        response.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
+      }
       return;
     }
 
@@ -130,11 +131,12 @@ public class AssetCrudController {
         response.setContentType(asset.contentType);
       response.setHeader("Content-Disposition", "inline; filename=" + exportFileName);
 
-      InputStream is = new FileInputStream(assetStore.getAssetLocationString(bucketName, asset.checksum));
+      InputStream is = assetStore.getInputStream(bucketName, asset.checksum);
       IOUtils.copy(is, response.getOutputStream());
       response.setStatus(HttpServletResponse.SC_FOUND);
       response.flushBuffer();
-    } catch (IOException ex) {
+      is.close();
+    } catch (Exception ex) {
       response.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
       log.info("Error writing file to output stream.", ex);
     }
@@ -192,39 +194,34 @@ public class AssetCrudController {
     if (existingAsset != null)
       return new ResponseEntity<>("Error: Attempting to create an asset with a key that already exists.", HttpStatus.CONFLICT);
 
-    Map.Entry<String, String> uploadResult;
+    AssetStore.UploadInfo uploadInfo;
     try {
-      uploadResult = assetStore.uploadTempAsset(file);
+      uploadInfo = assetStore.uploadTempAsset(file);
     } catch (Exception e) {
       log.error("Error during upload", e);
-      return new ResponseEntity<>("Error: A problem occured while uploading the file.", HttpStatus.PRECONDITION_FAILED);
+      return new ResponseEntity<>("Error: A problem occurred while uploading the file.", HttpStatus.PRECONDITION_FAILED);
     }
-
-    String tempFileLocation = uploadResult.getKey();
-    String checksum = uploadResult.getValue();
-    File tempFile = new File(tempFileLocation);
-    long fileSize = tempFile.length();
 
     HttpStatus status = HttpStatus.CREATED; // status indicates if it made it to the DB, not the asset store
 
     // determine if the asset should be added to the store or not
-    if (assetStore.assetExists(bucketName, checksum)) {
+    if (assetStore.assetExists(bucketName, uploadInfo.getChecksum())) {
 
-      if (FileUtils.contentEquals(tempFile, new File(assetStore.getAssetLocationString(bucketName, checksum)))) {
-        log.info("not adding asset to store since content exists");
-      } else {
-        log.info("checksum collision!!");
-        status = HttpStatus.CONFLICT;
-      }
+//      if (FileUtils.contentEquals(tempFile, new File(assetStore.getAssetLocationString(bucketName, checksum)))) {
+//        log.info("not adding asset to store since content exists");
+//      } else {
+//        log.info("checksum collision!!");
+//        status = HttpStatus.CONFLICT;
+//      }
 
       // dont bother storing the file since the data already exists in the system
-      assetStore.deleteAsset(tempFileLocation);
+      assetStore.deleteAsset(uploadInfo.getTempLocation());
     } else {
-      assetStore.saveUploadedAsset(bucketName, checksum, tempFileLocation);
+      assetStore.saveUploadedAsset(bucketName, uploadInfo.getChecksum(), uploadInfo.getTempLocation());
     }
 
     // add a record to the DB
-    Asset asset = new Asset(null, key, checksum, new Timestamp(new Date().getTime()), downloadName, contentType, fileSize, null, null, bucketId, bucketName, 0, Asset.Status.USED);
+    Asset asset = new Asset(null, key, uploadInfo.getChecksum(), new Timestamp(new Date().getTime()), downloadName, contentType, uploadInfo.getSize(), null, null, bucketId, bucketName, 0, Asset.Status.USED);
 
     log.info("db asset inserts: " + hsqlService.insertAsset(asset));
 
@@ -254,6 +251,8 @@ public class AssetCrudController {
     if (downloadName != null)
       asset.downloadName = downloadName;
 
+    // TODO: wrap this in a transaction since versionNumber is being updated ?
+
     asset.timestamp = new Timestamp(new Date().getTime());
     asset.versionNumber++;
     asset.id = null;  // remove this since it refers to the old asset
@@ -264,37 +263,32 @@ public class AssetCrudController {
       return new ResponseEntity<>(assetToJsonString(asset, false), HttpStatus.OK);
     }
 
-    Map.Entry<String, String> uploadResult;
+    AssetStore.UploadInfo uploadInfo;
     try {
-      uploadResult = assetStore.uploadTempAsset(file);
+      uploadInfo = assetStore.uploadTempAsset(file);
     } catch (Exception e) {
       log.error("Error during upload", e);
       return new ResponseEntity<>("Error: A problem occured while uploading the file.", HttpStatus.PRECONDITION_FAILED);
     }
 
-    String tempFileLocation = uploadResult.getKey();
-    String checksum = uploadResult.getValue();
-    File tempFile = new File(tempFileLocation);
-    long fileSize = tempFile.length();
-
     HttpStatus status = HttpStatus.OK; // note, different from 'create'
 
     // determine if the asset should be added to the store or not
-    if (assetStore.assetExists(bucketName, checksum)) {
+    if (assetStore.assetExists(bucketName, uploadInfo.getChecksum())) {
 
-      if (FileUtils.contentEquals(tempFile, new File(assetStore.getAssetLocationString(bucketName, checksum)))) {
-        log.info("not adding asset to store since content exists");
-      } else {
-        log.info("checksum collision!!");
-        status = HttpStatus.CONFLICT;
-      }
+//      if (FileUtils.contentEquals(tempFile, new File(assetStore.getAssetLocationString(bucketName, checksum)))) {
+//        log.info("not adding asset to store since content exists");
+//      } else {
+//        log.info("checksum collision!!");
+//        status = HttpStatus.CONFLICT;
+//      }
 
       // dont bother storing the file since the data already exists in the system
-      assetStore.deleteAsset(tempFileLocation);
+      assetStore.deleteAsset(uploadInfo.getTempLocation());
     } else {
-      assetStore.saveUploadedAsset(bucketName, checksum, tempFileLocation);
-      asset.checksum = checksum;
-      asset.size = fileSize;
+      assetStore.saveUploadedAsset(bucketName, uploadInfo.getChecksum(), uploadInfo.getTempLocation());
+      asset.checksum = uploadInfo.getChecksum();
+      asset.size = uploadInfo.getSize();
     }
 
     // add a record to the DB

@@ -8,7 +8,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.plos.repo.models.Asset;
 import org.plos.repo.models.Bucket;
-import org.plos.repo.service.FileSystemStoreService;
+import org.plos.repo.service.AssetStore;
 import org.plos.repo.service.HsqlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -24,7 +24,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.nio.charset.Charset;
-import java.security.MessageDigest;
 import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -42,10 +41,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
   @Autowired
-  HsqlService hsqlService;
+  private HsqlService hsqlService;
 
   @Autowired
-  FileSystemStoreService fileSystemStoreService;
+  private AssetStore assetStore;
 
   @Autowired
   private WebApplicationContext wac;
@@ -67,23 +66,20 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
     jsonObjectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
   }
 
-  public static void clearData(HsqlService hsqlService, FileSystemStoreService fileSystemStoreService) {
+  public static void clearData(HsqlService hsqlService, AssetStore assetStore) {
     List<Asset> assetList = hsqlService.listAllAssets();
 
     for (Asset asset : assetList) {
       //hsqlService.markAssetDeleted(asset.key, asset.checksum, asset.bucketName, asset.versionNumber);
       hsqlService.deleteAsset(asset.key, asset.bucketName, asset.versionNumber);
-      fileSystemStoreService.deleteAsset(fileSystemStoreService.getAssetLocationString(asset.bucketName, asset.checksum));
+      assetStore.deleteAsset(assetStore.getAssetLocationString(asset.bucketName, asset.checksum));
     }
-
-//    fileSystemStoreService.deleteAssets(assetList);
 
     List<Bucket> bucketList = hsqlService.listBuckets();
 
     for (Bucket bucket : bucketList) {
-      //hsqlService.expungeAssets(bucket.bucketName);
       hsqlService.deleteBucket(bucket.bucketName);
-      fileSystemStoreService.deleteBucket(bucket.bucketName);
+      assetStore.deleteBucket(bucket.bucketName);
     }
   }
 
@@ -92,9 +88,7 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
     Gson gson = new Gson();
 
-    clearData(hsqlService, fileSystemStoreService);
-
-    MessageDigest md = MessageDigest.getInstance(FileSystemStoreService.digestAlgorithm);
+    clearData(hsqlService, assetStore);
 
     this.mockMvc.perform(get("/assets").accept(APPLICATION_JSON_UTF8))
         .andExpect(status().isOk())
@@ -108,15 +102,12 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
     String testData1 = "test data one goes\nhere.";
     MockMultipartFile file1 = new MockMultipartFile("file", testData1.getBytes());
-//    String testData1Checksum = FileSystemStoreService.checksumToString(md.digest(testData1.getBytes()));
 
     String testData2 = "test data two goes\nhere.";
     MockMultipartFile file2 = new MockMultipartFile("file", testData2.getBytes());
-//    String testData2Checksum = FileSystemStoreService.checksumToString(md.digest(testData2.getBytes()));
 
     // CREATE
 
-//    String responseString =
     this.mockMvc.perform(fileUpload("/assets").file(file1).param("newAsset", "true")
         .param("key", "asset1").param("bucketName", "testbucketAssets").param("contentType", "text/plain"))
         .andExpect(status().isCreated());

@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 
 import requests, json
 import re
@@ -15,10 +16,10 @@ print (r.text)
 # print (r.status_code)
 
 
-files = {'file': open('/home/jfinger/mounts.log', 'rb')}
-values = {'key': 'testfile.log', 'bucketName' : 'production', 'contentType' : 'text/plain', 'newAsset' : 'true'}
-r = requests.post(baseUrl + 'assets/', files=files, data=values)
-print (r.text)
+# files = {'file': open('/home/jfinger/mounts.log', 'rb')}
+# values = {'key': 'testfile.log', 'bucketName' : 'production', 'contentType' : 'text/plain', 'newAsset' : 'true'}
+# r = requests.post(baseUrl + 'assets/', files=files, data=values)
+# print (r.text)
 
 files = {'file': open('/home/jfinger/looseFiles/DH3.8_DeveloperGuide.pdf', 'rb')}
 values = {'key': 'devguide.pdf', 'bucketName' : 'production', 'contentType' : 'application/pdf', 'newAsset' : 'true'}
@@ -57,6 +58,6 @@ values = {'key': 'devguide.pdf', 'bucketName' : 'production', 'contentType' : 'a
 r = requests.post(baseUrl + 'assets/', files=files, data=values)
 print (r.text)
 
-values = {'key': 'devguide.pdf', "checksum":"cbfbb2996a395177f841daf481dce9f2ca9cfa3b", 'versionNumber' : '1'}
+values = {'key': 'devguide.pdf', 'version' : '1'}
 r = requests.delete(baseUrl + 'assets/production', params=values)
 print (r.text)

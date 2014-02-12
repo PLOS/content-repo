@@ -46,7 +46,6 @@
 
 <ul>
   <li><a href="/buckets">/buckets</a></li>
-  <li><a href="/assets/count">/assets/count</a></li>
 </ul>
 
 <%--<hr/>--%>
