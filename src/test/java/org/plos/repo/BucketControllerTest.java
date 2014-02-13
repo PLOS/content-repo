@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import org.plos.repo.service.FileSystemStoreService;
+import org.plos.repo.service.AssetStore;
 import org.plos.repo.service.HsqlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -38,7 +38,8 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
   HsqlService hsqlService;
 
   @Autowired
-  FileSystemStoreService fileSystemStoreService;
+  AssetStore assetStore;
+//  FileSystemStoreService fileSystemStoreService;
 
   @Autowired
   private WebApplicationContext wac;
@@ -64,7 +65,7 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
   @Test
   public void testControllerCrud() throws Exception {
 
-    AssetControllerTest.clearData(hsqlService, fileSystemStoreService);
+    AssetControllerTest.clearData(hsqlService, assetStore);
 
 
     // CREATE
@@ -80,7 +81,7 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
         .param("name", "testbucket1"))
-        .andExpect(status().isConflict());
+        .andExpect(status().isNotExtended());
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
         .param("name", "testbucket2").param("id", "5"))

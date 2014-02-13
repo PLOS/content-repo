@@ -2,7 +2,6 @@ package org.plos.repo.rest;
 
 import org.plos.repo.models.Bucket;
 import org.plos.repo.service.AssetStore;
-import org.plos.repo.service.FileSystemStoreService;
 import org.plos.repo.service.HsqlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -37,7 +36,7 @@ public class BucketController {
     if (hsqlService.getBucketId(name) != null)
       return new ResponseEntity<>("Bucket already exists", HttpStatus.NOT_EXTENDED);
 
-    if (!FileSystemStoreService.isValidFileName(name))
+    if (!AssetStore.isValidFileName(name))
       return new ResponseEntity<>("Unable to create bucket. Name contains illegal file path characters: " + name, HttpStatus.PRECONDITION_FAILED);
 
     if (!assetStore.createBucket(name))

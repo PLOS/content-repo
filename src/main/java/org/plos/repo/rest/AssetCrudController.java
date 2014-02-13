@@ -22,7 +22,6 @@ import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.plos.repo.models.Asset;
 import org.plos.repo.service.AssetStore;
-import org.plos.repo.service.FileSystemStoreService;
 import org.plos.repo.service.HsqlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,7 +119,7 @@ public class AssetCrudController {
 
     if (asset.downloadName != null)
       exportFileName = asset.downloadName;
-    else if (FileSystemStoreService.isValidFileName(asset.key))
+    else if (AssetStore.isValidFileName(asset.key))
       exportFileName = asset.key;
 
     try {

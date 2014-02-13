@@ -11,15 +11,10 @@ r = requests.post(baseUrl + 'buckets/', data={'name' : 'production', 'id':0})
 print (r.text)
 r = requests.post(baseUrl + 'buckets/', data={'name' : 'staging'})
 print (r.text)
-# r = requests.post(baseUrl + 'buckets/', data={'name' : 'bad?name', 'id':2})
-# print (r.text)
-# print (r.status_code)
+r = requests.post(baseUrl + 'buckets/', data={'name' : 'bad?name', 'id':2})
+print (r.text)
+print (r.status_code)
 
-
-# files = {'file': open('/home/jfinger/mounts.log', 'rb')}
-# values = {'key': 'testfile.log', 'bucketName' : 'production', 'contentType' : 'text/plain', 'newAsset' : 'true'}
-# r = requests.post(baseUrl + 'assets/', files=files, data=values)
-# print (r.text)
 
 files = {'file': open('/home/jfinger/looseFiles/DH3.8_DeveloperGuide.pdf', 'rb')}
 values = {'key': 'devguide.pdf', 'bucketName' : 'production', 'contentType' : 'application/pdf', 'newAsset' : 'true'}

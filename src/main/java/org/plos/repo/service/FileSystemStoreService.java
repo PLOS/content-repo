@@ -16,33 +16,16 @@ import java.nio.channels.WritableByteChannel;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
-public class FileSystemStoreService implements AssetStore {
+public class FileSystemStoreService extends AssetStore {
 
   private static final Logger log = LoggerFactory.getLogger(FileSystemStoreService.class);
-
-  public static final String digestAlgorithm = "SHA-1";
 
   private String data_dir;
 
   @Required
   public void setPreferences(Preferences preferences) {
     data_dir = preferences.getDataDirectory();
-  }
-
-  public static boolean isValidFileName(String name) {
-    return !Pattern.compile("[^-_.A-Za-z0-9]").matcher(name).find();
-  }
-
-  public static String checksumToString(byte[] checksum) {
-
-    StringBuilder sb = new StringBuilder();
-
-    for (byte b : checksum)
-      sb.append(Integer.toHexString((b & 0xFF) | 0x100).substring(1,3));
-
-    return sb.toString();
   }
 
   private String getBucketLocationString(String bucketName) {
@@ -109,7 +92,6 @@ public class FileSystemStoreService implements AssetStore {
 
     in.close();
     out.close();
-    // fos.close();
 
     return new UploadInfo(){
       @Override

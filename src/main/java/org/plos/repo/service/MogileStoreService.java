@@ -15,29 +15,16 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.util.UUID;
 
-public class MogileStoreService implements AssetStore {
+public class MogileStoreService extends AssetStore {
 
-  public static final String digestAlgorithm = "SHA-1";
+  public static final String mogileFileClass = "";
 
-  private MogileFS mfs;
+  private MogileFS mfs = null;
 
   @Required
   public void setPreferences(Preferences preferences) throws Exception {
-
-    mfs = null;
-    mfs = new PooledMogileFSImpl("toast", new String[] { "127.0.0.1:7001" }, 0, 1, 10000);
+    mfs = new PooledMogileFSImpl("toast", new String[] { "127.0.0.1:7001" }, 1, 1, 10000);
 //    data_dir = preferences.getDataDirectory();
-
-  }
-
-  public static String checksumToString(byte[] checksum) {
-
-    StringBuilder sb = new StringBuilder();
-
-    for (byte b : checksum)
-      sb.append(Integer.toHexString((b & 0xFF) | 0x100).substring(1,3));
-
-    return sb.toString();
   }
 
   private String getBucketLocationString(String bucketName) {
@@ -66,10 +53,17 @@ public class MogileStoreService implements AssetStore {
   }
 
   public InputStream getInputStream(String bucketName, String checksum) throws Exception {
+
+    // TODO: return location instead of stream?
+    // ie - http://127.0.0.20:7500/dev1/0/000/000/0000000006.fid
+
     return mfs.getFileStream(getAssetLocationString(bucketName, checksum));
   }
 
   public boolean createBucket(String bucketName) {
+
+    // TODO: use mogile domains instead of filepaths?
+
     return true;
   }
 
@@ -80,7 +74,7 @@ public class MogileStoreService implements AssetStore {
   public UploadInfo uploadTempAsset(final MultipartFile file) throws Exception {
     final String tempFileLocation = UUID.randomUUID().toString() + ".tmp";
 
-    OutputStream fos = mfs.newFile(tempFileLocation, "testclass", file.getSize());
+    OutputStream fos = mfs.newFile(tempFileLocation, mogileFileClass, file.getSize());
 
     ReadableByteChannel in = Channels.newChannel(file.getInputStream());
     MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
@@ -98,8 +92,6 @@ public class MogileStoreService implements AssetStore {
 
     out.close();
     in.close();
-//    fos.close();
-
 
     return new UploadInfo(){
       @Override
