@@ -23,8 +23,10 @@ public class MogileStoreService extends AssetStore {
 
   @Required
   public void setPreferences(Preferences preferences) throws Exception {
-    mfs = new PooledMogileFSImpl("toast", new String[] { "127.0.0.1:7001" }, 1, 1, 10000);
-//    data_dir = preferences.getDataDirectory();
+
+    // TODO: figure out how to handle domains
+
+    mfs = new PooledMogileFSImpl("toast", preferences.getMogileTrackers(), 1, 1, 100);
   }
 
   private String getBucketLocationString(String bucketName) {

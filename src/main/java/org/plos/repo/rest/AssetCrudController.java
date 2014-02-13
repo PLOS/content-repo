@@ -267,7 +267,7 @@ public class AssetCrudController {
       uploadInfo = assetStore.uploadTempAsset(file);
     } catch (Exception e) {
       log.error("Error during upload", e);
-      return new ResponseEntity<>("Error: A problem occured while uploading the file.", HttpStatus.PRECONDITION_FAILED);
+      return new ResponseEntity<>("Error: A problem occurred while uploading the file.", HttpStatus.PRECONDITION_FAILED);
     }
 
     HttpStatus status = HttpStatus.OK; // note, different from 'create'

@@ -17,6 +17,8 @@ public class Preferences {
 
   private static final String FIELD_DATADIR = "data_directory";
 
+  private static final String MOGILE_TRACKERS = "mogile_trackers";
+
   private String[] configFiles;
 
   @Required
@@ -38,6 +40,10 @@ public class Preferences {
 
   public String getHsqldbConnectionString() {
     return "jdbc:hsqldb:" + getDataDirectory() + "/" + HsqlService.fileName;
+  }
+
+  public String[] getMogileTrackers() {
+    return loadConfigs().getProperty(MOGILE_TRACKERS).split(",");
   }
 
   private Properties loadConfigs() {

@@ -26,6 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -39,7 +40,6 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
 
   @Autowired
   AssetStore assetStore;
-//  FileSystemStoreService fileSystemStoreService;
 
   @Autowired
   private WebApplicationContext wac;
@@ -110,6 +110,7 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
 
     this.mockMvc.perform(fileUpload("/assets").file(new MockMultipartFile("file", "test".getBytes())).param("newAsset", "true")
         .param("key", "asset1").param("bucketName", "testbucket2"))
+        .andDo(print())
         .andExpect(status().isCreated());
 
     this.mockMvc.perform(delete("/buckets/testbucket2")).andExpect(status().isNotModified());
