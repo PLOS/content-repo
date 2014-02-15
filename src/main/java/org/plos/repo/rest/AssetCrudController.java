@@ -17,6 +17,7 @@
 
 package org.plos.repo.rest;
 
+import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
@@ -37,11 +38,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 
 @Controller
@@ -49,6 +52,13 @@ import java.util.List;
 public class AssetCrudController {
 
   private static final Logger log = LoggerFactory.getLogger(AssetCrudController.class);
+
+  private static final Joiner REPROXY_URL_JOINER = Joiner.on(' ');
+
+  private static final int REPROXY_CACHE_FOR_VALUE = 6 * 60 * 60; // TODO: Make configurable
+
+  private static final String REPROXY_CACHE_FOR_HEADER =
+      REPROXY_CACHE_FOR_VALUE + "; Last-Modified Content-Type Content-Disposition";
 
   @Autowired
   private AssetStore assetStore;
@@ -80,13 +90,27 @@ public class AssetCrudController {
 //    return hsqlService.listAssetsInBucket(bucketName);
 //  }
 
+  private boolean clientSupportsReproxy(HttpServletRequest request) {
+    Enumeration<?> headers = request.getHeaders("X-Proxy-Capabilities");
+    if (headers == null) {
+      return false;
+    }
+    while (headers.hasMoreElements()) {
+      if ("reproxy-file".equals(headers.nextElement())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @RequestMapping(value="{bucketName}", method=RequestMethod.GET)
   public @ResponseBody
   void read(@PathVariable String bucketName,
             @RequestParam(required = true) String key,
             @RequestParam(required = false) Integer version,
             @RequestParam(required = false) Boolean fetchMetadata,
-            HttpServletResponse response) {
+            HttpServletRequest request,
+            HttpServletResponse response) throws Exception {
 
     Asset asset;
     if (version == null)
@@ -113,7 +137,18 @@ public class AssetCrudController {
       return;
     }
 
-    // if they want the binary data
+    // if they want redirect URLs
+
+    if (clientSupportsReproxy(request) && assetStore.hasXReproxy()) {
+
+      response.setHeader("X-Reproxy-URL", REPROXY_URL_JOINER.join(assetStore.getRedirectURLs(bucketName, asset.checksum)));
+      response.setHeader("X-Reproxy-Cache-For", REPROXY_CACHE_FOR_HEADER);
+      response.setStatus(HttpServletResponse.SC_OK);
+
+      return;
+    }
+
+    // else assume they want the binary data
 
     String exportFileName = "content";
 

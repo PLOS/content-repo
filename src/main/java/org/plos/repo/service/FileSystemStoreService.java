@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -32,7 +33,6 @@ public class FileSystemStoreService extends AssetStore {
     return data_dir + "/" + bucketName + "/";
   }
 
-  // TODO: move to protected and share it. abstract instead of interface ?
   public String getAssetLocationString(String bucketName, String checksum) {
     return getBucketLocationString(bucketName) + checksum;
   }
@@ -54,6 +54,14 @@ public class FileSystemStoreService extends AssetStore {
       log.debug("Error while creating bucket. Directory was not able to be created : " + getBucketLocationString(bucketName));
 
     return result;
+  }
+
+  public Boolean hasXReproxy() {
+    return false;
+  }
+
+  public URL[] getRedirectURLs(String bucketName, String checksum) {
+    return new URL[]{}; // since the filesystem is not reproxyable
   }
 
   public boolean deleteBucket(String bucketName) {

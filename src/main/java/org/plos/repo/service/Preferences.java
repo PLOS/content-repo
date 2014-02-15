@@ -1,5 +1,7 @@
 package org.plos.repo.service;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
@@ -44,6 +46,11 @@ public class Preferences {
 
   public String[] getMogileTrackers() {
     return loadConfigs().getProperty(MOGILE_TRACKERS).split(",");
+  }
+
+  public AWSCredentials getAWScredentials() {
+    Properties properties = loadConfigs();
+    return new BasicAWSCredentials(properties.getProperty("aws_access_key"), properties.getProperty("aws_secret_key"));
   }
 
   private Properties loadConfigs() {

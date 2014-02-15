@@ -3,6 +3,7 @@ package org.plos.repo.service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.net.URL;
 import java.util.regex.Pattern;
 
 public abstract class AssetStore {
@@ -30,6 +31,9 @@ public abstract class AssetStore {
     return sb.toString();
   }
 
+  abstract public Boolean hasXReproxy();
+
+  abstract public URL[] getRedirectURLs(String bucketName, String checksum) throws Exception;
 
   abstract public String getAssetLocationString(String bucketName, String checksum);
 

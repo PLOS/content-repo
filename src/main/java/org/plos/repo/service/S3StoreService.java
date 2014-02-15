@@ -1,7 +1,6 @@
 package org.plos.repo.service;
 
-import com.guba.mogilefs.MogileFS;
-import com.guba.mogilefs.PooledMogileFSImpl;
+import com.amazonaws.services.s3.AmazonS3Client;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,17 +15,13 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.util.UUID;
 
-public class MogileStoreService extends AssetStore {
+public class S3StoreService extends AssetStore {
 
-  public static final String mogileFileClass = "";
-
-  public static final String mogileDefaultDomain = "toast";
-
-  private MogileFS mfs = null;
+  private AmazonS3Client s3Client = null;
 
   @Required
   public void setPreferences(Preferences preferences) throws Exception {
-    mfs = new PooledMogileFSImpl(mogileDefaultDomain, preferences.getMogileTrackers(), 1, 1, 100);
+    s3Client = new AmazonS3Client(preferences.getAWScredentials());
   }
 
   private String getBucketLocationString(String bucketName) {

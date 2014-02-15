@@ -163,6 +163,15 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
         .andExpect(status().isNotFound());  // asset should not exist
 
 
+    // READ REPROXY
+
+    if (assetStore.hasXReproxy()){
+      this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset1").param("version", "0").header("X-Proxy-Capabilities", "reproxy-file"))
+          .andDo(print())
+          .andExpect(status().isOk())
+          .andExpect(content().string(""));
+    }
+
     // UPDATE
 
     this.mockMvc.perform(fileUpload("/assets").file(file2).param("newAsset", "false")
@@ -189,7 +198,6 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
     // DELETE
 
     this.mockMvc.perform(delete("/assets/testbucketAssets").param("key", "asset1").param("version", "0"))
-        .andDo(print())
         .andExpect(status().isOk());
 
     // TODO: check asset deduplication somewhere
