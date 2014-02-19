@@ -1,5 +1,7 @@
 package org.plos.repo.service;
 
+import org.plos.repo.models.Asset;
+import org.plos.repo.models.Bucket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
@@ -37,21 +39,21 @@ public class FileSystemStoreService extends AssetStore {
     return getBucketLocationString(bucketName) + checksum;
   }
 
-  public boolean assetExists(String bucketName, String checksum) {
-    return new File(getAssetLocationString(bucketName, checksum)).exists();
+  public boolean assetExists(Asset asset) {
+    return new File(getAssetLocationString(asset.bucketName, asset.checksum)).exists();
   }
 
-  public InputStream getInputStream(String bucketName, String checksum) throws Exception {
-    return new FileInputStream(getAssetLocationString(bucketName, checksum));
+  public InputStream getInputStream(Asset asset) throws Exception {
+    return new FileInputStream(getAssetLocationString(asset.bucketName, asset.checksum));
   }
 
-  public boolean createBucket(String bucketName) {
+  public boolean createBucket(Bucket bucket) {
 
-    File dir = new File(getBucketLocationString(bucketName));
+    File dir = new File(getBucketLocationString(bucket.bucketName));
     boolean result = dir.mkdir();
 
     if (!result)
-      log.debug("Error while creating bucket. Directory was not able to be created : " + getBucketLocationString(bucketName));
+      log.debug("Error while creating bucket. Directory was not able to be created : " + getBucketLocationString(bucket.bucketName));
 
     return result;
   }
@@ -60,27 +62,27 @@ public class FileSystemStoreService extends AssetStore {
     return false;
   }
 
-  public URL[] getRedirectURLs(String bucketName, String checksum) {
+  public URL[] getRedirectURLs(Asset asset) {
     return new URL[]{}; // since the filesystem is not reproxyable
   }
 
-  public boolean deleteBucket(String bucketName) {
-    File dir = new File(getBucketLocationString(bucketName));
+  public boolean deleteBucket(Bucket bucket) {
+    File dir = new File(getBucketLocationString(bucket.bucketName));
     return dir.delete();
   }
 
-  public boolean saveUploadedAsset(String bucketName, String checksum, String tempFileLocation)
+  public boolean saveUploadedAsset(Bucket bucket, UploadInfo uploadInfo)
   throws Exception {
-    File tempFile = new File(tempFileLocation);
-    return tempFile.renameTo(new File(getAssetLocationString(bucketName, checksum)));
+    File tempFile = new File(uploadInfo.getTempLocation());
+    return tempFile.renameTo(new File(getAssetLocationString(bucket.bucketName, uploadInfo.getChecksum())));
   }
 
-  public boolean deleteAsset(String bucketName, String fileName) {
-    return new File(getAssetLocationString(bucketName, fileName)).delete();
+  public boolean deleteAsset(Asset asset) {
+    return new File(getAssetLocationString(asset.bucketName, asset.checksum)).delete();
   }
 
-  public boolean deleteTempUpload(String tempLocation) {
-    return new File(tempLocation).delete();
+  public boolean deleteTempUpload(UploadInfo uploadInfo) {
+    return new File(uploadInfo.getTempLocation()).delete();
   }
 
   public UploadInfo uploadTempAsset(final MultipartFile file) throws Exception {

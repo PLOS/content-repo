@@ -37,12 +37,7 @@ public class HsqlService {
   }
 
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
-    Bucket bucket = new Bucket();
-
-    bucket.bucketId = rs.getInt("BUCKETID");  // TODO: move string to const
-    bucket.bucketName = rs.getString("BUCKETNAME");
-
-    return bucket;
+    return new Bucket(rs.getString("BUCKETNAME"), rs.getInt("BUCKETID"));
   }
 
   public Integer getBucketId(String bucketName) {
@@ -58,8 +53,8 @@ public class HsqlService {
   }
 
   // FOR TESTING ONLY
-  public Integer deleteAsset(String key, String bucketName, int versionNumber) {
-    return jdbcTemplate.update("DELETE FROM assets WHERE key=? AND bucketId=? AND versionNumber=?", new Object[]{key, getBucketId(bucketName), versionNumber}, new int[]{Types.VARCHAR, Types.INTEGER, Types.INTEGER});
+  public Integer deleteAsset(Asset asset) {
+    return jdbcTemplate.update("DELETE FROM assets WHERE key=? AND bucketId=? AND versionNumber=?", new Object[]{asset.key, getBucketId(asset.bucketName), asset.versionNumber}, new int[]{Types.VARCHAR, Types.INTEGER, Types.INTEGER});
   }
 
   public Integer markAssetDeleted(String key, String bucketName, int versionNumber) {
@@ -118,14 +113,14 @@ public class HsqlService {
     return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM assets WHERE status="+Asset.Status.USED.getValue(), Integer.class);
   }
 
-  public Boolean insertBucket(String name, Integer id) {
+  public Boolean insertBucket(Bucket bucket) {
 
     int result;
 
-    if (id == null) {
-      result = jdbcTemplate.update("MERGE INTO buckets USING (VALUES(NULL,?)) AS vals(bucketId,bucketName) on buckets.bucketId = vals.bucketId WHEN NOT MATCHED THEN INSERT VALUES vals.bucketId, vals.bucketName", new Object[]{name}, new int[]{Types.VARCHAR});
+    if (bucket.bucketId == null) {
+      result = jdbcTemplate.update("MERGE INTO buckets USING (VALUES(NULL,?)) AS vals(bucketId,bucketName) on buckets.bucketId = vals.bucketId WHEN NOT MATCHED THEN INSERT VALUES vals.bucketId, vals.bucketName", new Object[]{bucket.bucketName}, new int[]{Types.VARCHAR});
     } else {
-      result = jdbcTemplate.update("MERGE INTO buckets USING (VALUES(?,?)) AS vals(bucketId,bucketName) on buckets.bucketId = vals.bucketId WHEN NOT MATCHED THEN INSERT VALUES vals.bucketId, vals.bucketName", new Object[]{id, name}, new int[]{Types.INTEGER, Types.VARCHAR});
+      result = jdbcTemplate.update("MERGE INTO buckets USING (VALUES(?,?)) AS vals(bucketId,bucketName) on buckets.bucketId = vals.bucketId WHEN NOT MATCHED THEN INSERT VALUES vals.bucketId, vals.bucketName", new Object[]{bucket.bucketId, bucket.bucketName}, new int[]{Types.INTEGER, Types.VARCHAR});
     }
 
     if (result == 0)
@@ -166,8 +161,8 @@ public class HsqlService {
     });
   }
 
-  public List<Asset> listAssetVersions(String bucketName, String key) {
-    return jdbcTemplate.query("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND key=? AND status=? ORDER BY versionNumber ASC", new Object[]{bucketName, key, Asset.Status.USED.getValue()}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TINYINT}, new RowMapper<Asset>() {
+  public List<Asset> listAssetVersions(Asset asset) {
+    return jdbcTemplate.query("SELECT * FROM assets a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND key=? AND status=? ORDER BY versionNumber ASC", new Object[]{asset.bucketName, asset.key, Asset.Status.USED.getValue()}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TINYINT}, new RowMapper<Asset>() {
       @Override
       public Asset mapRow(ResultSet resultSet, int i) throws SQLException {
         return mapAssetRow(resultSet);

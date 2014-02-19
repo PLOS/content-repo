@@ -2,6 +2,8 @@ package org.plos.repo.service;
 
 import com.guba.mogilefs.MogileFS;
 import com.guba.mogilefs.PooledMogileFSImpl;
+import org.plos.repo.models.Asset;
+import org.plos.repo.models.Bucket;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,9 +39,9 @@ public class MogileStoreService extends AssetStore {
     return getBucketLocationString(bucketName) + checksum;
   }
 
-  public boolean assetExists(String bucketName, String checksum) {
+  public boolean assetExists(Asset asset) {
     try {
-      InputStream in = mfs.getFileStream(getAssetLocationString(bucketName, checksum));
+      InputStream in = mfs.getFileStream(getAssetLocationString(asset.bucketName, asset.checksum));
 
       if (in == null) {
         in.close();
@@ -55,12 +57,12 @@ public class MogileStoreService extends AssetStore {
   }
 
   public Boolean hasXReproxy() {
-    return true;  // TODO: make this configurable
+    return true;  // TODO: make this configurable ?
   }
 
-  public URL[] getRedirectURLs(String bucketName, String checksum) throws Exception {
+  public URL[] getRedirectURLs(Asset asset) throws Exception {
 
-    String[] paths = mfs.getPaths(getAssetLocationString(bucketName, checksum), true);
+    String[] paths = mfs.getPaths(getAssetLocationString(asset.bucketName, asset.checksum), true);
     int pathCount = paths.length;
     URL[] urls = new URL[pathCount];
 
@@ -71,16 +73,16 @@ public class MogileStoreService extends AssetStore {
     return urls;
   }
 
-  public InputStream getInputStream(String bucketName, String checksum) throws Exception {
-    return mfs.getFileStream(getAssetLocationString(bucketName, checksum));
+  public InputStream getInputStream(Asset asset) throws Exception {
+    return mfs.getFileStream(getAssetLocationString(asset.bucketName, asset.checksum));
   }
 
-  public boolean createBucket(String bucketName) {
+  public boolean createBucket(Bucket bucket) {
     // we use file paths instead of domains so this function does not need to do anything
     return true;
   }
 
-  public boolean deleteBucket(String bucketName) {
+  public boolean deleteBucket(Bucket bucket) {
     return true;
   }
 
@@ -125,27 +127,27 @@ public class MogileStoreService extends AssetStore {
 
   }
 
-  public boolean saveUploadedAsset(String bucketName, String checksum, String tempFileLocation) throws Exception {
+  public boolean saveUploadedAsset(Bucket bucket, UploadInfo uploadInfo) throws Exception {
     try {
-      mfs.rename(tempFileLocation, getAssetLocationString(bucketName, checksum));
+      mfs.rename(uploadInfo.getTempLocation(), getAssetLocationString(bucket.bucketName, uploadInfo.getChecksum()));
       return true;
     } catch (Exception e) {
       return false;
     }
   }
 
-  public boolean deleteTempUpload(String tempLocation) {
+  public boolean deleteTempUpload(UploadInfo uploadInfo) {
     try {
-      mfs.delete(tempLocation);
+      mfs.delete(uploadInfo.getTempLocation());
       return true;
     } catch (Exception e) {
       return false;
     }
   }
 
-  public boolean deleteAsset(String bucketName, String fileName) {
+  public boolean deleteAsset(Asset asset) {
     try {
-      mfs.delete(getAssetLocationString(bucketName, fileName));
+      mfs.delete(getAssetLocationString(asset.bucketName, asset.checksum));
       return true;
     } catch (Exception e) {
       return false;

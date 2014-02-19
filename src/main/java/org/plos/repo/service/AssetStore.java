@@ -1,5 +1,7 @@
 package org.plos.repo.service;
 
+import org.plos.repo.models.Asset;
+import org.plos.repo.models.Bucket;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
@@ -21,6 +23,10 @@ public abstract class AssetStore {
     return !Pattern.compile("[^-_.A-Za-z0-9]").matcher(name).find();
   }
 
+//  public static boolean isValidBucketName(String bucketName) {
+//    return BucketNameUtils.isValidV2BucketName(bucketName);
+//  }
+
   public static String checksumToString(byte[] checksum) {
 
     StringBuilder sb = new StringBuilder();
@@ -33,22 +39,22 @@ public abstract class AssetStore {
 
   abstract public Boolean hasXReproxy();
 
-  abstract public URL[] getRedirectURLs(String bucketName, String checksum) throws Exception;
+  abstract public URL[] getRedirectURLs(Asset asset) throws Exception;
 
-  abstract public boolean assetExists(String bucketName, String checksum);
+  abstract public boolean assetExists(Asset asset);
 
-  abstract public boolean createBucket(String bucketName);
+  abstract public boolean createBucket(Bucket bucket);
 
-  abstract public boolean deleteBucket(String bucketName);
+  abstract public boolean deleteBucket(Bucket bucket);
 
   abstract public UploadInfo uploadTempAsset(MultipartFile file) throws Exception;
 
-  abstract public boolean saveUploadedAsset(String bucketName, String checksum, String tempFileLocation) throws Exception;
+  abstract public boolean saveUploadedAsset(Bucket bucket, UploadInfo uploadInfo) throws Exception;
 
-  abstract public boolean deleteAsset(String bucketName, String fileName);
+  abstract public boolean deleteAsset(Asset asset);
 
-  abstract public boolean deleteTempUpload(String tempLocation);
+  abstract public boolean deleteTempUpload(UploadInfo uploadInfo);
 
-  abstract public InputStream getInputStream(String bucketName, String checksum) throws Exception;
+  abstract public InputStream getInputStream(Asset asset) throws Exception;
 
 }

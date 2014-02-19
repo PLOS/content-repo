@@ -37,13 +37,15 @@ public class BucketController {
       return new ResponseEntity<>("Bucket already exists", HttpStatus.NOT_EXTENDED);
 
     if (!AssetStore.isValidFileName(name))
-      return new ResponseEntity<>("Unable to create bucket. Name contains illegal file path characters: " + name, HttpStatus.PRECONDITION_FAILED);
+      return new ResponseEntity<>("Unable to create bucket. Name contains illegal characters: " + name, HttpStatus.PRECONDITION_FAILED);
 
-    if (!assetStore.createBucket(name))
+    Bucket bucket = new Bucket(name, id);
+
+    if (!assetStore.createBucket(bucket))
       return new ResponseEntity<>("Unable to create bucket " + name, HttpStatus.CONFLICT);
 
-    if (!hsqlService.insertBucket(name, id)) {
-      assetStore.deleteBucket(name);
+    if (!hsqlService.insertBucket(bucket)) {
+      assetStore.deleteBucket(bucket);
       return new ResponseEntity<>("Unable to create bucket " + name, HttpStatus.CONFLICT);
     }
 
@@ -59,7 +61,9 @@ public class BucketController {
     if (hsqlService.listAssetsInBucket(name).size() != 0)
       return new ResponseEntity<>("Cannot delete bucket " + name + " because it contains assets.", HttpStatus.NOT_MODIFIED);
 
-    if (!assetStore.deleteBucket(name))
+    Bucket bucket = new Bucket(name);
+
+    if (!assetStore.deleteBucket(bucket))
       return new ResponseEntity<>("There was a problem removing the bucket", HttpStatus.NOT_MODIFIED);
 
     if (hsqlService.deleteBucket(name) > 0)

@@ -22,6 +22,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.plos.repo.models.Asset;
+import org.plos.repo.models.Bucket;
 import org.plos.repo.service.AssetStore;
 import org.plos.repo.service.HsqlService;
 import org.slf4j.Logger;
@@ -75,7 +76,7 @@ public class AssetCrudController {
     JsonObject jsonObject = gson.toJsonTree(asset).getAsJsonObject();
 
     if (includeVersions)
-      jsonObject.add("versions", gson.toJsonTree(hsqlService.listAssetVersions(asset.bucketName, asset.key)).getAsJsonArray());
+      jsonObject.add("versions", gson.toJsonTree(hsqlService.listAssetVersions(asset)).getAsJsonArray());
 
     return jsonObject.toString();
   }
@@ -141,7 +142,7 @@ public class AssetCrudController {
 
     if (clientSupportsReproxy(request) && assetStore.hasXReproxy()) {
 
-      response.setHeader("X-Reproxy-URL", REPROXY_URL_JOINER.join(assetStore.getRedirectURLs(bucketName, asset.checksum)));
+      response.setHeader("X-Reproxy-URL", REPROXY_URL_JOINER.join(assetStore.getRedirectURLs(asset)));
       response.setHeader("X-Reproxy-Cache-For", REPROXY_CACHE_FOR_HEADER);
       response.setStatus(HttpServletResponse.SC_OK);
 
@@ -165,7 +166,7 @@ public class AssetCrudController {
         response.setContentType(asset.contentType);
       response.setHeader("Content-Disposition", "inline; filename=" + exportFileName);
 
-      InputStream is = assetStore.getInputStream(bucketName, asset.checksum);
+      InputStream is = assetStore.getInputStream(asset);
       IOUtils.copy(is, response.getOutputStream());
       response.setStatus(HttpServletResponse.SC_FOUND);
       response.flushBuffer();
@@ -238,8 +239,10 @@ public class AssetCrudController {
 
     HttpStatus status = HttpStatus.CREATED; // status indicates if it made it to the DB, not the asset store
 
+    Asset asset = new Asset(null, key, uploadInfo.getChecksum(), new Timestamp(new Date().getTime()), downloadName, contentType, uploadInfo.getSize(), null, null, bucketId, bucketName, 0, Asset.Status.USED);
+
     // determine if the asset should be added to the store or not
-    if (assetStore.assetExists(bucketName, uploadInfo.getChecksum())) {
+    if (assetStore.assetExists(asset)) {
 
 //      if (FileUtils.contentEquals(tempFile, new File(assetStore.getAssetLocationString(bucketName, checksum)))) {
 //        log.info("not adding asset to store since content exists");
@@ -249,13 +252,12 @@ public class AssetCrudController {
 //      }
 
       // dont bother storing the file since the data already exists in the system
-      assetStore.deleteTempUpload(uploadInfo.getTempLocation());
+      assetStore.deleteTempUpload(uploadInfo);
     } else {
-      assetStore.saveUploadedAsset(bucketName, uploadInfo.getChecksum(), uploadInfo.getTempLocation());
+      assetStore.saveUploadedAsset(new Bucket(bucketName), uploadInfo);
     }
 
     // add a record to the DB
-    Asset asset = new Asset(null, key, uploadInfo.getChecksum(), new Timestamp(new Date().getTime()), downloadName, contentType, uploadInfo.getSize(), null, null, bucketId, bucketName, 0, Asset.Status.USED);
 
     log.info("db asset inserts: " + hsqlService.insertAsset(asset));
 
@@ -308,19 +310,11 @@ public class AssetCrudController {
     HttpStatus status = HttpStatus.OK; // note, different from 'create'
 
     // determine if the asset should be added to the store or not
-    if (assetStore.assetExists(bucketName, uploadInfo.getChecksum())) {
-
-//      if (FileUtils.contentEquals(tempFile, new File(assetStore.getAssetLocationString(bucketName, checksum)))) {
-//        log.info("not adding asset to store since content exists");
-//      } else {
-//        log.info("checksum collision!!");
-//        status = HttpStatus.CONFLICT;
-//      }
-
+    if (assetStore.assetExists(asset)) {
       // dont bother storing the file since the data already exists in the system
-      assetStore.deleteTempUpload(uploadInfo.getTempLocation());
+      assetStore.deleteTempUpload(uploadInfo);
     } else {
-      assetStore.saveUploadedAsset(bucketName, uploadInfo.getChecksum(), uploadInfo.getTempLocation());
+      assetStore.saveUploadedAsset(new Bucket(bucketName), uploadInfo);
       asset.checksum = uploadInfo.getChecksum();
       asset.size = uploadInfo.getSize();
     }

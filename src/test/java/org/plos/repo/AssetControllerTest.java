@@ -71,16 +71,15 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
     for (Asset asset : assetList) {
       //hsqlService.markAssetDeleted(asset.key, asset.checksum, asset.bucketName, asset.versionNumber);
-      hsqlService.deleteAsset(asset.key, asset.bucketName, asset.versionNumber);
-      assetStore.deleteAsset(asset.bucketName, asset.checksum);
-//      assetStore.deleteAsset(assetStore.getAssetLocationString(asset.bucketName, asset.checksum));
+      hsqlService.deleteAsset(asset);
+      assetStore.deleteAsset(asset);
     }
 
     List<Bucket> bucketList = hsqlService.listBuckets();
 
     for (Bucket bucket : bucketList) {
       hsqlService.deleteBucket(bucket.bucketName);
-      assetStore.deleteBucket(bucket.bucketName);
+      assetStore.deleteBucket(bucket);
     }
   }
 
@@ -204,6 +203,10 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
         .andExpect(status().isOk());
 
     // TODO: check asset deduplication somewhere
+
+
+    // clean up
+    clearData(hsqlService, assetStore);
 
   }
 

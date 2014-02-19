@@ -4,6 +4,8 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.CreateBucketRequest;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import org.plos.repo.models.Asset;
+import org.plos.repo.models.Bucket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
@@ -34,9 +36,9 @@ public class S3StoreService extends AssetStore {
     s3Client = new AmazonS3Client(preferences.getAWScredentials());
   }
 
-  public boolean assetExists(String bucketName, String checksum) {
+  public boolean assetExists(Asset asset) {
     try {
-      return s3Client.getObject(bucketName, checksum) != null;
+      return s3Client.getObject(asset.bucketName, asset.checksum) != null;
     } catch (Exception e) {
       return false;
     }
@@ -46,18 +48,18 @@ public class S3StoreService extends AssetStore {
     return true;  // TODO: make this configurable
   }
 
-  public URL[] getRedirectURLs(String bucketName, String checksum) throws Exception {
-    return new URL[]{ new URL(s3Client.getResourceUrl(bucketName, checksum)) };
+  public URL[] getRedirectURLs(Asset asset) throws Exception {
+    return new URL[]{ new URL(s3Client.getResourceUrl(asset.bucketName, asset.checksum)) };
   }
 
-  public InputStream getInputStream(String bucketName, String checksum) throws Exception {
-    return s3Client.getObject(bucketName, checksum).getObjectContent();
+  public InputStream getInputStream(Asset asset) throws Exception {
+    return s3Client.getObject(asset.bucketName, asset.checksum).getObjectContent();
   }
 
-  public boolean createBucket(String bucketName) {
+  public boolean createBucket(Bucket bucket) {
 
     try {
-      CreateBucketRequest bucketRequest = new CreateBucketRequest(bucketName);
+      CreateBucketRequest bucketRequest = new CreateBucketRequest(bucket.bucketName);
       bucketRequest.withCannedAcl(CannedAccessControlList.PublicRead);
       s3Client.createBucket(bucketRequest);
 
@@ -69,10 +71,10 @@ public class S3StoreService extends AssetStore {
 
   }
 
-  public boolean deleteBucket(String bucketName) {
+  public boolean deleteBucket(Bucket bucket) {
 
     try {
-      s3Client.deleteBucket(bucketName);
+      s3Client.deleteBucket(bucket.bucketName);
       return true;
     } catch (Exception e) {
       log.error("Error deleting bucket", e);
@@ -128,15 +130,15 @@ public class S3StoreService extends AssetStore {
 
   }
 
-  public boolean saveUploadedAsset(String bucketName, String checksum, String tempFileLocation) throws Exception {
+  public boolean saveUploadedAsset(Bucket bucket, UploadInfo uploadInfo) throws Exception {
     try {
-      File tempFile = new File(tempFileLocation);
+      File tempFile = new File(uploadInfo.getTempLocation());
 
       // TODO: store some redundant metadata in case we loose the DB ?
       //ObjectMetadata metadata = new ObjectMetadata();
       //metadata.addUserMetadata("downloadName", );
 
-      PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, checksum, tempFile);
+      PutObjectRequest putObjectRequest = new PutObjectRequest(bucket.bucketName, uploadInfo.getChecksum(), tempFile);
       putObjectRequest.withCannedAcl(CannedAccessControlList.PublicRead);
 
       s3Client.putObject(putObjectRequest);
@@ -149,13 +151,13 @@ public class S3StoreService extends AssetStore {
     }
   }
 
-  public boolean deleteTempUpload(String tempLocation) {
-    return new File(tempLocation).delete();
+  public boolean deleteTempUpload(UploadInfo uploadInfo) {
+    return new File(uploadInfo.getTempLocation()).delete();
   }
 
-  public boolean deleteAsset(String bucketName, String fileName) {
+  public boolean deleteAsset(Asset asset) {
     try {
-      s3Client.deleteObject(bucketName, fileName);
+      s3Client.deleteObject(asset.bucketName, asset.checksum);
       return true;
     } catch (Exception e) {
       log.error("Error deleting asset", e);
