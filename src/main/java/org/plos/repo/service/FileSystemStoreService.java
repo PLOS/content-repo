@@ -75,8 +75,12 @@ public class FileSystemStoreService extends AssetStore {
     return tempFile.renameTo(new File(getAssetLocationString(bucketName, checksum)));
   }
 
-  public boolean deleteAsset(String fileLocation) {
-    return new File(fileLocation).delete();
+  public boolean deleteAsset(String bucketName, String fileName) {
+    return new File(getAssetLocationString(bucketName, fileName)).delete();
+  }
+
+  public boolean deleteTempUpload(String tempLocation) {
+    return new File(tempLocation).delete();
   }
 
   public UploadInfo uploadTempAsset(final MultipartFile file) throws Exception {

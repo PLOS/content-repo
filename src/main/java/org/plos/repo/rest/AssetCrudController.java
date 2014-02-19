@@ -249,7 +249,7 @@ public class AssetCrudController {
 //      }
 
       // dont bother storing the file since the data already exists in the system
-      assetStore.deleteAsset(uploadInfo.getTempLocation());
+      assetStore.deleteTempUpload(uploadInfo.getTempLocation());
     } else {
       assetStore.saveUploadedAsset(bucketName, uploadInfo.getChecksum(), uploadInfo.getTempLocation());
     }
@@ -318,7 +318,7 @@ public class AssetCrudController {
 //      }
 
       // dont bother storing the file since the data already exists in the system
-      assetStore.deleteAsset(uploadInfo.getTempLocation());
+      assetStore.deleteTempUpload(uploadInfo.getTempLocation());
     } else {
       assetStore.saveUploadedAsset(bucketName, uploadInfo.getChecksum(), uploadInfo.getTempLocation());
       asset.checksum = uploadInfo.getChecksum();

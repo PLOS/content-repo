@@ -33,7 +33,7 @@ public class MogileStoreService extends AssetStore {
     return bucketName + "/";
   }
 
-  public String getAssetLocationString(String bucketName, String checksum) {
+  private String getAssetLocationString(String bucketName, String checksum) {
     return getBucketLocationString(bucketName) + checksum;
   }
 
@@ -134,12 +134,22 @@ public class MogileStoreService extends AssetStore {
     }
   }
 
-  public boolean deleteAsset(String fileLocation) {
+  public boolean deleteTempUpload(String tempLocation) {
     try {
-      mfs.delete(fileLocation);
+      mfs.delete(tempLocation);
       return true;
     } catch (Exception e) {
       return false;
     }
   }
+
+  public boolean deleteAsset(String bucketName, String fileName) {
+    try {
+      mfs.delete(getAssetLocationString(bucketName, fileName));
+      return true;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
 }

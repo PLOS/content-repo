@@ -35,8 +35,6 @@ public abstract class AssetStore {
 
   abstract public URL[] getRedirectURLs(String bucketName, String checksum) throws Exception;
 
-  abstract public String getAssetLocationString(String bucketName, String checksum);
-
   abstract public boolean assetExists(String bucketName, String checksum);
 
   abstract public boolean createBucket(String bucketName);
@@ -47,7 +45,9 @@ public abstract class AssetStore {
 
   abstract public boolean saveUploadedAsset(String bucketName, String checksum, String tempFileLocation) throws Exception;
 
-  abstract public boolean deleteAsset(String fileLocation);
+  abstract public boolean deleteAsset(String bucketName, String fileName);
+
+  abstract public boolean deleteTempUpload(String tempLocation);
 
   abstract public InputStream getInputStream(String bucketName, String checksum) throws Exception;
 

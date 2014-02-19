@@ -50,11 +50,6 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
 
   public static final MediaType APPLICATION_JSON_UTF8 = new MediaType(MediaType.APPLICATION_JSON.getType(), MediaType.APPLICATION_JSON.getSubtype(), Charset.forName("utf8"));
 
-  // set values before application context is loaded
-  static {
-    System.setProperty("configFile", "test.properties");
-  }
-
   @BeforeClass
   private void setup() {
     this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
@@ -76,19 +71,19 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
         .andExpect(content().string("[]"));
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
-        .param("name", "testbucket1"))
+        .param("name", "plos-buckettest-bucket1"))
         .andExpect(status().isCreated());
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
-        .param("name", "testbucket1"))
+        .param("name", "plos-buckettest-bucket1"))
         .andExpect(status().isNotExtended());
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
-        .param("name", "testbucket2").param("id", "5"))
+        .param("name", "plos-buckettest-bucket2").param("id", "5"))
         .andExpect(status().isCreated());
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
-        .param("name", "bad?&name"))
+        .param("name", "plos-buckettest-bad?&name"))
         .andExpect(status().isPreconditionFailed());
 
 
@@ -106,16 +101,16 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
 
     // DELETE
 
-    this.mockMvc.perform(delete("/buckets/testbucket1")).andExpect(status().isOk());
+    this.mockMvc.perform(delete("/buckets/plos-buckettest-bucket1")).andExpect(status().isOk());
 
     this.mockMvc.perform(fileUpload("/assets").file(new MockMultipartFile("file", "test".getBytes())).param("newAsset", "true")
-        .param("key", "asset1").param("bucketName", "testbucket2"))
+        .param("key", "asset1").param("bucketName", "plos-buckettest-bucket2"))
         .andDo(print())
         .andExpect(status().isCreated());
 
-    this.mockMvc.perform(delete("/buckets/testbucket2")).andExpect(status().isNotModified());
+    this.mockMvc.perform(delete("/buckets/plos-buckettest-bucket2")).andExpect(status().isNotModified());
 
-    this.mockMvc.perform(delete("/buckets/testbucket3")).andExpect(status().isNotFound());
+    this.mockMvc.perform(delete("/buckets/plos-buckettest-bucket3")).andExpect(status().isNotFound());
 
   }
 

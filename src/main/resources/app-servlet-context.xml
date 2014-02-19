@@ -76,7 +76,7 @@
     <beans:property name="dataSource" ref="dataSource" />
   </beans:bean>
 
-  <beans:bean id="assetStore" class="org.plos.repo.service.MogileStoreService" >
+  <beans:bean id="assetStore" class="org.plos.repo.service.S3StoreService" >
     <beans:property name="preferences" ref="prefs" />
   </beans:bean>
 

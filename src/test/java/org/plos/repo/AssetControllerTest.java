@@ -56,9 +56,9 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
   public static final MediaType APPLICATION_JSON_UTF8 = new MediaType(MediaType.APPLICATION_JSON.getType(), MediaType.APPLICATION_JSON.getSubtype(), Charset.forName("utf8"));
 
   // set values before application context is loaded
-  static {
-    System.setProperty("configFile", "test.properties");
-  }
+//  static {
+//    System.setProperty("configFile", "test.properties");
+//  }
 
   @BeforeClass
   private void setup() {
@@ -72,7 +72,8 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
     for (Asset asset : assetList) {
       //hsqlService.markAssetDeleted(asset.key, asset.checksum, asset.bucketName, asset.versionNumber);
       hsqlService.deleteAsset(asset.key, asset.bucketName, asset.versionNumber);
-      assetStore.deleteAsset(assetStore.getAssetLocationString(asset.bucketName, asset.checksum));
+      assetStore.deleteAsset(asset.bucketName, asset.checksum);
+//      assetStore.deleteAsset(assetStore.getAssetLocationString(asset.bucketName, asset.checksum));
     }
 
     List<Bucket> bucketList = hsqlService.listBuckets();
@@ -88,6 +89,8 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
     Gson gson = new Gson();
 
+    String bucketName = "plos-assettest-bucket1";
+
     clearData(hsqlService, assetStore);
 
     this.mockMvc.perform(get("/assets").accept(APPLICATION_JSON_UTF8))
@@ -96,7 +99,7 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
         .andExpect(content().string("[]"));
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
-        .param("name", "testbucketAssets"))
+        .param("name", bucketName))
         .andExpect(status().isCreated());
 
 
@@ -109,18 +112,18 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
     // CREATE
 
     this.mockMvc.perform(fileUpload("/assets").file(file1).param("newAsset", "true")
-        .param("key", "asset1").param("bucketName", "testbucketAssets").param("contentType", "text/plain"))
+        .param("key", "asset1").param("bucketName", bucketName).param("contentType", "text/plain"))
         .andExpect(status().isCreated());
 
 //    JsonObject jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
 //    Long asset1Timestamp = jsonObject.get("timestamp_unixnano").getAsLong();
 
     this.mockMvc.perform(fileUpload("/assets").file(file1).param("newAsset", "true")
-        .param("key", "asset1").param("bucketName", "testbucketAssets").param("contentType", "text/plain"))
+        .param("key", "asset1").param("bucketName", bucketName).param("contentType", "text/plain"))
         .andExpect(status().isConflict());  // since the key exists
 
     this.mockMvc.perform(fileUpload("/assets").file(file1).param("newAsset", "true")
-        .param("key", "asset2").param("bucketName", "testbucketAssets").param("contentType", "text/something").param("downloadName", "asset2.text"))
+        .param("key", "asset2").param("bucketName", bucketName).param("contentType", "text/something").param("downloadName", "asset2.text"))
         .andExpect(status().isCreated()); // since its a new key
 
     this.mockMvc.perform(fileUpload("/assets").file(file1).param("newAsset", "true")
@@ -128,45 +131,45 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
         .andExpect(status().isInsufficientStorage()); // since the bucket does not exist
 
     this.mockMvc.perform(fileUpload("/assets").file(new MockMultipartFile("file", "".getBytes())).param("newAsset", "true")
-        .param("key", "funky&?#key").param("bucketName", "testbucketAssets").param("contentType", "text/plain"))
+        .param("key", "funky&?#key").param("bucketName", bucketName).param("contentType", "text/plain"))
         .andExpect(status().isCreated()); // since we accept empty files
 
 
     // READ
 
-    this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset1"))
+    this.mockMvc.perform(get("/assets/" + bucketName).param("key", "asset1"))
         .andExpect(header().string("Content-Type", "text/plain"))
         .andExpect(header().string("Content-Disposition", "inline; filename=asset1"))
         .andExpect(content().string(testData1))
         .andExpect(status().isFound());  // file name assigned by key
 
-    this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset1").param("version", "0"))
+    this.mockMvc.perform(get("/assets/" + bucketName).param("key", "asset1").param("version", "0"))
         .andExpect(header().string("Content-Type", "text/plain"))
         .andExpect(header().string("Content-Disposition", "inline; filename=asset1"))
         .andExpect(content().string(testData1))
         .andExpect(status().isFound());  // version accessible
 
-    this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset1").param("version", "10"))
+    this.mockMvc.perform(get("/assets/" + bucketName).param("key", "asset1").param("version", "10"))
         .andExpect(status().isNotFound());  // version should not exist
 
-    this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset2"))
+    this.mockMvc.perform(get("/assets/" + bucketName).param("key", "asset2"))
         .andExpect(header().string("Content-Type", "text/something"))
         .andExpect(header().string("Content-Disposition", "inline; filename=asset2.text"))
         .andExpect(content().string(testData1));  // file name assigned by user
 
-    this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "funky&?#key"))
+    this.mockMvc.perform(get("/assets/" + bucketName).param("key", "funky&?#key"))
         .andExpect(header().string("Content-Type", "text/plain"))
         .andExpect(header().string("Content-Disposition", "inline; filename=content"))
         .andExpect(content().string(""));  // file name can not be set by key or user
 
-    this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "nonAsset"))
+    this.mockMvc.perform(get("/assets/" + bucketName).param("key", "nonAsset"))
         .andExpect(status().isNotFound());  // asset should not exist
 
 
     // READ REPROXY
 
     if (assetStore.hasXReproxy()){
-      this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset1").param("version", "0").header("X-Proxy-Capabilities", "reproxy-file"))
+      this.mockMvc.perform(get("/assets/" + bucketName).param("key", "asset1").param("version", "0").header("X-Proxy-Capabilities", "reproxy-file"))
           .andDo(print())
           .andExpect(status().isOk())
           .andExpect(content().string(""));
@@ -175,17 +178,17 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
     // UPDATE
 
     this.mockMvc.perform(fileUpload("/assets").file(file2).param("newAsset", "false")
-        .param("key", "asset3").param("bucketName", "testbucketAssets").param("contentType", "text/something").param("downloadName", "asset2.text"))
+        .param("key", "asset3").param("bucketName", bucketName).param("contentType", "text/something").param("downloadName", "asset2.text"))
         .andExpect(status().isNotAcceptable()); // since key does not exist
 
     this.mockMvc.perform(fileUpload("/assets").file(file2).param("newAsset", "false")
-        .param("key", "asset2").param("bucketName", "testbucketAssets").param("contentType", "text/something").param("downloadName", "asset2.text"))
+        .param("key", "asset2").param("bucketName", bucketName).param("contentType", "text/something").param("downloadName", "asset2.text"))
         .andExpect(status().isOk()); // since its a new version
 
 
     // LIST
 
-    String responseString = this.mockMvc.perform(get("/assets/testbucketAssets/").param("key", "asset2").param("fetchMetadata", "true"))
+    String responseString = this.mockMvc.perform(get("/assets/" + bucketName).param("key", "asset2").param("fetchMetadata", "true"))
         .andExpect(header().string("Content-Type", "application/json"))
         .andReturn().getResponse().getContentAsString();  // file name assigned by user
 
@@ -197,7 +200,7 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
     // DELETE
 
-    this.mockMvc.perform(delete("/assets/testbucketAssets").param("key", "asset1").param("version", "0"))
+    this.mockMvc.perform(delete("/assets/" + bucketName).param("key", "asset1").param("version", "0"))
         .andExpect(status().isOk());
 
     // TODO: check asset deduplication somewhere
