@@ -237,7 +237,7 @@ public class AssetCrudController {
       return new ResponseEntity<>("Error: A problem occurred while uploading the file.", HttpStatus.PRECONDITION_FAILED);
     }
 
-    HttpStatus status = HttpStatus.CREATED; // status indicates if it made it to the DB, not the asset store
+    HttpStatus status = HttpStatus.CREATED; // note: status indicates if it made it to the DB, not the asset store
 
     Asset asset = new Asset(null, key, uploadInfo.getChecksum(), new Timestamp(new Date().getTime()), downloadName, contentType, uploadInfo.getSize(), null, null, bucketId, bucketName, 0, Asset.Status.USED);
 
@@ -255,11 +255,12 @@ public class AssetCrudController {
       assetStore.deleteTempUpload(uploadInfo);
     } else {
       assetStore.saveUploadedAsset(new Bucket(bucketName), uploadInfo);
+      asset.urls = REPROXY_URL_JOINER.join(assetStore.getRedirectURLs(asset));
     }
 
     // add a record to the DB
 
-    log.info("db asset inserts: " + hsqlService.insertAsset(asset));
+    log.info("db asset inserts (create): " + hsqlService.insertAsset(asset));
 
     return new ResponseEntity<>(assetToJsonString(asset, false), status);
   }
@@ -294,7 +295,8 @@ public class AssetCrudController {
     asset.id = null;  // remove this since it refers to the old asset
 
     if (file == null) {
-      log.info("db asset inserts: " + hsqlService.insertAsset(asset));
+      asset.urls = REPROXY_URL_JOINER.join(assetStore.getRedirectURLs(asset));
+      log.info("db asset inserts (update meta): " + hsqlService.insertAsset(asset));
 
       return new ResponseEntity<>(assetToJsonString(asset, false), HttpStatus.OK);
     }
@@ -307,11 +309,10 @@ public class AssetCrudController {
       return new ResponseEntity<>("Error: A problem occurred while uploading the file.", HttpStatus.PRECONDITION_FAILED);
     }
 
-    HttpStatus status = HttpStatus.OK; // note, different from 'create'
+    HttpStatus status = HttpStatus.OK; // note: different return value from 'create'
 
     // determine if the asset should be added to the store or not
     if (assetStore.assetExists(asset)) {
-      // dont bother storing the file since the data already exists in the system
       assetStore.deleteTempUpload(uploadInfo);
     } else {
       assetStore.saveUploadedAsset(new Bucket(bucketName), uploadInfo);
@@ -319,8 +320,10 @@ public class AssetCrudController {
       asset.size = uploadInfo.getSize();
     }
 
+    asset.urls = REPROXY_URL_JOINER.join(assetStore.getRedirectURLs(asset));
+
     // add a record to the DB
-    log.info("db asset inserts: " + hsqlService.insertAsset(asset));
+    log.info("db asset inserts (update): " + hsqlService.insertAsset(asset));
 
     return new ResponseEntity<>(assetToJsonString(asset, false), status);
   }

@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS assets (
   key VARCHAR (1000) NOT NULL,
   checksum VARCHAR (1000) NOT NULL,
   timestamp timestamp NOT NULL,
-  url VARCHAR (1000), -- servable path to asset mostly for mogile
+  urls VARCHAR (3000), -- direct http paths to asset, space separated
   downloadName VARCHAR (1000),  -- the name of the file when downloaded
   contentType VARCHAR (200), -- the mime type
   size INTEGER NOT NULL,  -- the file size in bytes

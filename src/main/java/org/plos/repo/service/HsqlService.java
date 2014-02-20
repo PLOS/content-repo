@@ -33,7 +33,7 @@ public class HsqlService {
   }
 
   private static Asset mapAssetRow(ResultSet rs) throws SQLException {
-    return new Asset(rs.getInt("ID"), rs.getString("KEY"), rs.getString("CHECKSUM"), rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"), rs.getLong("SIZE"), rs.getString("URL"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"), Asset.STATUS_VALUES.get(rs.getInt("STATUS")));
+    return new Asset(rs.getInt("ID"), rs.getString("KEY"), rs.getString("CHECKSUM"), rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"), rs.getLong("SIZE"), rs.getString("URLS"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"), Asset.STATUS_VALUES.get(rs.getInt("STATUS")));
   }
 
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
@@ -106,7 +106,7 @@ public class HsqlService {
   }
 
   public Integer insertAsset(Asset asset) {
-    return jdbcTemplate.update("INSERT INTO assets (key, checksum, timestamp, bucketId, contentType, downloadName, size, tag, versionNumber, status) VALUES (?,?,?,?,?,?,?,?,?,?)", new Object[]{asset.key, asset.checksum, asset.timestamp, asset.bucketId, asset.contentType, asset.downloadName, asset.size, asset.tag, asset.versionNumber, asset.status.getValue()}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.VARCHAR, Types.INTEGER, Types.TINYINT});
+    return jdbcTemplate.update("INSERT INTO assets (key, checksum, timestamp, bucketId, contentType, urls, downloadName, size, tag, versionNumber, status) VALUES (?, ?,?,?,?,?,?,?,?,?,?)", new Object[]{asset.key, asset.checksum, asset.timestamp, asset.bucketId, asset.contentType, asset.urls, asset.downloadName, asset.size, asset.tag, asset.versionNumber, asset.status.getValue()}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.VARCHAR, Types.INTEGER, Types.TINYINT});
   }
 
   public Integer assetCount() throws Exception {

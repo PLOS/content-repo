@@ -32,7 +32,7 @@ public class Asset {
       });
 
   public Integer id; // assigned by the db
-  public String url; // assigned by the backend storage (S3, Mogile, FS)
+  public String urls; // assigned by the backend storage (S3, Mogile, FS), space separated
   public String key; // what the user specifies
   public String checksum;  // of the file contents
   public Timestamp timestamp;   // created time
@@ -45,7 +45,7 @@ public class Asset {
   public Integer versionNumber;
   public Status status;
 
-  public Asset(Integer id, String key, String checksum, Timestamp timestamp, String downloadName, String contentType, Long size, String url, String tag, Integer bucketId, String bucketName, Integer versionNumber, Status status) {
+  public Asset(Integer id, String key, String checksum, Timestamp timestamp, String downloadName, String contentType, Long size, String urls, String tag, Integer bucketId, String bucketName, Integer versionNumber, Status status) {
     this.id = id;
     this.key = key;
     this.checksum = checksum;
@@ -53,7 +53,7 @@ public class Asset {
     this.downloadName = downloadName;
     this.contentType = contentType;
     this.size = size;
-    this.url = url;
+    this.urls = urls;
     this.tag = tag;
     this.bucketId = bucketId;
     this.bucketName = bucketName;

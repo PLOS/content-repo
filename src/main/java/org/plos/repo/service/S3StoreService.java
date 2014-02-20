@@ -134,10 +134,6 @@ public class S3StoreService extends AssetStore {
     try {
       File tempFile = new File(uploadInfo.getTempLocation());
 
-      // TODO: store some redundant metadata in case we loose the DB ?
-      //ObjectMetadata metadata = new ObjectMetadata();
-      //metadata.addUserMetadata("downloadName", );
-
       PutObjectRequest putObjectRequest = new PutObjectRequest(bucket.bucketName, uploadInfo.getChecksum(), tempFile);
       putObjectRequest.withCannedAcl(CannedAccessControlList.PublicRead);
 
