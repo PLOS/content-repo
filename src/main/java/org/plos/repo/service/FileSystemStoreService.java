@@ -36,6 +36,7 @@ public class FileSystemStoreService extends AssetStore {
   }
 
   public String getAssetLocationString(String bucketName, String checksum) {
+    // TODO: handle large file counts by sharding into directories like git, or just up the system inode count?
     return getBucketLocationString(bucketName) + checksum;
   }
 

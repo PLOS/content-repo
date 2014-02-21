@@ -260,7 +260,7 @@ public class AssetCrudController {
 
     // add a record to the DB
 
-    log.info("db asset inserts (create): " + hsqlService.insertAsset(asset));
+    hsqlService.insertAsset(asset); // TODO: deal with 0 return values
 
     return new ResponseEntity<>(assetToJsonString(asset, false), status);
   }
@@ -296,7 +296,7 @@ public class AssetCrudController {
 
     if (file == null) {
       asset.urls = REPROXY_URL_JOINER.join(assetStore.getRedirectURLs(asset));
-      log.info("db asset inserts (update meta): " + hsqlService.insertAsset(asset));
+      hsqlService.insertAsset(asset); // TODO: deal with 0 return values
 
       return new ResponseEntity<>(assetToJsonString(asset, false), HttpStatus.OK);
     }
@@ -323,7 +323,7 @@ public class AssetCrudController {
     asset.urls = REPROXY_URL_JOINER.join(assetStore.getRedirectURLs(asset));
 
     // add a record to the DB
-    log.info("db asset inserts (update): " + hsqlService.insertAsset(asset));
+    hsqlService.insertAsset(asset); // TODO: deal with 0 return values
 
     return new ResponseEntity<>(assetToJsonString(asset, false), status);
   }

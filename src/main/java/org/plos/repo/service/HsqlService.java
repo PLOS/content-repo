@@ -106,7 +106,12 @@ public class HsqlService {
   }
 
   public Integer insertAsset(Asset asset) {
-    return jdbcTemplate.update("INSERT INTO assets (key, checksum, timestamp, bucketId, contentType, urls, downloadName, size, tag, versionNumber, status) VALUES (?, ?,?,?,?,?,?,?,?,?,?)", new Object[]{asset.key, asset.checksum, asset.timestamp, asset.bucketId, asset.contentType, asset.urls, asset.downloadName, asset.size, asset.tag, asset.versionNumber, asset.status.getValue()}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.VARCHAR, Types.INTEGER, Types.TINYINT});
+
+    Integer updatedEntries = jdbcTemplate.update("INSERT INTO assets (key, checksum, timestamp, bucketId, contentType, urls, downloadName, size, tag, versionNumber, status) VALUES (?, ?,?,?,?,?,?,?,?,?,?)", new Object[]{asset.key, asset.checksum, asset.timestamp, asset.bucketId, asset.contentType, asset.urls, asset.downloadName, asset.size, asset.tag, asset.versionNumber, asset.status.getValue()}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.VARCHAR, Types.INTEGER, Types.TINYINT});
+
+    log.info("db asset insert key " + asset.key + " version " + asset.versionNumber + "  " + (updatedEntries > 0 ? "SUCCESS" : "FAILURE"));
+
+    return updatedEntries;
   }
 
   public Integer assetCount() throws Exception {
