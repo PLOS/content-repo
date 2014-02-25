@@ -104,7 +104,7 @@ public class AssetCrudController {
     return false;
   }
 
-  @RequestMapping(value="{bucketName}", method=RequestMethod.GET)
+  @RequestMapping(value="{bucketName:.+}", method=RequestMethod.GET)
   public @ResponseBody
   void read(@PathVariable String bucketName,
             @RequestParam(required = true) String key,
@@ -178,7 +178,7 @@ public class AssetCrudController {
 
   }
 
-  @RequestMapping(value="{bucketName}", method=RequestMethod.DELETE)
+  @RequestMapping(value="{bucketName:.+}", method=RequestMethod.DELETE)
   public ResponseEntity<String> delete(@PathVariable String bucketName,
                                        @RequestParam String key,
                                        @RequestParam int version) throws Exception {

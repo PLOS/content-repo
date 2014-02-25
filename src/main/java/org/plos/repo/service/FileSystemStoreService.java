@@ -36,8 +36,7 @@ public class FileSystemStoreService extends AssetStore {
   }
 
   public String getAssetLocationString(String bucketName, String checksum) {
-    // TODO: handle large file counts by sharding into directories like git, or just up the system inode count?
-    return getBucketLocationString(bucketName) + checksum;
+    return getBucketLocationString(bucketName) + checksum.substring(0, 2) + "/" + checksum;
   }
 
   public boolean assetExists(Asset asset) {
@@ -75,11 +74,30 @@ public class FileSystemStoreService extends AssetStore {
   public boolean saveUploadedAsset(Bucket bucket, UploadInfo uploadInfo)
   throws Exception {
     File tempFile = new File(uploadInfo.getTempLocation());
-    return tempFile.renameTo(new File(getAssetLocationString(bucket.bucketName, uploadInfo.getChecksum())));
+
+    File newFile = new File(getAssetLocationString(bucket.bucketName, uploadInfo.getChecksum()));
+
+    // create the subdirectory if it does not exist
+    File subDir = new File(newFile.getParent());
+    if (!subDir.exists() && !subDir.mkdir())
+      return false;
+
+    return tempFile.renameTo(newFile);
   }
 
   public boolean deleteAsset(Asset asset) {
-    return new File(getAssetLocationString(asset.bucketName, asset.checksum)).delete();
+
+    File file = new File(getAssetLocationString(asset.bucketName, asset.checksum));
+    File subDir = new File(file.getParent());
+
+    boolean result = file.delete();
+
+    // delete the parent subdirectory if it is empty
+
+    if (subDir.isDirectory() && file.list().length == 0)
+      subDir.delete();
+
+    return result;
   }
 
   public boolean deleteTempUpload(UploadInfo uploadInfo) {

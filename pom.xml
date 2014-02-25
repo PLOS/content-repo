@@ -53,13 +53,6 @@
     <activemq.version>5.2.0</activemq.version>
   </properties>
 
-  <repositories>
-    <repository>
-      <id>source.db4o</id>
-      <url>http://source.db4o.com/maven</url>
-    </repository>
-  </repositories>
-
   <distributionManagement>
   </distributionManagement>
 
@@ -119,11 +112,6 @@
       <artifactId>gson</artifactId>
       <version>2.2.2</version>
       <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.db4o</groupId>
-      <artifactId>db4o-full-java5</artifactId>
-      <version>8.1-SNAPSHOT</version>
     </dependency>
 
     <dependency>
@@ -359,6 +347,58 @@
 
   </dependencies>
 
+
+  <!--<pluginRepositories>-->
+    <!--<pluginRepository>-->
+      <!--<id>central</id>-->
+      <!--<name>Maven Plugin Repository</name>-->
+      <!--<url>http://repo2.maven.org/maven2</url>-->
+      <!--<layout>default</layout>-->
+      <!--<snapshots>-->
+        <!--<enabled>false</enabled>-->
+      <!--</snapshots>-->
+      <!--<releases>-->
+        <!--<updatePolicy>never</updatePolicy>-->
+      <!--</releases>-->
+    <!--</pluginRepository>-->
+  <!--</pluginRepositories>-->
+
+
+  <repositories>
+    <repository>
+      <id>central</id>
+      <name>Maven Repository Switchboard</name>
+      <layout>default</layout>
+      <url>http://repo2.maven.org/maven2</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>ambra</id>
+      <name>Maven 2 Release Repository for Ambra</name>
+      <url>http://maven.ambraproject.org/maven2/release/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>ambra.snapshot</id>
+      <name>Maven 2 Snapshot Repository for Ambra</name>
+      <url>http://maven.ambraproject.org/maven2/snapshot/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+
+  </repositories>
+  
 
   <build>
     <finalName>${project.name}-${project.version}</finalName>

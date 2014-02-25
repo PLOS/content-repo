@@ -59,7 +59,7 @@ public class S3StoreService extends AssetStore {
   public boolean createBucket(Bucket bucket) {
 
     try {
-      CreateBucketRequest bucketRequest = new CreateBucketRequest(bucket.bucketName);
+      CreateBucketRequest bucketRequest = new CreateBucketRequest(bucket.bucketName, com.amazonaws.services.s3.model.Region.US_West);
       bucketRequest.withCannedAcl(CannedAccessControlList.PublicRead);
       s3Client.createBucket(bucketRequest);
 
@@ -130,21 +130,39 @@ public class S3StoreService extends AssetStore {
 
   }
 
-  public boolean saveUploadedAsset(Bucket bucket, UploadInfo uploadInfo) throws Exception {
-    try {
-      File tempFile = new File(uploadInfo.getTempLocation());
+  public boolean saveUploadedAsset(Bucket bucket, UploadInfo uploadInfo) {
 
-      PutObjectRequest putObjectRequest = new PutObjectRequest(bucket.bucketName, uploadInfo.getChecksum(), tempFile);
-      putObjectRequest.withCannedAcl(CannedAccessControlList.PublicRead);
+    int retries = 5;
+    int tryCount = 0;
+    int waitSecond = 4;
 
-      s3Client.putObject(putObjectRequest);
+    File tempFile = new File(uploadInfo.getTempLocation());
 
-      tempFile.delete();
+    PutObjectRequest putObjectRequest = new PutObjectRequest(bucket.bucketName, uploadInfo.getChecksum(), tempFile);
+    putObjectRequest.withCannedAcl(CannedAccessControlList.PublicRead);
 
-      return true;
-    } catch (Exception e) {
-      return false;
+    while (tryCount < retries) {
+
+      try {
+
+        s3Client.putObject(putObjectRequest);
+        tempFile.delete();
+        return true;
+
+      } catch (Exception e) {
+
+        tryCount++;
+
+        log.error("Error during putObject", e);
+
+        try {
+          Thread.sleep(waitSecond * 1000);
+        } catch (Exception e2) {  }
+
+      }
     }
+
+    return false;
   }
 
   public boolean deleteTempUpload(UploadInfo uploadInfo) {

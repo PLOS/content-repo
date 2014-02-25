@@ -50,10 +50,10 @@ class ContentRepo:
 			}
 		r = requests.post(url, files=files, data=values)
 
-		return r.status_code == requests.codes.created
+		return r
+		#return r.status_code == requests.codes.created
 
-	def assetExists(self, bucketName, key, versionNumber):
-
+	def _getAssetMetadataRequest(self, bucketName, key, versionNumber):
 		url = self.repoServer + '/assets/' + bucketName
 
 		values = {
@@ -63,5 +63,7 @@ class ContentRepo:
 			}
 
 		r = requests.get(url, params=values)
+		return r
 
-		return r.status_code == requests.codes.ok
+	def assetExists(self, bucketName, key, versionNumber):
+		return self._getAssetMetadataRequest(bucketName, key, versionNumber).status_code == requests.codes.ok

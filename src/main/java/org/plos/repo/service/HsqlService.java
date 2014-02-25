@@ -101,6 +101,7 @@ public class HsqlService {
       return asset;
 
     } catch (EmptyResultDataAccessException e) {
+      //log.error("error fetching asset " + key, e);
       return null;
     }
   }
