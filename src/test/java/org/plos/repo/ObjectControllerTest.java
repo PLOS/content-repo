@@ -6,9 +6,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import org.plos.repo.models.Asset;
-import org.plos.repo.models.Bucket;
-import org.plos.repo.service.AssetStore;
+import org.plos.repo.models.*;
+import org.plos.repo.models.Object;
+import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.HsqlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -38,13 +38,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebAppConfiguration
 @EnableWebMvc
 @ContextConfiguration(locations = {"classpath:app-servlet-context.xml"})
-public class AssetControllerTest extends AbstractTestNGSpringContextTests {
+public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
 
   @Autowired
   private HsqlService hsqlService;
 
   @Autowired
-  private AssetStore assetStore;
+  private ObjectStore objectStore;
 
   @Autowired
   private WebApplicationContext wac;
@@ -66,20 +66,20 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
     jsonObjectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
   }
 
-  public static void clearData(HsqlService hsqlService, AssetStore assetStore) {
-    List<Asset> assetList = hsqlService.listAllAssets();
+  public static void clearData(HsqlService hsqlService, ObjectStore objectStore) {
+    List<org.plos.repo.models.Object> objectList = hsqlService.listAllObject();
 
-    for (Asset asset : assetList) {
-      //hsqlService.markAssetDeleted(asset.key, asset.checksum, asset.bucketName, asset.versionNumber);
-      hsqlService.deleteAsset(asset);
-      assetStore.deleteAsset(asset);
+    for (Object object : objectList) {
+      //hsqlService.markObjectDeleted(object.key, object.checksum, object.bucketName, object.versionNumber);
+      hsqlService.deleteObject(object);
+      objectStore.deleteObject(object);
     }
 
     List<Bucket> bucketList = hsqlService.listBuckets();
 
     for (Bucket bucket : bucketList) {
       hsqlService.deleteBucket(bucket.bucketName);
-      assetStore.deleteBucket(bucket);
+      objectStore.deleteBucket(bucket);
     }
   }
 
@@ -88,11 +88,11 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
     Gson gson = new Gson();
 
-    String bucketName = "plos-assettest-bucket1";
+    String bucketName = "plos-objstoretest-bucket1";
 
-    clearData(hsqlService, assetStore);
+    clearData(hsqlService, objectStore);
 
-    this.mockMvc.perform(get("/assets").accept(APPLICATION_JSON_UTF8))
+    this.mockMvc.perform(get("/objects").accept(APPLICATION_JSON_UTF8))
         .andExpect(status().isOk())
         .andExpect(content().contentType("application/json;charset=UTF-8"))
         .andExpect(content().string("[]"));
@@ -110,65 +110,68 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
     // CREATE
 
-    this.mockMvc.perform(fileUpload("/assets").file(file1).param("newAsset", "true")
-        .param("key", "asset1").param("bucketName", bucketName).param("contentType", "text/plain"))
+    this.mockMvc.perform(fileUpload("/objects").file(file1).param("newObject", "true")
+        .param("key", "object1").param("bucketName", bucketName).param("contentType", "text/plain"))
         .andExpect(status().isCreated());
 
 //    JsonObject jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
-//    Long asset1Timestamp = jsonObject.get("timestamp_unixnano").getAsLong();
+//    Long object1Timestamp = jsonObject.get("timestamp_unixnano").getAsLong();
 
-    this.mockMvc.perform(fileUpload("/assets").file(file1).param("newAsset", "true")
-        .param("key", "asset1").param("bucketName", bucketName).param("contentType", "text/plain"))
+    this.mockMvc.perform(fileUpload("/objects").file(file1).param("newObject", "true")
+        .param("key", "object1").param("bucketName", bucketName).param("contentType", "text/plain"))
         .andExpect(status().isConflict());  // since the key exists
 
-    this.mockMvc.perform(fileUpload("/assets").file(file1).param("newAsset", "true")
-        .param("key", "asset2").param("bucketName", bucketName).param("contentType", "text/something").param("downloadName", "asset2.text"))
+    this.mockMvc.perform(fileUpload("/objects").file(file1).param("newObject", "true")
+        .param("key", "object2").param("bucketName", bucketName).param("contentType", "text/something").param("downloadName", "object2.text"))
         .andExpect(status().isCreated()); // since its a new key
 
-    this.mockMvc.perform(fileUpload("/assets").file(file1).param("newAsset", "true")
-        .param("key", "asset1").param("bucketName", "testbucketAssets2").param("contentType", "text/plain"))
+    this.mockMvc.perform(fileUpload("/objects").file(file1).param("newObject", "true")
+        .param("key", "object1").param("bucketName", "testbucketObjects2").param("contentType", "text/plain"))
         .andExpect(status().isInsufficientStorage()); // since the bucket does not exist
 
-    this.mockMvc.perform(fileUpload("/assets").file(new MockMultipartFile("file", "".getBytes())).param("newAsset", "true")
+    this.mockMvc.perform(fileUpload("/objects").file(new MockMultipartFile("file", "".getBytes())).param("newObject", "true")
         .param("key", "funky&?#key").param("bucketName", bucketName).param("contentType", "text/plain"))
         .andExpect(status().isCreated()); // since we accept empty files
 
 
+    // TODO: create the same object in two buckets, and make sure deleting one does not delete the other
+
+
     // READ
 
-    this.mockMvc.perform(get("/assets/" + bucketName).param("key", "asset1"))
+    this.mockMvc.perform(get("/objects/" + bucketName).param("key", "object1"))
         .andExpect(header().string("Content-Type", "text/plain"))
-        .andExpect(header().string("Content-Disposition", "inline; filename=asset1"))
+        .andExpect(header().string("Content-Disposition", "inline; filename=object1"))
         .andExpect(content().string(testData1))
         .andExpect(status().isFound());  // file name assigned by key
 
-    this.mockMvc.perform(get("/assets/" + bucketName).param("key", "asset1").param("version", "0"))
+    this.mockMvc.perform(get("/objects/" + bucketName).param("key", "object1").param("version", "0"))
         .andExpect(header().string("Content-Type", "text/plain"))
-        .andExpect(header().string("Content-Disposition", "inline; filename=asset1"))
+        .andExpect(header().string("Content-Disposition", "inline; filename=object1"))
         .andExpect(content().string(testData1))
         .andExpect(status().isFound());  // version accessible
 
-    this.mockMvc.perform(get("/assets/" + bucketName).param("key", "asset1").param("version", "10"))
+    this.mockMvc.perform(get("/objects/" + bucketName).param("key", "object1").param("version", "10"))
         .andExpect(status().isNotFound());  // version should not exist
 
-    this.mockMvc.perform(get("/assets/" + bucketName).param("key", "asset2"))
+    this.mockMvc.perform(get("/objects/" + bucketName).param("key", "object2"))
         .andExpect(header().string("Content-Type", "text/something"))
-        .andExpect(header().string("Content-Disposition", "inline; filename=asset2.text"))
+        .andExpect(header().string("Content-Disposition", "inline; filename=object2.text"))
         .andExpect(content().string(testData1));  // file name assigned by user
 
-    this.mockMvc.perform(get("/assets/" + bucketName).param("key", "funky&?#key"))
+    this.mockMvc.perform(get("/objects/" + bucketName).param("key", "funky&?#key"))
         .andExpect(header().string("Content-Type", "text/plain"))
         .andExpect(header().string("Content-Disposition", "inline; filename=content"))
         .andExpect(content().string(""));  // file name can not be set by key or user
 
-    this.mockMvc.perform(get("/assets/" + bucketName).param("key", "nonAsset"))
-        .andExpect(status().isNotFound());  // asset should not exist
+    this.mockMvc.perform(get("/objects/" + bucketName).param("key", "notObject"))
+        .andExpect(status().isNotFound());  // object should not exist
 
 
     // READ REPROXY
 
-    if (assetStore.hasXReproxy()){
-      this.mockMvc.perform(get("/assets/" + bucketName).param("key", "asset1").param("version", "0").header("X-Proxy-Capabilities", "reproxy-file"))
+    if (objectStore.hasXReproxy()){
+      this.mockMvc.perform(get("/objects/" + bucketName).param("key", "object1").param("version", "0").header("X-Proxy-Capabilities", "reproxy-file"))
           .andDo(print())
           .andExpect(status().isOk())
           .andExpect(content().string(""));
@@ -176,37 +179,37 @@ public class AssetControllerTest extends AbstractTestNGSpringContextTests {
 
     // UPDATE
 
-    this.mockMvc.perform(fileUpload("/assets").file(file2).param("newAsset", "false")
-        .param("key", "asset3").param("bucketName", bucketName).param("contentType", "text/something").param("downloadName", "asset2.text"))
+    this.mockMvc.perform(fileUpload("/objects").file(file2).param("newObject", "false")
+        .param("key", "object3").param("bucketName", bucketName).param("contentType", "text/something").param("downloadName", "object2.text"))
         .andExpect(status().isNotAcceptable()); // since key does not exist
 
-    this.mockMvc.perform(fileUpload("/assets").file(file2).param("newAsset", "false")
-        .param("key", "asset2").param("bucketName", bucketName).param("contentType", "text/something").param("downloadName", "asset2.text"))
+    this.mockMvc.perform(fileUpload("/objects").file(file2).param("newObject", "false")
+        .param("key", "object2").param("bucketName", bucketName).param("contentType", "text/something").param("downloadName", "object2.text"))
         .andExpect(status().isOk()); // since its a new version
 
 
     // LIST
 
-    String responseString = this.mockMvc.perform(get("/assets/" + bucketName).param("key", "asset2").param("fetchMetadata", "true"))
+    String responseString = this.mockMvc.perform(get("/objects/" + bucketName).param("key", "object2").param("fetchMetadata", "true"))
         .andExpect(header().string("Content-Type", "application/json"))
         .andReturn().getResponse().getContentAsString();  // file name assigned by user
 
     JsonObject jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
     JsonArray jsonArray = jsonObject.getAsJsonArray("versions");
 
-    assert(jsonArray.size() == 2);  // since there should be two versions of this asset
+    assert(jsonArray.size() == 2);  // since there should be two versions of this object
 
 
     // DELETE
 
-    this.mockMvc.perform(delete("/assets/" + bucketName).param("key", "asset1").param("version", "0"))
+    this.mockMvc.perform(delete("/objects/" + bucketName).param("key", "object1").param("version", "0"))
         .andExpect(status().isOk());
 
-    // TODO: check asset deduplication somewhere
+    // TODO: check object deduplication somewhere
 
 
     // clean up
-    clearData(hsqlService, assetStore);
+    clearData(hsqlService, objectStore);
 
   }
 

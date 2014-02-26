@@ -21,9 +21,9 @@ import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
-import org.plos.repo.models.Asset;
-import org.plos.repo.models.Bucket;
-import org.plos.repo.service.AssetStore;
+import org.plos.repo.models.*;
+import org.plos.repo.models.Object;
+import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.HsqlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,10 +49,10 @@ import java.util.Enumeration;
 import java.util.List;
 
 @Controller
-@RequestMapping("/assets")
-public class AssetCrudController {
+@RequestMapping("/objects")
+public class ObjectCrudController {
 
-  private static final Logger log = LoggerFactory.getLogger(AssetCrudController.class);
+  private static final Logger log = LoggerFactory.getLogger(ObjectCrudController.class);
 
   private static final Joiner REPROXY_URL_JOINER = Joiner.on(' ');
 
@@ -62,33 +62,33 @@ public class AssetCrudController {
       REPROXY_CACHE_FOR_VALUE + "; Last-Modified Content-Type Content-Disposition";
 
   @Autowired
-  private AssetStore assetStore;
+  private ObjectStore objectStore;
 
   @Autowired
   private HsqlService hsqlService;
 
 
-  // TODO: check at startup that db is in sync with assetStore ?
+  // TODO: check at startup that db is in sync with objectStore ?
 
   private static Gson gson = new Gson();
 
-  private String assetToJsonString(Asset asset, boolean includeVersions) {
-    JsonObject jsonObject = gson.toJsonTree(asset).getAsJsonObject();
+  private String objectToJsonString(Object object, boolean includeVersions) {
+    JsonObject jsonObject = gson.toJsonTree(object).getAsJsonObject();
 
     if (includeVersions)
-      jsonObject.add("versions", gson.toJsonTree(hsqlService.listAssetVersions(asset)).getAsJsonArray());
+      jsonObject.add("versions", gson.toJsonTree(hsqlService.listObjectVersions(object)).getAsJsonArray());
 
     return jsonObject.toString();
   }
 
   @RequestMapping(method=RequestMethod.GET)
-  public @ResponseBody List<Asset> listAllAssets() throws Exception {
-    return hsqlService.listAllAssets();
+  public @ResponseBody List<Object> listAllObjects() throws Exception {
+    return hsqlService.listAllObject();
   }
 
 //  @RequestMapping(value="{bucketName}", method=RequestMethod.GET)
-//  public @ResponseBody List<Asset> listAssetsInBucket(@PathVariable String bucketName) throws Exception {
-//    return hsqlService.listAssetsInBucket(bucketName);
+//  public @ResponseBody List<Object> listObjectsInBucket(@PathVariable String bucketName) throws Exception {
+//    return hsqlService.listObjectsInBucket(bucketName);
 //  }
 
   private boolean clientSupportsReproxy(HttpServletRequest request) {
@@ -113,13 +113,13 @@ public class AssetCrudController {
             HttpServletRequest request,
             HttpServletResponse response) throws Exception {
 
-    Asset asset;
+    org.plos.repo.models.Object object;
     if (version == null)
-      asset = hsqlService.getAsset(bucketName, key);
+      object = hsqlService.getObject(bucketName, key);
     else
-      asset = hsqlService.getAsset(bucketName, key, version);
+      object = hsqlService.getObject(bucketName, key, version);
 
-    if (asset == null) {
+    if (object == null) {
       response.setStatus(HttpServletResponse.SC_NOT_FOUND);
       return;
     }
@@ -129,7 +129,7 @@ public class AssetCrudController {
     if (fetchMetadata != null && fetchMetadata) {
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
       try {
-        response.getWriter().write(assetToJsonString(asset, version == null));
+        response.getWriter().write(objectToJsonString(object, version == null));
         response.setStatus(HttpServletResponse.SC_OK);
       } catch (IOException e) {
         log.error("Error reading metadata", e);
@@ -140,9 +140,9 @@ public class AssetCrudController {
 
     // if they want redirect URLs
 
-    if (clientSupportsReproxy(request) && assetStore.hasXReproxy()) {
+    if (clientSupportsReproxy(request) && objectStore.hasXReproxy()) {
 
-      response.setHeader("X-Reproxy-URL", REPROXY_URL_JOINER.join(assetStore.getRedirectURLs(asset)));
+      response.setHeader("X-Reproxy-URL", REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object)));
       response.setHeader("X-Reproxy-Cache-For", REPROXY_CACHE_FOR_HEADER);
       response.setStatus(HttpServletResponse.SC_OK);
 
@@ -153,20 +153,20 @@ public class AssetCrudController {
 
     String exportFileName = "content";
 
-    if (asset.downloadName != null)
-      exportFileName = asset.downloadName;
-    else if (AssetStore.isValidFileName(asset.key))
-      exportFileName = asset.key;
+    if (object.downloadName != null)
+      exportFileName = object.downloadName;
+    else if (ObjectStore.isValidFileName(object.key))
+      exportFileName = object.key;
 
     try {
 
-      if (asset.contentType == null || asset.contentType.isEmpty())
+      if (object.contentType == null || object.contentType.isEmpty())
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
       else
-        response.setContentType(asset.contentType);
+        response.setContentType(object.contentType);
       response.setHeader("Content-Disposition", "inline; filename=" + exportFileName);
 
-      InputStream is = assetStore.getInputStream(asset);
+      InputStream is = objectStore.getInputStream(object);
       IOUtils.copy(is, response.getOutputStream());
       response.setStatus(HttpServletResponse.SC_FOUND);
       response.flushBuffer();
@@ -183,14 +183,14 @@ public class AssetCrudController {
                                        @RequestParam String key,
                                        @RequestParam int version) throws Exception {
 
-    if (hsqlService.markAssetDeleted(key, bucketName, version) == 0)
-      return new ResponseEntity<>("Error: Can not find asset in database.", HttpStatus.NOT_FOUND);
+    if (hsqlService.markObjectDeleted(key, bucketName, version) == 0)
+      return new ResponseEntity<>("Error: Can not find object in database.", HttpStatus.NOT_FOUND);
 
-    // NOTE: we no longer delete assets from the asset store
+    // NOTE: we no longer delete objects from the object store
 
-    // delete it from the asset store if it is no longer referenced in the database
-//    if (!hsqlService.assetInUse(bucketName, checksum) && !assetStore.deleteAsset(assetStore.getAssetLocationString(bucketName, checksum)))
-//      return new ResponseEntity<>("Error: There was a problem deleting the asset from the filesystem.", HttpStatus.NOT_MODIFIED);
+    // delete it from the object store if it is no longer referenced in the database
+//    if (!hsqlService.objectInUse(bucketName, checksum) && !objectStore.deleteObject(objectStore.getObjectLocationString(bucketName, checksum)))
+//      return new ResponseEntity<>("Error: There was a problem deleting the object from the filesystem.", HttpStatus.NOT_MODIFIED);
 
     return new ResponseEntity<>(key + " version " + version + " deleted", HttpStatus.OK);
   }
@@ -201,10 +201,10 @@ public class AssetCrudController {
                                                @RequestParam(required = false) String contentType,
                                                @RequestParam(required = false) String downloadName,
                                                @RequestParam(required = false) MultipartFile file,
-                                               @RequestParam(required = true) boolean newAsset
+                                               @RequestParam(required = true) boolean newObject
   ) throws Exception {
 
-    if (newAsset)
+    if (newObject)
       return create(key, bucketName, contentType, downloadName, file);
 
     return update(key, bucketName, contentType, downloadName, file);
@@ -224,45 +224,45 @@ public class AssetCrudController {
     if (bucketId == null)
       return new ResponseEntity<>("Error: Can not find bucket " + bucketName, HttpStatus.INSUFFICIENT_STORAGE);
 
-    Asset existingAsset = hsqlService.getAsset(bucketName, key);
+    Object existingObject = hsqlService.getObject(bucketName, key);
 
-    if (existingAsset != null)
-      return new ResponseEntity<>("Error: Attempting to create an asset with a key that already exists.", HttpStatus.CONFLICT);
+    if (existingObject != null)
+      return new ResponseEntity<>("Error: Attempting to create an object with a key that already exists.", HttpStatus.CONFLICT);
 
-    AssetStore.UploadInfo uploadInfo;
+    ObjectStore.UploadInfo uploadInfo;
     try {
-      uploadInfo = assetStore.uploadTempAsset(file);
+      uploadInfo = objectStore.uploadTempObject(file);
     } catch (Exception e) {
       log.error("Error during upload", e);
       return new ResponseEntity<>("Error: A problem occurred while uploading the file.", HttpStatus.PRECONDITION_FAILED);
     }
 
-    HttpStatus status = HttpStatus.CREATED; // note: status indicates if it made it to the DB, not the asset store
+    HttpStatus status = HttpStatus.CREATED; // note: status indicates if it made it to the DB, not the object store
 
-    Asset asset = new Asset(null, key, uploadInfo.getChecksum(), new Timestamp(new Date().getTime()), downloadName, contentType, uploadInfo.getSize(), null, null, bucketId, bucketName, 0, Asset.Status.USED);
+    Object object = new Object(null, key, uploadInfo.getChecksum(), new Timestamp(new Date().getTime()), downloadName, contentType, uploadInfo.getSize(), null, null, bucketId, bucketName, 0, Object.Status.USED);
 
-    // determine if the asset should be added to the store or not
-    if (assetStore.assetExists(asset)) {
+    // determine if the object should be added to the store or not
+    if (objectStore.objectExists(object)) {
 
-//      if (FileUtils.contentEquals(tempFile, new File(assetStore.getAssetLocationString(bucketName, checksum)))) {
-//        log.info("not adding asset to store since content exists");
+//      if (FileUtils.contentEquals(tempFile, new File(objectStore.getObjectLocationString(bucketName, checksum)))) {
+//        log.info("not adding object to store since content exists");
 //      } else {
 //        log.info("checksum collision!!");
 //        status = HttpStatus.CONFLICT;
 //      }
 
       // dont bother storing the file since the data already exists in the system
-      assetStore.deleteTempUpload(uploadInfo);
+      objectStore.deleteTempUpload(uploadInfo);
     } else {
-      assetStore.saveUploadedAsset(new Bucket(bucketName), uploadInfo);
-      asset.urls = REPROXY_URL_JOINER.join(assetStore.getRedirectURLs(asset));
+      objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo);
+      object.urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
     }
 
     // add a record to the DB
 
-    hsqlService.insertAsset(asset); // TODO: deal with 0 return values
+    hsqlService.insertObject(object); // TODO: deal with 0 return values
 
-    return new ResponseEntity<>(assetToJsonString(asset, false), status);
+    return new ResponseEntity<>(objectToJsonString(object, false), status);
   }
 
   private ResponseEntity<String> update(String key,
@@ -276,34 +276,34 @@ public class AssetCrudController {
     if (bucketId == null)
       return new ResponseEntity<>("Error: Can not find bucket " + bucketName, HttpStatus.INSUFFICIENT_STORAGE);
 
-    Asset asset = hsqlService.getAsset(bucketName, key);
+    Object object = hsqlService.getObject(bucketName, key);
 
-    if (asset == null)
-      return new ResponseEntity<>("Error: Attempting to create a new version of an non-existing asset.", HttpStatus.NOT_ACCEPTABLE);
+    if (object == null)
+      return new ResponseEntity<>("Error: Attempting to create a new version of an non-existing object.", HttpStatus.NOT_ACCEPTABLE);
 
-    // copy over values from previous asset, if they are not specified in the request
+    // copy over values from previous object, if they are not specified in the request
     if (contentType != null)
-      asset.contentType = contentType;
+      object.contentType = contentType;
 
     if (downloadName != null)
-      asset.downloadName = downloadName;
+      object.downloadName = downloadName;
 
     // TODO: wrap this in a transaction since versionNumber is being updated ?
 
-    asset.timestamp = new Timestamp(new Date().getTime());
-    asset.versionNumber++;
-    asset.id = null;  // remove this since it refers to the old asset
+    object.timestamp = new Timestamp(new Date().getTime());
+    object.versionNumber++;
+    object.id = null;  // remove this since it refers to the old object
 
     if (file == null) {
-      asset.urls = REPROXY_URL_JOINER.join(assetStore.getRedirectURLs(asset));
-      hsqlService.insertAsset(asset); // TODO: deal with 0 return values
+      object.urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
+      hsqlService.insertObject(object); // TODO: deal with 0 return values
 
-      return new ResponseEntity<>(assetToJsonString(asset, false), HttpStatus.OK);
+      return new ResponseEntity<>(objectToJsonString(object, false), HttpStatus.OK);
     }
 
-    AssetStore.UploadInfo uploadInfo;
+    ObjectStore.UploadInfo uploadInfo;
     try {
-      uploadInfo = assetStore.uploadTempAsset(file);
+      uploadInfo = objectStore.uploadTempObject(file);
     } catch (Exception e) {
       log.error("Error during upload", e);
       return new ResponseEntity<>("Error: A problem occurred while uploading the file.", HttpStatus.PRECONDITION_FAILED);
@@ -311,21 +311,21 @@ public class AssetCrudController {
 
     HttpStatus status = HttpStatus.OK; // note: different return value from 'create'
 
-    // determine if the asset should be added to the store or not
-    if (assetStore.assetExists(asset)) {
-      assetStore.deleteTempUpload(uploadInfo);
+    // determine if the object should be added to the store or not
+    if (objectStore.objectExists(object)) {
+      objectStore.deleteTempUpload(uploadInfo);
     } else {
-      assetStore.saveUploadedAsset(new Bucket(bucketName), uploadInfo);
-      asset.checksum = uploadInfo.getChecksum();
-      asset.size = uploadInfo.getSize();
+      objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo);
+      object.checksum = uploadInfo.getChecksum();
+      object.size = uploadInfo.getSize();
     }
 
-    asset.urls = REPROXY_URL_JOINER.join(assetStore.getRedirectURLs(asset));
+    object.urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
 
     // add a record to the DB
-    hsqlService.insertAsset(asset); // TODO: deal with 0 return values
+    hsqlService.insertObject(object); // TODO: deal with 0 return values
 
-    return new ResponseEntity<>(assetToJsonString(asset, false), status);
+    return new ResponseEntity<>(objectToJsonString(object, false), status);
   }
 
 }

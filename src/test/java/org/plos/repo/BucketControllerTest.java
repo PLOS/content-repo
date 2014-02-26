@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import org.plos.repo.service.AssetStore;
 import org.plos.repo.service.HsqlService;
+import org.plos.repo.service.ObjectStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -39,7 +39,7 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
   HsqlService hsqlService;
 
   @Autowired
-  AssetStore assetStore;
+  ObjectStore objectStore;
 
   @Autowired
   private WebApplicationContext wac;
@@ -60,7 +60,7 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
   @Test
   public void testControllerCrud() throws Exception {
 
-    AssetControllerTest.clearData(hsqlService, assetStore);
+    ObjectControllerTest.clearData(hsqlService, objectStore);
 
 
     // CREATE
@@ -103,8 +103,8 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
 
     this.mockMvc.perform(delete("/buckets/plos-buckettest-bucket1")).andExpect(status().isOk());
 
-    this.mockMvc.perform(fileUpload("/assets").file(new MockMultipartFile("file", "test".getBytes())).param("newAsset", "true")
-        .param("key", "asset1").param("bucketName", "plos-buckettest-bucket2"))
+    this.mockMvc.perform(fileUpload("/objects").file(new MockMultipartFile("file", "test".getBytes())).param("newObject", "true")
+        .param("key", "object1").param("bucketName", "plos-buckettest-bucket2"))
         .andDo(print())
         .andExpect(status().isCreated());
 
@@ -112,6 +112,10 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
 
     this.mockMvc.perform(delete("/buckets/plos-buckettest-bucket3")).andExpect(status().isNotFound());
 
+
+    // clean up
+
+    ObjectControllerTest.clearData(hsqlService, objectStore);
   }
 
 }

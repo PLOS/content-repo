@@ -4,7 +4,8 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.CreateBucketRequest;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import org.plos.repo.models.Asset;
+import com.amazonaws.services.s3.model.S3Object;
+import org.plos.repo.models.Object;
 import org.plos.repo.models.Bucket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,7 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.util.UUID;
 
-public class S3StoreService extends AssetStore {
+public class S3StoreService extends ObjectStore {
 
   private static final Logger log = LoggerFactory.getLogger(S3StoreService.class);
 
@@ -36,9 +37,16 @@ public class S3StoreService extends AssetStore {
     s3Client = new AmazonS3Client(preferences.getAWScredentials());
   }
 
-  public boolean assetExists(Asset asset) {
+  public boolean objectExists(Object object) {
     try {
-      return s3Client.getObject(asset.bucketName, asset.checksum) != null;
+      S3Object obj = s3Client.getObject(object.bucketName, object.checksum);
+
+      if (obj == null)
+        return false;
+
+      obj.close();
+      return true;
+
     } catch (Exception e) {
       return false;
     }
@@ -48,12 +56,12 @@ public class S3StoreService extends AssetStore {
     return true;  // TODO: make this configurable
   }
 
-  public URL[] getRedirectURLs(Asset asset) throws Exception {
-    return new URL[]{ new URL(s3Client.getResourceUrl(asset.bucketName, asset.checksum)) };
+  public URL[] getRedirectURLs(Object object) throws Exception {
+    return new URL[]{ new URL(s3Client.getResourceUrl(object.bucketName, object.checksum)) };
   }
 
-  public InputStream getInputStream(Asset asset) throws Exception {
-    return s3Client.getObject(asset.bucketName, asset.checksum).getObjectContent();
+  public InputStream getInputStream(Object object) throws Exception {
+    return s3Client.getObject(object.bucketName, object.checksum).getObjectContent();
   }
 
   public boolean createBucket(Bucket bucket) {
@@ -89,7 +97,7 @@ public class S3StoreService extends AssetStore {
    * @return
    * @throws Exception
    */
-  public UploadInfo uploadTempAsset(final MultipartFile file) throws Exception {
+  public UploadInfo uploadTempObject(final MultipartFile file) throws Exception {
 
     final String tempFileLocation = temp_upload_dir + "/" + UUID.randomUUID().toString() + ".tmp";
 
@@ -130,7 +138,7 @@ public class S3StoreService extends AssetStore {
 
   }
 
-  public boolean saveUploadedAsset(Bucket bucket, UploadInfo uploadInfo) {
+  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo) {
 
     int retries = 5;
     int tryCount = 0;
@@ -169,12 +177,12 @@ public class S3StoreService extends AssetStore {
     return new File(uploadInfo.getTempLocation()).delete();
   }
 
-  public boolean deleteAsset(Asset asset) {
+  public boolean deleteObject(Object object) {
     try {
-      s3Client.deleteObject(asset.bucketName, asset.checksum);
+      s3Client.deleteObject(object.bucketName, object.checksum);
       return true;
     } catch (Exception e) {
-      log.error("Error deleting asset", e);
+      log.error("Error deleting object", e);
       return false;
     }
   }

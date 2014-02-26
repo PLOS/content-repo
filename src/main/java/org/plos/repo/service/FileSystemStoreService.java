@@ -1,6 +1,6 @@
 package org.plos.repo.service;
 
-import org.plos.repo.models.Asset;
+import org.plos.repo.models.Object;
 import org.plos.repo.models.Bucket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +20,7 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.util.UUID;
 
-public class FileSystemStoreService extends AssetStore {
+public class FileSystemStoreService extends ObjectStore {
 
   private static final Logger log = LoggerFactory.getLogger(FileSystemStoreService.class);
 
@@ -35,16 +35,16 @@ public class FileSystemStoreService extends AssetStore {
     return data_dir + "/" + bucketName + "/";
   }
 
-  public String getAssetLocationString(String bucketName, String checksum) {
+  public String getObjectLocationString(String bucketName, String checksum) {
     return getBucketLocationString(bucketName) + checksum.substring(0, 2) + "/" + checksum;
   }
 
-  public boolean assetExists(Asset asset) {
-    return new File(getAssetLocationString(asset.bucketName, asset.checksum)).exists();
+  public boolean objectExists(Object object) {
+    return new File(getObjectLocationString(object.bucketName, object.checksum)).exists();
   }
 
-  public InputStream getInputStream(Asset asset) throws Exception {
-    return new FileInputStream(getAssetLocationString(asset.bucketName, asset.checksum));
+  public InputStream getInputStream(Object object) throws Exception {
+    return new FileInputStream(getObjectLocationString(object.bucketName, object.checksum));
   }
 
   public boolean createBucket(Bucket bucket) {
@@ -62,7 +62,7 @@ public class FileSystemStoreService extends AssetStore {
     return false;
   }
 
-  public URL[] getRedirectURLs(Asset asset) {
+  public URL[] getRedirectURLs(Object object) {
     return new URL[]{}; // since the filesystem is not reproxyable
   }
 
@@ -71,11 +71,11 @@ public class FileSystemStoreService extends AssetStore {
     return dir.delete();
   }
 
-  public boolean saveUploadedAsset(Bucket bucket, UploadInfo uploadInfo)
+  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo)
   throws Exception {
     File tempFile = new File(uploadInfo.getTempLocation());
 
-    File newFile = new File(getAssetLocationString(bucket.bucketName, uploadInfo.getChecksum()));
+    File newFile = new File(getObjectLocationString(bucket.bucketName, uploadInfo.getChecksum()));
 
     // create the subdirectory if it does not exist
     File subDir = new File(newFile.getParent());
@@ -85,16 +85,16 @@ public class FileSystemStoreService extends AssetStore {
     return tempFile.renameTo(newFile);
   }
 
-  public boolean deleteAsset(Asset asset) {
+  public boolean deleteObject(Object object) {
 
-    File file = new File(getAssetLocationString(asset.bucketName, asset.checksum));
+    File file = new File(getObjectLocationString(object.bucketName, object.checksum));
     File subDir = new File(file.getParent());
 
     boolean result = file.delete();
 
     // delete the parent subdirectory if it is empty
 
-    if (subDir.isDirectory() && file.list().length == 0)
+    if (subDir.isDirectory() && subDir.list().length == 0)
       subDir.delete();
 
     return result;
@@ -104,7 +104,7 @@ public class FileSystemStoreService extends AssetStore {
     return new File(uploadInfo.getTempLocation()).delete();
   }
 
-  public UploadInfo uploadTempAsset(final MultipartFile file) throws Exception {
+  public UploadInfo uploadTempObject(final MultipartFile file) throws Exception {
     final String tempFileLocation = data_dir + "/" + UUID.randomUUID().toString() + ".tmp";
 
     FileOutputStream fos = new FileOutputStream(tempFileLocation);

@@ -7,7 +7,7 @@ import com.google.common.collect.Maps;
 import java.sql.Timestamp;
 import java.util.EnumSet;
 
-public class Asset {
+public class Object {
 
   public enum Status {
     USED(0), DELETED(1);
@@ -45,7 +45,7 @@ public class Asset {
   public Integer versionNumber;
   public Status status;
 
-  public Asset(Integer id, String key, String checksum, Timestamp timestamp, String downloadName, String contentType, Long size, String urls, String tag, Integer bucketId, String bucketName, Integer versionNumber, Status status) {
+  public Object(Integer id, String key, String checksum, Timestamp timestamp, String downloadName, String contentType, Long size, String urls, String tag, Integer bucketId, String bucketName, Integer versionNumber, Status status) {
     this.id = id;
     this.key = key;
     this.checksum = checksum;

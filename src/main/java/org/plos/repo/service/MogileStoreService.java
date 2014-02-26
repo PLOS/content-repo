@@ -2,8 +2,8 @@ package org.plos.repo.service;
 
 import com.guba.mogilefs.MogileFS;
 import com.guba.mogilefs.PooledMogileFSImpl;
-import org.plos.repo.models.Asset;
-import org.plos.repo.models.Bucket;
+import org.plos.repo.models.*;
+import org.plos.repo.models.Object;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,7 +18,7 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.util.UUID;
 
-public class MogileStoreService extends AssetStore {
+public class MogileStoreService extends ObjectStore {
 
   public static final String mogileFileClass = "";
 
@@ -35,13 +35,13 @@ public class MogileStoreService extends AssetStore {
     return bucketName + "/";
   }
 
-  private String getAssetLocationString(String bucketName, String checksum) {
+  private String getObjectLocationString(String bucketName, String checksum) {
     return getBucketLocationString(bucketName) + checksum;
   }
 
-  public boolean assetExists(Asset asset) {
+  public boolean objectExists(Object object) {
     try {
-      InputStream in = mfs.getFileStream(getAssetLocationString(asset.bucketName, asset.checksum));
+      InputStream in = mfs.getFileStream(getObjectLocationString(object.bucketName, object.checksum));
 
       if (in == null) {
         in.close();
@@ -60,9 +60,9 @@ public class MogileStoreService extends AssetStore {
     return true;  // TODO: make this configurable ?
   }
 
-  public URL[] getRedirectURLs(Asset asset) throws Exception {
+  public URL[] getRedirectURLs(Object object) throws Exception {
 
-    String[] paths = mfs.getPaths(getAssetLocationString(asset.bucketName, asset.checksum), true);
+    String[] paths = mfs.getPaths(getObjectLocationString(object.bucketName, object.checksum), true);
     int pathCount = paths.length;
     URL[] urls = new URL[pathCount];
 
@@ -73,8 +73,8 @@ public class MogileStoreService extends AssetStore {
     return urls;
   }
 
-  public InputStream getInputStream(Asset asset) throws Exception {
-    return mfs.getFileStream(getAssetLocationString(asset.bucketName, asset.checksum));
+  public InputStream getInputStream(org.plos.repo.models.Object object) throws Exception {
+    return mfs.getFileStream(getObjectLocationString(object.bucketName, object.checksum));
   }
 
   public boolean createBucket(Bucket bucket) {
@@ -86,7 +86,7 @@ public class MogileStoreService extends AssetStore {
     return true;
   }
 
-  public UploadInfo uploadTempAsset(final MultipartFile file) throws Exception {
+  public UploadInfo uploadTempObject(final MultipartFile file) throws Exception {
     final String tempFileLocation = UUID.randomUUID().toString() + ".tmp";
 
     OutputStream fos = mfs.newFile(tempFileLocation, mogileFileClass, file.getSize());
@@ -127,9 +127,9 @@ public class MogileStoreService extends AssetStore {
 
   }
 
-  public boolean saveUploadedAsset(Bucket bucket, UploadInfo uploadInfo) throws Exception {
+  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo) throws Exception {
     try {
-      mfs.rename(uploadInfo.getTempLocation(), getAssetLocationString(bucket.bucketName, uploadInfo.getChecksum()));
+      mfs.rename(uploadInfo.getTempLocation(), getObjectLocationString(bucket.bucketName, uploadInfo.getChecksum()));
       return true;
     } catch (Exception e) {
       return false;
@@ -145,9 +145,9 @@ public class MogileStoreService extends AssetStore {
     }
   }
 
-  public boolean deleteAsset(Asset asset) {
+  public boolean deleteObject(Object object) {
     try {
-      mfs.delete(getAssetLocationString(asset.bucketName, asset.checksum));
+      mfs.delete(getObjectLocationString(object.bucketName, object.checksum));
       return true;
     } catch (Exception e) {
       return false;

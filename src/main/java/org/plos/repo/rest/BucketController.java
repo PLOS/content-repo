@@ -1,7 +1,7 @@
 package org.plos.repo.rest;
 
 import org.plos.repo.models.Bucket;
-import org.plos.repo.service.AssetStore;
+import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.HsqlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,7 +19,7 @@ import java.util.List;
 public class BucketController {
 
   @Autowired
-  private AssetStore assetStore;
+  private ObjectStore objectStore;
 
   @Autowired
   private HsqlService hsqlService;
@@ -36,16 +36,16 @@ public class BucketController {
     if (hsqlService.getBucketId(name) != null)
       return new ResponseEntity<>("Bucket already exists", HttpStatus.NOT_EXTENDED);
 
-    if (!AssetStore.isValidFileName(name))
+    if (!ObjectStore.isValidFileName(name))
       return new ResponseEntity<>("Unable to create bucket. Name contains illegal characters: " + name, HttpStatus.PRECONDITION_FAILED);
 
     Bucket bucket = new Bucket(name, id);
 
-    if (!assetStore.createBucket(bucket))
+    if (!objectStore.createBucket(bucket))
       return new ResponseEntity<>("Unable to create bucket " + name, HttpStatus.CONFLICT);
 
     if (!hsqlService.insertBucket(bucket)) {
-      assetStore.deleteBucket(bucket);
+      objectStore.deleteBucket(bucket);
       return new ResponseEntity<>("Unable to create bucket " + name, HttpStatus.CONFLICT);
     }
 
@@ -58,12 +58,12 @@ public class BucketController {
     if (hsqlService.getBucketId(name) == null)
       return new ResponseEntity<>("Cannot delete bucket. Bucket not found", HttpStatus.NOT_FOUND);
 
-    if (hsqlService.listAssetsInBucket(name).size() != 0)
-      return new ResponseEntity<>("Cannot delete bucket " + name + " because it contains assets.", HttpStatus.NOT_MODIFIED);
+    if (hsqlService.listObjectsInBucket(name).size() != 0)
+      return new ResponseEntity<>("Cannot delete bucket " + name + " because it contains objects.", HttpStatus.NOT_MODIFIED);
 
     Bucket bucket = new Bucket(name);
 
-    if (!assetStore.deleteBucket(bucket))
+    if (!objectStore.deleteBucket(bucket))
       return new ResponseEntity<>("There was a problem removing the bucket", HttpStatus.NOT_MODIFIED);
 
     if (hsqlService.deleteBucket(name) > 0)

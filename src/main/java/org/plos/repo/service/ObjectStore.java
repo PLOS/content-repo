@@ -1,14 +1,14 @@
 package org.plos.repo.service;
 
-import org.plos.repo.models.Asset;
-import org.plos.repo.models.Bucket;
+import org.plos.repo.models.*;
+import org.plos.repo.models.Object;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.net.URL;
 import java.util.regex.Pattern;
 
-public abstract class AssetStore {
+public abstract class ObjectStore {
 
   public static interface UploadInfo {
     Long getSize();
@@ -39,22 +39,22 @@ public abstract class AssetStore {
 
   abstract public Boolean hasXReproxy();
 
-  abstract public URL[] getRedirectURLs(Asset asset) throws Exception;
+  abstract public URL[] getRedirectURLs(org.plos.repo.models.Object object) throws Exception;
 
-  abstract public boolean assetExists(Asset asset);
+  abstract public boolean objectExists(Object object);
 
   abstract public boolean createBucket(Bucket bucket);
 
   abstract public boolean deleteBucket(Bucket bucket);
 
-  abstract public UploadInfo uploadTempAsset(MultipartFile file) throws Exception;
+  abstract public UploadInfo uploadTempObject(MultipartFile file) throws Exception;
 
-  abstract public boolean saveUploadedAsset(Bucket bucket, UploadInfo uploadInfo) throws Exception;
+  abstract public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo) throws Exception;
 
-  abstract public boolean deleteAsset(Asset asset);
+  abstract public boolean deleteObject(Object object);
 
   abstract public boolean deleteTempUpload(UploadInfo uploadInfo);
 
-  abstract public InputStream getInputStream(Asset asset) throws Exception;
+  abstract public InputStream getInputStream(Object object) throws Exception;
 
 }

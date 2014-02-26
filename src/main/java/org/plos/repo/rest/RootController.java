@@ -50,7 +50,7 @@ public class RootController {
     Map<String, Integer> counts = new HashMap<>();
     Map<String, String> service = new HashMap<>();
 
-    counts.put("assets", hsqlService.assetCount());
+    counts.put("objects", hsqlService.objectCount());
 
     service.put("version", preferences.getProjectVersion());
     service.put("configs", preferences.getConfigs());

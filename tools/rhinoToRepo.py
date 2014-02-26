@@ -27,7 +27,7 @@ dest.createBucket(bucketName)
 
 articles = source.articles(False, True)
 
-a = 0
+a = 0  # article count
 for article in articles:
 
 	if a < startArticleNum:
@@ -42,36 +42,37 @@ for article in articles:
 
 		for key in representations:
 
-			if dest.assetExists(bucketName, key, '0'):
+			if dest.objectExists(bucketName, key, '0'):
 				print (key + "  already in repo, skipping upload")
 				continue
 
-			assetNoPrefix = source._stripPrefix(key, True)
+			objectNoPrefix = source._stripPrefix(key, True)
 
-			tempLocalFile = '/tmp/temp.asset'
+			tempLocalFile = '/tmp/repo-obj.temp'
 
 			# TODO: add retry logic here
 			try :
 
 				begin = time.time()
-				assetData = source.getAfid(assetNoPrefix, tempLocalFile, 'MD5')
+				objectData = source.getAfid(objectNoPrefix, tempLocalFile, 'MD5')
 				readtime = time.time() - begin
 
-				checksumMD5 = assetData[1]
-				contentType = assetData[2]	# requires rhino.py be updated to provide this info
+				checksumMD5 = objectData[1]
+				contentType = objectData[2]	# requires rhino.py be updated to provide this info
 
 				begin = time.time()
-				newAsset = dest.newAsset(bucketName, tempLocalFile, key, contentType, assetNoPrefix)
+				newObject = dest.newObject(bucketName, tempLocalFile, key, contentType, objectNoPrefix)
 				writetime = time.time() - begin
 
-				assetJson = json.loads(newAsset.text)
-				assetJson["md5"] = checksumMD5
-				uploadStatus = (newAsset.status_code == requests.codes.created)
+				objectJson = json.loads(newObject.text)
+				objectJson["md5"] = checksumMD5
+				objectJson["a"] = a
+				uploadStatus = (newObject.status_code == requests.codes.created)
 
 				print ("(a " + str(a) + ") " + key + "  uploaded: " + str(uploadStatus) + "  read: {0:.2f}".format(round(readtime, 2)) + "  write: {0:.2f}".format(round(writetime, 2)))
 
 #				f.write(key + "\t" + checksumMD5 + "\t" + contentType + "\n")
-				f.write (pprint.pformat(assetJson) + "\n")
+				f.write (pprint.pformat(objectJson) + "\n")
 
 
 			except Exception as e:

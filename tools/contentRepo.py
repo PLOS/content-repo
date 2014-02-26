@@ -36,9 +36,9 @@ class ContentRepo:
 
 		return r.status_code == requests.codes.ok
 
-	def newAsset(self, bucketName, fileLocation, key, contentType, downloadName):
+	def newObject(self, bucketName, fileLocation, key, contentType, downloadName):
 
-		url = self.repoServer + '/assets/'
+		url = self.repoServer + '/objects/'
 
 		files = {'file': open(fileLocation, 'rb')}
 		values = {
@@ -46,15 +46,15 @@ class ContentRepo:
 			'bucketName' : bucketName, 
 			'contentType' : contentType, 
 			'downloadName' : downloadName,
-			'newAsset' : 'true'
+			'newObject' : 'true'
 			}
 		r = requests.post(url, files=files, data=values)
 
 		return r
 		#return r.status_code == requests.codes.created
 
-	def _getAssetMetadataRequest(self, bucketName, key, versionNumber):
-		url = self.repoServer + '/assets/' + bucketName
+	def _getObjectMetadataRequest(self, bucketName, key, versionNumber):
+		url = self.repoServer + '/objects/' + bucketName
 
 		values = {
 			'key': key, 
@@ -65,5 +65,5 @@ class ContentRepo:
 		r = requests.get(url, params=values)
 		return r
 
-	def assetExists(self, bucketName, key, versionNumber):
-		return self._getAssetMetadataRequest(bucketName, key, versionNumber).status_code == requests.codes.ok
+	def objectExists(self, bucketName, key, versionNumber):
+		return self._getObjectMetadataRequest(bucketName, key, versionNumber).status_code == requests.codes.ok
