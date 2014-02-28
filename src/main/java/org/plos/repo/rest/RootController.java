@@ -18,10 +18,12 @@
 package org.plos.repo.rest;
 
 import org.plos.repo.service.HsqlService;
+import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.Preferences;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
@@ -42,9 +44,17 @@ public class RootController {
   private HsqlService hsqlService;
 
   @Autowired
+  private ObjectStore objectStore;
+
+  @Autowired
   private Preferences preferences;
 
-  @RequestMapping(value = "/")
+  @RequestMapping(value = "hasXReproxy")
+  public @ResponseBody boolean hasXReproxy() {
+    return objectStore.hasXReproxy();
+  }
+
+  @RequestMapping(value = "")
   public ModelAndView rootPage(ModelAndView model) throws Exception {
 
     Map<String, Integer> counts = new HashMap<>();

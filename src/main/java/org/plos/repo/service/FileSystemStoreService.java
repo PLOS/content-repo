@@ -71,7 +71,7 @@ public class FileSystemStoreService extends ObjectStore {
     return dir.delete();
   }
 
-  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo)
+  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object)
   throws Exception {
     File tempFile = new File(uploadInfo.getTempLocation());
 

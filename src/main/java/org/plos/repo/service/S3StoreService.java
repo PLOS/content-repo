@@ -3,10 +3,13 @@ package org.plos.repo.service;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.CreateBucketRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.Region;
 import com.amazonaws.services.s3.model.S3Object;
-import org.plos.repo.models.Object;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.plos.repo.models.Bucket;
+import org.plos.repo.models.Object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
@@ -22,6 +25,8 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class S3StoreService extends ObjectStore {
@@ -67,7 +72,7 @@ public class S3StoreService extends ObjectStore {
   public boolean createBucket(Bucket bucket) {
 
     try {
-      CreateBucketRequest bucketRequest = new CreateBucketRequest(bucket.bucketName, com.amazonaws.services.s3.model.Region.US_West);
+      CreateBucketRequest bucketRequest = new CreateBucketRequest(bucket.bucketName, Region.US_West);
       bucketRequest.withCannedAcl(CannedAccessControlList.PublicRead);
       s3Client.createBucket(bucketRequest);
 
@@ -138,22 +143,42 @@ public class S3StoreService extends ObjectStore {
 
   }
 
-  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo) {
+  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
 
     int retries = 5;
     int tryCount = 0;
     int waitSecond = 4;
 
+    ObjectMapper m = new ObjectMapper();
+    Map<String, java.lang.Object> propsObj = m.convertValue(object, Map.class);
+
+    Map<String, String> propsStr = new HashMap<>();
+
+    for (Map.Entry<String, java.lang.Object> entry : propsObj.entrySet()) {
+      try {
+        if (entry.getValue() == null)
+          propsStr.put(entry.getKey(), "");
+        else
+          propsStr.put(entry.getKey(), entry.getValue().toString());
+      } catch (ClassCastException cce){
+        log.error("Problem converting object to metadata", cce);
+      }
+    }
+
+    ObjectMetadata objectMetadata = new ObjectMetadata();
+    objectMetadata.setContentLength(uploadInfo.getSize());
+    objectMetadata.setUserMetadata(propsStr);
+
     File tempFile = new File(uploadInfo.getTempLocation());
 
     PutObjectRequest putObjectRequest = new PutObjectRequest(bucket.bucketName, uploadInfo.getChecksum(), tempFile);
     putObjectRequest.withCannedAcl(CannedAccessControlList.PublicRead);
+    putObjectRequest.setMetadata(objectMetadata);
 
     while (tryCount < retries) {
 
       try {
-
-        s3Client.putObject(putObjectRequest);
+        s3Client.putObject(putObjectRequest); // TODO: check result and do something about it
         tempFile.delete();
         return true;
 

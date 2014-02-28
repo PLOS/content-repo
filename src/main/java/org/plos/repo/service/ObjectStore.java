@@ -49,7 +49,7 @@ public abstract class ObjectStore {
 
   abstract public UploadInfo uploadTempObject(MultipartFile file) throws Exception;
 
-  abstract public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo) throws Exception;
+  abstract public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) throws Exception;
 
   abstract public boolean deleteObject(Object object);
 

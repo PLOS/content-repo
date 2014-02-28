@@ -127,7 +127,7 @@ public class MogileStoreService extends ObjectStore {
 
   }
 
-  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo) throws Exception {
+  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) throws Exception {
     try {
       mfs.rename(uploadInfo.getTempLocation(), getObjectLocationString(bucket.bucketName, uploadInfo.getChecksum()));
       return true;

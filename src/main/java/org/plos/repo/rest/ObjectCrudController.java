@@ -254,7 +254,7 @@ public class ObjectCrudController {
       // dont bother storing the file since the data already exists in the system
       objectStore.deleteTempUpload(uploadInfo);
     } else {
-      objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo);
+      objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object);
       object.urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
     }
 
@@ -311,13 +311,15 @@ public class ObjectCrudController {
 
     HttpStatus status = HttpStatus.OK; // note: different return value from 'create'
 
+    object.urls = "";
+
     // determine if the object should be added to the store or not
     if (objectStore.objectExists(object)) {
       objectStore.deleteTempUpload(uploadInfo);
     } else {
-      objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo);
       object.checksum = uploadInfo.getChecksum();
       object.size = uploadInfo.getSize();
+      objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object);
     }
 
     object.urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));

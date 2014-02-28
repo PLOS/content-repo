@@ -209,7 +209,7 @@ public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
 
 
     // clean up
-    clearData(hsqlService, objectStore);
+//    clearData(hsqlService, objectStore);
 
   }
 
