@@ -34,7 +34,7 @@ public class BucketController {
                                        @RequestParam(required = false) Integer id) {
 
     if (hsqlService.getBucketId(name) != null)
-      return new ResponseEntity<>("Bucket already exists", HttpStatus.NOT_EXTENDED);
+      return new ResponseEntity<>("Bucket already exists", HttpStatus.NO_CONTENT);
 
     if (!ObjectStore.isValidFileName(name))
       return new ResponseEntity<>("Unable to create bucket. Name contains illegal characters: " + name, HttpStatus.PRECONDITION_FAILED);

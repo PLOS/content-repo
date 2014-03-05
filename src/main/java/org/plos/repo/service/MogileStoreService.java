@@ -93,8 +93,7 @@ public class MogileStoreService extends ObjectStore {
 
     ReadableByteChannel in = Channels.newChannel(file.getInputStream());
     MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
-    WritableByteChannel out = Channels.newChannel(
-        new DigestOutputStream(fos, digest));
+    WritableByteChannel out = Channels.newChannel(new DigestOutputStream(fos, digest));
     ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
 
     while (in.read(buffer) != -1) {

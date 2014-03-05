@@ -142,7 +142,14 @@ public class ObjectCrudController {
 
     if (clientSupportsReproxy(request) && objectStore.hasXReproxy()) {
 
-      response.setHeader("X-Reproxy-URL", REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object)));
+      // if the urls are in the database use that first
+      String urls = object.urls;
+
+      // if not, check the filestore
+      if (object.urls == null || object.urls.isEmpty())
+        urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
+
+      response.setHeader("X-Reproxy-URL", urls);
       response.setHeader("X-Reproxy-Cache-For", REPROXY_CACHE_FOR_HEADER);
       response.setStatus(HttpServletResponse.SC_OK);
 
@@ -168,7 +175,7 @@ public class ObjectCrudController {
 
       InputStream is = objectStore.getInputStream(object);
       IOUtils.copy(is, response.getOutputStream());
-      response.setStatus(HttpServletResponse.SC_FOUND);
+      response.setStatus(HttpServletResponse.SC_OK);
       response.flushBuffer();
       is.close();
     } catch (Exception ex) {
@@ -239,7 +246,9 @@ public class ObjectCrudController {
 
     HttpStatus status = HttpStatus.CREATED; // note: status indicates if it made it to the DB, not the object store
 
-    Object object = new Object(null, key, uploadInfo.getChecksum(), new Timestamp(new Date().getTime()), downloadName, contentType, uploadInfo.getSize(), null, null, bucketId, bucketName, 0, Object.Status.USED);
+    Integer versionNumber = hsqlService.getNextAvailableVersionNumber(bucketName, key);
+
+    Object object = new Object(null, key, uploadInfo.getChecksum(), new Timestamp(new Date().getTime()), downloadName, contentType, uploadInfo.getSize(), null, null, bucketId, bucketName, versionNumber, Object.Status.USED);
 
     // determine if the object should be added to the store or not
     if (objectStore.objectExists(object)) {

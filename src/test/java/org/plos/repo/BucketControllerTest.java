@@ -76,7 +76,7 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
         .param("name", "plos-buckettest-bucket1"))
-        .andExpect(status().isNotExtended());
+        .andExpect(status().isNoContent());
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
         .param("name", "plos-buckettest-bucket2").param("id", "5"))

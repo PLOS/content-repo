@@ -143,13 +143,13 @@ public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
         .andExpect(header().string("Content-Type", "text/plain"))
         .andExpect(header().string("Content-Disposition", "inline; filename=object1"))
         .andExpect(content().string(testData1))
-        .andExpect(status().isFound());  // file name assigned by key
+        .andExpect(status().isOk());  // file name assigned by key
 
     this.mockMvc.perform(get("/objects/" + bucketName).param("key", "object1").param("version", "0"))
         .andExpect(header().string("Content-Type", "text/plain"))
         .andExpect(header().string("Content-Disposition", "inline; filename=object1"))
         .andExpect(content().string(testData1))
-        .andExpect(status().isFound());  // version accessible
+        .andExpect(status().isOk());  // version accessible
 
     this.mockMvc.perform(get("/objects/" + bucketName).param("key", "object1").param("version", "10"))
         .andExpect(status().isNotFound());  // version should not exist
@@ -205,7 +205,10 @@ public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
     this.mockMvc.perform(delete("/objects/" + bucketName).param("key", "object1").param("version", "0"))
         .andExpect(status().isOk());
 
-    // TODO: check object deduplication somewhere
+    // TODO: tests to add
+    //   object deduplication
+    //   check url redirect resolve order (db vs filestore)
+
 
 
     // clean up

@@ -61,6 +61,15 @@ public class HsqlService {
     return jdbcTemplate.update("UPDATE objects SET status=? WHERE key=? AND bucketId=? AND versionNumber=?", new java.lang.Object[]{Object.Status.DELETED.getValue(), key, getBucketId(bucketName), versionNumber}, new int[]{Types.TINYINT, Types.VARCHAR, Types.INTEGER, Types.TIMESTAMP});
   }
 
+  public Integer getNextAvailableVersionNumber(String bucketName, String key) {
+
+    try {
+      return 1 + jdbcTemplate.queryForObject("SELECT versionNumber FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND key=? ORDER BY versionNumber DESC LIMIT 1", new java.lang.Object[]{bucketName, key}, new int[]{Types.VARCHAR, Types.VARCHAR}, Integer.class);
+    } catch (EmptyResultDataAccessException e) {
+      return 0;
+    }
+  }
+
   public Object getObject(String bucketName, String key) {
 
     try {
