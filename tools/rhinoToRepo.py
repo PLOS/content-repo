@@ -16,7 +16,9 @@ if startArticleNum == None:
 	startArticleNum = 0
 
 rhinoToRepoLog = 'rhinoToRepo.log'
+errorLog = 'error.log'
 f = open(rhinoToRepoLog, 'a')
+eLog = open(errorLog, 'a')
 
 dest = ContentRepo()
 source = Rhino()
@@ -36,7 +38,11 @@ for article in articles:
 
 	print ("article (" + str(a) + "): " + article)
 
-	reps = source.assets(article)
+	try:
+		reps = source.assets(article)
+	except Exception as e:
+		eLog.write("article (" + str(a) + "): " + str(e) + "\n")
+		continue
 
 	for (doi, representations) in reps.iteritems():
 
