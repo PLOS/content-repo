@@ -8,9 +8,10 @@ __author__    = 'Jono Finger'
 __copyright__ = 'Copyright 2014, PLOS'
 __version__   = '0.1'
 
-# exec with : PYTHONPATH=path/to/rhino/tools/python/plosapi python rhinoToRepo.py 100
+# exec with : PYTHONPATH=path/to/rhino/tools/python/plosapi python rhinoToRepo.py http://localhost:8084 100
 
-startArticleNum = int(sys.argv[1])
+repoServer = sys.argv[1]
+startArticleNum = int(sys.argv[2])
 
 if startArticleNum == None:
 	startArticleNum = 0
@@ -20,7 +21,7 @@ errorLog = 'error.log'
 f = open(rhinoToRepoLog, 'a')
 eLog = open(errorLog, 'a')
 
-dest = ContentRepo()
+dest = ContentRepo(repoServer)
 source = Rhino()
 
 bucketName = 'us-west-1.repo.plos.org'
