@@ -42,14 +42,16 @@
     </c:if>
 </c:forEach>
 
-<h2>Some sample inputs</h2>
+<%--<h2>Some sample inputs</h2>--%>
 
-<ul>
-  <li><a href="/buckets">/buckets</a></li>
-</ul>
+<%--<ul>--%>
+  <%--<li><a href="/buckets">/buckets</a></li>--%>
+<%--</ul>--%>
 
 <%--<hr/>--%>
 <%--<center><img src="resources/squirrel.jpg" alt="A squirrel (they are scatter hoarders)" width="300"/></center>--%>
+
+<%-- or perhaps an acorn woodpecker? --%>
 
 </body>
 </html>

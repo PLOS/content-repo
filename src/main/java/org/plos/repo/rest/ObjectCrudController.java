@@ -43,6 +43,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Enumeration;
@@ -174,10 +175,12 @@ public class ObjectCrudController {
       response.setHeader("Content-Disposition", "inline; filename=" + exportFileName);
 
       InputStream is = objectStore.getInputStream(object);
-      IOUtils.copy(is, response.getOutputStream());
+      OutputStream os = response.getOutputStream();
+      IOUtils.copy(is, os);
       response.setStatus(HttpServletResponse.SC_OK);
       response.flushBuffer();
       is.close();
+      os.close();
     } catch (Exception ex) {
       response.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
       log.info("Error writing file to output stream.", ex);
