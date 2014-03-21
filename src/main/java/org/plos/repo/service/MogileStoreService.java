@@ -4,6 +4,8 @@ import com.guba.mogilefs.MogileFS;
 import com.guba.mogilefs.PooledMogileFSImpl;
 import org.plos.repo.models.*;
 import org.plos.repo.models.Object;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,6 +22,8 @@ import java.util.UUID;
 
 public class MogileStoreService extends ObjectStore {
 
+  private static final Logger log = LoggerFactory.getLogger(MogileStoreService.class);
+
   public static final String mogileFileClass = "";
 
   public static final String mogileDefaultDomain = "toast";
@@ -28,6 +32,7 @@ public class MogileStoreService extends ObjectStore {
 
   @Required
   public void setPreferences(Preferences preferences) throws Exception {
+    log.info("Using MogileStore backend");
     mfs = new PooledMogileFSImpl(mogileDefaultDomain, preferences.getMogileTrackers(), 1, 1, 100);
   }
 

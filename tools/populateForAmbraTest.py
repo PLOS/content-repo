@@ -1,12 +1,16 @@
 #!/usr/bin/env python2
 
-import requests, json, time, sys, pprint
-from contentRepo import ContentRepo
-from rhino import Rhino
+'''
+This is used to migrate a single article from a running instance of Rhino to a running content repo.
+'''
 
 __author__    = 'Jono Finger'
 __copyright__ = 'Copyright 2014, PLOS'
 __version__   = '0.1'
+
+import requests, json, time, sys, pprint
+from contentRepo import ContentRepo
+from rhino import Rhino
 
 # example : PYTHONPATH=path/to/rhino/tools/python/plosapi python populateForAmbraTest.py http://localhost:8081 filestoretest.plos.org journal.pone.0004011
 
@@ -19,7 +23,7 @@ article = sys.argv[3]
 dest = ContentRepo(repoServer)
 source = Rhino()
 
-# dest.createBucket(bucketName) # assume the bucket already exists
+dest.createBucket(bucketName)
 
 print ("article: " + article)
 

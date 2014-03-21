@@ -39,6 +39,7 @@ public class S3StoreService extends ObjectStore {
 
   @Required
   public void setPreferences(Preferences preferences) throws Exception {
+    log.info("Using S3Store backend");
     s3Client = new AmazonS3Client(preferences.getAWScredentials());
   }
 

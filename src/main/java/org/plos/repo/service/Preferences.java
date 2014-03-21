@@ -41,7 +41,7 @@ public class Preferences {
   }
 
   public String getHsqldbConnectionString() {
-    return "jdbc:hsqldb:" + getDataDirectory() + "/" + HsqlService.fileName;
+    return "jdbc:hsqldb:file:" + getDataDirectory() + "/" + HsqlService.fileName;
   }
 
   public String[] getMogileTrackers() {

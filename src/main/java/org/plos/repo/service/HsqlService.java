@@ -27,6 +27,7 @@ public class HsqlService {
   public void setDataSource(DriverManagerDataSource dataSource) {
     try {
       jdbcTemplate = new JdbcTemplate(dataSource);
+      jdbcTemplate.execute("CHECKPOINT DEFRAG");  // kludge to deal with embedded db file growth
     } catch (Exception e2) {
       e2.printStackTrace();
     }
