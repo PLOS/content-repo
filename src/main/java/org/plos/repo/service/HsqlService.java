@@ -1,7 +1,7 @@
 package org.plos.repo.service;
 
 import org.hsqldb.types.Types;
-import org.plos.repo.models.*;
+import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +10,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -27,7 +28,16 @@ public class HsqlService {
   public void setDataSource(DriverManagerDataSource dataSource) {
     try {
       jdbcTemplate = new JdbcTemplate(dataSource);
-      jdbcTemplate.execute("CHECKPOINT DEFRAG");  // kludge to deal with embedded db file growth
+
+      // kludges for dealing with HSQLDB
+      SqlRowSet rowset = jdbcTemplate.queryForRowSet("select * from INFORMATION_SCHEMA.SYSTEM_INDEXINFO where INDEX_NAME = 'OBJKEY'");
+
+      if (!rowset.next()) {
+        log.info("Creating DB index");
+        jdbcTemplate.execute("CREATE INDEX objKey ON objects(bucketId, key)");
+        jdbcTemplate.execute("CHECKPOINT DEFRAG");
+      }
+
     } catch (Exception e2) {
       e2.printStackTrace();
     }
