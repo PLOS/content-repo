@@ -21,6 +21,8 @@ public class Preferences {
 
   private static final String MOGILE_TRACKERS = "mogile_trackers";
 
+  private static final String JDBC_URL = "database_url";
+
   private String[] configFiles;
 
   @Required
@@ -40,9 +42,21 @@ public class Preferences {
     return dir;
   }
 
-  public String getHsqldbConnectionString() {
-    return "jdbc:hsqldb:file:" + getDataDirectory() + "/" + HsqlService.fileName;
+  public String getJdbcConnectionSring() {
+
+    String dataDir = getDataDirectory();
+    String connectionString = loadConfigs().getProperty(JDBC_URL);
+
+    connectionString = connectionString.replaceFirst("\\{" + FIELD_DATADIR + "}", dataDir);
+
+    log.info("DB Connection = " + connectionString);
+
+    return connectionString;
   }
+
+//  public String getHsqldbConnectionString() {
+//    return "jdbc:hsqldb:file:" + getDataDirectory() + "/" + HsqlService.fileName;
+//  }
 
   public String[] getMogileTrackers() {
     return loadConfigs().getProperty(MOGILE_TRACKERS).split(",");

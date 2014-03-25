@@ -64,15 +64,15 @@
   </mvc:interceptors>
 
   <beans:bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-    <beans:property name="driverClassName" value="org.hsqldb.jdbcDriver"/>
-    <beans:property name="url" value="#{ prefs.hsqldbConnectionString }"/>
+    <!--<beans:property name="driverClassName" value="org.hsqldb.jdbcDriver"/>-->
+    <beans:property name="url" value="#{ prefs.jdbcConnectionSring }"/>
   </beans:bean>
 
   <jdbc:initialize-database data-source="dataSource">
-    <jdbc:script location="classpath:setup.sql"/>
+    <jdbc:script location="classpath:setup.mysql"/>
   </jdbc:initialize-database>
 
-  <beans:bean id="hsqlService" class="org.plos.repo.service.HsqlService">
+  <beans:bean id="sqlService" class="org.plos.repo.service.MysqlService">
     <beans:property name="dataSource" ref="dataSource" />
   </beans:bean>
 
