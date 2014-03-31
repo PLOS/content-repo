@@ -54,7 +54,7 @@ public class FileSystemStoreService extends ObjectStore {
     boolean result = dir.mkdir();
 
     if (!result)
-      log.debug("Error while creating bucket. Directory was not able to be created : " + getBucketLocationString(bucket.bucketName));
+      log.error("Error while creating bucket. Directory was not able to be created : " + getBucketLocationString(bucket.bucketName));
 
     return result;
   }

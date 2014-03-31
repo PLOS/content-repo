@@ -17,9 +17,9 @@
 
 package org.plos.repo.rest;
 
-import org.plos.repo.service.HsqlService;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.Preferences;
+import org.plos.repo.service.SqlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,7 +41,7 @@ public class RootController {
   }
 
   @Autowired
-  private HsqlService hsqlService;
+  private SqlService sqlService;
 
   @Autowired
   private ObjectStore objectStore;
@@ -60,7 +60,7 @@ public class RootController {
     Map<String, Integer> counts = new HashMap<>();
     Map<String, String> service = new HashMap<>();
 
-    counts.put("objects", hsqlService.objectCount());
+    counts.put("objects", sqlService.objectCount());
 
     service.put("version", preferences.getProjectVersion());
     service.put("configs", preferences.getConfigs());

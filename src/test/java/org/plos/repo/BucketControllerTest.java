@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import org.plos.repo.service.HsqlService;
 import org.plos.repo.service.ObjectStore;
+import org.plos.repo.service.SqlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class BucketControllerTest extends AbstractTestNGSpringContextTests {
 
   @Autowired
-  HsqlService hsqlService;
+  SqlService sqlService;
 
   @Autowired
   ObjectStore objectStore;
@@ -60,7 +60,7 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
   @Test
   public void testControllerCrud() throws Exception {
 
-    ObjectControllerTest.clearData(hsqlService, objectStore);
+    ObjectControllerTest.clearData(sqlService, objectStore);
 
 
     // CREATE
@@ -71,19 +71,19 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
         .andExpect(content().string("[]"));
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
-        .param("name", "plos-buckettest-bucket1"))
+        .param("name", "plos-bucketunittest-bucket1"))
         .andExpect(status().isCreated());
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
-        .param("name", "plos-buckettest-bucket1"))
+        .param("name", "plos-bucketunittest-bucket1"))
         .andExpect(status().isNoContent());
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
-        .param("name", "plos-buckettest-bucket2").param("id", "5"))
+        .param("name", "plos-bucketunittest-bucket2").param("id", "5"))
         .andExpect(status().isCreated());
 
     this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
-        .param("name", "plos-buckettest-bad?&name"))
+        .param("name", "plos-bucketunittest-bad?&name"))
         .andExpect(status().isPreconditionFailed());
 
 
@@ -101,21 +101,21 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
 
     // DELETE
 
-    this.mockMvc.perform(delete("/buckets/plos-buckettest-bucket1")).andExpect(status().isOk());
+    this.mockMvc.perform(delete("/buckets/plos-bucketunittest-bucket1")).andExpect(status().isOk());
 
     this.mockMvc.perform(fileUpload("/objects").file(new MockMultipartFile("file", "test".getBytes())).param("newObject", "true")
-        .param("key", "object1").param("bucketName", "plos-buckettest-bucket2"))
+        .param("key", "object1").param("bucketName", "plos-bucketunittest-bucket2"))
         .andDo(print())
         .andExpect(status().isCreated());
 
-    this.mockMvc.perform(delete("/buckets/plos-buckettest-bucket2")).andExpect(status().isNotModified());
+    this.mockMvc.perform(delete("/buckets/plos-bucketunittest-bucket2")).andExpect(status().isNotModified());
 
-    this.mockMvc.perform(delete("/buckets/plos-buckettest-bucket3")).andExpect(status().isNotFound());
+    this.mockMvc.perform(delete("/buckets/plos-bucketunittest-bucket3")).andExpect(status().isNotFound());
 
 
     // clean up
 
-    ObjectControllerTest.clearData(hsqlService, objectStore);
+    ObjectControllerTest.clearData(sqlService, objectStore);
   }
 
 }

@@ -6,10 +6,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import org.plos.repo.models.*;
+import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
 import org.plos.repo.service.ObjectStore;
-import org.plos.repo.service.HsqlService;
+import org.plos.repo.service.SqlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
 
   @Autowired
-  private HsqlService hsqlService;
+  private SqlService sqlService;
 
   @Autowired
   private ObjectStore objectStore;
@@ -66,19 +66,19 @@ public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
     jsonObjectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
   }
 
-  public static void clearData(HsqlService hsqlService, ObjectStore objectStore) {
-    List<org.plos.repo.models.Object> objectList = hsqlService.listAllObject();
+  public static void clearData(SqlService sqlService, ObjectStore objectStore) {
+    List<org.plos.repo.models.Object> objectList = sqlService.listAllObject();
 
     for (Object object : objectList) {
-      //hsqlService.markObjectDeleted(object.key, object.checksum, object.bucketName, object.versionNumber);
-      hsqlService.deleteObject(object);
+      //sqlService.markObjectDeleted(object.key, object.checksum, object.bucketName, object.versionNumber);
+      sqlService.deleteObject(object);
       objectStore.deleteObject(object);
     }
 
-    List<Bucket> bucketList = hsqlService.listBuckets();
+    List<Bucket> bucketList = sqlService.listBuckets();
 
     for (Bucket bucket : bucketList) {
-      hsqlService.deleteBucket(bucket.bucketName);
+      sqlService.deleteBucket(bucket.bucketName);
       objectStore.deleteBucket(bucket);
     }
   }
@@ -88,9 +88,9 @@ public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
 
     Gson gson = new Gson();
 
-    String bucketName = "plos-objstoretest-bucket1";
+    String bucketName = "plos-objstoreunittest-bucket1";
 
-    clearData(hsqlService, objectStore);
+    clearData(sqlService, objectStore);
 
     this.mockMvc.perform(get("/objects").accept(APPLICATION_JSON_UTF8))
         .andExpect(status().isOk())
@@ -212,7 +212,7 @@ public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
 
 
     // clean up
-//    clearData(hsqlService, objectStore);
+//    clearData(sqlService, objectStore);
 
   }
 

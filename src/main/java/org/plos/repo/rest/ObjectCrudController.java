@@ -21,10 +21,10 @@ import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
-import org.plos.repo.models.*;
+import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
 import org.plos.repo.service.ObjectStore;
-import org.plos.repo.service.HsqlService;
+import org.plos.repo.service.SqlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,7 +66,7 @@ public class ObjectCrudController {
   private ObjectStore objectStore;
 
   @Autowired
-  private HsqlService hsqlService;
+  private SqlService sqlService;
 
 
   // TODO: check at startup that db is in sync with objectStore ?
@@ -77,19 +77,19 @@ public class ObjectCrudController {
     JsonObject jsonObject = gson.toJsonTree(object).getAsJsonObject();
 
     if (includeVersions)
-      jsonObject.add("versions", gson.toJsonTree(hsqlService.listObjectVersions(object)).getAsJsonArray());
+      jsonObject.add("versions", gson.toJsonTree(sqlService.listObjectVersions(object)).getAsJsonArray());
 
     return jsonObject.toString();
   }
 
   @RequestMapping(method=RequestMethod.GET)
   public @ResponseBody List<Object> listAllObjects() throws Exception {
-    return hsqlService.listAllObject();
+    return sqlService.listAllObject();
   }
 
 //  @RequestMapping(value="{bucketName}", method=RequestMethod.GET)
 //  public @ResponseBody List<Object> listObjectsInBucket(@PathVariable String bucketName) throws Exception {
-//    return hsqlService.listObjectsInBucket(bucketName);
+//    return sqlService.listObjectsInBucket(bucketName);
 //  }
 
   private boolean clientSupportsReproxy(HttpServletRequest request) {
@@ -116,9 +116,9 @@ public class ObjectCrudController {
 
     org.plos.repo.models.Object object;
     if (version == null)
-      object = hsqlService.getObject(bucketName, key);
+      object = sqlService.getObject(bucketName, key);
     else
-      object = hsqlService.getObject(bucketName, key, version);
+      object = sqlService.getObject(bucketName, key, version);
 
     if (object == null) {
       response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -193,13 +193,13 @@ public class ObjectCrudController {
                                        @RequestParam String key,
                                        @RequestParam int version) throws Exception {
 
-    if (hsqlService.markObjectDeleted(key, bucketName, version) == 0)
+    if (sqlService.markObjectDeleted(key, bucketName, version) == 0)
       return new ResponseEntity<>("Error: Can not find object in database.", HttpStatus.NOT_FOUND);
 
     // NOTE: we no longer delete objects from the object store
 
     // delete it from the object store if it is no longer referenced in the database
-//    if (!hsqlService.objectInUse(bucketName, checksum) && !objectStore.deleteObject(objectStore.getObjectLocationString(bucketName, checksum)))
+//    if (!sqlService.objectInUse(bucketName, checksum) && !objectStore.deleteObject(objectStore.getObjectLocationString(bucketName, checksum)))
 //      return new ResponseEntity<>("Error: There was a problem deleting the object from the filesystem.", HttpStatus.NOT_MODIFIED);
 
     return new ResponseEntity<>(key + " version " + version + " deleted", HttpStatus.OK);
@@ -226,7 +226,7 @@ public class ObjectCrudController {
                           String downloadName,
                           MultipartFile file) throws Exception {
 
-    Integer bucketId = hsqlService.getBucketId(bucketName);
+    Integer bucketId = sqlService.getBucketId(bucketName);
 
     if (file == null)
       return new ResponseEntity<>("Error: A file must be specified for uploading.", HttpStatus.PRECONDITION_FAILED);
@@ -234,7 +234,7 @@ public class ObjectCrudController {
     if (bucketId == null)
       return new ResponseEntity<>("Error: Can not find bucket " + bucketName, HttpStatus.INSUFFICIENT_STORAGE);
 
-    Object existingObject = hsqlService.getObject(bucketName, key);
+    Object existingObject = sqlService.getObject(bucketName, key);
 
     if (existingObject != null)
       return new ResponseEntity<>("Error: Attempting to create an object with a key that already exists.", HttpStatus.CONFLICT);
@@ -249,7 +249,7 @@ public class ObjectCrudController {
 
     HttpStatus status = HttpStatus.CREATED; // note: status indicates if it made it to the DB, not the object store
 
-    Integer versionNumber = hsqlService.getNextAvailableVersionNumber(bucketName, key);
+    Integer versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, key);
 
     Object object = new Object(null, key, uploadInfo.getChecksum(), new Timestamp(new Date().getTime()), downloadName, contentType, uploadInfo.getSize(), null, null, bucketId, bucketName, versionNumber, Object.Status.USED);
 
@@ -272,7 +272,7 @@ public class ObjectCrudController {
 
     // add a record to the DB
 
-    hsqlService.insertObject(object); // TODO: deal with 0 return values
+    sqlService.insertObject(object); // TODO: deal with 0 return values
 
     return new ResponseEntity<>(objectToJsonString(object, false), status);
   }
@@ -283,12 +283,12 @@ public class ObjectCrudController {
                                         String downloadName,
                                         MultipartFile file) throws Exception {
 
-    Integer bucketId = hsqlService.getBucketId(bucketName);
+    Integer bucketId = sqlService.getBucketId(bucketName);
 
     if (bucketId == null)
       return new ResponseEntity<>("Error: Can not find bucket " + bucketName, HttpStatus.INSUFFICIENT_STORAGE);
 
-    Object object = hsqlService.getObject(bucketName, key);
+    Object object = sqlService.getObject(bucketName, key);
 
     if (object == null)
       return new ResponseEntity<>("Error: Attempting to create a new version of an non-existing object.", HttpStatus.NOT_ACCEPTABLE);
@@ -308,7 +308,7 @@ public class ObjectCrudController {
 
     if (file == null) {
       object.urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
-      hsqlService.insertObject(object); // TODO: deal with 0 return values
+      sqlService.insertObject(object); // TODO: deal with 0 return values
 
       return new ResponseEntity<>(objectToJsonString(object, false), HttpStatus.OK);
     }
@@ -337,7 +337,7 @@ public class ObjectCrudController {
     object.urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
 
     // add a record to the DB
-    hsqlService.insertObject(object); // TODO: deal with 0 return values
+    sqlService.insertObject(object); // TODO: deal with 0 return values
 
     return new ResponseEntity<>(objectToJsonString(object, false), status);
   }

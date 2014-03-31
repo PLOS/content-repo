@@ -5,7 +5,7 @@ import re
 from lxml import etree
 
 
-baseUrl = 'http://localhost:8080/'
+baseUrl = 'http://localhost:8081/'
 
 bucketProduction = 'plos-testupload-production'
 
