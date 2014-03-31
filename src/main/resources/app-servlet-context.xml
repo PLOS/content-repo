@@ -46,15 +46,6 @@
     <beans:property name="systemPropertiesMode" value="2"/>
   </beans:bean>
 
-  <beans:bean id="prefs" class="org.plos.repo.service.Preferences">
-    <beans:property name="configFiles">
-      <beans:list>
-        <beans:value>default.properties</beans:value>
-        <beans:value>${configFile:}</beans:value>
-      </beans:list>
-    </beans:property>
-  </beans:bean>
-
   <beans:bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
       <!-- <beans:property name="maxUploadSize" value=""/> -->
   </beans:bean>
@@ -62,23 +53,6 @@
   <mvc:interceptors>
     <beans:bean class="org.plos.repo.rest.LoggingInterceptor"/>
   </mvc:interceptors>
-
-  <beans:bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-    <!--<beans:property name="driverClassName" value="org.hsqldb.jdbcDriver"/>-->
-    <beans:property name="url" value="#{ prefs.jdbcConnectionSring }"/>
-  </beans:bean>
-
-  <jdbc:initialize-database data-source="dataSource">
-    <jdbc:script location="classpath:setup.mysql"/>
-  </jdbc:initialize-database>
-
-  <beans:bean id="sqlService" class="org.plos.repo.service.MysqlService">
-    <beans:property name="dataSource" ref="dataSource" />
-  </beans:bean>
-
-  <beans:bean id="objectStore" class="org.plos.repo.service.FileSystemStoreService" >
-    <beans:property name="preferences" ref="prefs" />
-  </beans:bean>
 
   <context:component-scan base-package="org.plos.repo"/>
 

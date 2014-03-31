@@ -37,6 +37,8 @@ public abstract class ObjectStore {
     return sb.toString();
   }
 
+  abstract public void setPreferences(Preferences preferences) throws Exception;
+
   abstract public Boolean hasXReproxy();
 
   abstract public URL[] getRedirectURLs(org.plos.repo.models.Object object) throws Exception;

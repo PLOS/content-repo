@@ -23,6 +23,8 @@ public class Preferences {
 
   private static final String JDBC_URL = "database_url";
 
+  private static final String STORAGE_BACKEND = "storage_backend";
+
   private String[] configFiles;
 
   @Required
@@ -54,12 +56,12 @@ public class Preferences {
     return connectionString;
   }
 
-//  public String getHsqldbConnectionString() {
-//    return "jdbc:hsqldb:file:" + getDataDirectory() + "/" + HsqlService.fileName;
-//  }
-
   public String[] getMogileTrackers() {
     return loadConfigs().getProperty(MOGILE_TRACKERS).split(",");
+  }
+
+  public Class getStorageClass() throws ClassNotFoundException {
+    return Class.forName(loadConfigs().getProperty(STORAGE_BACKEND));
   }
 
   public AWSCredentials getAWScredentials() {

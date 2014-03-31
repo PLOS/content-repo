@@ -27,7 +27,7 @@ public class FileSystemStoreService extends ObjectStore {
   private String data_dir;
 
   @Required
-  public void setPreferences(Preferences preferences) {
+  public void setPreferences(Preferences preferences) throws Exception {
     log.info("Using FileSystemStore backend");
     data_dir = preferences.getDataDirectory();
   }

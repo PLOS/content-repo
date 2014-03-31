@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS buckets (
 CREATE TABLE IF NOT EXISTS objects (
   id INTEGER NOT NULL AUTO_INCREMENT,
   bucketId INTEGER REFERENCES buckets,
-  `key` VARCHAR (255) NOT NULL,
-  checksum VARCHAR (1000) NOT NULL,
+  objkey VARCHAR (255) NOT NULL,
+  checksum VARCHAR (255) NOT NULL,
   timestamp timestamp NOT NULL,
   urls VARCHAR (3000), -- direct http paths to object, space separated
   downloadName VARCHAR (1000),  -- the name of the file when downloaded
@@ -19,6 +19,6 @@ CREATE TABLE IF NOT EXISTS objects (
   tag VARCHAR (200),
   status TINYINT DEFAULT 0 NOT NULL, -- 0: used, 1: deleted
   versionNumber INTEGER NOT NULL,
-  UNIQUE KEY keySum (bucketId, `key`, versionNumber),
+  UNIQUE KEY keySum (bucketId, objkey, versionNumber),
   PRIMARY KEY (id)
 );
