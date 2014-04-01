@@ -88,7 +88,7 @@ public class Config {
       sqlFile = new ClassPathResource("setup.mysql");
 
 
-    } else if (dbBackend.equalsIgnoreCase("HSqlDB")) {
+    } else if (dbBackend.equalsIgnoreCase("HSQL Database Engine")) {
 
       service = new HsqlService();
       sqlFile = new ClassPathResource("setup.hsql");

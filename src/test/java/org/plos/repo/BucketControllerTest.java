@@ -50,6 +50,11 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
 
   public static final MediaType APPLICATION_JSON_UTF8 = new MediaType(MediaType.APPLICATION_JSON.getType(), MediaType.APPLICATION_JSON.getSubtype(), Charset.forName("utf8"));
 
+  // set values before application context is loaded
+  static {
+    System.setProperty("configFile", "test.properties");
+  }
+
   @BeforeClass
   private void setup() {
     this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
@@ -103,7 +108,7 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
 
     this.mockMvc.perform(delete("/buckets/plos-bucketunittest-bucket1")).andExpect(status().isOk());
 
-    this.mockMvc.perform(fileUpload("/objects").file(new MockMultipartFile("file", "test".getBytes())).param("newObject", "true")
+    this.mockMvc.perform(fileUpload("/objects").file(new MockMultipartFile("file", "test".getBytes())).param("create", "new")
         .param("key", "object1").param("bucketName", "plos-bucketunittest-bucket2"))
         .andDo(print())
         .andExpect(status().isCreated());

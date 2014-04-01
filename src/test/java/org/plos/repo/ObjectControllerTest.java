@@ -110,26 +110,26 @@ public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
 
     // CREATE
 
-    this.mockMvc.perform(fileUpload("/objects").file(file1).param("newObject", "true")
+    this.mockMvc.perform(fileUpload("/objects").file(file1).param("create", "new")
         .param("key", "object1").param("bucketName", bucketName).param("contentType", "text/plain"))
         .andExpect(status().isCreated());
 
 //    JsonObject jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
 //    Long object1Timestamp = jsonObject.get("timestamp_unixnano").getAsLong();
 
-    this.mockMvc.perform(fileUpload("/objects").file(file1).param("newObject", "true")
+    this.mockMvc.perform(fileUpload("/objects").file(file1).param("create", "new")
         .param("key", "object1").param("bucketName", bucketName).param("contentType", "text/plain"))
         .andExpect(status().isConflict());  // since the key exists
 
-    this.mockMvc.perform(fileUpload("/objects").file(file1).param("newObject", "true")
+    this.mockMvc.perform(fileUpload("/objects").file(file1).param("create", "new")
         .param("key", "object2").param("bucketName", bucketName).param("contentType", "text/something").param("downloadName", "object2.text"))
         .andExpect(status().isCreated()); // since its a new key
 
-    this.mockMvc.perform(fileUpload("/objects").file(file1).param("newObject", "true")
+    this.mockMvc.perform(fileUpload("/objects").file(file1).param("create", "new")
         .param("key", "object1").param("bucketName", "testbucketObjects2").param("contentType", "text/plain"))
         .andExpect(status().isInsufficientStorage()); // since the bucket does not exist
 
-    this.mockMvc.perform(fileUpload("/objects").file(new MockMultipartFile("file", "".getBytes())).param("newObject", "true")
+    this.mockMvc.perform(fileUpload("/objects").file(new MockMultipartFile("file", "".getBytes())).param("create", "new")
         .param("key", "funky&?#key").param("bucketName", bucketName).param("contentType", "text/plain"))
         .andExpect(status().isCreated()); // since we accept empty files
 
@@ -177,15 +177,31 @@ public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
           .andExpect(content().string(""));
     }
 
+
     // UPDATE
 
-    this.mockMvc.perform(fileUpload("/objects").file(file2).param("newObject", "false")
+    this.mockMvc.perform(fileUpload("/objects").file(file2).param("create", "version")
         .param("key", "object3").param("bucketName", bucketName).param("contentType", "text/something").param("downloadName", "object2.text"))
         .andExpect(status().isNotAcceptable()); // since key does not exist
 
-    this.mockMvc.perform(fileUpload("/objects").file(file2).param("newObject", "false")
+    this.mockMvc.perform(fileUpload("/objects").file(file2).param("create", "version")
         .param("key", "object2").param("bucketName", bucketName).param("contentType", "text/something").param("downloadName", "object2.text"))
         .andExpect(status().isOk()); // since its a new version
+
+
+    // AUTO CREATE
+
+    this.mockMvc.perform(fileUpload("/objects").file(file2).param("create", "auto")
+        .param("key", "object2").param("bucketName", bucketName).param("contentType", "text/something").param("downloadName", "object2.text"))
+        .andExpect(status().isOk()); // since its a new version
+
+    this.mockMvc.perform(fileUpload("/objects").file(file2).param("create", "badrequest")
+        .param("key", "object2").param("bucketName", bucketName).param("contentType", "text/something").param("downloadName", "object2.text"))
+        .andExpect(status().isBadRequest()); // since creation flag is bad
+
+    this.mockMvc.perform(fileUpload("/objects").file(file2).param("create", "auto")
+        .param("key", "object4").param("bucketName", bucketName))
+        .andExpect(status().isCreated());  // since it is a new object
 
 
     // LIST
@@ -197,7 +213,7 @@ public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
     JsonObject jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
     JsonArray jsonArray = jsonObject.getAsJsonArray("versions");
 
-    assert(jsonArray.size() == 2);  // since there should be two versions of this object
+    assert(jsonArray.size() == 3);
 
 
     // DELETE

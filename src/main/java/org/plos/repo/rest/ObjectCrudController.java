@@ -125,6 +125,8 @@ public class ObjectCrudController {
       return;
     }
 
+    // TODO: deal with client caching here like we do in Ambra serveResource?
+
     // if they want the metadata
 
     if (fetchMetadata != null && fetchMetadata) {
@@ -211,20 +213,31 @@ public class ObjectCrudController {
                                                @RequestParam(required = false) String contentType,
                                                @RequestParam(required = false) String downloadName,
                                                @RequestParam(required = false) MultipartFile file,
-                                               @RequestParam(required = true) boolean newObject
+                                               @RequestParam(required = true)  String create
   ) throws Exception {
 
-    if (newObject)
-      return create(key, bucketName, contentType, downloadName, file);
+    Object existingObject = sqlService.getObject(bucketName, key);
 
-    return update(key, bucketName, contentType, downloadName, file);
+    if (create.equalsIgnoreCase("new")) {
+      return create(key, bucketName, contentType, downloadName, file, existingObject);
+    } else if (create.equalsIgnoreCase("version")) {
+      return update(key, bucketName, contentType, downloadName, file, existingObject);
+    } else if (create.equalsIgnoreCase("auto")) {
+      if (existingObject == null)
+        return create(key, bucketName, contentType, downloadName, file, null);
+      else
+        return update(key, bucketName, contentType, downloadName, file, existingObject);
+    }
+
+    return new ResponseEntity<>("Invalid create flag", HttpStatus.BAD_REQUEST);
   }
 
   private ResponseEntity<String> create(String key,
                           String bucketName,
                           String contentType,
                           String downloadName,
-                          MultipartFile file) throws Exception {
+                          MultipartFile file,
+                          Object existingObject) throws Exception {
 
     Integer bucketId = sqlService.getBucketId(bucketName);
 
@@ -234,7 +247,7 @@ public class ObjectCrudController {
     if (bucketId == null)
       return new ResponseEntity<>("Error: Can not find bucket " + bucketName, HttpStatus.INSUFFICIENT_STORAGE);
 
-    Object existingObject = sqlService.getObject(bucketName, key);
+//    Object existingObject = sqlService.getObject(bucketName, key);
 
     if (existingObject != null)
       return new ResponseEntity<>("Error: Attempting to create an object with a key that already exists.", HttpStatus.CONFLICT);
@@ -277,18 +290,32 @@ public class ObjectCrudController {
     return new ResponseEntity<>(objectToJsonString(object, false), status);
   }
 
+  /**
+   * Take an existing key, make a copy of it and modify it as needed. This means a new version
+   * of an existing object. This new part of it could be the file itself, or some of its metadata.
+   *
+   * @param key
+   * @param bucketName
+   * @param contentType
+   * @param downloadName
+   * @param file
+   * @param object
+   * @return
+   * @throws Exception
+   */
   private ResponseEntity<String> update(String key,
                                         String bucketName,
                                         String contentType,
                                         String downloadName,
-                                        MultipartFile file) throws Exception {
+                                        MultipartFile file,
+                                        Object object) throws Exception {
 
     Integer bucketId = sqlService.getBucketId(bucketName);
 
     if (bucketId == null)
       return new ResponseEntity<>("Error: Can not find bucket " + bucketName, HttpStatus.INSUFFICIENT_STORAGE);
 
-    Object object = sqlService.getObject(bucketName, key);
+//    Object object = sqlService.getObject(bucketName, key);
 
     if (object == null)
       return new ResponseEntity<>("Error: Attempting to create a new version of an non-existing object.", HttpStatus.NOT_ACCEPTABLE);
