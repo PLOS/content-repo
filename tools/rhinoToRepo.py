@@ -79,6 +79,8 @@ for article in articles:
                 checksumMD5 = objectData[1]
                 contentType = objectData[3]
 
+                # TODO: add test for when size = 0 or when size differs from in to out
+
                 begin = time.time()
                 newObject = dest.newObject(bucketName, tempLocalFile, key, contentType, objectNoPrefix)
                 writetime = time.time() - begin
@@ -88,11 +90,14 @@ for article in articles:
                 objectJson['a'] = a
                 uploadStatus = (newObject.status_code == requests.codes.created)
 
-                print ('(a ' + str(a) + ') ' + key + '  uploaded: ' + str(uploadStatus) + '  read: {0:.2f}'.format(round(readtime, 2)) + '  write: {0:.2f}'.format(round(writetime, 2)))
+                print ('(a ' + str(a) + ') ' + key + '  uploaded: ' + str(uploadStatus) + '  size: ' + str(objectJson[u'size']) + '  read: {0:.2f}'.format(round(readtime, 2)) + '  write: {0:.2f}'.format(round(writetime, 2)))
 
                 #				f.write(key + '\t' + checksumMD5 + '\t' + contentType + '\n')
                 f.write (pprint.pformat(objectJson) + '\n')
 
+                if objectJson[u'size'] is 0:
+                    print ('Warning: File size = 0')
+                    #sys.exit(-1)
 
             except Exception as e:
                 print (key + '  request failed. skipping: ' + str(e))

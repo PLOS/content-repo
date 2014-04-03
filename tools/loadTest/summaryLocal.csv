@@ -1,3 +1,0 @@
-sampler_label,aggregate_report_count,average,aggregate_report_min,aggregate_report_max,aggregate_report_stddev,aggregate_report_error%,aggregate_report_rate,aggregate_report_bandwidth,average_bytes
-Fetch Article (article tab),125,328,143,2180,229.07940981240543,0.0,0.8509016153516266,251.074183517355,302150.048
-TOTAL,125,328,143,2180,229.07940981240543,0.0,0.8509016153516266,251.074183517355,302150.048

@@ -46,7 +46,7 @@ class ContentRepo:
 			'bucketName' : bucketName, 
 			'contentType' : contentType, 
 			'downloadName' : downloadName,
-			'newObject' : 'true'
+			'create' : 'new'
 			}
 		r = requests.post(url, files=files, data=values)
 
