@@ -2,10 +2,12 @@
 
 import requests
 import json
+import os
 import time
 import sys
 import argparse
 import pprint
+import uuid
 from contentRepo import ContentRepo
 from rhino import Rhino
 
@@ -26,10 +28,12 @@ args = argparser.parse_args()
 
 rhinoToRepoLog = 'rhinoToRepo.log'
 errorLog = 'error.log'
-f = open(rhinoToRepoLog, 'a')
-eLog = open(errorLog, 'a')
+logMessage = open(rhinoToRepoLog, 'a')
+logError = open(errorLog, 'a')
 
 dest = ContentRepo(args.repoServer)
+
+tempLocalFile = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'repo-obj.temp')
 
 if args.rhinoServer is None:
     source = Rhino()
@@ -54,7 +58,7 @@ for article in articles:
     try:
         reps = source.assets(article)
     except Exception as e:
-        eLog.write('article (' + str(a) + '): ' + str(e) + '\n')
+        logError.write('article (' + str(a) + '): ' + str(e) + '\n')
         continue
 
     for (doi, representations) in reps.iteritems():
@@ -67,37 +71,39 @@ for article in articles:
 
             objectNoPrefix = source._stripPrefix(key, True)
 
-            tempLocalFile = '/tmp/repo-obj.temp'
+            #tempLocalFile = str(uuid.uuid4())+'.tmp'
 
             # TODO: add retry logic here
-            try :
+            try:
 
                 begin = time.time()
-                objectData = source.getAfid(objectNoPrefix, tempLocalFile)
-                readtime = time.time() - begin
-
-                checksumMD5 = objectData[1]
-                contentType = objectData[3]
-
-                # TODO: add test for when size = 0 or when size differs from in to out
+                _, checksumMD5, checksumSHA1, contentType, sourceSize = source.getAfid(objectNoPrefix, tempLocalFile)
+                readTime = time.time() - begin
 
                 begin = time.time()
                 newObject = dest.newObject(bucketName, tempLocalFile, key, contentType, objectNoPrefix)
-                writetime = time.time() - begin
+                writeTime = time.time() - begin
 
                 objectJson = json.loads(newObject.text)
                 objectJson['md5'] = checksumMD5
                 objectJson['a'] = a
                 uploadStatus = (newObject.status_code == requests.codes.created)
 
-                print ('(a ' + str(a) + ') ' + key + '  uploaded: ' + str(uploadStatus) + '  size: ' + str(objectJson[u'size']) + '  read: {0:.2f}'.format(round(readtime, 2)) + '  write: {0:.2f}'.format(round(writetime, 2)))
+                print ('(a ' + str(a) + ') ' + key + '  uploaded: ' + str(uploadStatus) + '  size: ' + str(objectJson[u'size']) + '  read: {0:.2f}'.format(round(readTime, 2)) + '  write: {0:.2f}'.format(round(writeTime, 2)))
 
-                #				f.write(key + '\t' + checksumMD5 + '\t' + contentType + '\n')
-                f.write (pprint.pformat(objectJson) + '\n')
+                logMessage.write(pprint.pformat(objectJson) + '\n')
+
+                if (not objectJson[u'size'] == sourceSize) or (not objectJson[u'checksum'] == unicode(checksumSHA1)):
+                    print ('Input and output files do not match')
+                    print ('input checksum ' + checksumSHA1)
+                    pprint.pprint(objectJson)
+                    sys.exit(-2)
 
                 if objectJson[u'size'] is 0:
                     print ('Warning: File size = 0')
-                    #sys.exit(-1)
+                    sys.exit(-1)
+
+                #os.remove(tempLocalFile)
 
             except Exception as e:
                 print (key + '  request failed. skipping: ' + str(e))
