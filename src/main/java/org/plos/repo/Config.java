@@ -27,7 +27,7 @@ public class Config {
 
     Preferences p = new Preferences();
 
-    if (userConfig.isEmpty())
+    if (userConfig == null || userConfig.isEmpty())
       p.setConfigFiles(new String[]{"default.properties"});
     else
       p.setConfigFiles(new String[]{"default.properties", userConfig});
