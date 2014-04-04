@@ -353,11 +353,11 @@ public class ObjectCrudController {
     object.urls = "";
 
     // determine if the object should be added to the store or not
+    object.checksum = uploadInfo.getChecksum();
+    object.size = uploadInfo.getSize();
     if (objectStore.objectExists(object)) {
       objectStore.deleteTempUpload(uploadInfo);
     } else {
-      object.checksum = uploadInfo.getChecksum();
-      object.size = uploadInfo.getSize();
       objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object);
     }
 
