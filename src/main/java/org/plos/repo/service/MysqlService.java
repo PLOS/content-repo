@@ -1,9 +1,12 @@
 package org.plos.repo.service;
 
-import org.hsqldb.types.Types;
 import org.plos.repo.models.Bucket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class MysqlService extends SqlService{
 
@@ -19,20 +22,80 @@ public class MysqlService extends SqlService{
   }
 
   @Override
-  public Boolean insertBucket(Bucket bucket) {
+  public boolean insertBucket(Bucket bucket) {
 
     int result;
 
+//    if (bucket.bucketId == null) {
+//      result = jdbcTemplate.update("INSERT IGNORE INTO buckets SET bucketName=?", new java.lang.Object[]{bucket.bucketName}, new int[]{Types.VARCHAR});
+//    } else {
+//      result = jdbcTemplate.update("INSERT IGNORE INTO buckets SET bucketId=?, bucketName=?", new java.lang.Object[]{bucket.bucketId, bucket.bucketName}, new int[]{Types.INTEGER, Types.VARCHAR});
+//    }
+
+    Connection connection = null;
+    PreparedStatement p = null;
+
     if (bucket.bucketId == null) {
-      result = jdbcTemplate.update("INSERT IGNORE INTO buckets SET bucketName=?", new java.lang.Object[]{bucket.bucketName}, new int[]{Types.VARCHAR});
+
+      try {
+        connection = dataSource.getConnection();
+        p = connection.prepareStatement("INSERT IGNORE INTO buckets SET bucketName=?");
+
+        p.setString(1, bucket.bucketName);
+
+        result = p.executeUpdate();
+
+      } catch (SQLException e) {
+        // TODO: handle the error
+        return false;
+      } finally {
+
+        try {
+          if (p != null)
+            p.close();
+
+          if (connection != null)
+            connection.close();
+        } catch (SQLException e) {
+
+          // TODO: handle exception
+        }
+      }
+
     } else {
-      result = jdbcTemplate.update("INSERT IGNORE INTO buckets SET bucketId=?, bucketName=?", new java.lang.Object[]{bucket.bucketId, bucket.bucketName}, new int[]{Types.INTEGER, Types.VARCHAR});
+
+      try {
+        connection = dataSource.getConnection();
+        p = connection.prepareStatement("INSERT IGNORE INTO buckets SET bucketId=?, bucketName=?");
+
+        p.setInt(1, bucket.bucketId);
+        p.setString(2, bucket.bucketName);
+
+        result = p.executeUpdate();
+
+      } catch (SQLException e) {
+        // TODO: handle the error
+        return false;
+      } finally {
+
+        try {
+          if (p != null)
+            p.close();
+
+          if (connection != null)
+            connection.close();
+        } catch (SQLException e) {
+
+          // TODO: handle exception
+        }
+      }
+
     }
 
     if (result == 0)
       log.error("Error while creating bucket: database update failed");
 
-    return (result > 0);
+    return result > 0;
   }
 
 }

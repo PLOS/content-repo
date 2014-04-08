@@ -12,12 +12,12 @@ CREATE TABLE IF NOT EXISTS objects (
   objkey VARCHAR (255) NOT NULL,
   checksum VARCHAR (255) NOT NULL,
   timestamp timestamp NOT NULL,
-  urls VARCHAR (3000), -- direct http paths to object, space separated
-  downloadName VARCHAR (1000),  -- the name of the file when downloaded
-  contentType VARCHAR (200), -- the mime type
-  size INTEGER NOT NULL,  -- the file size in bytes
+  urls VARCHAR (3000),
+  downloadName VARCHAR (1000),
+  contentType VARCHAR (200),
+  size INTEGER NOT NULL,
   tag VARCHAR (200),
-  status TINYINT DEFAULT 0 NOT NULL, -- 0: used, 1: deleted
+  status TINYINT DEFAULT 0 NOT NULL,
   versionNumber INTEGER NOT NULL,
   UNIQUE KEY keySum (bucketId, objkey, versionNumber),
   PRIMARY KEY (id)

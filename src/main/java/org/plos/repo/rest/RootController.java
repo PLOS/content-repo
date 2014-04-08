@@ -52,8 +52,8 @@ public class RootController {
     this.handlerMapping = handlerMapping;
   }
 
-//  @Autowired
-//  private SqlService sqlService;
+  @Autowired
+  private SqlService sqlService;
 
   @Autowired
   private ObjectStore objectStore;
@@ -70,52 +70,51 @@ public class RootController {
   public ModelAndView rootPage(ModelAndView model) throws Exception {
 
 
-
-    SqlService sqlService;
-    Resource sqlFile;
-
-    Enumeration<Driver> drivers = java.sql.DriverManager.getDrivers();
-
-    while (drivers.hasMoreElements()) {
-      Driver driver = drivers.nextElement();
-      log.info("available driver: " + driver);
-    }
-
-    Connection conn = DriverManager.getConnection("jdbc:hsqldb:file:/tmp/plosrepo-hsqldb123");
-
-    String dbBackend = conn.getMetaData().getDatabaseProductName();
-
-
-//    DriverManagerDataSource dataSource = new DriverManagerDataSource();
-//    dataSource.setUrl("jdbc:hsqldb:file:/tmp/plosrepo-hsqldb123");
+//    SqlService sqlService;
+//    Resource sqlFile;
 //
-//    log.info("connection: " + dataSource.getConnection());
+//    Enumeration<Driver> drivers = java.sql.DriverManager.getDrivers();
 //
-//    String dbBackend = dataSource.getConnection().getMetaData().getDatabaseProductName();
-
-
-    if (dbBackend.equalsIgnoreCase("MySQL")) {
-
-      sqlService = new MysqlService();
-      sqlFile = new ClassPathResource("setup.mysql");
-
-
-    } else if (dbBackend.equalsIgnoreCase("HSQL Database Engine")) {
-
-      sqlService = new HsqlService();
-      sqlFile = new ClassPathResource("setup.hsql");
-
-    } else {
-      throw new Exception("Database type not supported: " + dbBackend);
-    }
-
-    ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-
-    populator.addScript(sqlFile);
-    DatabasePopulatorUtils.execute(populator, dataSource);
-
-    sqlService.setDataSource(dataSource);
-
+//    while (drivers.hasMoreElements()) {
+//      Driver driver = drivers.nextElement();
+//      log.info("available driver: " + driver);
+//    }
+//
+//    Connection conn = DriverManager.getConnection("jdbc:hsqldb:file:/tmp/plosrepo-hsqldb123");
+//
+//    String dbBackend = conn.getMetaData().getDatabaseProductName();
+//
+//
+////    DriverManagerDataSource dataSource = new DriverManagerDataSource();
+////    dataSource.setUrl("jdbc:hsqldb:file:/tmp/plosrepo-hsqldb123");
+////
+////    log.info("connection: " + dataSource.getConnection());
+////
+////    String dbBackend = dataSource.getConnection().getMetaData().getDatabaseProductName();
+//
+//
+//    if (dbBackend.equalsIgnoreCase("MySQL")) {
+//
+//      sqlService = new MysqlService();
+//      sqlFile = new ClassPathResource("setup.mysql");
+//
+//
+//    } else if (dbBackend.equalsIgnoreCase("HSQL Database Engine")) {
+//
+//      sqlService = new HsqlService();
+//      sqlFile = new ClassPathResource("setup.hsql");
+//
+//    } else {
+//      throw new Exception("Database type not supported: " + dbBackend);
+//    }
+//
+//    ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
+//
+//    populator.addScript(sqlFile);
+//    DatabasePopulatorUtils.execute(populator, dataSource);
+//
+//    sqlService.setDataSource(dataSource);
+//
 
 
 

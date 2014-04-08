@@ -1,23 +1,28 @@
 package org.plos.repo;
 
-import org.apache.tomcat.jdbc.pool.DataSource;
-import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.plos.repo.service.HsqlService;
 import org.plos.repo.service.MysqlService;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.Preferences;
+import org.plos.repo.service.ScriptRunner;
 import org.plos.repo.service.SqlService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.sql.DataSource;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.lang.reflect.Constructor;
 import java.sql.Connection;
-import java.sql.DriverManager;
 
 @Configuration
 public class Config {
 
-  private String dbBackend = "";
+//  private String dbBackend = "";
 
   @Bean
   public Preferences prefs() {
@@ -48,18 +53,40 @@ public class Config {
     return objStore;
   }
 
+//  @Bean
+//  public DataSource dataSource() throws Exception {
+//
+//    Context initContext = new InitialContext();
+//    Context envContext  = (Context)initContext.lookup("java:/comp/env");
+//    DataSource source = (DataSource)envContext.lookup("jdbc/repoDB");
+//
+//    return source;
+//  }
+
   @Bean
   public SqlService sqlService() throws Exception {
 
-    Preferences p = prefs();
+//    Preferences p = prefs();
 
-    PoolProperties pool = new PoolProperties();
-    pool.setUrl(p.getJdbcConnectionSring());
-    DataSource dataSource = new org.apache.tomcat.jdbc.pool.DataSource();
-    dataSource.setPoolProperties(pool);
+//    ContextResource contextResource = new ContextResource();
+//    contextResource.setName("jdbc/repo");
+//    contextResource.seta
+//
+    Context initContext = new InitialContext();
+    Context envContext  = (Context)initContext.lookup("java:/comp/env");
+    DataSource ds = (DataSource)envContext.lookup("jdbc/repoDB");
+    Connection connection = ds.getConnection();
+
+//    DataSource ds = dataSource();
+//    Connection connection = ds.getConnection();
+
+//    PoolProperties pool = new PoolProperties();
+//    pool.setUrl(p.getJdbcConnectionSring());
+//    DataSource dataSource = new org.apache.tomcat.jdbc.pool.DataSource();
+//    dataSource.setPoolProperties(pool);
 
 //    Connection connection  = DriverManager.getConnection(p.getJdbcConnectionSring());
-    Connection connection = dataSource.getConnection();
+    //Connection connection = dataSource.getConnection();
 
     String dbBackend = connection.getMetaData().getDatabaseProductName();
 
@@ -67,21 +94,12 @@ public class Config {
     Resource sqlFile;
 
 
-    ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
+    // TODO: fetch the driver from a better place
 
     if (dbBackend.equalsIgnoreCase("MySQL")) {
 
-//      MysqlService mysqlService = new MysqlService();
-//
-//      String connectionUrl = dataSource.getConnection().getMetaData().getURL();
-//      String databaseName = connectionUrl.substring(connectionUrl.lastIndexOf('/') + 1);
-//
-//      mysqlService.createDb(databaseName);
-//      service = mysqlService;
-
       service = new MysqlService();
       sqlFile = new ClassPathResource("setup.mysql");
-
 
     } else if (dbBackend.equalsIgnoreCase("HSQL Database Engine")) {
 
@@ -92,13 +110,14 @@ public class Config {
       throw new Exception("Database type not supported: " + dbBackend);
     }
 
-    populator.addScript(sqlFile);
-    DatabasePopulatorUtils.execute(populator, dataSource);
+    ScriptRunner scriptRunner = new ScriptRunner(connection, true, true);
+    scriptRunner.runScript(new BufferedReader(new FileReader(sqlFile.getFile())));
 
-    service.setDataSource(dataSource);
+    service.setDataSource(ds);
 
     return service;
   }
+
 
 //  @Bean
 //  public DriverManagerDataSource dataSource() throws Exception {

@@ -1,12 +1,10 @@
 package org.plos.repo.service;
 
-import org.hsqldb.types.Types;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
-import org.springframework.dao.EmptyResultDataAccessException;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -20,21 +18,37 @@ public abstract class SqlService {
 
   private static final Logger log = LoggerFactory.getLogger(SqlService.class);
 
-//  protected JdbcTemplate jdbcTemplate;
+  protected DataSource dataSource;
+//  protected Connection connection;
 
-  protected Connection connection;
+//  @Required
+//  public void setDataSource(DataSource dataSource) {
+//    try {
+//      jdbcTemplate = new JdbcTemplate(dataSource);
+//    } catch (Exception e) {
+//      log.error("Error setting up jdbc", e);
+//    }
+//
+//    postDbInit();
+//  }
 
   @Required
   public void setDataSource(DataSource dataSource) {
     try {
-      jdbcTemplate = new JdbcTemplate(dataSource);
+      this.dataSource = dataSource;
+//      this.connection = dataSource.getConnection();
     } catch (Exception e) {
       log.error("Error setting up jdbc", e);
     }
 
     postDbInit();
-
   }
+
+//  @Required
+//  public void setConnection(Connection connection) {
+//    this.connection = connection;
+//    postDbInit();
+//  }
 
   public abstract void postDbInit();
 
@@ -49,9 +63,11 @@ public abstract class SqlService {
   public Integer getBucketId(String bucketName) {
 
     PreparedStatement p = null;
+    Connection connection = null;
 
     try {
 
+      connection = dataSource.getConnection();
       p = connection.prepareStatement("SELECT bucketId FROM buckets WHERE bucketName=?");
 
       p.setString(1, bucketName);
@@ -72,7 +88,8 @@ public abstract class SqlService {
         if (p != null)
           p.close();
 
-        connection.close();
+        if (connection != null)
+          connection.close();
       } catch (SQLException e) {
 
         // TODO: handle exception
@@ -80,28 +97,31 @@ public abstract class SqlService {
     }
   }
 
-  public boolean deleteBucket(String bucketName) {
+  public int deleteBucket(String bucketName) {
 
     PreparedStatement p = null;
+    Connection connection = null;
 
     try {
 
+      connection = dataSource.getConnection();
       p = connection.prepareStatement("DELETE FROM buckets WHERE bucketName=?");
 
       p.setString(1, bucketName);
 
-      return p.execute();
+      return p.executeUpdate();
 
     } catch (SQLException e) {
       // TODO: handle the error
-      return false;
+      return 0;
     } finally {
 
       try {
         if (p != null)
           p.close();
 
-        connection.close();
+        if (connection != null)
+          connection.close();
       } catch (SQLException e) {
 
         // TODO: handle exception
@@ -111,11 +131,14 @@ public abstract class SqlService {
   }
 
   // FOR TESTING ONLY
-  public boolean deleteObject(Object object) {
+  public int deleteObject(Object object) {
 
     PreparedStatement p = null;
+    Connection connection = null;
 
     try {
+
+      connection = dataSource.getConnection();
 
       p = connection.prepareStatement("DELETE FROM objects WHERE objKey=? AND bucketId=? AND versionNumber=?");
 
@@ -123,18 +146,19 @@ public abstract class SqlService {
       p.setInt(2, object.bucketId);
       p.setInt(3, object.versionNumber);
 
-      return p.execute();
+      return p.executeUpdate();
 
     } catch (SQLException e) {
       // TODO: handle the error
-      return false;
+      return 0;
     } finally {
 
       try {
         if (p != null)
           p.close();
 
-        connection.close();
+        if (connection != null)
+          connection.close();
       } catch (SQLException e) {
 
         // TODO: handle exception
@@ -143,32 +167,35 @@ public abstract class SqlService {
 
   }
 
-  public boolean markObjectDeleted(String key, String bucketName, int versionNumber) {
+  public int markObjectDeleted(String key, String bucketName, int versionNumber) {
 
     PreparedStatement p = null;
+    Connection connection = null;
 
     try {
 
-      p = connection.prepareStatement("UPDATE objects SET status=? WHERE objKey=? AND bucketId=? AND versionNumber=?");
+      connection = dataSource.getConnection();
 
+      p = connection.prepareStatement("UPDATE objects SET status=? WHERE objKey=? AND bucketId=? AND versionNumber=?");
 
       p.setInt(1, Object.Status.DELETED.getValue());
       p.setString(2, key);
       p.setInt(3, getBucketId(bucketName));
       p.setInt(4, versionNumber);
 
-      return p.execute();
+      return p.executeUpdate();
 
     } catch (SQLException e) {
       // TODO: handle the error
-      return false;
+      return 0;
     } finally {
 
       try {
         if (p != null)
           p.close();
 
-        connection.close();
+        if (connection != null)
+          connection.close();
       } catch (SQLException e) {
 
         // TODO: handle exception
@@ -180,8 +207,11 @@ public abstract class SqlService {
   public Integer getNextAvailableVersionNumber(String bucketName, String key) {
 
     PreparedStatement p = null;
+    Connection connection = null;
 
     try {
+
+      connection = dataSource.getConnection();
 
       p = connection.prepareStatement("SELECT versionNumber FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=? ORDER BY versionNumber DESC LIMIT 1");
 
@@ -204,7 +234,8 @@ public abstract class SqlService {
         if (p != null)
           p.close();
 
-        connection.close();
+        if (connection != null)
+          connection.close();
       } catch (SQLException e) {
 
         // TODO: handle exception
@@ -215,73 +246,30 @@ public abstract class SqlService {
 
   public Object getObject(String bucketName, String key) {
 
-    try {
-      Object object = (Object) jdbcTemplate.queryForObject("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=? AND status=? ORDER BY versionNumber DESC LIMIT 1", new java.lang.Object[]{bucketName, key, Object.Status.USED.getValue()}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TINYINT}, new RowMapper<java.lang.Object>() {
-        @Override
-        public Object mapRow(ResultSet resultSet, int i) throws SQLException {
-          return mapObjectRow(resultSet);
-        }
-      });
-
-      if (object.status == Object.Status.DELETED) {
-        log.info("searched for object which has been deleted. id: " + object.id);
-        return null;
-      }
-
-      return object;
-
-    } catch (EmptyResultDataAccessException e) {
-      return null;
-    }
-  }
-
-  public Object getObject(String bucketName, String key, Integer version) {
-
-    try {
-      Object object = (Object)jdbcTemplate.queryForObject("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=? AND versionNumber=?", new java.lang.Object[]{bucketName, key, version}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.INTEGER}, new RowMapper<java.lang.Object>() {
-        @Override
-        public Object mapRow(ResultSet resultSet, int i) throws SQLException {
-          return mapObjectRow(resultSet);
-        }
-      });
-
-      if (object.status == Object.Status.DELETED) {
-        log.info("searched for object which has been deleted. id: " + object.id);
-        return null;
-      }
-
-      return object;
-
-    } catch (EmptyResultDataAccessException e) {
-      //log.error("error fetching object " + key, e);
-      return null;
-    }
-  }
-
-  public Integer insertObject(Object object) {
-
-    Integer updatedEntries = jdbcTemplate.update("INSERT INTO objects (objKey, checksum, timestamp, bucketId, contentType, urls, downloadName, size, tag, versionNumber, status) VALUES (?, ?,?,?,?,?,?,?,?,?,?)", new java.lang.Object[]{object.key, object.checksum, object.timestamp, object.bucketId, object.contentType, object.urls, object.downloadName, object.size, object.tag, object.versionNumber, object.status.getValue()}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.VARCHAR, Types.INTEGER, Types.TINYINT});
-
-    log.info("db object insert key " + object.key + " version " + object.versionNumber + "  " + (updatedEntries > 0 ? "SUCCESS" : "FAILURE"));
-
-    return updatedEntries;
-  }
-
-  public Integer objectCount() throws Exception {
-
-    List<Bucket> buckets = new ArrayList<>();
-
     PreparedStatement p = null;
+    Connection connection = null;
 
     try {
+      connection = dataSource.getConnection();
 
-      p = connection.prepareStatement("SELECT COUNT(*) FROM objects WHERE status=?");
+      p = connection.prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=? AND status=? ORDER BY versionNumber DESC LIMIT 1");
 
-      p.setInt(1, Object.Status.USED.getValue());
+      p.setString(1, bucketName);
+      p.setString(2, key);
+      p.setInt(3, Object.Status.USED.getValue());
+
       ResultSet result = p.executeQuery();
 
-      if (result.next())
-        return result.getInt(0);
+      if (result.next()) {
+        Object object = mapObjectRow(result);
+
+        if (object.status == Object.Status.DELETED) {
+          log.info("searched for object which has been deleted. id: " + object.id);
+          return null;
+        }
+
+        return object;
+      }
       else
         return null;
 
@@ -294,7 +282,8 @@ public abstract class SqlService {
         if (p != null)
           p.close();
 
-        connection.close();
+        if (connection != null)
+          connection.close();
       } catch (SQLException e) {
 
         // TODO: handle exception
@@ -303,30 +292,148 @@ public abstract class SqlService {
 
   }
 
-  public abstract Boolean insertBucket(Bucket bucket);
-//  {
+  public Object getObject(String bucketName, String key, Integer version) {
 
-//    int result;
-//
-//    if (bucket.bucketId == null) {
-//      result = jdbcTemplate.update("MERGE INTO buckets USING (VALUES(NULL,?)) AS vals(bucketId,bucketName) on buckets.bucketId = vals.bucketId WHEN NOT MATCHED THEN INSERT VALUES vals.bucketId, vals.bucketName", new java.lang.Object[]{bucket.bucketName}, new int[]{Types.VARCHAR});
-//    } else {
-//      result = jdbcTemplate.update("MERGE INTO buckets USING (VALUES(?,?)) AS vals(bucketId,bucketName) on buckets.bucketId = vals.bucketId WHEN NOT MATCHED THEN INSERT VALUES vals.bucketId, vals.bucketName", new java.lang.Object[]{bucket.bucketId, bucket.bucketName}, new int[]{Types.INTEGER, Types.VARCHAR});
-//    }
-//
-//    if (result == 0)
-//      log.error("Error while creating bucket: database update failed");
-//
-//    return (result > 0);
-  //}
+    PreparedStatement p = null;
+    Connection connection = null;
+
+    try {
+      connection = dataSource.getConnection();
+
+      p = connection.prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=? AND versionNumber=?");
+
+      p.setString(1, bucketName);
+      p.setString(2, key);
+      p.setInt(3, version);
+
+      ResultSet result = p.executeQuery();
+
+      if (result.next()) {
+        Object object = mapObjectRow(result);
+
+        if (object.status == Object.Status.DELETED) {
+          log.info("searched for object which has been deleted. id: " + object.id);
+          return null;
+        }
+
+        return object;
+      }
+      else
+        return null;
+
+    } catch (SQLException e) {
+      // TODO: handle the error
+      return null;
+    } finally {
+
+      try {
+        if (p != null)
+          p.close();
+
+        if (connection != null)
+          connection.close();
+      } catch (SQLException e) {
+
+        // TODO: handle exception
+      }
+    }
+
+  }
+
+  public int insertObject(Object object) {
+
+    PreparedStatement p = null;
+    Connection connection = null;
+
+    try {
+      connection = dataSource.getConnection();
+
+      p = connection.prepareStatement("INSERT INTO objects (objKey, checksum, timestamp, bucketId, contentType, urls, downloadName, size, tag, versionNumber, status) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+
+      p.setString(1, object.key);
+      p.setString(2, object.checksum);
+      p.setTimestamp(3, object.timestamp);
+      p.setInt(4, object.bucketId);
+      p.setString(5, object.contentType);
+      p.setString(6, object.urls);
+      p.setString(7, object.downloadName);
+      p.setLong(8, object.size);
+      p.setString(9, object.tag);
+      p.setInt(10, object.versionNumber);
+      p.setInt(11, object.status.getValue());
+
+      return p.executeUpdate();
+
+    } catch (SQLException e) {
+      log.error("error while inserting object", e);
+      return 0;
+    } finally {
+
+      try {
+        if (p != null)
+          p.close();
+
+        if (connection != null)
+          connection.close();
+      } catch (SQLException e) {
+
+        // TODO: handle exception
+      }
+    }
+
+  }
+
+  public Integer objectCount() throws Exception {
+
+    PreparedStatement p = null;
+    Connection connection = null;
+
+    try {
+      connection = dataSource.getConnection();
+
+      p = connection.prepareStatement("SELECT COUNT(*) FROM objects WHERE status=?");
+
+      p.setInt(1, Object.Status.USED.getValue());
+      ResultSet result = p.executeQuery();
+
+      if (result.next())
+        return result.getInt(1);
+      else
+        return null;
+
+    } catch (SQLException e) {
+      log.error("Error finding object count", e);
+
+      // TODO: handle the error
+      return null;
+    } finally {
+
+      try {
+        if (p != null)
+          p.close();
+
+        if (connection != null)
+          connection.close();
+      } catch (SQLException e) {
+
+        // TODO: handle exception
+      }
+    }
+
+  }
+
+  public abstract boolean insertBucket(Bucket bucket);
+
 
   public List<Bucket> listBuckets() {
 
     List<Bucket> buckets = new ArrayList<>();
 
     PreparedStatement p = null;
+    Connection connection = null;
 
     try {
+      connection = dataSource.getConnection();
 
       p = connection.prepareStatement("SELECT * FROM buckets");
 
@@ -340,7 +447,7 @@ public abstract class SqlService {
       return buckets;
 
     } catch (SQLException e) {
-      // TODO: handle the error
+      log.error("error listing buckets", e);
       return null;
     } finally {
 
@@ -348,7 +455,8 @@ public abstract class SqlService {
         if (p != null)
           p.close();
 
-        connection.close();
+        if (connection != null)
+          connection.close();
       } catch (SQLException e) {
 
         // TODO: handle exception
@@ -362,8 +470,10 @@ public abstract class SqlService {
     List<Object> objects = new ArrayList<>();
 
     PreparedStatement p = null;
+    Connection connection = null;
 
     try {
+      connection = dataSource.getConnection();
 
       p = connection.prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
 
@@ -384,7 +494,8 @@ public abstract class SqlService {
         if (p != null)
           p.close();
 
-        connection.close();
+        if (connection != null)
+          connection.close();
       } catch (SQLException e) {
 
         // TODO: handle exception
@@ -398,8 +509,10 @@ public abstract class SqlService {
     List<Object> objects = new ArrayList<>();
 
     PreparedStatement p = null;
+    Connection connection = null;
 
     try {
+      connection = dataSource.getConnection();
 
       p = connection.prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND status=?");
 
@@ -423,7 +536,8 @@ public abstract class SqlService {
         if (p != null)
           p.close();
 
-        connection.close();
+        if (connection != null)
+          connection.close();
       } catch (SQLException e) {
 
         // TODO: handle exception
@@ -437,8 +551,10 @@ public abstract class SqlService {
     List<Object> objects = new ArrayList<>();
 
     PreparedStatement p = null;
+    Connection connection = null;
 
     try {
+      connection = dataSource.getConnection();
 
       p = connection.prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND objKey=? AND status=? ORDER BY versionNumber ASC");
 
@@ -463,7 +579,8 @@ public abstract class SqlService {
         if (p != null)
           p.close();
 
-        connection.close();
+        if (connection != null)
+          connection.close();
       } catch (SQLException e) {
 
         // TODO: handle exception
