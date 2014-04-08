@@ -7,22 +7,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class SqlService {
 
   private static final Logger log = LoggerFactory.getLogger(SqlService.class);
 
-  protected JdbcTemplate jdbcTemplate;
+//  protected JdbcTemplate jdbcTemplate;
+
+  protected Connection connection;
 
   @Required
-  public void setDataSource(DriverManagerDataSource dataSource) {
+  public void setDataSource(DataSource dataSource) {
     try {
       jdbcTemplate = new JdbcTemplate(dataSource);
     } catch (Exception e) {
@@ -44,33 +47,170 @@ public abstract class SqlService {
   }
 
   public Integer getBucketId(String bucketName) {
+
+    PreparedStatement p = null;
+
     try {
-      return jdbcTemplate.queryForObject("SELECT bucketId FROM buckets WHERE bucketName=?", new java.lang.Object[]{bucketName}, Integer.class);
-    } catch (EmptyResultDataAccessException e) {
+
+      p = connection.prepareStatement("SELECT bucketId FROM buckets WHERE bucketName=?");
+
+      p.setString(1, bucketName);
+
+      ResultSet result = p.executeQuery();
+
+      if (result.next())
+        return result.getInt("bucketId");
+      else
+        return null;
+
+    } catch (SQLException e) {
+      // TODO: handle the error
       return null;
+    } finally {
+
+      try {
+        if (p != null)
+          p.close();
+
+        connection.close();
+      } catch (SQLException e) {
+
+        // TODO: handle exception
+      }
     }
   }
 
-  public Integer deleteBucket(String bucketName) {
-    return jdbcTemplate.update("DELETE FROM buckets WHERE bucketName=?", new java.lang.Object[]{bucketName}, new int[]{Types.VARCHAR});
+  public boolean deleteBucket(String bucketName) {
+
+    PreparedStatement p = null;
+
+    try {
+
+      p = connection.prepareStatement("DELETE FROM buckets WHERE bucketName=?");
+
+      p.setString(1, bucketName);
+
+      return p.execute();
+
+    } catch (SQLException e) {
+      // TODO: handle the error
+      return false;
+    } finally {
+
+      try {
+        if (p != null)
+          p.close();
+
+        connection.close();
+      } catch (SQLException e) {
+
+        // TODO: handle exception
+      }
+    }
+
   }
 
   // FOR TESTING ONLY
-  public Integer deleteObject(Object object) {
-    return jdbcTemplate.update("DELETE FROM objects WHERE objKey=? AND bucketId=? AND versionNumber=?", new java.lang.Object[]{object.key, getBucketId(object.bucketName), object.versionNumber}, new int[]{Types.VARCHAR, Types.INTEGER, Types.INTEGER});
+  public boolean deleteObject(Object object) {
+
+    PreparedStatement p = null;
+
+    try {
+
+      p = connection.prepareStatement("DELETE FROM objects WHERE objKey=? AND bucketId=? AND versionNumber=?");
+
+      p.setString(1, object.key);
+      p.setInt(2, object.bucketId);
+      p.setInt(3, object.versionNumber);
+
+      return p.execute();
+
+    } catch (SQLException e) {
+      // TODO: handle the error
+      return false;
+    } finally {
+
+      try {
+        if (p != null)
+          p.close();
+
+        connection.close();
+      } catch (SQLException e) {
+
+        // TODO: handle exception
+      }
+    }
+
   }
 
-  public Integer markObjectDeleted(String key, String bucketName, int versionNumber) {
-    return jdbcTemplate.update("UPDATE objects SET status=? WHERE objKey=? AND bucketId=? AND versionNumber=?", new java.lang.Object[]{Object.Status.DELETED.getValue(), key, getBucketId(bucketName), versionNumber}, new int[]{Types.TINYINT, Types.VARCHAR, Types.INTEGER, Types.INTEGER});
+  public boolean markObjectDeleted(String key, String bucketName, int versionNumber) {
+
+    PreparedStatement p = null;
+
+    try {
+
+      p = connection.prepareStatement("UPDATE objects SET status=? WHERE objKey=? AND bucketId=? AND versionNumber=?");
+
+
+      p.setInt(1, Object.Status.DELETED.getValue());
+      p.setString(2, key);
+      p.setInt(3, getBucketId(bucketName));
+      p.setInt(4, versionNumber);
+
+      return p.execute();
+
+    } catch (SQLException e) {
+      // TODO: handle the error
+      return false;
+    } finally {
+
+      try {
+        if (p != null)
+          p.close();
+
+        connection.close();
+      } catch (SQLException e) {
+
+        // TODO: handle exception
+      }
+    }
+
   }
 
   public Integer getNextAvailableVersionNumber(String bucketName, String key) {
 
+    PreparedStatement p = null;
+
     try {
-      return 1 + jdbcTemplate.queryForObject("SELECT versionNumber FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=? ORDER BY versionNumber DESC LIMIT 1", new java.lang.Object[]{bucketName, key}, new int[]{Types.VARCHAR, Types.VARCHAR}, Integer.class);
-    } catch (EmptyResultDataAccessException e) {
-      return 0;
+
+      p = connection.prepareStatement("SELECT versionNumber FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=? ORDER BY versionNumber DESC LIMIT 1");
+
+      p.setString(1, bucketName);
+      p.setString(2, key);
+
+      ResultSet result = p.executeQuery();
+
+      if (result.next())
+        return result.getInt("versionNumber");
+      else
+        return 0;
+
+    } catch (SQLException e) {
+      // TODO: handle the error
+      return null;
+    } finally {
+
+      try {
+        if (p != null)
+          p.close();
+
+        connection.close();
+      } catch (SQLException e) {
+
+        // TODO: handle exception
+      }
     }
+
   }
 
   public Object getObject(String bucketName, String key) {
@@ -128,7 +268,39 @@ public abstract class SqlService {
   }
 
   public Integer objectCount() throws Exception {
-    return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM objects WHERE status="+ Object.Status.USED.getValue(), Integer.class);
+
+    List<Bucket> buckets = new ArrayList<>();
+
+    PreparedStatement p = null;
+
+    try {
+
+      p = connection.prepareStatement("SELECT COUNT(*) FROM objects WHERE status=?");
+
+      p.setInt(1, Object.Status.USED.getValue());
+      ResultSet result = p.executeQuery();
+
+      if (result.next())
+        return result.getInt(0);
+      else
+        return null;
+
+    } catch (SQLException e) {
+      // TODO: handle the error
+      return null;
+    } finally {
+
+      try {
+        if (p != null)
+          p.close();
+
+        connection.close();
+      } catch (SQLException e) {
+
+        // TODO: handle exception
+      }
+    }
+
   }
 
   public abstract Boolean insertBucket(Bucket bucket);
@@ -150,43 +322,154 @@ public abstract class SqlService {
 
   public List<Bucket> listBuckets() {
 
-    return jdbcTemplate.query("SELECT * FROM buckets", new RowMapper<Bucket>() {
-      @Override
-      public Bucket mapRow(ResultSet resultSet, int i) throws SQLException {
-        return mapBucketRow(resultSet);
+    List<Bucket> buckets = new ArrayList<>();
+
+    PreparedStatement p = null;
+
+    try {
+
+      p = connection.prepareStatement("SELECT * FROM buckets");
+
+      ResultSet result = p.executeQuery();
+
+      while (result.next()) {
+        Bucket bucket = mapBucketRow(result);
+        buckets.add(bucket);
       }
-    });
+
+      return buckets;
+
+    } catch (SQLException e) {
+      // TODO: handle the error
+      return null;
+    } finally {
+
+      try {
+        if (p != null)
+          p.close();
+
+        connection.close();
+      } catch (SQLException e) {
+
+        // TODO: handle exception
+      }
+    }
 
   }
 
   public List<Object> listAllObject() {
 
-    return jdbcTemplate.query("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId", new RowMapper<Object>() {
-      @Override
-      public Object mapRow(ResultSet resultSet, int i) throws SQLException {
-        return mapObjectRow(resultSet);
+    List<Object> objects = new ArrayList<>();
+
+    PreparedStatement p = null;
+
+    try {
+
+      p = connection.prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
+
+      ResultSet result = p.executeQuery();
+
+      while (result.next()) {
+        objects.add(mapObjectRow(result));
       }
-    });
+
+      return objects;
+
+    } catch (SQLException e) {
+      // TODO: handle the error
+      return null;
+    } finally {
+
+      try {
+        if (p != null)
+          p.close();
+
+        connection.close();
+      } catch (SQLException e) {
+
+        // TODO: handle exception
+      }
+    }
 
   }
 
   public List<Object> listObjectsInBucket(String bucketName) {
 
-    return jdbcTemplate.query("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND status=?", new java.lang.Object[]{bucketName, Object.Status.USED.getValue()}, new int[]{Types.VARCHAR, Types.TINYINT}, new RowMapper<Object>() {
-      @Override
-      public Object mapRow(ResultSet resultSet, int i) throws SQLException {
-        return mapObjectRow(resultSet);
+    List<Object> objects = new ArrayList<>();
+
+    PreparedStatement p = null;
+
+    try {
+
+      p = connection.prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND status=?");
+
+      p.setString(1, bucketName);
+      p.setInt(2, Object.Status.USED.getValue());
+
+      ResultSet result = p.executeQuery();
+
+      while (result.next()) {
+        objects.add(mapObjectRow(result));
       }
-    });
+
+      return objects;
+
+    } catch (SQLException e) {
+      // TODO: handle the error
+      return null;
+    } finally {
+
+      try {
+        if (p != null)
+          p.close();
+
+        connection.close();
+      } catch (SQLException e) {
+
+        // TODO: handle exception
+      }
+    }
+
   }
 
   public List<Object> listObjectVersions(Object object) {
-    return jdbcTemplate.query("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND objKey=? AND status=? ORDER BY versionNumber ASC", new java.lang.Object[]{object.bucketName, object.key, Object.Status.USED.getValue()}, new int[]{Types.VARCHAR, Types.VARCHAR, Types.TINYINT}, new RowMapper<Object>() {
-      @Override
-      public Object mapRow(ResultSet resultSet, int i) throws SQLException {
-        return mapObjectRow(resultSet);
+
+    List<Object> objects = new ArrayList<>();
+
+    PreparedStatement p = null;
+
+    try {
+
+      p = connection.prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND objKey=? AND status=? ORDER BY versionNumber ASC");
+
+      p.setString(1, object.bucketName);
+      p.setString(2, object.key);
+      p.setInt(3, Object.Status.USED.getValue());
+
+      ResultSet result = p.executeQuery();
+
+      while (result.next()) {
+        objects.add(mapObjectRow(result));
       }
-    });
+
+      return objects;
+
+    } catch (SQLException e) {
+      // TODO: handle the error
+      return null;
+    } finally {
+
+      try {
+        if (p != null)
+          p.close();
+
+        connection.close();
+      } catch (SQLException e) {
+
+        // TODO: handle exception
+      }
+    }
+
   }
 
 }
