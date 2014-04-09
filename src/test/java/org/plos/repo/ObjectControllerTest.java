@@ -88,6 +88,7 @@ public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
 //    ds.setPassword("");
 
     ic.bind("java:/comp/env/jdbc/repoDB", ds);
+
   }
 
   @BeforeClass

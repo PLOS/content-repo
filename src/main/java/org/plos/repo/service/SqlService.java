@@ -549,37 +549,37 @@ public abstract class SqlService {
     }
 
   }
-
-  public void checkpoint() {
-    // kludege for dealing with HSQLDB pooling and unit tests
-
-    PreparedStatement p = null;
-    Connection connection = null;
-
-    try {
-      connection = dataSource.getConnection();
-
-      p = connection.prepareStatement("CHECKPOINT");
-
-      p.execute();
-
-    } catch (SQLException e) {
-      // TODO: handle the error
-    } finally {
-
-      try {
-        if (p != null)
-          p.close();
-
-        if (connection != null)
-          connection.close();
-      } catch (SQLException e) {
-
-        // TODO: handle exception
-      }
-    }
-
-  }
+//
+//  public void checkpoint() {
+//    // kludege for dealing with HSQLDB pooling and unit tests
+//
+//    PreparedStatement p = null;
+//    Connection connection = null;
+//
+//    try {
+//      connection = dataSource.getConnection();
+//
+//      p = connection.prepareStatement("CHECKPOINT");
+//
+//      p.execute();
+//
+//    } catch (SQLException e) {
+//      // TODO: handle the error
+//    } finally {
+//
+//      try {
+//        if (p != null)
+//          p.close();
+//
+//        if (connection != null)
+//          connection.close();
+//      } catch (SQLException e) {
+//
+//        // TODO: handle exception
+//      }
+//    }
+//
+//  }
 
   public List<Object> listObjectVersions(Object object) {
 

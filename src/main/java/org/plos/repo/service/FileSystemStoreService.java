@@ -1,10 +1,9 @@
 package org.plos.repo.service;
 
-import org.plos.repo.models.Object;
 import org.plos.repo.models.Bucket;
+import org.plos.repo.models.Object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Required;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -24,16 +23,20 @@ public class FileSystemStoreService extends ObjectStore {
 
   private static final Logger log = LoggerFactory.getLogger(FileSystemStoreService.class);
 
-  private String data_dir;
+  private String dataDirectory;
 
-  @Required
-  public void setPreferences(Preferences preferences) throws Exception {
-    log.info("Using FileSystemStore backend");
-    data_dir = preferences.getDataDirectory();
+  public FileSystemStoreService(String dataDirectory) {
+    this.dataDirectory = dataDirectory;
   }
 
+//  @Required
+//  public void setPreferences(Preferences preferences) throws Exception {
+//    log.info("Using FileSystemStore backend");
+//    data_dir = preferences.getDataDirectory();
+//  }
+
   private String getBucketLocationString(String bucketName) {
-    return data_dir + "/" + bucketName + "/";
+    return dataDirectory + "/" + bucketName + "/";
   }
 
   public String getObjectLocationString(String bucketName, String checksum) {
@@ -106,7 +109,7 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
   public UploadInfo uploadTempObject(final MultipartFile file) throws Exception {
-    final String tempFileLocation = data_dir + "/" + UUID.randomUUID().toString() + ".tmp";
+    final String tempFileLocation = dataDirectory + "/" + UUID.randomUUID().toString() + ".tmp";
 
     FileOutputStream fos = new FileOutputStream(tempFileLocation);
 

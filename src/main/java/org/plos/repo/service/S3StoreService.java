@@ -1,5 +1,6 @@
 package org.plos.repo.service;
 
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.CreateBucketRequest;
@@ -12,7 +13,6 @@ import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Required;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -37,11 +37,15 @@ public class S3StoreService extends ObjectStore {
 
   private static final String temp_upload_dir = "/tmp";
 
-  @Required
-  public void setPreferences(Preferences preferences) throws Exception {
-    log.info("Using S3Store backend");
-    s3Client = new AmazonS3Client(preferences.getAWScredentials());
+  public S3StoreService(String aws_access_key, String aws_secret_key) {
+    s3Client = new AmazonS3Client(new BasicAWSCredentials(aws_access_key, aws_secret_key));
   }
+
+//  @Required
+//  public void setPreferences(Preferences preferences) throws Exception {
+//    log.info("Using S3Store backend");
+//    s3Client = new AmazonS3Client(preferences.getAWScredentials());
+//  }
 
   public boolean objectExists(Object object) {
     try {

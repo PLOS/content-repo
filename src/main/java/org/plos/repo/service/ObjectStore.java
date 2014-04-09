@@ -37,7 +37,7 @@ public abstract class ObjectStore {
     return sb.toString();
   }
 
-  abstract public void setPreferences(Preferences preferences) throws Exception;
+//  abstract public void setPreferences(Preferences preferences) throws Exception;
 
   abstract public Boolean hasXReproxy();
 

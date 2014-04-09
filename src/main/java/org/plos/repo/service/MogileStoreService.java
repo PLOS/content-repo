@@ -2,11 +2,10 @@ package org.plos.repo.service;
 
 import com.guba.mogilefs.MogileFS;
 import com.guba.mogilefs.PooledMogileFSImpl;
-import org.plos.repo.models.*;
+import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Required;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
@@ -26,15 +25,19 @@ public class MogileStoreService extends ObjectStore {
 
   public static final String mogileFileClass = "";
 
-  public static final String mogileDefaultDomain = "toast";
+//  public static final String mogileDefaultDomain = "toast";
 
   private MogileFS mfs = null;
 
-  @Required
-  public void setPreferences(Preferences preferences) throws Exception {
-    log.info("Using MogileStore backend");
-    mfs = new PooledMogileFSImpl(mogileDefaultDomain, preferences.getMogileTrackers(), 1, 1, 100);
+  public MogileStoreService(String domain, String[] trackerStrings, int maxTrackerConnections, int maxIdleConnections, long maxIdleTimeMillis) throws Exception {
+    mfs = new PooledMogileFSImpl(domain, trackerStrings, maxTrackerConnections, maxIdleConnections, maxIdleTimeMillis);
   }
+
+//  @Required
+//  public void setPreferences(Preferences preferences) throws Exception {
+//    log.info("Using MogileStore backend");
+//    mfs = new PooledMogileFSImpl(mogileDefaultDomain, preferences.getMogileTrackers(), 1, 1, 100);
+//  }
 
   private String getBucketLocationString(String bucketName) {
     return bucketName + "/";
