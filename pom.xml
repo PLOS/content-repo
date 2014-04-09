@@ -351,9 +351,9 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.tomcat</groupId>
+      <groupId>tomcat</groupId>
       <artifactId>catalina</artifactId>
-      <version>6.0.16</version>
+      <version>5.5.23</version>
     </dependency>
 
     <!--<dependency>-->
