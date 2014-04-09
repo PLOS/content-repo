@@ -8,7 +8,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class MysqlService extends SqlService{
+public class MysqlService extends SqlService {
 
   private static final Logger log = LoggerFactory.getLogger(HsqlService.class);
 

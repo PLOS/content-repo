@@ -4,6 +4,7 @@ import org.plos.repo.models.Bucket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.PreDestroy;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,6 +13,37 @@ import java.sql.SQLException;
 public class HsqlService extends SqlService {
 
   private static final Logger log = LoggerFactory.getLogger(HsqlService.class);
+
+  @PreDestroy
+  public void destroy() {
+    // kludege for dealing with HSQLDB pooling and unit tests
+
+    PreparedStatement p = null;
+    Connection connection = null;
+
+    try {
+      connection = dataSource.getConnection();
+
+      p = connection.prepareStatement("CHECKPOINT");
+
+      p.execute();
+
+    } catch (SQLException e) {
+      // TODO: handle the error
+    } finally {
+
+      try {
+        if (p != null)
+          p.close();
+
+        if (connection != null)
+          connection.close();
+      } catch (SQLException e) {
+
+        // TODO: handle exception
+      }
+    }
+  }
 
   public void postDbInit() {
 
@@ -106,6 +138,7 @@ public class HsqlService extends SqlService {
       try {
 
         connection = dataSource.getConnection();
+
         p = connection.prepareStatement("MERGE INTO buckets USING (VALUES(NULL,?)) AS vals(bucketId,bucketName) on buckets.bucketId = vals.bucketId WHEN NOT MATCHED THEN INSERT VALUES vals.bucketId, vals.bucketName");
 
         p.setString(1, bucket.bucketName);
@@ -134,6 +167,7 @@ public class HsqlService extends SqlService {
       try {
 
         connection = dataSource.getConnection();
+
         p = connection.prepareStatement("MERGE INTO buckets USING (VALUES(?,?)) AS vals(bucketId,bucketName) on buckets.bucketId = vals.bucketId WHEN NOT MATCHED THEN INSERT VALUES vals.bucketId, vals.bucketName");
 
         p.setInt(1, bucket.bucketId);

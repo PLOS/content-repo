@@ -362,7 +362,11 @@ public abstract class SqlService {
       p.setInt(10, object.versionNumber);
       p.setInt(11, object.status.getValue());
 
-      return p.executeUpdate();
+      int result = p.executeUpdate();
+
+      connection.commit();
+
+      return result;
 
     } catch (SQLException e) {
       log.error("error while inserting object", e);
@@ -530,6 +534,37 @@ public abstract class SqlService {
     } catch (SQLException e) {
       // TODO: handle the error
       return null;
+    } finally {
+
+      try {
+        if (p != null)
+          p.close();
+
+        if (connection != null)
+          connection.close();
+      } catch (SQLException e) {
+
+        // TODO: handle exception
+      }
+    }
+
+  }
+
+  public void checkpoint() {
+    // kludege for dealing with HSQLDB pooling and unit tests
+
+    PreparedStatement p = null;
+    Connection connection = null;
+
+    try {
+      connection = dataSource.getConnection();
+
+      p = connection.prepareStatement("CHECKPOINT");
+
+      p.execute();
+
+    } catch (SQLException e) {
+      // TODO: handle the error
     } finally {
 
       try {

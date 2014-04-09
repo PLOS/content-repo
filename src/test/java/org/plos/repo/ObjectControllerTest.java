@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.hsqldb.jdbc.JDBCDataSource;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
 import org.plos.repo.service.ObjectStore;
@@ -24,6 +25,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import java.nio.charset.Charset;
 import java.util.List;
@@ -62,8 +65,29 @@ public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
   }
 
   @BeforeSuite
-  private static void injectContextDB() throws NamingException {
-    BucketControllerTest.injectContextDB();
+  public static void injectContextDB() throws NamingException {
+
+    // Create initial context
+    System.setProperty(Context.INITIAL_CONTEXT_FACTORY, "org.apache.naming.java.javaURLContextFactory");
+    System.setProperty(Context.URL_PKG_PREFIXES, "org.apache.naming");
+    InitialContext ic = new InitialContext();
+
+    ic.createSubcontext("java:");
+    ic.createSubcontext("java:/comp");
+    ic.createSubcontext("java:/comp/env");
+    ic.createSubcontext("java:/comp/env/jdbc");
+
+    JDBCDataSource ds = new JDBCDataSource();
+    ds.setUrl("jdbc:hsqldb:file:/tmp/plosrepo-unittest-hsqldb");
+    ds.setUser("");
+    ds.setPassword("");
+
+//    MysqlDataSource ds = new MysqlDataSource();
+//    ds.setUrl("jdbc:mysql://localhost:3306/plosrepo_unittest");
+//    ds.setUser("root");
+//    ds.setPassword("");
+
+    ic.bind("java:/comp/env/jdbc/repoDB", ds);
   }
 
   @BeforeClass
@@ -172,6 +196,8 @@ public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
 
     this.mockMvc.perform(get("/objects/" + bucketName).param("key", "notObject"))
         .andExpect(status().isNotFound());  // object should not exist
+
+    List<Bucket> bucketList = sqlService.listBuckets();
 
 
     // READ REPROXY

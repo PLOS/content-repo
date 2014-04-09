@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import org.hsqldb.jdbc.JDBCDataSource;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.SqlService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +21,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import java.nio.charset.Charset;
 
@@ -61,25 +58,8 @@ public class BucketControllerTest extends AbstractTestNGSpringContextTests {
   }
 
   @BeforeSuite
-  public static void injectContextDB() throws NamingException {
-
-    // Create initial context
-    System.setProperty(Context.INITIAL_CONTEXT_FACTORY, "org.apache.naming.java.javaURLContextFactory");
-    System.setProperty(Context.URL_PKG_PREFIXES, "org.apache.naming");
-    InitialContext ic = new InitialContext();
-
-    ic.createSubcontext("java:");
-    ic.createSubcontext("java:/comp");
-    ic.createSubcontext("java:/comp/env");
-    ic.createSubcontext("java:/comp/env/jdbc");
-
-    // Construct DataSource
-    JDBCDataSource ds = new JDBCDataSource();
-    ds.setUrl("jdbc:hsqldb:file:/tmp/plosrepo-unittest-hsqldb");
-    ds.setUser("");
-    ds.setPassword("");
-
-    ic.bind("java:/comp/env/jdbc/repoDB", ds);
+  private static void injectContextDB() throws NamingException {
+    ObjectControllerTest.injectContextDB();
   }
 
   @BeforeClass
