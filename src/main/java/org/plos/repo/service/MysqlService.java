@@ -26,12 +26,6 @@ public class MysqlService extends SqlService {
 
     int result;
 
-//    if (bucket.bucketId == null) {
-//      result = jdbcTemplate.update("INSERT IGNORE INTO buckets SET bucketName=?", new java.lang.Object[]{bucket.bucketName}, new int[]{Types.VARCHAR});
-//    } else {
-//      result = jdbcTemplate.update("INSERT IGNORE INTO buckets SET bucketId=?, bucketName=?", new java.lang.Object[]{bucket.bucketId, bucket.bucketName}, new int[]{Types.INTEGER, Types.VARCHAR});
-//    }
-
     Connection connection = null;
     PreparedStatement p = null;
 
@@ -46,7 +40,7 @@ public class MysqlService extends SqlService {
         result = p.executeUpdate();
 
       } catch (SQLException e) {
-        // TODO: handle the error
+        log.error("error inserting bucket", e);
         return false;
       } finally {
 
@@ -57,8 +51,7 @@ public class MysqlService extends SqlService {
           if (connection != null)
             connection.close();
         } catch (SQLException e) {
-
-          // TODO: handle exception
+          log.error("error closing connection", e);
         }
       }
 
@@ -74,7 +67,7 @@ public class MysqlService extends SqlService {
         result = p.executeUpdate();
 
       } catch (SQLException e) {
-        // TODO: handle the error
+        log.error("error inserting bucket", e);
         return false;
       } finally {
 
@@ -85,8 +78,7 @@ public class MysqlService extends SqlService {
           if (connection != null)
             connection.close();
         } catch (SQLException e) {
-
-          // TODO: handle exception
+          log.error("error closing connection", e);
         }
       }
 

@@ -19,38 +19,19 @@ public abstract class SqlService {
   private static final Logger log = LoggerFactory.getLogger(SqlService.class);
 
   protected DataSource dataSource;
-//  protected Connection connection;
-
-//  @Required
-//  public void setDataSource(DataSource dataSource) {
-//    try {
-//      jdbcTemplate = new JdbcTemplate(dataSource);
-//    } catch (Exception e) {
-//      log.error("Error setting up jdbc", e);
-//    }
-//
-//    postDbInit();
-//  }
 
   @Required
   public void setDataSource(DataSource dataSource) {
     try {
       this.dataSource = dataSource;
-//      this.connection = dataSource.getConnection();
+      postDbInit();
     } catch (Exception e) {
       log.error("Error setting up jdbc", e);
     }
 
-    postDbInit();
   }
 
-//  @Required
-//  public void setConnection(Connection connection) {
-//    this.connection = connection;
-//    postDbInit();
-//  }
-
-  public abstract void postDbInit();
+  public abstract void postDbInit() throws Exception;
 
   private static org.plos.repo.models.Object mapObjectRow(ResultSet rs) throws SQLException {
     return new org.plos.repo.models.Object(rs.getInt("ID"), rs.getString("OBJKEY"), rs.getString("CHECKSUM"), rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"), rs.getLong("SIZE"), rs.getString("URLS"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"), Object.STATUS_VALUES.get(rs.getInt("STATUS")));
@@ -80,7 +61,7 @@ public abstract class SqlService {
         return null;
 
     } catch (SQLException e) {
-      // TODO: handle the error
+      log.error("error getting bucket id", e);
       return null;
     } finally {
 
@@ -91,8 +72,7 @@ public abstract class SqlService {
         if (connection != null)
           connection.close();
       } catch (SQLException e) {
-
-        // TODO: handle exception
+        log.error("error closing connection", e);
       }
     }
   }
@@ -112,7 +92,7 @@ public abstract class SqlService {
       return p.executeUpdate();
 
     } catch (SQLException e) {
-      // TODO: handle the error
+      log.error("sql error", e);
       return 0;
     } finally {
 
@@ -123,8 +103,7 @@ public abstract class SqlService {
         if (connection != null)
           connection.close();
       } catch (SQLException e) {
-
-        // TODO: handle exception
+        log.error("error closing connection", e);
       }
     }
 
@@ -149,7 +128,7 @@ public abstract class SqlService {
       return p.executeUpdate();
 
     } catch (SQLException e) {
-      // TODO: handle the error
+      log.error("sql error", e);
       return 0;
     } finally {
 
@@ -160,8 +139,7 @@ public abstract class SqlService {
         if (connection != null)
           connection.close();
       } catch (SQLException e) {
-
-        // TODO: handle exception
+        log.error("error closing connection", e);
       }
     }
 
@@ -186,7 +164,7 @@ public abstract class SqlService {
       return p.executeUpdate();
 
     } catch (SQLException e) {
-      // TODO: handle the error
+      log.error("sql error", e);
       return 0;
     } finally {
 
@@ -197,8 +175,7 @@ public abstract class SqlService {
         if (connection != null)
           connection.close();
       } catch (SQLException e) {
-
-        // TODO: handle exception
+        log.error("error closing connection", e);
       }
     }
 
@@ -226,7 +203,7 @@ public abstract class SqlService {
         return 0;
 
     } catch (SQLException e) {
-      // TODO: handle the error
+      log.error("sql error", e);
       return null;
     } finally {
 
@@ -237,8 +214,7 @@ public abstract class SqlService {
         if (connection != null)
           connection.close();
       } catch (SQLException e) {
-
-        // TODO: handle exception
+        log.error("error closing connection", e);
       }
     }
 
@@ -274,7 +250,7 @@ public abstract class SqlService {
         return null;
 
     } catch (SQLException e) {
-      // TODO: handle the error
+      log.error("sql error", e);
       return null;
     } finally {
 
@@ -285,8 +261,7 @@ public abstract class SqlService {
         if (connection != null)
           connection.close();
       } catch (SQLException e) {
-
-        // TODO: handle exception
+        log.error("error closing connection", e);
       }
     }
 
@@ -322,7 +297,7 @@ public abstract class SqlService {
         return null;
 
     } catch (SQLException e) {
-      // TODO: handle the error
+      log.error("sql error", e);
       return null;
     } finally {
 
@@ -333,8 +308,7 @@ public abstract class SqlService {
         if (connection != null)
           connection.close();
       } catch (SQLException e) {
-
-        // TODO: handle exception
+        log.error("error closing connection", e);
       }
     }
 
@@ -364,12 +338,10 @@ public abstract class SqlService {
 
       int result = p.executeUpdate();
 
-      connection.commit();
-
       return result;
 
     } catch (SQLException e) {
-      log.error("error while inserting object", e);
+      log.error("sql error", e);
       return 0;
     } finally {
 
@@ -380,8 +352,7 @@ public abstract class SqlService {
         if (connection != null)
           connection.close();
       } catch (SQLException e) {
-
-        // TODO: handle exception
+        log.error("error closing connection", e);
       }
     }
 
@@ -406,9 +377,7 @@ public abstract class SqlService {
         return null;
 
     } catch (SQLException e) {
-      log.error("Error finding object count", e);
-
-      // TODO: handle the error
+      log.error("sql error", e);
       return null;
     } finally {
 
@@ -419,8 +388,7 @@ public abstract class SqlService {
         if (connection != null)
           connection.close();
       } catch (SQLException e) {
-
-        // TODO: handle exception
+        log.error("error closing connection", e);
       }
     }
 
@@ -451,7 +419,7 @@ public abstract class SqlService {
       return buckets;
 
     } catch (SQLException e) {
-      log.error("error listing buckets", e);
+      log.error("sql error", e);
       return null;
     } finally {
 
@@ -462,8 +430,7 @@ public abstract class SqlService {
         if (connection != null)
           connection.close();
       } catch (SQLException e) {
-
-        // TODO: handle exception
+        log.error("error closing connection", e);
       }
     }
 
@@ -490,7 +457,7 @@ public abstract class SqlService {
       return objects;
 
     } catch (SQLException e) {
-      // TODO: handle the error
+      log.error("sql error", e);
       return null;
     } finally {
 
@@ -501,8 +468,7 @@ public abstract class SqlService {
         if (connection != null)
           connection.close();
       } catch (SQLException e) {
-
-        // TODO: handle exception
+        log.error("error closing connection", e);
       }
     }
 
@@ -532,7 +498,7 @@ public abstract class SqlService {
       return objects;
 
     } catch (SQLException e) {
-      // TODO: handle the error
+      log.error("sql error", e);
       return null;
     } finally {
 
@@ -543,43 +509,11 @@ public abstract class SqlService {
         if (connection != null)
           connection.close();
       } catch (SQLException e) {
-
-        // TODO: handle exception
+        log.error("error closing connection", e);
       }
     }
 
   }
-//
-//  public void checkpoint() {
-//    // kludege for dealing with HSQLDB pooling and unit tests
-//
-//    PreparedStatement p = null;
-//    Connection connection = null;
-//
-//    try {
-//      connection = dataSource.getConnection();
-//
-//      p = connection.prepareStatement("CHECKPOINT");
-//
-//      p.execute();
-//
-//    } catch (SQLException e) {
-//      // TODO: handle the error
-//    } finally {
-//
-//      try {
-//        if (p != null)
-//          p.close();
-//
-//        if (connection != null)
-//          connection.close();
-//      } catch (SQLException e) {
-//
-//        // TODO: handle exception
-//      }
-//    }
-//
-//  }
 
   public List<Object> listObjectVersions(Object object) {
 
@@ -606,7 +540,7 @@ public abstract class SqlService {
       return objects;
 
     } catch (SQLException e) {
-      // TODO: handle the error
+      log.error("sql error", e);
       return null;
     } finally {
 
@@ -617,8 +551,7 @@ public abstract class SqlService {
         if (connection != null)
           connection.close();
       } catch (SQLException e) {
-
-        // TODO: handle exception
+        log.error("error closing connection", e);
       }
     }
 

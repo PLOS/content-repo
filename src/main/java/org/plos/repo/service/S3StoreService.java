@@ -41,12 +41,6 @@ public class S3StoreService extends ObjectStore {
     s3Client = new AmazonS3Client(new BasicAWSCredentials(aws_access_key, aws_secret_key));
   }
 
-//  @Required
-//  public void setPreferences(Preferences preferences) throws Exception {
-//    log.info("Using S3Store backend");
-//    s3Client = new AmazonS3Client(preferences.getAWScredentials());
-//  }
-
   public boolean objectExists(Object object) {
     try {
       S3Object obj = s3Client.getObject(object.bucketName, object.checksum);

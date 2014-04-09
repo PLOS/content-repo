@@ -9,6 +9,7 @@ import com.google.gson.JsonObject;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
+import org.plos.repo.service.FileSystemStoreService;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.SqlService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ import javax.naming.NamingException;
 import java.nio.charset.Charset;
 import java.util.List;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -59,15 +61,12 @@ public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
 
   public static final MediaType APPLICATION_JSON_UTF8 = new MediaType(MediaType.APPLICATION_JSON.getType(), MediaType.APPLICATION_JSON.getSubtype(), Charset.forName("utf8"));
 
-  // set values before application context is loaded
-  static {
-    System.setProperty("configFile", "test.properties");
-  }
-
   @BeforeSuite
   public static void injectContextDB() throws NamingException {
 
-    // Create initial context
+    if (System.getProperty(Context.INITIAL_CONTEXT_FACTORY) != null)
+      return;
+
     System.setProperty(Context.INITIAL_CONTEXT_FACTORY, "org.apache.naming.java.javaURLContextFactory");
     System.setProperty(Context.URL_PKG_PREFIXES, "org.apache.naming");
     InitialContext ic = new InitialContext();
@@ -77,17 +76,18 @@ public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
     ic.createSubcontext("java:/comp/env");
     ic.createSubcontext("java:/comp/env/jdbc");
 
+    ic.createSubcontext("java:/comp/env/repo");
+
     JDBCDataSource ds = new JDBCDataSource();
     ds.setUrl("jdbc:hsqldb:file:/tmp/plosrepo-unittest-hsqldb");
     ds.setUser("");
     ds.setPassword("");
 
-//    MysqlDataSource ds = new MysqlDataSource();
-//    ds.setUrl("jdbc:mysql://localhost:3306/plosrepo_unittest");
-//    ds.setUser("root");
-//    ds.setPassword("");
-
     ic.bind("java:/comp/env/jdbc/repoDB", ds);
+
+    ObjectStore os = new FileSystemStoreService("/tmp/repo_data_unittest");
+
+    ic.bind("java:/comp/env/repo/objectStore", os);
 
   }
 
@@ -251,8 +251,8 @@ public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
 
     // DELETE
 
-//    this.mockMvc.perform(delete("/objects/" + bucketName).param("key", "object1").param("version", "0"))
-//        .andExpect(status().isOk());
+    this.mockMvc.perform(delete("/objects/" + bucketName).param("key", "object1").param("version", "0"))
+        .andExpect(status().isOk());
 
     // TODO: tests to add
     //   object deduplication

@@ -17,35 +17,24 @@
 
 package org.plos.repo.rest;
 
-import org.plos.repo.service.HsqlService;
-import org.plos.repo.service.MysqlService;
 import org.plos.repo.service.ObjectStore;
-import org.plos.repo.service.Preferences;
 import org.plos.repo.service.SqlService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-import java.sql.Connection;
-import java.sql.Driver;
-import java.sql.DriverManager;
-import java.util.Enumeration;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 @Controller
 public class RootController {
 
   private final RequestMappingHandlerMapping handlerMapping;
-
-  private static final Logger log = LoggerFactory.getLogger(RootController.class);
 
   @Autowired
   public RootController(RequestMappingHandlerMapping handlerMapping) {
@@ -58,79 +47,34 @@ public class RootController {
   @Autowired
   private ObjectStore objectStore;
 
-  @Autowired
-  private Preferences preferences;
-
   @RequestMapping(value = "hasXReproxy")
   public @ResponseBody boolean hasXReproxy() {
     return objectStore.hasXReproxy();
   }
 
+  private String getProjectVersion() {
+
+    // TODO: move this function somewhere else
+
+    try (InputStream is = getClass().getResourceAsStream("/version.properties")) {
+      Properties properties = new Properties();
+      properties.load(is);
+      return properties.get("version") + " (" + properties.get("buildDate") + ")";
+    } catch (Exception e) {
+      return "unknown";
+    }
+  }
+
   @RequestMapping(value = "")
   public ModelAndView rootPage(ModelAndView model) throws Exception {
-
-
-//    SqlService sqlService;
-//    Resource sqlFile;
-//
-//    Enumeration<Driver> drivers = java.sql.DriverManager.getDrivers();
-//
-//    while (drivers.hasMoreElements()) {
-//      Driver driver = drivers.nextElement();
-//      log.info("available driver: " + driver);
-//    }
-//
-//    Connection conn = DriverManager.getConnection("jdbc:hsqldb:file:/tmp/plosrepo-hsqldb123");
-//
-//    String dbBackend = conn.getMetaData().getDatabaseProductName();
-//
-//
-////    DriverManagerDataSource dataSource = new DriverManagerDataSource();
-////    dataSource.setUrl("jdbc:hsqldb:file:/tmp/plosrepo-hsqldb123");
-////
-////    log.info("connection: " + dataSource.getConnection());
-////
-////    String dbBackend = dataSource.getConnection().getMetaData().getDatabaseProductName();
-//
-//
-//    if (dbBackend.equalsIgnoreCase("MySQL")) {
-//
-//      sqlService = new MysqlService();
-//      sqlFile = new ClassPathResource("setup.mysql");
-//
-//
-//    } else if (dbBackend.equalsIgnoreCase("HSQL Database Engine")) {
-//
-//      sqlService = new HsqlService();
-//      sqlFile = new ClassPathResource("setup.hsql");
-//
-//    } else {
-//      throw new Exception("Database type not supported: " + dbBackend);
-//    }
-//
-//    ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-//
-//    populator.addScript(sqlFile);
-//    DatabasePopulatorUtils.execute(populator, dataSource);
-//
-//    sqlService.setDataSource(dataSource);
-//
-
-
-
-
-
-
-
 
     Map<String, Integer> counts = new HashMap<>();
     Map<String, String> service = new HashMap<>();
 
     counts.put("objects", sqlService.objectCount());
 
-    service.put("version", preferences.getProjectVersion());
-    service.put("configs", preferences.getConfigs());
-    service.put("data directory", preferences.getDataDirectory());
+    // TODO: create /config endpoint, and move this there
+    service.put("version", getProjectVersion());
 
     model.addObject("service", service);
     model.addObject("counts", counts);

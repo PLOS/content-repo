@@ -3,7 +3,6 @@ package org.plos.repo.config;
 import org.plos.repo.service.HsqlService;
 import org.plos.repo.service.MysqlService;
 import org.plos.repo.service.ObjectStore;
-import org.plos.repo.service.Preferences;
 import org.plos.repo.service.ScriptRunner;
 import org.plos.repo.service.SqlService;
 import org.slf4j.Logger;
@@ -26,30 +25,7 @@ public class Config {
   private static final Logger log = LoggerFactory.getLogger(Config.class);
 
   @Bean
-  public Preferences prefs() {
-
-    String userConfig = System.getProperty("configFile");
-
-    Preferences p = new Preferences();
-
-    if (userConfig == null || userConfig.isEmpty())
-      p.setConfigFiles(new String[]{"default.properties"});
-    else
-      p.setConfigFiles(new String[]{"default.properties", userConfig});
-
-    return p;
-
-  }
-
-  @Bean
   public ObjectStore objectStore() throws Exception {
-
-//    Class storeClass = prefs().getStorageClass();
-//
-//    Constructor constructor = storeClass.getConstructor();
-//    ObjectStore objStore = (ObjectStore)constructor.newInstance();
-//
-//    objStore.setPreferences(prefs());
 
     Context initContext = new InitialContext();
     Context envContext  = (Context)initContext.lookup("java:/comp/env");
@@ -70,6 +46,8 @@ public class Config {
 
     String dbBackend = connection.getMetaData().getDatabaseProductName();
 
+    log.info("Database: " + dbBackend + "  " + connection.getMetaData().getURL());
+
     SqlService service;
     Resource sqlFile;
 
@@ -87,9 +65,10 @@ public class Config {
       throw new Exception("Database type not supported: " + dbBackend);
     }
 
-    ScriptRunner scriptRunner = new ScriptRunner(connection, true, true);
+    ScriptRunner scriptRunner = new ScriptRunner(connection, false, true);
     scriptRunner.runScript(new BufferedReader(new FileReader(sqlFile.getFile())));
 
+    connection.setAutoCommit(true);
     service.setDataSource(ds);
 
     return service;

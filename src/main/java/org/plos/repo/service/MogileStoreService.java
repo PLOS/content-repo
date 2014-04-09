@@ -33,12 +33,6 @@ public class MogileStoreService extends ObjectStore {
     mfs = new PooledMogileFSImpl(domain, trackerStrings, maxTrackerConnections, maxIdleConnections, maxIdleTimeMillis);
   }
 
-//  @Required
-//  public void setPreferences(Preferences preferences) throws Exception {
-//    log.info("Using MogileStore backend");
-//    mfs = new PooledMogileFSImpl(mogileDefaultDomain, preferences.getMogileTrackers(), 1, 1, 100);
-//  }
-
   private String getBucketLocationString(String bucketName) {
     return bucketName + "/";
   }

@@ -27,13 +27,10 @@ public class FileSystemStoreService extends ObjectStore {
 
   public FileSystemStoreService(String dataDirectory) {
     this.dataDirectory = dataDirectory;
-  }
 
-//  @Required
-//  public void setPreferences(Preferences preferences) throws Exception {
-//    log.info("Using FileSystemStore backend");
-//    data_dir = preferences.getDataDirectory();
-//  }
+    File dir = new File(dataDirectory);
+    dir.mkdir();
+  }
 
   private String getBucketLocationString(String bucketName) {
     return dataDirectory + "/" + bucketName + "/";

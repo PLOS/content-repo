@@ -350,17 +350,26 @@
       <version>8.0.5</version>
     </dependency>
 
-    <dependency>
-      <groupId>tomcat</groupId>
-      <artifactId>catalina</artifactId>
-      <version>5.5.23</version>
-    </dependency>
-
     <!--<dependency>-->
-      <!--<groupId>org.hibernate</groupId>-->
-      <!--<artifactId>hibernate-core</artifactId>-->
-      <!--<version>4.3.1.Final</version>-->
+      <!--<groupId>tomcat</groupId>-->
+      <!--<artifactId>catalina</artifactId>-->
+      <!--<version>5.5.23</version>-->
     <!--</dependency>-->
+
+
+
+    <!--
+        This needs to be added back for the unit tests to pass when using
+        springmvc and tomcat in the unit tests. Perhaps it will be easier
+        when we move to jersey
+        http://jira.codehaus.org/browse/MOJO-1076
+                                                  -->
+    <!--<dependency>-->
+      <!--<groupId>org.apache.tomcat</groupId>-->
+      <!--<artifactId>catalina</artifactId>-->
+      <!--<version>6.0.16</version>-->
+    <!--</dependency>-->
+
 
   </dependencies>
 
@@ -513,6 +522,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>tomcat-maven-plugin</artifactId>
+
         <configuration>
           <path>/</path>
           <contextFile>/etc/ambra/context.xml</contextFile>
@@ -523,7 +533,6 @@
             <artifactId>juli</artifactId>
             <version>6.0.36</version>
           </dependency>
-
         </dependencies>
       </plugin>
 

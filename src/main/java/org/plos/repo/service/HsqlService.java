@@ -15,189 +15,132 @@ public class HsqlService extends SqlService {
   private static final Logger log = LoggerFactory.getLogger(HsqlService.class);
 
   @PreDestroy
-  public void destroy() {
-    // kludege for dealing with HSQLDB pooling and unit tests
+  public void destroy() throws Exception {
+
+    // kludge for dealing with HSQLDB pooling and unit tests
 
     PreparedStatement p = null;
     Connection connection = null;
 
-    try {
-      connection = dataSource.getConnection();
+    connection = dataSource.getConnection();
+    p = connection.prepareStatement("CHECKPOINT");
+    p.execute();
 
-      p = connection.prepareStatement("CHECKPOINT");
+    if (p != null)
+      p.close();
 
-      p.execute();
+    if (connection != null)
+      connection.close();
 
-    } catch (SQLException e) {
-      // TODO: handle the error
-    } finally {
-
-      try {
-        if (p != null)
-          p.close();
-
-        if (connection != null)
-          connection.close();
-      } catch (SQLException e) {
-
-        // TODO: handle exception
-      }
-    }
   }
 
-  public void postDbInit() {
+  public void postDbInit() throws Exception {
 
     // kludges for dealing with HSQLDB
 
     Connection connection = null;
     PreparedStatement p = null;
 
-    try {
-      connection = dataSource.getConnection();
-      p = connection.prepareStatement("select * from INFORMATION_SCHEMA.SYSTEM_INDEXINFO where INDEX_NAME = 'OBJKEYINDEX'");
+    connection = dataSource.getConnection();
+    p = connection.prepareStatement("select * from INFORMATION_SCHEMA.SYSTEM_INDEXINFO where INDEX_NAME = 'OBJKEYINDEX'");
 
-      ResultSet result = p.executeQuery();
+    ResultSet result = p.executeQuery();
 
-      PreparedStatement pc = null;
+    PreparedStatement pc = null;
 
-      if (result.next()) {
+    if (result.next()) {
+      pc = connection.prepareStatement("CREATE INDEX objKeyIndex ON objects(bucketId, objKey)");
 
-        try {
-
-          pc = connection.prepareStatement("CREATE INDEX objKeyIndex ON objects(bucketId, objKey)");
-
-          pc.execute();
-
-        } catch (SQLException e) {
-          // TODO: handle the error
-        } finally {
-
-          try {
-            if (pc != null)
-              pc.close();
-
-            //connection.close();
-          } catch (SQLException e) {
-
-            // TODO: handle exception
-          }
-        }
-
-
-      } else {
-        log.info("Creating DB index");
-
-        try {
-
-          pc = connection.prepareStatement("CHECKPOINT DEFRAG");
-          pc.execute();
-
-        } catch (SQLException e) {
-          // TODO: handle the error
-        } finally {
-
-          try {
-            if (pc != null)
-              pc.close();
-
-            //connection.close();
-          } catch (SQLException e) {
-
-            // TODO: handle exception
-          }
-        }
-      }
-
-    } catch (SQLException e) {
-      // TODO: handle the error
-    } finally {
-
-      try {
-        if (p != null)
-          p.close();
-
-        if (connection != null)
-          connection.close();
-      } catch (SQLException e) {
-
-        // TODO: handle exception
-      }
+    } else {
+      log.info("Creating DB index");
+      pc = connection.prepareStatement("CHECKPOINT DEFRAG");
     }
 
-  }
+    pc.execute();
+
+    if (p != null)
+      p.close();
+
+    if (pc != null)
+      pc.close();
+
+    if (connection != null)
+      connection.close();
+
+   }
 
   public boolean insertBucket(Bucket bucket) {
 
-    int result;
+       int result;
 
-    Connection connection = null;
-    PreparedStatement p = null;
+       Connection connection = null;
+       PreparedStatement p = null;
 
-    if (bucket.bucketId == null) {
+       if (bucket.bucketId == null) {
 
-      try {
+         try {
 
-        connection = dataSource.getConnection();
+           connection = dataSource.getConnection();
 
-        p = connection.prepareStatement("MERGE INTO buckets USING (VALUES(NULL,?)) AS vals(bucketId,bucketName) on buckets.bucketId = vals.bucketId WHEN NOT MATCHED THEN INSERT VALUES vals.bucketId, vals.bucketName");
+           p = connection.prepareStatement("MERGE INTO buckets USING (VALUES(NULL,?)) AS vals(bucketId,bucketName) on buckets.bucketId = vals.bucketId WHEN NOT MATCHED THEN INSERT VALUES vals.bucketId, vals.bucketName");
 
-        p.setString(1, bucket.bucketName);
+           p.setString(1, bucket.bucketName);
 
-        result = p.executeUpdate();
+           result = p.executeUpdate();
 
-      } catch (SQLException e) {
-        // TODO: handle the error
-        return false;
-      } finally {
+         } catch (SQLException e) {
+           log.error("error inserting bucket", e);
+           return false;
+         } finally {
 
-        try {
-          if (p != null)
-            p.close();
+           try {
+             if (p != null)
+               p.close();
 
-          if (connection != null)
-            connection.close();
-        } catch (SQLException e) {
+             if (connection != null)
+                connection.close();
 
-          // TODO: handle exception
-        }
-      }
+           } catch (SQLException e) {
+             log.error("error closing connection", e);
+           }
+         }
 
-    } else {
+       } else {
 
-      try {
+         try {
 
-        connection = dataSource.getConnection();
+           connection = dataSource.getConnection();
 
-        p = connection.prepareStatement("MERGE INTO buckets USING (VALUES(?,?)) AS vals(bucketId,bucketName) on buckets.bucketId = vals.bucketId WHEN NOT MATCHED THEN INSERT VALUES vals.bucketId, vals.bucketName");
+           p = connection.prepareStatement("MERGE INTO buckets USING (VALUES   (?,?)) AS vals(bucketId,bucketName) on buckets.bucketId = vals.bucketId WHEN NOT MATCHED THEN INSERT VALUES vals.bucketId, vals.bucketName");
 
-        p.setInt(1, bucket.bucketId);
-        p.setString(2, bucket.bucketName);
+           p.setInt(1, bucket.bucketId);
+              p.setString(2, bucket.bucketName);
 
-        result = p.executeUpdate();
+           result = p.executeUpdate();
 
-      } catch (SQLException e) {
-        // TODO: handle the error
-        return false;
-      } finally {
+         } catch (SQLException e   ) {
+           log.error("error inserting bucket", e);
+           return false;
+         } finally {
 
-        try {
-          if (p != null)
-            p.close();
+           try {
+             if (p != null)
+               p.close();
 
-          if (connection != null)
-            connection.close();
-        } catch (SQLException e) {
+             if (connection != null)
+               connection.close();
 
-          // TODO: handle exception
-        }
-      }
+           } catch (SQLException e) {
+             log.error("error closing connection", e);
+           }
+         }
 
-    }
+       }
 
-    if (result == 0)
-      log.error("Error while creating bucket: database update failed");
+       if (result == 0)
+         log.error("Error while creating bucket: database update failed");
 
-    return (result > 0);
-  }
+       return (result > 0);
+     }
 
-}
+   }
