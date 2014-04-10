@@ -45,7 +45,7 @@ public class RootController {
 
   @GET
   @Path("test")
-  public Response root2() {
+  public Response test() {
     String result = "root2";
     return Response.status(200).entity(result).build();
   }

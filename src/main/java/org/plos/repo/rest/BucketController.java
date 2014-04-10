@@ -6,13 +6,16 @@ import org.plos.repo.service.SqlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.ws.rs.DELETE;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
-//@Controller
-//@RequestMapping("/buckets")
 @Component
 @Path("/buckets")
 public class BucketController {
@@ -23,62 +26,124 @@ public class BucketController {
   @Autowired
   private SqlService sqlService;
 
-  @GET
-//  @Produces({"application/json"})
-  public List<Bucket> list() throws Exception {
-    return sqlService.listBuckets();
+//  @GET
+//  @Produces(MediaType.APPLICATION_JSON)
+//  @Path("json")
+//  public List<Bucket> json() throws Exception {
+//
+//    Bucket b = new Bucket("some name", 123);
+//    List<Bucket> buckets = new ArrayList<>();
+//    buckets.add(b);
+//
+//    return buckets;
+//
+//  }
+//
+//  @GET
+//  @Produces(MediaType.APPLICATION_XML)
+//  @Path("xml")
+//  public List<Bucket> xml() throws Exception {
+//
+//    Bucket b = new Bucket("some name", 123);
+//    List<Bucket> buckets = new ArrayList<>();
+//    buckets.add(b);
+//
+//    return buckets;
+//
+//  }
+//
+//
+//  @GET
+//  @Path("response")
+//  @Produces(MediaType.APPLICATION_JSON)
+//  public Response response() throws Exception {
+//
+//    Bucket b = new Bucket("some name", 123);
+//    List<Bucket> buckets = new ArrayList<>();
+//    buckets.add(b);
+//
 //    return Response.status(200).entity(sqlService.listBuckets()).build();
-  }
+//
+//  }
+//
+//  @GET
+//  @Path("response2")
+//  @Produces(MediaType.APPLICATION_JSON)
+//  public Response response2() throws Exception {
+//
+//    Bucket b = new Bucket("some name", 123);
+//    List<Bucket> buckets = new ArrayList<>();
+//    buckets.add(b);
+//
+//    Response r2 = Response.ok().entity(b).build();
+//    return r2;
+//  }
+//
+//
+//  @GET
+//  @Path("response3")
+////  @Produces(MediaType.APPLICATION_JSON)
+//  public Response responseList() throws Exception {
+//
+//    Bucket b = new Bucket("some name", 123);
+//    List<Bucket> buckets = new ArrayList<>();
+//    buckets.add(b);
+//
+//    Response r2 = Response.ok().entity(new GenericEntity<List<Bucket>>(buckets) {
+//    }).build();
+//
+//    return r2;
+//  }
 
   @GET
-  @Path("response")
-  public Response listResponse() throws Exception {
-    return Response.status(200).entity(sqlService.listBuckets()).build();
+  public Response list() throws Exception {
+    return Response.status(200).entity(
+        new GenericEntity<List<Bucket>>(sqlService.listBuckets()){}).build();
   }
 
-/*
-  @RequestMapping(method = RequestMethod.POST)
-  public ResponseEntity<String> create(@RequestParam String name,
-                                       @RequestParam(required = false) Integer id) {
+  @POST
+  public Response create(@FormParam("name") String name,
+                         @FormParam("id") Integer id) {
 
     if (sqlService.getBucketId(name) != null)
-      return new ResponseEntity<>("Bucket already exists", HttpStatus.NO_CONTENT);
+      return Response.status(Response.Status.NO_CONTENT).entity("Bucket already exists").build();
 
     if (!ObjectStore.isValidFileName(name))
-      return new ResponseEntity<>("Unable to create bucket. Name contains illegal characters: " + name, HttpStatus.PRECONDITION_FAILED);
+      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Unable to create bucket. Name contains illegal characters: " + name).build();
 
     Bucket bucket = new Bucket(name, id);
 
     if (!objectStore.createBucket(bucket))
-      return new ResponseEntity<>("Unable to create bucket " + name, HttpStatus.CONFLICT);
+      return Response.status(Response.Status.CONFLICT).entity("Unable to create bucket " + name).build();
 
     if (!sqlService.insertBucket(bucket)) {
       objectStore.deleteBucket(bucket);
-      return new ResponseEntity<>("Unable to create bucket " + name, HttpStatus.CONFLICT);
+      return Response.status(Response.Status.CONFLICT).entity("Unable to create bucket " + name).build();
     }
 
-    return new ResponseEntity<>("Created bucket " + name, HttpStatus.CREATED);
+    return Response.status(Response.Status.CREATED).entity("Created bucket " + name).build();
   }
 
-  @RequestMapping(value="{name}", method = RequestMethod.DELETE)
-  public ResponseEntity<String> delete(@PathVariable String name) {
+  @DELETE
+  @Path("{name}")
+  public Response delete(@PathParam("name") String name) {
 
     if (sqlService.getBucketId(name) == null)
-      return new ResponseEntity<>("Cannot delete bucket. Bucket not found", HttpStatus.NOT_FOUND);
+      return Response.status(Response.Status.NOT_FOUND).entity("Cannot delete bucket. Bucket not found.").build();
 
     if (sqlService.listObjectsInBucket(name).size() != 0)
-      return new ResponseEntity<>("Cannot delete bucket " + name + " because it contains objects.", HttpStatus.NOT_MODIFIED);
+      return Response.status(Response.Status.NOT_MODIFIED).entity("Cannot delete bucket " + name + " because it contains objects.").build();
 
     Bucket bucket = new Bucket(name);
 
     if (!objectStore.deleteBucket(bucket))
-      return new ResponseEntity<>("There was a problem removing the bucket", HttpStatus.NOT_MODIFIED);
+      return Response.status(Response.Status.NOT_MODIFIED).entity("There was a problem removing the bucket").build();
 
     if (sqlService.deleteBucket(name) > 0)
-      return new ResponseEntity<>("Bucket " + name + " deleted.", HttpStatus.OK);
+      return Response.status(Response.Status.OK).entity("Bucket " + name + " deleted.").build();
 
-    return new ResponseEntity<>("No buckets deleted.", HttpStatus.NOT_MODIFIED);
+    return Response.status(Response.Status.NOT_MODIFIED).entity("No buckets deleted.").build();
 
   }
-*/
+
 }
