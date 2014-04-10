@@ -20,26 +20,22 @@ package org.plos.repo.rest;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.SqlService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+import org.springframework.stereotype.Component;
 
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Response;
 
-@Controller
+@Component
+@Path("/")
 public class RootController {
 
-  private final RequestMappingHandlerMapping handlerMapping;
-
-  @Autowired
-  public RootController(RequestMappingHandlerMapping handlerMapping) {
-    this.handlerMapping = handlerMapping;
-  }
+//  private final RequestMappingHandlerMapping handlerMapping;
+//
+//  @Autowired
+//  public RootController(RequestMappingHandlerMapping handlerMapping) {
+//    this.handlerMapping = handlerMapping;
+//  }
 
   @Autowired
   private SqlService sqlService;
@@ -47,6 +43,14 @@ public class RootController {
   @Autowired
   private ObjectStore objectStore;
 
+  @GET
+  @Path("test")
+  public Response root2() {
+    String result = "root2";
+    return Response.status(200).entity(result).build();
+  }
+
+/*
   @RequestMapping(value = "hasXReproxy")
   public @ResponseBody boolean hasXReproxy() {
     return objectStore.hasXReproxy();
@@ -78,10 +82,10 @@ public class RootController {
 
     model.addObject("service", service);
     model.addObject("counts", counts);
-    model.addObject("handlerMethods", handlerMapping.getHandlerMethods());
+    //model.addObject("handlerMethods", handlerMapping.getHandlerMethods());
 
     model.setViewName("root");
     return model;
   }
-
+*/
 }

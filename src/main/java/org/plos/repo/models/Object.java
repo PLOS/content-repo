@@ -4,9 +4,11 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
+import javax.xml.bind.annotation.XmlRootElement;
 import java.sql.Timestamp;
 import java.util.EnumSet;
 
+@XmlRootElement
 public class Object {
 
   public enum Status {
@@ -44,6 +46,11 @@ public class Object {
   public String bucketName;
   public Integer versionNumber;
   public Status status;
+
+  // empty constructor required for JAXB mapping
+  public Object() {
+    throw new UnsupportedOperationException("No-arg constructor should not be called");
+  }
 
   public Object(Integer id, String key, String checksum, Timestamp timestamp, String downloadName, String contentType, Long size, String urls, String tag, Integer bucketId, String bucketName, Integer versionNumber, Status status) {
     this.id = id;

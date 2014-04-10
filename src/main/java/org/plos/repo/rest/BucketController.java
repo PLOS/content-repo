@@ -4,18 +4,17 @@ import org.plos.repo.models.Bucket;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.SqlService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.stereotype.Component;
 
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Response;
 import java.util.List;
 
-@Controller
-@RequestMapping("/buckets")
+//@Controller
+//@RequestMapping("/buckets")
+@Component
+@Path("/buckets")
 public class BucketController {
 
   @Autowired
@@ -24,11 +23,20 @@ public class BucketController {
   @Autowired
   private SqlService sqlService;
 
-  @RequestMapping(method = RequestMethod.GET)
-  public ResponseEntity<List<Bucket>> list() throws Exception {
-    return new ResponseEntity<>(sqlService.listBuckets(), HttpStatus.OK);
+  @GET
+//  @Produces({"application/json"})
+  public List<Bucket> list() throws Exception {
+    return sqlService.listBuckets();
+//    return Response.status(200).entity(sqlService.listBuckets()).build();
   }
 
+  @GET
+  @Path("response")
+  public Response listResponse() throws Exception {
+    return Response.status(200).entity(sqlService.listBuckets()).build();
+  }
+
+/*
   @RequestMapping(method = RequestMethod.POST)
   public ResponseEntity<String> create(@RequestParam String name,
                                        @RequestParam(required = false) Integer id) {
@@ -72,5 +80,5 @@ public class BucketController {
     return new ResponseEntity<>("No buckets deleted.", HttpStatus.NOT_MODIFIED);
 
   }
-
+*/
 }

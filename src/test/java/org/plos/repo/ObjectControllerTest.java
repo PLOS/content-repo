@@ -64,6 +64,8 @@ public class ObjectControllerTest extends AbstractTestNGSpringContextTests {
   @BeforeSuite
   public static void injectContextDB() throws NamingException {
 
+    // TODO: use jersey to test instead : https://jersey.java.net/documentation/latest/user-guide.html#test-framework
+
     if (System.getProperty(Context.INITIAL_CONTEXT_FACTORY) != null)
       return;
 
