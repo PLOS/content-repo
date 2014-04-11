@@ -4,7 +4,6 @@ import org.plos.repo.models.Bucket;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.SqlService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
@@ -16,7 +15,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
-@Component
+//@Component
 @Path("/buckets")
 public class BucketController {
 

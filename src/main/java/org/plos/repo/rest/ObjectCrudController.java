@@ -20,7 +20,7 @@ package org.plos.repo.rest;
 import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.sun.jersey.multipart.FormDataParam;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
 import org.plos.repo.service.ObjectStore;
@@ -28,9 +28,7 @@ import org.plos.repo.service.SqlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -45,10 +43,9 @@ import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.List;
 
-@Component
+//@Component
 @Path("/objects")
 public class ObjectCrudController {
 
@@ -92,18 +89,18 @@ public class ObjectCrudController {
 //    return sqlService.listObjectsInBucket(bucketName);
 //  }
 
-  private boolean clientSupportsReproxy(HttpServletRequest request) {
-    Enumeration<?> headers = request.getHeaders("X-Proxy-Capabilities");
-    if (headers == null) {
-      return false;
-    }
-    while (headers.hasMoreElements()) {
-      if ("reproxy-file".equals(headers.nextElement())) {
-        return true;
-      }
-    }
-    return false;
-  }
+//  private boolean clientSupportsReproxy(HttpServletRequest request) {
+//    Enumeration<?> headers = request.getHeaders("X-Proxy-Capabilities");
+//    if (headers == null) {
+//      return false;
+//    }
+//    while (headers.hasMoreElements()) {
+//      if ("reproxy-file".equals(headers.nextElement())) {
+//        return true;
+//      }
+//    }
+//    return false;
+//  }
 
   private boolean clientSupportsReproxy(String requestXProxy) {
 
