@@ -4,7 +4,6 @@ import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -105,24 +104,28 @@ public class FileSystemStoreService extends ObjectStore {
     return new File(uploadInfo.getTempLocation()).delete();
   }
 
-  public UploadInfo uploadTempObject(final MultipartFile file) throws Exception {
+
+  public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws Exception {
     final String tempFileLocation = dataDirectory + "/" + UUID.randomUUID().toString() + ".tmp";
 
     FileOutputStream fos = new FileOutputStream(tempFileLocation);
 
-    ReadableByteChannel in = Channels.newChannel(file.getInputStream());
+    ReadableByteChannel in = Channels.newChannel(uploadedInputStream);
     MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
     WritableByteChannel out = Channels.newChannel(
         new DigestOutputStream(fos, digest));
     ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
 
+    long size = 0;
+
     while (in.read(buffer) != -1) {
       buffer.flip();
-      out.write(buffer);
+      size += out.write(buffer);
       buffer.clear();
     }
 
     final String checksum = checksumToString(digest.digest());
+    final long finalSize = size;
 
     in.close();
     out.close();
@@ -130,7 +133,7 @@ public class FileSystemStoreService extends ObjectStore {
     return new UploadInfo(){
       @Override
       public Long getSize() {
-        return file.getSize();
+        return finalSize;
       }
 
       @Override

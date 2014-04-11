@@ -26,78 +26,9 @@ public class BucketController {
   @Autowired
   private SqlService sqlService;
 
-//  @GET
-//  @Produces(MediaType.APPLICATION_JSON)
-//  @Path("json")
-//  public List<Bucket> json() throws Exception {
-//
-//    Bucket b = new Bucket("some name", 123);
-//    List<Bucket> buckets = new ArrayList<>();
-//    buckets.add(b);
-//
-//    return buckets;
-//
-//  }
-//
-//  @GET
-//  @Produces(MediaType.APPLICATION_XML)
-//  @Path("xml")
-//  public List<Bucket> xml() throws Exception {
-//
-//    Bucket b = new Bucket("some name", 123);
-//    List<Bucket> buckets = new ArrayList<>();
-//    buckets.add(b);
-//
-//    return buckets;
-//
-//  }
-//
-//
-//  @GET
-//  @Path("response")
-//  @Produces(MediaType.APPLICATION_JSON)
-//  public Response response() throws Exception {
-//
-//    Bucket b = new Bucket("some name", 123);
-//    List<Bucket> buckets = new ArrayList<>();
-//    buckets.add(b);
-//
-//    return Response.status(200).entity(sqlService.listBuckets()).build();
-//
-//  }
-//
-//  @GET
-//  @Path("response2")
-//  @Produces(MediaType.APPLICATION_JSON)
-//  public Response response2() throws Exception {
-//
-//    Bucket b = new Bucket("some name", 123);
-//    List<Bucket> buckets = new ArrayList<>();
-//    buckets.add(b);
-//
-//    Response r2 = Response.ok().entity(b).build();
-//    return r2;
-//  }
-//
-//
-//  @GET
-//  @Path("response3")
-////  @Produces(MediaType.APPLICATION_JSON)
-//  public Response responseList() throws Exception {
-//
-//    Bucket b = new Bucket("some name", 123);
-//    List<Bucket> buckets = new ArrayList<>();
-//    buckets.add(b);
-//
-//    Response r2 = Response.ok().entity(new GenericEntity<List<Bucket>>(buckets) {
-//    }).build();
-//
-//    return r2;
-//  }
-
   @GET
   public Response list() throws Exception {
-    return Response.status(200).entity(
+    return Response.status(Response.Status.OK).entity(
         new GenericEntity<List<Bucket>>(sqlService.listBuckets()){}).build();
   }
 

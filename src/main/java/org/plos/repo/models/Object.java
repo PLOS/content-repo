@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.sql.Timestamp;
 import java.util.EnumSet;
 
@@ -37,6 +38,8 @@ public class Object {
   public String urls; // assigned by the backend storage (S3, Mogile, FS), space separated
   public String key; // what the user specifies
   public String checksum;  // of the file contents
+
+  @XmlJavaTypeAdapter( TimestampAdapter.class)
   public Timestamp timestamp;   // created time
   public String downloadName;
   public String contentType;
@@ -49,6 +52,7 @@ public class Object {
 
   // empty constructor required for JAXB mapping
   public Object() {
+//    timestamp = new Timestamp(0);
     throw new UnsupportedOperationException("No-arg constructor should not be called");
   }
 

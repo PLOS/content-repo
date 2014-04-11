@@ -6,17 +6,10 @@ import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
-import java.security.DigestOutputStream;
-import java.security.MessageDigest;
 import java.util.UUID;
 
 public class MogileStoreService extends ObjectStore {
@@ -88,43 +81,55 @@ public class MogileStoreService extends ObjectStore {
     return true;
   }
 
-  public UploadInfo uploadTempObject(final MultipartFile file) throws Exception {
+  public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws Exception {
     final String tempFileLocation = UUID.randomUUID().toString() + ".tmp";
 
-    OutputStream fos = mfs.newFile(tempFileLocation, mogileFileClass, file.getSize());
 
-    ReadableByteChannel in = Channels.newChannel(file.getInputStream());
-    MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
-    WritableByteChannel out = Channels.newChannel(new DigestOutputStream(fos, digest));
-    ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
 
-    while (in.read(buffer) != -1) {
-      buffer.flip();
-      out.write(buffer);
-      buffer.clear();
-    }
+    // TODO: size hack! not correct
+    // figure out how to determine size efficiently
 
-    final String checksum = checksumToString(digest.digest());
+    OutputStream fos = mfs.newFile(tempFileLocation, mogileFileClass, 12987);
 
-    out.close();
-    in.close();
+    throw new Exception("need to implement this correctly");
 
-    return new UploadInfo(){
-      @Override
-      public Long getSize() {
-        return file.getSize();
-      }
 
-      @Override
-      public String getTempLocation() {
-        return tempFileLocation;
-      }
 
-      @Override
-      public String getChecksum() {
-        return checksum;
-      }
-    };
+//    ReadableByteChannel in = Channels.newChannel(uploadedInputStream);
+//    MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
+//    WritableByteChannel out = Channels.newChannel(new DigestOutputStream(fos, digest));
+//    ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
+//
+//    long size = 0;
+//
+//    while (in.read(buffer) != -1) {
+//      buffer.flip();
+//      size += out.write(buffer);
+//      buffer.clear();
+//    }
+//
+//    final String checksum = checksumToString(digest.digest());
+//    final long finalSize = size;
+//
+//    out.close();
+//    in.close();
+//
+//    return new UploadInfo(){
+//      @Override
+//      public Long getSize() {
+//        return finalSize;
+//      }
+//
+//      @Override
+//      public String getTempLocation() {
+//        return tempFileLocation;
+//      }
+//
+//      @Override
+//      public String getChecksum() {
+//        return checksum;
+//      }
+//    };
 
   }
 

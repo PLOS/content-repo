@@ -101,24 +101,27 @@ public class S3StoreService extends ObjectStore {
    * @return
    * @throws Exception
    */
-  public UploadInfo uploadTempObject(final MultipartFile file) throws Exception {
+  public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws Exception {
 
     final String tempFileLocation = temp_upload_dir + "/" + UUID.randomUUID().toString() + ".tmp";
 
     FileOutputStream fos = new FileOutputStream(tempFileLocation);
 
-    ReadableByteChannel in = Channels.newChannel(file.getInputStream());
+    ReadableByteChannel in = Channels.newChannel(uploadedInputStream);
     MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
     WritableByteChannel out = Channels.newChannel(new DigestOutputStream(fos, digest));
     ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
 
+    long size = 0;
+
     while (in.read(buffer) != -1) {
       buffer.flip();
-      out.write(buffer);
+      size += out.write(buffer);
       buffer.clear();
     }
 
     final String checksum = checksumToString(digest.digest());
+    final long finalSize = size;
 
     out.close();
     in.close();
@@ -126,7 +129,7 @@ public class S3StoreService extends ObjectStore {
     return new UploadInfo(){
       @Override
       public Long getSize() {
-        return file.getSize();
+        return finalSize;
       }
 
       @Override

@@ -1,8 +1,7 @@
 package org.plos.repo.service;
 
-import org.plos.repo.models.*;
+import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -47,7 +46,7 @@ public abstract class ObjectStore {
 
   abstract public boolean deleteBucket(Bucket bucket);
 
-  abstract public UploadInfo uploadTempObject(MultipartFile file) throws Exception;
+  abstract public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws Exception;
 
   abstract public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) throws Exception;
 

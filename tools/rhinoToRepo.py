@@ -7,7 +7,6 @@ import time
 import sys
 import argparse
 import pprint
-import uuid
 from contentRepo import ContentRepo
 from rhino import Rhino
 

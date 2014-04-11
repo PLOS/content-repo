@@ -20,7 +20,7 @@ package org.plos.repo.rest;
 import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.apache.commons.io.IOUtils;
+import com.sun.jersey.multipart.FormDataParam;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
 import org.plos.repo.service.ObjectStore;
@@ -28,29 +28,28 @@ import org.plos.repo.service.SqlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 
-@Controller
-@RequestMapping("/objects")
+@Component
+@Path("/objects")
 public class ObjectCrudController {
 
   private static final Logger log = LoggerFactory.getLogger(ObjectCrudController.class);
@@ -82,9 +81,10 @@ public class ObjectCrudController {
     return jsonObject.toString();
   }
 
-  @RequestMapping(method=RequestMethod.GET)
-  public @ResponseBody List<Object> listAllObjects() throws Exception {
-    return sqlService.listAllObject();
+  @GET
+  public Response listAllObjects() throws Exception {
+    return Response.status(Response.Status.OK).entity(
+        new GenericEntity<List<Object>>(sqlService.listAllObject()){}).build();
   }
 
 //  @RequestMapping(value="{bucketName}", method=RequestMethod.GET)
@@ -105,14 +105,24 @@ public class ObjectCrudController {
     return false;
   }
 
-  @RequestMapping(value="{bucketName:.+}", method=RequestMethod.GET)
-  public @ResponseBody
-  void read(@PathVariable String bucketName,
-            @RequestParam(required = true) String key,
-            @RequestParam(required = false) Integer version,
-            @RequestParam(required = false) Boolean fetchMetadata,
-            HttpServletRequest request,
-            HttpServletResponse response) throws Exception {
+  private boolean clientSupportsReproxy(String requestXProxy) {
+
+    if (requestXProxy == null)
+      return false;
+
+    if (requestXProxy.equals("reproxy-file")) // TODO: move this and others to constants
+      return true;
+
+    return false;
+  }
+
+  @GET @Path("{bucketName}")
+  public Response read(@PathParam("bucketName") String bucketName,
+                       @QueryParam("key") String key,
+                       @QueryParam("version") Integer version,
+                       @QueryParam("fetchMetadata") Boolean fetchMetadata,
+                       @HeaderParam("X-Proxy-Capabilities") String requestXProxy
+  ) throws Exception {
 
     org.plos.repo.models.Object object;
     if (version == null)
@@ -120,30 +130,18 @@ public class ObjectCrudController {
     else
       object = sqlService.getObject(bucketName, key, version);
 
-    if (object == null) {
-      response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-      return;
-    }
-
-    // TODO: deal with client caching here like we do in Ambra serveResource?
+    if (object == null)
+      return Response.status(Response.Status.NOT_FOUND).build();
 
     // if they want the metadata
 
     if (fetchMetadata != null && fetchMetadata) {
-      response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-      try {
-        response.getWriter().write(objectToJsonString(object, version == null));
-        response.setStatus(HttpServletResponse.SC_OK);
-      } catch (IOException e) {
-        log.error("Error reading metadata", e);
-        response.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
-      }
-      return;
+      return Response.status(Response.Status.OK).type(MediaType.APPLICATION_JSON_TYPE).entity(objectToJsonString(object, version == null)).build();
     }
 
     // if they want redirect URLs
 
-    if (clientSupportsReproxy(request) && objectStore.hasXReproxy()) {
+    if (clientSupportsReproxy(requestXProxy) && objectStore.hasXReproxy()) {
 
       // if the urls are in the database use that first
       String urls = object.urls;
@@ -152,11 +150,8 @@ public class ObjectCrudController {
       if (object.urls == null || object.urls.isEmpty())
         urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
 
-      response.setHeader("X-Reproxy-URL", urls);
-      response.setHeader("X-Reproxy-Cache-For", REPROXY_CACHE_FOR_HEADER);
-      response.setStatus(HttpServletResponse.SC_OK);
+      return Response.status(Response.Status.OK).header("X-Reproxy-URL", urls).header("X-Reproxy-Cache-For", REPROXY_CACHE_FOR_HEADER).build();
 
-      return;
     }
 
     // else assume they want the binary data
@@ -168,35 +163,36 @@ public class ObjectCrudController {
     else if (ObjectStore.isValidFileName(object.key))
       exportFileName = object.key;
 
-    try {
 
-      if (object.contentType == null || object.contentType.isEmpty())
-        response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
-      else
-        response.setContentType(object.contentType);
-      response.setHeader("Content-Disposition", "inline; filename=" + exportFileName);
+    String contentType = object.contentType;
 
-      InputStream is = objectStore.getInputStream(object);
-      OutputStream os = response.getOutputStream();
-      IOUtils.copy(is, os);
-      response.setStatus(HttpServletResponse.SC_OK);
-      response.flushBuffer();
-      is.close();
-      os.close();
-    } catch (Exception ex) {
-      response.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
-      log.info("Error writing file to output stream.", ex);
-    }
+    if (object.contentType == null || object.contentType.isEmpty())
+      contentType = javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
+
+    InputStream is = objectStore.getInputStream(object);
+
+    // TODO: find out if Jersey is closing the InputStream
+
+    Response response = Response.ok(is, contentType).header("Content-Disposition", "inline; filename=" + exportFileName).build();
+
+//      OutputStream os = response.getOutputStream();
+//      IOUtils.copy(is, os);
+//      response.flushBuffer();
+//      is.close();
+//      os.close();
+
+    return response;
 
   }
 
-  @RequestMapping(value="{bucketName:.+}", method=RequestMethod.DELETE)
-  public ResponseEntity<String> delete(@PathVariable String bucketName,
-                                       @RequestParam String key,
-                                       @RequestParam int version) throws Exception {
+  @DELETE
+  @Path("{bucketName}")
+  public Response delete(@PathParam("bucketName") String bucketName,
+                         @QueryParam("key") String key,
+                         @QueryParam("version") int version) throws Exception {
 
     if (sqlService.markObjectDeleted(key, bucketName, version) == 0)
-      return new ResponseEntity<>("Error: Can not find object in database.", HttpStatus.NOT_FOUND);
+      return Response.status(Response.Status.NOT_FOUND).entity("Error: Can not find object in database.").build();
 
     // NOTE: we no longer delete objects from the object store
 
@@ -204,63 +200,60 @@ public class ObjectCrudController {
 //    if (!sqlService.objectInUse(bucketName, checksum) && !objectStore.deleteObject(objectStore.getObjectLocationString(bucketName, checksum)))
 //      return new ResponseEntity<>("Error: There was a problem deleting the object from the filesystem.", HttpStatus.NOT_MODIFIED);
 
-    return new ResponseEntity<>(key + " version " + version + " deleted", HttpStatus.OK);
+    return Response.status(Response.Status.OK).entity(key + " version " + version + " deleted").build();
   }
 
-  @RequestMapping(method=RequestMethod.POST)
-  public ResponseEntity<String> createOrUpdate(@RequestParam String key,
-                                               @RequestParam String bucketName,
-                                               @RequestParam(required = false) String contentType,
-                                               @RequestParam(required = false) String downloadName,
-                                               @RequestParam(required = false) MultipartFile file,
-                                               @RequestParam(required = true)  String create
+  @POST
+  @Consumes(MediaType.MULTIPART_FORM_DATA)
+  public Response createOrUpdate(@FormDataParam("key") String key,
+                                 @FormDataParam("bucketName") String bucketName,
+                                 @FormDataParam("contentType") String contentType,
+                                 @FormDataParam("downloadName") String downloadName,
+                                 @FormDataParam("create") String create,
+                                 @FormDataParam("file") InputStream uploadedInputStream
   ) throws Exception {
 
     Object existingObject = sqlService.getObject(bucketName, key);
 
     if (create.equalsIgnoreCase("new")) {
-      return create(key, bucketName, contentType, downloadName, file, existingObject);
+      return create(key, bucketName, contentType, downloadName, uploadedInputStream, existingObject);
     } else if (create.equalsIgnoreCase("version")) {
-      return update(key, bucketName, contentType, downloadName, file, existingObject);
+      return update(bucketName, contentType, downloadName, uploadedInputStream, existingObject);
     } else if (create.equalsIgnoreCase("auto")) {
       if (existingObject == null)
-        return create(key, bucketName, contentType, downloadName, file, null);
+        return create(key, bucketName, contentType, downloadName, uploadedInputStream, null);
       else
-        return update(key, bucketName, contentType, downloadName, file, existingObject);
+        return update(bucketName, contentType, downloadName, uploadedInputStream, existingObject);
     }
 
-    return new ResponseEntity<>("Invalid create flag", HttpStatus.BAD_REQUEST);
+    return Response.status(Response.Status.BAD_REQUEST).entity("Invalid create flag").build();
   }
 
-  private ResponseEntity<String> create(String key,
+  private Response create(String key,
                           String bucketName,
                           String contentType,
                           String downloadName,
-                          MultipartFile file,
+                          InputStream uploadedInputStream,
                           Object existingObject) throws Exception {
 
     Integer bucketId = sqlService.getBucketId(bucketName);
 
-    if (file == null)
-      return new ResponseEntity<>("Error: A file must be specified for uploading.", HttpStatus.PRECONDITION_FAILED);
+    if (uploadedInputStream == null)
+      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: A file must be specified for uploading.").build();
 
     if (bucketId == null)
-      return new ResponseEntity<>("Error: Can not find bucket " + bucketName, HttpStatus.INSUFFICIENT_STORAGE);
-
-//    Object existingObject = sqlService.getObject(bucketName, key);
+      return Response.status(Response.Status.NOT_FOUND).entity("Error: Can not find bucket " + bucketName).build();
 
     if (existingObject != null)
-      return new ResponseEntity<>("Error: Attempting to create an object with a key that already exists.", HttpStatus.CONFLICT);
+      return Response.status(Response.Status.CONFLICT).entity("Error: Attempting to create an object with a key that already exists.").build();
 
     ObjectStore.UploadInfo uploadInfo;
     try {
-      uploadInfo = objectStore.uploadTempObject(file);
+      uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
     } catch (Exception e) {
       log.error("Error during upload", e);
-      return new ResponseEntity<>("Error: A problem occurred while uploading the file.", HttpStatus.PRECONDITION_FAILED);
+      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: A problem occurred while uploading the file.").build();
     }
-
-    HttpStatus status = HttpStatus.CREATED; // note: status indicates if it made it to the DB, not the object store
 
     Integer versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, key);
 
@@ -287,38 +280,35 @@ public class ObjectCrudController {
 
     sqlService.insertObject(object); // TODO: deal with 0 return values
 
-    return new ResponseEntity<>(objectToJsonString(object, false), status);
+    // TODO: explicitly cast the JSON ?
+    return Response.status(Response.Status.CREATED).entity(objectToJsonString(object, false)).build();
   }
 
   /**
    * Take an existing key, make a copy of it and modify it as needed. This means a new version
    * of an existing object. This new part of it could be the file itself, or some of its metadata.
    *
-   * @param key
    * @param bucketName
    * @param contentType
    * @param downloadName
-   * @param file
+   * @param uploadedInputStream
    * @param object
    * @return
    * @throws Exception
    */
-  private ResponseEntity<String> update(String key,
-                                        String bucketName,
-                                        String contentType,
-                                        String downloadName,
-                                        MultipartFile file,
-                                        Object object) throws Exception {
+  private Response update(String bucketName,
+                          String contentType,
+                          String downloadName,
+                          InputStream uploadedInputStream,
+                          Object object) throws Exception {
 
     Integer bucketId = sqlService.getBucketId(bucketName);
 
     if (bucketId == null)
-      return new ResponseEntity<>("Error: Can not find bucket " + bucketName, HttpStatus.INSUFFICIENT_STORAGE);
-
-//    Object object = sqlService.getObject(bucketName, key);
+      return Response.status(Response.Status.NOT_FOUND).entity("Error: Can not find bucket " + bucketName).build();
 
     if (object == null)
-      return new ResponseEntity<>("Error: Attempting to create a new version of an non-existing object.", HttpStatus.NOT_ACCEPTABLE);
+      return Response.status(Response.Status.NOT_ACCEPTABLE).entity("Error: Attempting to create a new version of an non-existing object.").build();
 
     // copy over values from previous object, if they are not specified in the request
     if (contentType != null)
@@ -333,22 +323,21 @@ public class ObjectCrudController {
     object.versionNumber++;
     object.id = null;  // remove this since it refers to the old object
 
-    if (file == null) {
+    if (uploadedInputStream == null) {
       object.urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
       sqlService.insertObject(object); // TODO: deal with 0 return values
 
-      return new ResponseEntity<>(objectToJsonString(object, false), HttpStatus.OK);
+      return Response.status(Response.Status.OK).entity(objectToJsonString(object, false)).build();
     }
 
     ObjectStore.UploadInfo uploadInfo;
     try {
-      uploadInfo = objectStore.uploadTempObject(file);
+      uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
     } catch (Exception e) {
       log.error("Error during upload", e);
-      return new ResponseEntity<>("Error: A problem occurred while uploading the file.", HttpStatus.PRECONDITION_FAILED);
-    }
 
-    HttpStatus status = HttpStatus.OK; // note: different return value from 'create'
+      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: A problem occurred while uploading the file.").build();
+    }
 
     object.urls = "";
 
@@ -366,7 +355,7 @@ public class ObjectCrudController {
     // add a record to the DB
     sqlService.insertObject(object); // TODO: deal with 0 return values
 
-    return new ResponseEntity<>(objectToJsonString(object, false), status);
+    return Response.status(Response.Status.OK).entity(objectToJsonString(object, false)).build();
   }
 
 }
