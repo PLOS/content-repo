@@ -48,9 +48,9 @@
       <!-- <beans:property name="maxUploadSize" value=""/> -->
   </beans:bean>
 
-  <mvc:interceptors>
-    <beans:bean class="org.plos.repo.rest.LoggingInterceptor"/>
-  </mvc:interceptors>
+  <!--<mvc:interceptors>-->
+    <!--<beans:bean class="org.plos.repo.rest.LoggingInterceptor"/>-->
+  <!--</mvc:interceptors>-->
 
   <context:component-scan base-package="org.plos.repo"/>
 

@@ -20,13 +20,12 @@ package org.plos.repo.rest;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.SqlService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
-@Component
+//@Component
 @Path("/")
 public class RootController {
 
