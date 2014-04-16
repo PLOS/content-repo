@@ -1,128 +1,61 @@
 package org.plos.repo;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import org.plos.repo.service.ObjectStore;
-import org.plos.repo.service.SqlService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
-import org.springframework.test.context.web.WebAppConfiguration;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.Test;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+import org.junit.Assert;
+import org.junit.Test;
+import org.plos.repo.rest.BucketController;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import javax.naming.NamingException;
-import java.nio.charset.Charset;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+public class BucketControllerTest extends JerseyTest {
 
-@WebAppConfiguration
-@EnableWebMvc
-@ContextConfiguration(locations = {"classpath:app-servlet-context.xml"})
-public class BucketControllerTest extends AbstractTestNGSpringContextTests {
+  @Override
+  protected javax.ws.rs.core.Application configure() {
 
-  @Autowired
-  SqlService sqlService;
+    ApplicationContext context = new AnnotationConfigApplicationContext(TestConfig.class);
+    final ResourceConfig config = new ResourceConfig().property("contextConfig", context);
+    config.register(BucketController.class);
+    return config;
 
-  @Autowired
-  ObjectStore objectStore;
+//    ResourceConfig rc = new ResourceConfig().register(BucketController.class)
+//        .register(SpringLifecycleListener.class)
+//        .register(RequestContextFilter.class)
+//        .register(TestConfig.class)
+//        .property("contextClass", "org.springframework.web.context.support.AnnotationConfigWebApplicationContext")
+//        .property("contextConfigLocation", "org.plos.repo.config.Config");
+//    return rc;
 
-  @Autowired
-  private WebApplicationContext wac;
+//    return new Application();
 
-  private MockMvc mockMvc;
+//    return new ResourceConfig().register(SpringLifecycleListener.class);
 
-  private ObjectMapper jsonObjectMapper = new ObjectMapper();
+//    return new ResourceConfig(BucketController.class);
 
-  public static final MediaType APPLICATION_JSON_UTF8 = new MediaType(MediaType.APPLICATION_JSON.getType(), MediaType.APPLICATION_JSON.getSubtype(), Charset.forName("utf8"));
-
-  @BeforeSuite
-  private static void injectContextDB() throws NamingException {
-    ObjectControllerTest.injectContextDB();
-  }
-
-  @BeforeClass
-  private void setup() {
-    this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
-    jsonObjectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+//    return new LowLevelAppDescriptor.Builder(BucketController.class)
+//        .clientConfig( new DefaultClientConfig())
+//        .build();
   }
 
 
   @Test
-  public void testControllerCrud() throws Exception {
-
-    ObjectControllerTest.clearData(sqlService, objectStore);
-
+  public void testControllerCrud() {
 
     // CREATE
 
-    this.mockMvc.perform(get("/buckets").accept(APPLICATION_JSON_UTF8))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType("application/json;charset=UTF-8"))
-        .andExpect(content().string("[]"));
+    String responseString = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+    Assert.assertEquals(responseString, "[]");
 
-    this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
-        .param("name", "plos-bucketunittest-bucket1"))
-        .andExpect(status().isCreated());
+    Form form = new Form().param("name", "plos-bucketunittest-bucket1");
+    Response response = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(form));
 
-    this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
-        .param("name", "plos-bucketunittest-bucket1"))
-        .andExpect(status().isNoContent());
+    Assert.assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
 
-    this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
-        .param("name", "plos-bucketunittest-bucket2").param("id", "5"))
-        .andExpect(status().isCreated());
-
-    this.mockMvc.perform(post("/buckets").accept(APPLICATION_JSON_UTF8)
-        .param("name", "plos-bucketunittest-bad?&name"))
-        .andExpect(status().isPreconditionFailed());
-
-
-    // LIST
-
-    String responseString = this.mockMvc.perform(get("/buckets"))
-//        .andExpect(header().string("Content-Type", "application/json"))
-        .andReturn().getResponse().getContentAsString();  // file name assigned by user
-
-    Gson gson = new Gson();
-    JsonArray jsonArray = gson.fromJson(responseString, JsonElement.class).getAsJsonArray();
-
-    assert(jsonArray.size() == 2);
-
-
-    // DELETE
-
-    this.mockMvc.perform(delete("/buckets/plos-bucketunittest-bucket1")).andExpect(status().isOk());
-
-    this.mockMvc.perform(fileUpload("/objects").file(new MockMultipartFile("file", "test".getBytes())).param("create", "new")
-        .param("key", "object1").param("bucketName", "plos-bucketunittest-bucket2"))
-        .andDo(print())
-        .andExpect(status().isCreated());
-
-    this.mockMvc.perform(delete("/buckets/plos-bucketunittest-bucket2")).andExpect(status().isNotModified());
-
-    this.mockMvc.perform(delete("/buckets/plos-bucketunittest-bucket3")).andExpect(status().isNotFound());
-
-
-    // clean up
-
-    ObjectControllerTest.clearData(sqlService, objectStore);
   }
 
 }

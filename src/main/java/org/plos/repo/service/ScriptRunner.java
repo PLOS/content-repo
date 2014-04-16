@@ -25,7 +25,11 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintWriter;
 import java.io.Reader;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  * Tool to run database scripts
@@ -114,9 +118,9 @@ public class ScriptRunner {
    *            - the connection to use for the script
    * @param reader
    *            - the source of the script
-   * @throws SQLException
+   * @throws java.sql.SQLException
    *             if any SQL errors occur
-   * @throws IOException
+   * @throws java.io.IOException
    *             if there is an error reading from the Reader
    */
   private void runScript(Connection conn, Reader reader) throws IOException,

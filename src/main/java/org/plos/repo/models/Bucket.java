@@ -1,6 +1,9 @@
 package org.plos.repo.models;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.lang.Integer;
+import java.lang.String;
+import java.lang.UnsupportedOperationException;
 
 @XmlRootElement
 public class Bucket {

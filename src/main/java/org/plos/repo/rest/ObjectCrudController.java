@@ -27,8 +27,8 @@ import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.SqlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -58,10 +58,10 @@ public class ObjectCrudController {
   private static final String REPROXY_CACHE_FOR_HEADER =
       REPROXY_CACHE_FOR_VALUE + "; Last-Modified Content-Type Content-Disposition";
 
-  @Autowired
+  @Inject
   private ObjectStore objectStore;
 
-  @Autowired
+  @Inject
   private SqlService sqlService;
 
 
@@ -164,7 +164,7 @@ public class ObjectCrudController {
     String contentType = object.contentType;
 
     if (object.contentType == null || object.contentType.isEmpty())
-      contentType = javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
+      contentType = MediaType.APPLICATION_OCTET_STREAM;
 
     InputStream is = objectStore.getInputStream(object);
 

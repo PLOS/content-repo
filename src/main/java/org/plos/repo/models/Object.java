@@ -39,7 +39,7 @@ public class Object {
   public String key; // what the user specifies
   public String checksum;  // of the file contents
 
-  @XmlJavaTypeAdapter( TimestampAdapter.class)
+  @XmlJavaTypeAdapter(TimestampAdapter.class)
   public Timestamp timestamp;   // created time
   public String downloadName;
   public String contentType;

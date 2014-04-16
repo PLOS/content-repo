@@ -3,8 +3,8 @@ package org.plos.repo.rest;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.SqlService;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -19,10 +19,10 @@ import java.util.List;
 @Path("/buckets")
 public class BucketController {
 
-  @Autowired
+  @Inject
   private ObjectStore objectStore;
 
-  @Autowired
+  @Inject
   private SqlService sqlService;
 
   @GET
