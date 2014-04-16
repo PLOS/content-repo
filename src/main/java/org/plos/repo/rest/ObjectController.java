@@ -47,9 +47,9 @@ import java.util.List;
 
 //@Component
 @Path("/objects")
-public class ObjectCrudController {
+public class ObjectController {
 
-  private static final Logger log = LoggerFactory.getLogger(ObjectCrudController.class);
+  private static final Logger log = LoggerFactory.getLogger(ObjectController.class);
 
   private static final Joiner REPROXY_URL_JOINER = Joiner.on(' ');
 
@@ -239,7 +239,7 @@ public class ObjectCrudController {
       return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: A file must be specified for uploading.").build();
 
     if (bucketId == null)
-      return Response.status(Response.Status.NOT_FOUND).entity("Error: Can not find bucket " + bucketName).build();
+      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: Can not find bucket " + bucketName).build();
 
     if (existingObject != null)
       return Response.status(Response.Status.CONFLICT).entity("Error: Attempting to create an object with a key that already exists.").build();
@@ -302,7 +302,7 @@ public class ObjectCrudController {
     Integer bucketId = sqlService.getBucketId(bucketName);
 
     if (bucketId == null)
-      return Response.status(Response.Status.NOT_FOUND).entity("Error: Can not find bucket " + bucketName).build();
+      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: Can not find bucket " + bucketName).build();
 
     if (object == null)
       return Response.status(Response.Status.NOT_ACCEPTABLE).entity("Error: Attempting to create a new version of an non-existing object.").build();

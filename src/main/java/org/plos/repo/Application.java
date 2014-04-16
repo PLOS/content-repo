@@ -4,7 +4,7 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spring.scope.RequestContextFilter;
 import org.plos.repo.rest.BucketController;
-import org.plos.repo.rest.ObjectCrudController;
+import org.plos.repo.rest.ObjectController;
 
 public class Application extends ResourceConfig {
 
@@ -13,13 +13,8 @@ public class Application extends ResourceConfig {
    */
   public Application() {
 
-//    register(SpringComponentProvider.class);
-//    register(SpringLifecycleListener.class);
-//
-//    packages("org.plos.repo");
-
     register(BucketController.class);
-    register(ObjectCrudController.class);
+    register(ObjectController.class);
 
     register(MultiPartFeature.class);
     register(RequestContextFilter.class);

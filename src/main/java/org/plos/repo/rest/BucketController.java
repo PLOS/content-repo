@@ -15,7 +15,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
-//@Component
 @Path("/buckets")
 public class BucketController {
 
