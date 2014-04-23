@@ -20,9 +20,9 @@ import java.io.FileReader;
 import java.sql.Connection;
 
 @Configuration
-public class Config {
+public class SpringConfig {
 
-  private static final Logger log = LoggerFactory.getLogger(Config.class);
+  private static final Logger log = LoggerFactory.getLogger(SpringConfig.class);
 
   @Bean
   public ObjectStore objectStore() throws Exception {

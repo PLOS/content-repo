@@ -45,7 +45,6 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
-//@Component
 @Path("/objects")
 public class ObjectController {
 
@@ -70,6 +69,9 @@ public class ObjectController {
   private static Gson gson = new Gson();
 
   private String objectToJsonString(Object object, boolean includeVersions) {
+
+    // TODO: see if this can be done more generically so it can return XML as well
+
     JsonObject jsonObject = gson.toJsonTree(object).getAsJsonObject();
 
     if (includeVersions)
@@ -80,6 +82,9 @@ public class ObjectController {
 
   @GET
   public Response listAllObjects() throws Exception {
+
+    // TODO: is this function useful? would it need paging for large datasets?
+
     return Response.status(Response.Status.OK).entity(
         new GenericEntity<List<Object>>(sqlService.listAllObject()){}).build();
   }
@@ -107,7 +112,7 @@ public class ObjectController {
     if (requestXProxy == null)
       return false;
 
-    if (requestXProxy.equals("reproxy-file")) // TODO: move this and others to constants
+    if (requestXProxy.equals("reproxy-file")) // TODO: move this string and others to constants
       return true;
 
     return false;
@@ -210,15 +215,19 @@ public class ObjectController {
                                  @FormDataParam("file") InputStream uploadedInputStream
   ) throws Exception {
 
+    // TODO: handle timestamps as input (for migrating from an existing repo)
+
     Object existingObject = sqlService.getObject(bucketName, key);
 
     if (create.equalsIgnoreCase("new")) {
-      return create(key, bucketName, contentType, downloadName, uploadedInputStream, existingObject);
+      if (existingObject != null)
+        return Response.status(Response.Status.CONFLICT).entity("Error: Attempting to create an object with a key that already exists.").build();
+      return create(key, bucketName, contentType, downloadName, uploadedInputStream);
     } else if (create.equalsIgnoreCase("version")) {
       return update(bucketName, contentType, downloadName, uploadedInputStream, existingObject);
     } else if (create.equalsIgnoreCase("auto")) {
       if (existingObject == null)
-        return create(key, bucketName, contentType, downloadName, uploadedInputStream, null);
+        return create(key, bucketName, contentType, downloadName, uploadedInputStream);
       else
         return update(bucketName, contentType, downloadName, uploadedInputStream, existingObject);
     }
@@ -230,8 +239,7 @@ public class ObjectController {
                           String bucketName,
                           String contentType,
                           String downloadName,
-                          InputStream uploadedInputStream,
-                          Object existingObject) throws Exception {
+                          InputStream uploadedInputStream) throws Exception {
 
     Integer bucketId = sqlService.getBucketId(bucketName);
 
@@ -241,8 +249,8 @@ public class ObjectController {
     if (bucketId == null)
       return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: Can not find bucket " + bucketName).build();
 
-    if (existingObject != null)
-      return Response.status(Response.Status.CONFLICT).entity("Error: Attempting to create an object with a key that already exists.").build();
+//    if (existingObject != null)
+//      return Response.status(Response.Status.CONFLICT).entity("Error: Attempting to create an object with a key that already exists.").build();
 
     ObjectStore.UploadInfo uploadInfo;
     try {

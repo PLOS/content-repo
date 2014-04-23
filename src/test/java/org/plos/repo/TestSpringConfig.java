@@ -14,7 +14,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
 
-public class TestConfig {
+public class TestSpringConfig {
 
   @Bean
   public ObjectStore objectStore() throws Exception {
