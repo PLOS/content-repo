@@ -20,6 +20,9 @@ package org.plos.repo.rest;
 import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiImplicitParam;
+import com.wordnik.swagger.annotations.ApiOperation;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
@@ -46,6 +49,7 @@ import java.util.Date;
 import java.util.List;
 
 @Path("/objects")
+@Api(value="/objects")
 public class ObjectController {
 
   private static final Logger log = LoggerFactory.getLogger(ObjectController.class);
@@ -80,20 +84,6 @@ public class ObjectController {
     return jsonObject.toString();
   }
 
-  @GET
-  public Response listAllObjects() throws Exception {
-
-    // TODO: is this function useful? would it need paging for large datasets?
-
-    return Response.status(Response.Status.OK).entity(
-        new GenericEntity<List<Object>>(sqlService.listAllObject()){}).build();
-  }
-
-//  @RequestMapping(value="{bucketName}", method=RequestMethod.GET)
-//  public @ResponseBody List<Object> listObjectsInBucket(@PathVariable String bucketName) throws Exception {
-//    return sqlService.listObjectsInBucket(bucketName);
-//  }
-
 //  private boolean clientSupportsReproxy(HttpServletRequest request) {
 //    Enumeration<?> headers = request.getHeaders("X-Proxy-Capabilities");
 //    if (headers == null) {
@@ -118,7 +108,23 @@ public class ObjectController {
     return false;
   }
 
-  @GET @Path("{bucketName}")
+  @GET
+  @ApiOperation(value = "", notes="List objects")
+  public Response listAllObjects() throws Exception {
+
+    // TODO: is this function useful? would it need paging for large datasets?
+
+    return Response.status(Response.Status.OK).entity(
+        new GenericEntity<List<Object>>(sqlService.listAllObject()){}).build();
+  }
+
+//  @RequestMapping(value="{bucketName}", method=RequestMethod.GET)
+//  public @ResponseBody List<Object> listObjectsInBucket(@PathVariable String bucketName) throws Exception {
+//    return sqlService.listObjectsInBucket(bucketName);
+//  }
+
+  @GET @Path("/{bucketName}")
+  @ApiOperation(value = "/{bucketName}", notes="Read object")
   public Response read(@PathParam("bucketName") String bucketName,
                        @QueryParam("key") String key,
                        @QueryParam("version") Integer version,
@@ -158,7 +164,7 @@ public class ObjectController {
 
     // else assume they want the binary data
 
-    String exportFileName = "content";
+    String exportFileName = "content";  // TODO: should we urlencode it instead?
 
     if (object.downloadName != null)
       exportFileName = object.downloadName;
@@ -188,7 +194,8 @@ public class ObjectController {
   }
 
   @DELETE
-  @Path("{bucketName}")
+  @Path("/{bucketName}")
+  @ApiOperation(value = "/{bucketName}", notes="Delete an object")
   public Response delete(@PathParam("bucketName") String bucketName,
                          @QueryParam("key") String key,
                          @QueryParam("version") int version) throws Exception {
@@ -207,6 +214,8 @@ public class ObjectController {
 
   @POST
   @Consumes(MediaType.MULTIPART_FORM_DATA)
+  @ApiOperation(value = "", notes="Create an object")
+  @ApiImplicitParam(dataType = "file", name = "uploadedInputStream", paramType = "body")
   public Response createOrUpdate(@FormDataParam("key") String key,
                                  @FormDataParam("bucketName") String bucketName,
                                  @FormDataParam("contentType") String contentType,
@@ -277,7 +286,7 @@ public class ObjectController {
       // dont bother storing the file since the data already exists in the system
       objectStore.deleteTempUpload(uploadInfo);
     } else {
-      objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object);
+      objectStore.saveUploadedObject(new Bucket(null, bucketName), uploadInfo, object);
       object.urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
     }
 
@@ -352,7 +361,7 @@ public class ObjectController {
     if (objectStore.objectExists(object)) {
       objectStore.deleteTempUpload(uploadInfo);
     } else {
-      objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object);
+      objectStore.saveUploadedObject(new Bucket(null, bucketName), uploadInfo, object);
     }
 
     object.urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));

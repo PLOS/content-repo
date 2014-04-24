@@ -38,7 +38,7 @@ public abstract class SqlService {
   }
 
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
-    return new Bucket(rs.getString("BUCKETNAME"), rs.getInt("BUCKETID"));
+    return new Bucket(rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"));
   }
 
   public Integer getBucketId(String bucketName) {
@@ -316,6 +316,8 @@ public abstract class SqlService {
 
   public int insertObject(Object object) {
 
+    // TODO: return object or objectid from this function?
+
     PreparedStatement p = null;
     Connection connection = null;
 
@@ -394,8 +396,47 @@ public abstract class SqlService {
 
   }
 
-  public abstract boolean insertBucket(Bucket bucket);
+//  public abstract boolean insertBucket(Bucket bucket);
 
+  public boolean insertBucket(Bucket bucket) {
+
+    int result;
+
+    Connection connection = null;
+    PreparedStatement p = null;
+
+    try {
+
+      connection = dataSource.getConnection();
+
+      p = connection.prepareStatement("INSERT INTO buckets (bucketName) VALUES(?)");
+
+      p.setString(1, bucket.bucketName);
+
+      result = p.executeUpdate();
+
+    } catch (SQLException e) {
+      log.error("error inserting bucket", e);
+      return false;
+    } finally {
+
+      try {
+        if (p != null)
+          p.close();
+
+        if (connection != null)
+          connection.close();
+
+      } catch (SQLException e) {
+        log.error("error closing connection", e);
+      }
+    }
+
+    if (result == 0)
+      log.error("Error while creating bucket: database update failed");
+
+    return (result > 0);
+  }
 
   public List<Bucket> listBuckets() {
 

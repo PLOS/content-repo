@@ -7,6 +7,7 @@ import java.lang.UnsupportedOperationException;
 
 @XmlRootElement
 public class Bucket {
+
   public Integer bucketId;
   public String bucketName;
 
@@ -15,12 +16,9 @@ public class Bucket {
     throw new UnsupportedOperationException("No-arg constructor should not be called");
   }
 
-  public Bucket(String bucketName, Integer bucketId) {
+  public Bucket(Integer bucketId, String bucketName) {
     this.bucketName = bucketName;
     this.bucketId = bucketId;
   }
 
-  public Bucket(String bucketName) {
-    this.bucketName = bucketName;
-  }
 }

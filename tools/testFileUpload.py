@@ -7,11 +7,11 @@ baseUrl = 'http://localhost:8081/'
 
 bucketProduction = 'plos-testupload-production'
 
-r = requests.post(baseUrl + 'buckets/', data={'name' : bucketProduction, 'id':0})
+r = requests.post(baseUrl + 'buckets/', data={'name' : bucketProduction})
 print (r.text)
 r = requests.post(baseUrl + 'buckets/', data={'name' : 'plos-testupload-staging'})
 print (r.text)
-r = requests.post(baseUrl + 'buckets/', data={'name' : 'plos-testupload-bad?name', 'id':2})
+r = requests.post(baseUrl + 'buckets/', data={'name' : 'plos-testupload-bad?name'})
 print (r.text)
 print (r.status_code)
 

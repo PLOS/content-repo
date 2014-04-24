@@ -52,7 +52,6 @@ public class Object {
 
   // empty constructor required for JAXB mapping
   public Object() {
-//    timestamp = new Timestamp(0);
     throw new UnsupportedOperationException("No-arg constructor should not be called");
   }
 

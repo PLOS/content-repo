@@ -1,12 +1,7 @@
 package org.plos.repo.service;
 
-import org.plos.repo.models.Bucket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 public class MysqlService extends SqlService {
 
@@ -20,7 +15,7 @@ public class MysqlService extends SqlService {
   public void postDbInit() {
 
   }
-
+/*
   @Override
   public boolean insertBucket(Bucket bucket) {
 
@@ -29,7 +24,7 @@ public class MysqlService extends SqlService {
     Connection connection = null;
     PreparedStatement p = null;
 
-    if (bucket.bucketId == null) {
+    //if (bucket.bucketId == null) {
 
       try {
         connection = dataSource.getConnection();
@@ -55,39 +50,41 @@ public class MysqlService extends SqlService {
         }
       }
 
-    } else {
-
-      try {
-        connection = dataSource.getConnection();
-        p = connection.prepareStatement("INSERT IGNORE INTO buckets SET bucketId=?, bucketName=?");
-
-        p.setInt(1, bucket.bucketId);
-        p.setString(2, bucket.bucketName);
-
-        result = p.executeUpdate();
-
-      } catch (SQLException e) {
-        log.error("error inserting bucket", e);
-        return false;
-      } finally {
-
-        try {
-          if (p != null)
-            p.close();
-
-          if (connection != null)
-            connection.close();
-        } catch (SQLException e) {
-          log.error("error closing connection", e);
-        }
-      }
-
-    }
+    //}
+//    else
+//    {
+//
+//      try {
+//        connection = dataSource.getConnection();
+//        p = connection.prepareStatement("INSERT IGNORE INTO buckets SET bucketId=?, bucketName=?");
+//
+//        p.setInt(1, bucket.bucketId);
+//        p.setString(2, bucket.bucketName);
+//
+//        result = p.executeUpdate();
+//
+//      } catch (SQLException e) {
+//        log.error("error inserting bucket", e);
+//        return false;
+//      } finally {
+//
+//        try {
+//          if (p != null)
+//            p.close();
+//
+//          if (connection != null)
+//            connection.close();
+//        } catch (SQLException e) {
+//          log.error("error closing connection", e);
+//        }
+//      }
+//
+//    }
 
     if (result == 0)
       log.error("Error while creating bucket: database update failed");
 
     return result > 0;
   }
-
+*/
 }

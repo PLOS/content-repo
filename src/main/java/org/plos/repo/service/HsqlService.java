@@ -1,6 +1,5 @@
 package org.plos.repo.service;
 
-import org.plos.repo.models.Bucket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,7 +7,6 @@ import javax.annotation.PreDestroy;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 
 public class HsqlService extends SqlService {
 
@@ -68,7 +66,7 @@ public class HsqlService extends SqlService {
       connection.close();
 
    }
-
+/*
   public boolean insertBucket(Bucket bucket) {
 
        int result;
@@ -76,7 +74,7 @@ public class HsqlService extends SqlService {
        Connection connection = null;
        PreparedStatement p = null;
 
-       if (bucket.bucketId == null) {
+//       if (bucket.bucketId == null) {
 
          try {
 
@@ -104,43 +102,43 @@ public class HsqlService extends SqlService {
              log.error("error closing connection", e);
            }
          }
-
-       } else {
-
-         try {
-
-           connection = dataSource.getConnection();
-
-           p = connection.prepareStatement("MERGE INTO buckets USING (VALUES   (?,?)) AS vals(bucketId,bucketName) on buckets.bucketId = vals.bucketId WHEN NOT MATCHED THEN INSERT VALUES vals.bucketId, vals.bucketName");
-
-           p.setInt(1, bucket.bucketId);
-              p.setString(2, bucket.bucketName);
-
-           result = p.executeUpdate();
-
-         } catch (SQLException e   ) {
-           log.error("error inserting bucket", e);
-           return false;
-         } finally {
-
-           try {
-             if (p != null)
-               p.close();
-
-             if (connection != null)
-               connection.close();
-
-           } catch (SQLException e) {
-             log.error("error closing connection", e);
-           }
-         }
-
-       }
+//
+//       } else {
+//
+//         try {
+//
+//           connection = dataSource.getConnection();
+//
+//           p = connection.prepareStatement("MERGE INTO buckets USING (VALUES   (?,?)) AS vals(bucketId,bucketName) on buckets.bucketId = vals.bucketId WHEN NOT MATCHED THEN INSERT VALUES vals.bucketId, vals.bucketName");
+//
+//           p.setInt(1, bucket.bucketId);
+//           p.setString(2, bucket.bucketName);
+//
+//           result = p.executeUpdate();
+//
+//         } catch (SQLException e   ) {
+//           log.error("error inserting bucket", e);
+//           return false;
+//         } finally {
+//
+//           try {
+//             if (p != null)
+//               p.close();
+//
+//             if (connection != null)
+//               connection.close();
+//
+//           } catch (SQLException e) {
+//             log.error("error closing connection", e);
+//           }
+//         }
+//
+//       }
 
        if (result == 0)
          log.error("Error while creating bucket: database update failed");
 
        return (result > 0);
      }
-
+*/
    }
