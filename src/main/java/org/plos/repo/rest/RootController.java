@@ -12,19 +12,19 @@ public class RootController {
   @GET
   public String index() {
 
-    // TODO: display something useful here, like number of objects...
+    // TODO: display spirit animal
 
     return "<h1>PLoS Content Repository REST API</h1>";
   }
 
-  // TODO: write the config function
+  // TODO: write this function
 //  @GET
-//  @Path("config")
-//  public Response config() {
+//  @Path("info")
+//  public Response info() {
 //
 //    final HashMap<String, String> vars = new HashMap<>();
 //    vars.put("version", ...);
-//    // TODO: add database etc.
+//    // TODO: add database etc., add object count
 //
 //    return Response.status(Response.Status.OK).entity(
 //        new GenericEntity<Map<String, String>>(vars){}).build();
