@@ -20,8 +20,10 @@ package org.plos.repo.rest;
 import com.google.common.base.Joiner;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiImplicitParam;
+import com.wordnik.swagger.annotations.ApiImplicitParams;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
@@ -71,19 +73,6 @@ public class ObjectController {
   // TODO: check at startup that db is in sync with objectStore ?
 
 
-//  private boolean clientSupportsReproxy(HttpServletRequest request) {
-//    Enumeration<?> headers = request.getHeaders("X-Proxy-Capabilities");
-//    if (headers == null) {
-//      return false;
-//    }
-//    while (headers.hasMoreElements()) {
-//      if ("reproxy-file".equals(headers.nextElement())) {
-//        return true;
-//      }
-//    }
-//    return false;
-//  }
-
   private boolean clientSupportsReproxy(String requestXProxy) {
 
     if (requestXProxy == null)
@@ -96,7 +85,7 @@ public class ObjectController {
   }
 
   @GET
-  @ApiOperation(value = "", notes="List objects")
+  @ApiOperation(value = "List objects")
   public Response listAllObjects() throws Exception {
 
     // TODO: is this function useful? would it need paging for large datasets?
@@ -111,7 +100,7 @@ public class ObjectController {
 //  }
 
   @GET @Path("/{bucketName}")
-  @ApiOperation(value = "/{bucketName}", notes="Read object")
+  @ApiOperation(value = "Fetch an object or its metadata")
   public Response read(@ApiParam(required = true) @PathParam("bucketName") String bucketName,
                        @ApiParam(required = true) @QueryParam("key") String key,
                        @QueryParam("version") Integer version,
@@ -186,7 +175,7 @@ public class ObjectController {
 
   @DELETE
   @Path("/{bucketName}")
-  @ApiOperation(value = "/{bucketName}", notes="Delete an object")
+  @ApiOperation(value = "Delete an object")
   public Response delete(@PathParam("bucketName") String bucketName,
                          @QueryParam("key") String key,
                          @QueryParam("version") int version) throws Exception {
@@ -205,23 +194,39 @@ public class ObjectController {
 
   @POST
   @Consumes(MediaType.MULTIPART_FORM_DATA)
-  @ApiOperation(value = "", notes="Create an object")
-  @ApiImplicitParam(dataType = "file", name = "uploadedInputStream", paramType = "body")
-  public Response createOrUpdate(@FormDataParam("key") String key,
-                                 @FormDataParam("bucketName") String bucketName,
-                                 @FormDataParam("contentType") String contentType,
-                                 @FormDataParam("downloadName") String downloadName,
-                                 @FormDataParam("create") String create,
-                                 @FormDataParam("file") InputStream uploadedInputStream
+  @ApiOperation(value = "Create an object")
+  //@ApiImplicitParam(dataType = "file", name = "uploadedInputStream", paramType = "form")
+  @ApiImplicitParams({
+    @ApiImplicitParam(dataType = "string", name = "key", paramType = "form"),
+    @ApiImplicitParam(dataType = "string", name = "bucketName", paramType = "form"),
+    @ApiImplicitParam(dataType = "string", name = "create", paramType = "form"),
+    @ApiImplicitParam(dataType = "file", name = "uploadedInputStream", paramType = "body")
+  })
+  public Response createOrUpdate(@ApiParam(name = "key", value="object key") @FormDataParam("key") String key,
+                                 @ApiParam(name = "bucketName") @FormDataParam("bucketName") String bucketName,
+                                 @ApiParam("contentType") @FormDataParam("contentType") String contentType,
+                                 @ApiParam("downloadName") @FormDataParam("downloadName") String downloadName,
+                                 @ApiParam("create") @FormDataParam("create") String create,
+                                 @FormDataParam("file") InputStream uploadedInputStream,
+                                 @FormDataParam("file") FormDataContentDisposition contentDisp
   ) throws Exception {
 
     // TODO: handle timestamps as input (for migrating from an existing repo)
+
+    if (key == null)
+      return Response.status(Response.Status.BAD_REQUEST).entity("No key entered").type(MediaType.TEXT_PLAIN).build();
+
+    if (create == null)
+      return Response.status(Response.Status.BAD_REQUEST).entity("No create flag entered").type(MediaType.TEXT_PLAIN).build();
+
+    if (bucketName == null)
+      return Response.status(Response.Status.BAD_REQUEST).entity("No bucket specified").type(MediaType.TEXT_PLAIN).build();
 
     Object existingObject = sqlService.getObject(bucketName, key);
 
     if (create.equalsIgnoreCase("new")) {
       if (existingObject != null)
-        return Response.status(Response.Status.CONFLICT).entity("Error: Attempting to create an object with a key that already exists.").build();
+        return Response.status(Response.Status.CONFLICT).entity("Error: Attempting to create an object with a key that already exists.").type(MediaType.TEXT_PLAIN).build();
       return create(key, bucketName, contentType, downloadName, uploadedInputStream);
     } else if (create.equalsIgnoreCase("version")) {
       return update(bucketName, contentType, downloadName, uploadedInputStream, existingObject);
@@ -232,7 +237,7 @@ public class ObjectController {
         return update(bucketName, contentType, downloadName, uploadedInputStream, existingObject);
     }
 
-    return Response.status(Response.Status.BAD_REQUEST).entity("Invalid create flag").build();
+    return Response.status(Response.Status.BAD_REQUEST).entity("Invalid create flag").type(MediaType.TEXT_PLAIN).build();
   }
 
   private Response create(String key,
@@ -244,10 +249,10 @@ public class ObjectController {
     Integer bucketId = sqlService.getBucketId(bucketName);
 
     if (uploadedInputStream == null)
-      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: A file must be specified for uploading.").build();
+      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: A file must be specified for uploading.").type(MediaType.TEXT_PLAIN).build();
 
     if (bucketId == null)
-      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: Can not find bucket " + bucketName).build();
+      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: Can not find bucket " + bucketName).type(MediaType.TEXT_PLAIN).build();
 
 //    if (existingObject != null)
 //      return Response.status(Response.Status.CONFLICT).entity("Error: Attempting to create an object with a key that already exists.").build();
@@ -257,7 +262,7 @@ public class ObjectController {
       uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
     } catch (Exception e) {
       log.error("Error during upload", e);
-      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: A problem occurred while uploading the file.").build();
+      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: A problem occurred while uploading the file.").type(MediaType.TEXT_PLAIN).build();
     }
 
     Integer versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, key);
@@ -285,7 +290,6 @@ public class ObjectController {
 
     sqlService.insertObject(object); // TODO: deal with 0 return values
 
-    // TODO: explicitly cast the JSON ?
     return Response.status(Response.Status.CREATED).entity(object).build();
   }
 
@@ -310,10 +314,10 @@ public class ObjectController {
     Integer bucketId = sqlService.getBucketId(bucketName);
 
     if (bucketId == null)
-      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: Can not find bucket " + bucketName).build();
+      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: Can not find bucket " + bucketName).type(MediaType.TEXT_PLAIN).build();
 
     if (object == null)
-      return Response.status(Response.Status.NOT_ACCEPTABLE).entity("Error: Attempting to create a new version of an non-existing object.").build();
+      return Response.status(Response.Status.NOT_ACCEPTABLE).entity("Error: Attempting to create a new version of an non-existing object.").type(MediaType.TEXT_PLAIN).build();
 
     // copy over values from previous object, if they are not specified in the request
     if (contentType != null)
@@ -341,7 +345,7 @@ public class ObjectController {
     } catch (Exception e) {
       log.error("Error during upload", e);
 
-      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: A problem occurred while uploading the file.").build();
+      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: A problem occurred while uploading the file.").type(MediaType.TEXT_PLAIN).build();
     }
 
     object.urls = "";

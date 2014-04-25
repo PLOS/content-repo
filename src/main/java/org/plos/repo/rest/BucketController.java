@@ -32,14 +32,14 @@ public class BucketController {
   private SqlService sqlService;
 
   @GET
-  @ApiOperation(value = "", notes="List buckets")
+  @ApiOperation(value = "List buckets")
   public Response list() throws Exception {
     return Response.status(Response.Status.OK).entity(
         new GenericEntity<List<Bucket>>(sqlService.listBuckets()){}).build();
   }
 
   @POST
-  @ApiOperation(value = "", notes="Create a bucket")
+  @ApiOperation(value = "Create a bucket")
   @ApiResponses(value = {
     @ApiResponse(code = 409, message = "The bucket was unable to be created"),
     @ApiResponse(code = 412, message = "Error in bucket name")
@@ -68,7 +68,7 @@ public class BucketController {
 
   @DELETE
   @Path("/{name}")
-  @ApiOperation(value = "/{name}", notes="Delete a bucket")
+  @ApiOperation(value = "Delete a bucket")
   @ApiResponses(value = {
     @ApiResponse(code = 304, message = "The bucket was unable to be deleted")
   })

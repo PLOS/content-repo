@@ -14,6 +14,7 @@ public class JerseyApplication extends ResourceConfig {
     packages("org.plos.repo.rest");
 
     register(MultiPartFeature.class);
+    //register(MultiPartMediaTypes.class);
     register(RequestContextFilter.class);
   }
 }
