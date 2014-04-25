@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.junit.Test;
 
@@ -11,13 +12,17 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.Charset;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class ObjectControllerTest extends RepoBaseTest {
 
   @Test
-  public void testControllerCrud() {
+  public void testControllerCrud() throws Exception {
 
     Gson gson = new Gson();
 
@@ -121,7 +126,7 @@ public class ObjectControllerTest extends RepoBaseTest {
     assertEquals(response.readEntity(String.class), "");
     assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
     assertEquals(response.getHeaderString("Content-Type"), "text/plain");
-    assertEquals(response.getHeaderString("Content-Disposition"), "inline; filename=content");
+    assertEquals(response.getHeaderString("Content-Disposition"), "inline; filename=funky%26%3F%23key");
 
     response = target("/objects/" + bucketName).queryParam("key", "notObject").request().get();
     assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
@@ -130,12 +135,17 @@ public class ObjectControllerTest extends RepoBaseTest {
     // REPROXY
 
     if (objectStore.hasXReproxy()) {
-      response = target("/objects/" + bucketName).queryParam("key", "object1").queryParam("version", "0").request().get();
-      assertEquals(response.getHeaderString("X-Proxy-Capabilities"), "reproxy-file");
+      response = target("/objects/" + bucketName).queryParam("key", "object1").queryParam("version", "0").request().header("X-Proxy-Capabilities", "reproxy-file").get();
+      assertNotNull(response.getHeaderString("X-Reproxy-URL"));
       assertEquals(response.readEntity(String.class), "");
       assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
 
-      // TODO: fetch the reproxy content and assert its data
+      String reproxyUrl = response.getHeaderString("X-Reproxy-URL");
+      URL url = new URL(reproxyUrl);
+      InputStream inputStream = url.openStream();
+      String testData1Out = IOUtils.toString(url.openStream(), Charset.defaultCharset());
+      inputStream.close();
+      assertEquals(testData1, testData1Out);
     }
 
 

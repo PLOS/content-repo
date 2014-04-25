@@ -43,6 +43,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
+import java.net.URLEncoder;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -154,12 +155,12 @@ public class ObjectController {
 
     // else assume they want the binary data
 
-    String exportFileName = "content";  // TODO: should we urlencode it instead?
+    String exportFileName = object.key;
 
     if (object.downloadName != null)
       exportFileName = object.downloadName;
-    else if (ObjectStore.isValidFileName(object.key))
-      exportFileName = object.key;
+
+    exportFileName = URLEncoder.encode(exportFileName, "UTF-8");
 
 
     String contentType = object.contentType;

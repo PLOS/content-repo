@@ -1,15 +1,19 @@
 package org.plos.repo.service;
 
+import com.google.common.base.Preconditions;
 import com.guba.mogilefs.MogileFS;
 import com.guba.mogilefs.PooledMogileFSImpl;
+import org.apache.commons.io.IOUtils;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.security.MessageDigest;
 import java.util.UUID;
 
 public class MogileStoreService extends ObjectStore {
@@ -18,12 +22,19 @@ public class MogileStoreService extends ObjectStore {
 
   public static final String mogileFileClass = "";
 
-//  public static final String mogileDefaultDomain = "toast";
-
   private MogileFS mfs = null;
 
   public MogileStoreService(String domain, String[] trackerStrings, int maxTrackerConnections, int maxIdleConnections, long maxIdleTimeMillis) throws Exception {
     mfs = new PooledMogileFSImpl(domain, trackerStrings, maxTrackerConnections, maxIdleConnections, maxIdleTimeMillis);
+  }
+
+  private static byte[] readStreamInput(InputStream input) throws IOException {
+    Preconditions.checkNotNull(input);
+    try {
+      return IOUtils.toByteArray(input);
+    } finally {
+      input.close();
+    }
   }
 
   private String getBucketLocationString(String bucketName) {
@@ -82,54 +93,40 @@ public class MogileStoreService extends ObjectStore {
   }
 
   public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws Exception {
+
     final String tempFileLocation = UUID.randomUUID().toString() + ".tmp";
 
+    // NOTE: in the future we can avoid having to read to memory by using a
+    //   different MogileFS library that does not require size at creation time.
 
+    byte[] objectData = readStreamInput(uploadedInputStream);
 
-    // TODO: size hack! not correct
-    // figure out how to determine size efficiently
+    MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
 
-    OutputStream fos = mfs.newFile(tempFileLocation, mogileFileClass, 12987);
+    OutputStream fos = mfs.newFile(tempFileLocation, mogileFileClass, objectData.length);
 
-    throw new Exception("need to implement this correctly");
+    IOUtils.write(objectData, fos);
+    fos.close();
 
+    final String checksum = checksumToString(digest.digest(objectData));
+    final long finalSize = objectData.length;
 
+    return new UploadInfo(){
+      @Override
+      public Long getSize() {
+        return finalSize;
+      }
 
-//    ReadableByteChannel in = Channels.newChannel(uploadedInputStream);
-//    MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
-//    WritableByteChannel out = Channels.newChannel(new DigestOutputStream(fos, digest));
-//    ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
-//
-//    long size = 0;
-//
-//    while (in.read(buffer) != -1) {
-//      buffer.flip();
-//      size += out.write(buffer);
-//      buffer.clear();
-//    }
-//
-//    final String checksum = checksumToString(digest.digest());
-//    final long finalSize = size;
-//
-//    out.close();
-//    in.close();
-//
-//    return new UploadInfo(){
-//      @Override
-//      public Long getSize() {
-//        return finalSize;
-//      }
-//
-//      @Override
-//      public String getTempLocation() {
-//        return tempFileLocation;
-//      }
-//
-//      @Override
-//      public String getChecksum() {
-//        return checksum;
-//      }
-//    };
+      @Override
+      public String getTempLocation() {
+        return tempFileLocation;
+      }
+
+      @Override
+      public String getChecksum() {
+        return checksum;
+      }
+    };
 
   }
 

@@ -19,6 +19,7 @@ public class TestSpringConfig {
   @Bean
   public ObjectStore objectStore() throws Exception {
     return new FileSystemStoreService("/tmp/repo_unittest");
+//    return new MogileStoreService("toast", new String[]{"localhost:7001"}, 1, 1, 100);
   }
 
   @Bean

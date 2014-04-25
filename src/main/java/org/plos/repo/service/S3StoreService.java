@@ -56,7 +56,7 @@ public class S3StoreService extends ObjectStore {
   }
 
   public Boolean hasXReproxy() {
-    return true;  // TODO: make this configurable
+    return true;
   }
 
   public URL[] getRedirectURLs(Object object) throws Exception {
@@ -96,7 +96,7 @@ public class S3StoreService extends ObjectStore {
   /**
    * Upload the file to the local server, calculate the checksum. Dont put in on S3 yet.
    *
-   * @param file
+   * @param uploadedInputStream
    * @return
    * @throws Exception
    */
