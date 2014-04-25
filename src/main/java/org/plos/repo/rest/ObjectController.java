@@ -18,11 +18,10 @@
 package org.plos.repo.rest;
 
 import com.google.common.base.Joiner;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiImplicitParam;
 import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiParam;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
@@ -70,19 +69,6 @@ public class ObjectController {
 
   // TODO: check at startup that db is in sync with objectStore ?
 
-  private static Gson gson = new Gson();
-
-  private String objectToJsonString(Object object, boolean includeVersions) {
-
-    // TODO: see if this can be done more generically so it can return XML as well
-
-    JsonObject jsonObject = gson.toJsonTree(object).getAsJsonObject();
-
-    if (includeVersions)
-      jsonObject.add("versions", gson.toJsonTree(sqlService.listObjectVersions(object)).getAsJsonArray());
-
-    return jsonObject.toString();
-  }
 
 //  private boolean clientSupportsReproxy(HttpServletRequest request) {
 //    Enumeration<?> headers = request.getHeaders("X-Proxy-Capabilities");
@@ -125,8 +111,8 @@ public class ObjectController {
 
   @GET @Path("/{bucketName}")
   @ApiOperation(value = "/{bucketName}", notes="Read object")
-  public Response read(@PathParam("bucketName") String bucketName,
-                       @QueryParam("key") String key,
+  public Response read(@ApiParam(required = true) @PathParam("bucketName") String bucketName,
+                       @ApiParam(required = true) @QueryParam("key") String key,
                        @QueryParam("version") Integer version,
                        @QueryParam("fetchMetadata") Boolean fetchMetadata,
                        @HeaderParam("X-Proxy-Capabilities") String requestXProxy
@@ -144,7 +130,11 @@ public class ObjectController {
     // if they want the metadata
 
     if (fetchMetadata != null && fetchMetadata) {
-      return Response.status(Response.Status.OK).type(MediaType.APPLICATION_JSON_TYPE).entity(objectToJsonString(object, version == null)).build();
+
+      if (fetchMetadata)
+        object.versions = sqlService.listObjectVersions(object);
+
+      return Response.status(Response.Status.OK).entity(object).build();
     }
 
     // if they want redirect URLs
@@ -295,7 +285,7 @@ public class ObjectController {
     sqlService.insertObject(object); // TODO: deal with 0 return values
 
     // TODO: explicitly cast the JSON ?
-    return Response.status(Response.Status.CREATED).entity(objectToJsonString(object, false)).build();
+    return Response.status(Response.Status.CREATED).entity(object).build();
   }
 
   /**
@@ -341,7 +331,7 @@ public class ObjectController {
       object.urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
       sqlService.insertObject(object); // TODO: deal with 0 return values
 
-      return Response.status(Response.Status.OK).entity(objectToJsonString(object, false)).build();
+      return Response.status(Response.Status.OK).entity(object).build();
     }
 
     ObjectStore.UploadInfo uploadInfo;
@@ -369,7 +359,7 @@ public class ObjectController {
     // add a record to the DB
     sqlService.insertObject(object); // TODO: deal with 0 return values
 
-    return Response.status(Response.Status.OK).entity(objectToJsonString(object, false)).build();
+    return Response.status(Response.Status.OK).entity(object).build();
   }
 
 }

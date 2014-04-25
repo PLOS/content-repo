@@ -41,6 +41,11 @@ values = {'key': 'downloadName', 'bucketName' : bucketProduction, 'contentType' 
 r = requests.post(baseUrl + 'objects/', files=files, data=values)
 print (r.text)
 
+files = {'file': open('/home/jfinger/looseFiles/DH3.8_DeveloperGuide.pdf', 'rb')}
+values = {'key': 'downloadName', 'bucketName' : bucketProduction, 'contentType' : 'application/pdf', 'downloadName' : '10.1371/journal.pone.0002020.g003.PDF', 'create':'version'}
+r = requests.post(baseUrl + 'objects/', files=files, data=values)
+print (r.text)
+
 
 # deletion test
 files = {'file': open('/home/jfinger/journal.pone.0085647.pdf', 'rb')}

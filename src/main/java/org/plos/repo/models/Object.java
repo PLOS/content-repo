@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.sql.Timestamp;
 import java.util.EnumSet;
+import java.util.List;
 
 @XmlRootElement
 public class Object {
@@ -49,6 +50,8 @@ public class Object {
   public String bucketName;
   public Integer versionNumber;
   public Status status;
+
+  public List<Object> versions;
 
   // empty constructor required for JAXB mapping
   public Object() {
