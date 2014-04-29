@@ -81,18 +81,20 @@ public class ObjectController {
   @GET
   @ApiOperation(value = "List objects", response = List.class)
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-  public Response listAllObjects() throws Exception {
+  public Response listObjects(@ApiParam(required = false) @QueryParam("bucketName") String bucketName) throws Exception {
 
-    // TODO: is this function useful? would it need paging for large datasets?
+    if (bucketName == null) {
+      return Response.status(Response.Status.OK).entity(
+        new GenericEntity<List<Object>>(sqlService.listAllObject()){}).build();
+    }
+
+    if (sqlService.getBucketId(bucketName) == null)
+      return Response.status(Response.Status.NOT_FOUND).build();
 
     return Response.status(Response.Status.OK).entity(
-        new GenericEntity<List<Object>>(sqlService.listAllObject()){}).build();
+        new GenericEntity<List<Object>>(sqlService.listObjectsInBucket(bucketName)) {
+        }).build();
   }
-
-//  @RequestMapping(value="{bucketName}", method=RequestMethod.GET)
-//  public @ResponseBody List<Object> listObjectsInBucket(@PathVariable String bucketName) throws Exception {
-//    return sqlService.listObjectsInBucket(bucketName);
-//  }
 
   @GET @Path("/{bucketName}")
   @ApiOperation(value = "Fetch an object or its metadata", response = Object.class)
