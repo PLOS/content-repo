@@ -21,7 +21,6 @@ import com.google.common.base.Joiner;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
@@ -75,18 +74,21 @@ public class ObjectController {
   private SqlService sqlService;
 
 
-  // TODO: check at startup that db is in sync with objectStore ?
+  // TODO: check at startup that db is in sync with objectStore ? bill says write a python script instead
 
 
   @GET
-  @ApiOperation(value = "List objects", response = List.class)
+  @ApiOperation(value = "List objects", response = Object.class, responseContainer = "List")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-  public Response listObjects(@ApiParam(required = false) @QueryParam("bucketName") String bucketName) throws Exception {
+  public Response listObjects(
+      @ApiParam(required = false) @QueryParam("bucketName") String bucketName) throws Exception {
 
-    if (bucketName == null) {
+
+    // TODO: allow filtering on object status
+
+    if (bucketName == null)
       return Response.status(Response.Status.OK).entity(
         new GenericEntity<List<Object>>(sqlService.listAllObject()){}).build();
-    }
 
     if (sqlService.getBucketId(bucketName) == null)
       return Response.status(Response.Status.NOT_FOUND).build();
@@ -133,7 +135,8 @@ public class ObjectController {
       if (object.urls == null || object.urls.isEmpty())
         urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
 
-      return Response.status(Response.Status.OK).header(REPROXY_HEADER_URL, urls).header(REPROXY_HEADER_CACHE_FOR, REPROXY_CACHE_FOR_HEADER).build();
+      return Response.status(Response.Status.OK).header(REPROXY_HEADER_URL, urls)
+          .header(REPROXY_HEADER_CACHE_FOR, REPROXY_CACHE_FOR_HEADER).build();
 
     }
 
@@ -155,7 +158,8 @@ public class ObjectController {
 
     // TODO: find out if Jersey is closing the InputStream
 
-    Response response = Response.ok(is, contentType).header("Content-Disposition", "inline; filename=" + exportFileName).build();
+    Response response = Response.ok(is, contentType)
+        .header("Content-Disposition", "inline; filename=" + exportFileName).build();
 
 //      OutputStream os = response.getOutputStream();
 //      IOUtils.copy(is, os);
@@ -170,12 +174,21 @@ public class ObjectController {
   @DELETE
   @Path("/{bucketName}")
   @ApiOperation(value = "Delete an object")
-  public Response delete(@PathParam("bucketName") String bucketName,
-                         @QueryParam("key") String key,
-                         @QueryParam("version") int version) throws Exception {
+  public Response delete(@ApiParam(required = true) @PathParam("bucketName") String bucketName,
+                         @ApiParam(required = true) @QueryParam("key") String key,
+                         @ApiParam(required = true) @QueryParam("version") Integer version) throws Exception {
+
+    if (key == null)
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity("No key entered").type(MediaType.TEXT_PLAIN).build();
+
+    if (version == null)
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity("No version entered").type(MediaType.TEXT_PLAIN).build();
 
     if (sqlService.markObjectDeleted(key, bucketName, version) == 0)
-      return Response.status(Response.Status.NOT_FOUND).entity("Error: Can not find object in database.").build();
+      return Response.status(Response.Status.NOT_FOUND)
+          .entity("Can not find object in database.").type(MediaType.TEXT_PLAIN).build();
 
     // NOTE: we no longer delete objects from the object store
 
@@ -183,76 +196,104 @@ public class ObjectController {
 //    if (!sqlService.objectInUse(bucketName, checksum) && !objectStore.deleteObject(objectStore.getObjectLocationString(bucketName, checksum)))
 //      return new ResponseEntity<>("Error: There was a problem deleting the object from the filesystem.", HttpStatus.NOT_MODIFIED);
 
-    return Response.status(Response.Status.OK).entity(key + " version " + version + " deleted").build();
+    return Response.status(Response.Status.OK)
+        .entity(key + " version " + version + " deleted").type(MediaType.TEXT_PLAIN).build();
   }
 
   @POST
   @Consumes(MediaType.MULTIPART_FORM_DATA)
-  @ApiOperation(value = "Create an object")
+  @ApiOperation(value = "Create a new object or a new version of an existing object",
+      notes = "Set the create field to 'new' object if the object you are inserting is not already in the repo. If you want to create a new version of an existing object set create to 'version'. Setting create to 'auto' automagically determines if the object should be new or versioned. However 'auto' should only be used by the ambra-file-store. In addition you may optionally specify a timestamp for object creation time. This feature is for migrating from an existing content store. Note that the timestamp must conform to this format: yyyy-[m]m-[d]d hh:mm:ss[.f...]")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-  public Response createOrUpdate(@ApiParam(required = true) @FormDataParam("key") String key,
-                                 @ApiParam(required = true) @FormDataParam("bucketName") String bucketName,
-                                 @ApiParam(value = "MIME type") @FormDataParam("contentType") String contentType,
-                                 @ApiParam(value = "name of file when downloaded", required = true) @FormDataParam("downloadName") String downloadName,
-                                 @ApiParam(value = "creation method", allowableValues = "new,version") @FormDataParam("create") String create,
-                                 @FormDataParam("file") InputStream uploadedInputStream,
-                                 @FormDataParam("file") FormDataContentDisposition contentDisp
+  public Response createOrUpdate(
+      @ApiParam(required = true) @FormDataParam("key") String key,
+      @ApiParam(required = true) @FormDataParam("bucketName") String bucketName,
+      @ApiParam(value = "MIME type") @FormDataParam("contentType") String contentType,
+      @ApiParam(value = "name of file when downloaded", required = false)
+        @FormDataParam("downloadName") String downloadName,
+      @ApiParam(value = "creation method", allowableValues = "new,version,auto", defaultValue = "new",
+required = true)
+        @FormDataParam("create") String create,
+      @ApiParam(value = "creation time", required = false)
+        @FormDataParam("timestamp") String timestampString,
+      @FormDataParam("file") InputStream uploadedInputStream
   ) throws Exception {
+
+    Timestamp timestamp = new Timestamp(new Date().getTime());
+
+    if (timestampString != null) {
+      try {
+        timestamp = Timestamp.valueOf(timestampString);
+      } catch (Exception e) {
+        return Response.status(Response.Status.BAD_REQUEST)
+            .entity("Could not parse timestamp").type(MediaType.TEXT_PLAIN).build();
+      }
+    }
 
     // TODO: handle timestamps as input (for migrating from an existing repo)
 
     if (key == null)
-      return Response.status(Response.Status.BAD_REQUEST).entity("No key entered").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity("No key entered").type(MediaType.TEXT_PLAIN).build();
 
     if (create == null)
-      return Response.status(Response.Status.BAD_REQUEST).entity("No create flag entered").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity("No create flag entered").type(MediaType.TEXT_PLAIN).build();
 
     if (bucketName == null)
-      return Response.status(Response.Status.BAD_REQUEST).entity("No bucket specified").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity("No bucket specified").type(MediaType.TEXT_PLAIN).build();
 
     Object existingObject = sqlService.getObject(bucketName, key);
 
     if (create.equalsIgnoreCase("new")) {
       if (existingObject != null)
-        return Response.status(Response.Status.CONFLICT).entity("Attempting to create an object with a key that already exists.").type(MediaType.TEXT_PLAIN).build();
-      return create(key, bucketName, contentType, downloadName, uploadedInputStream);
+        return Response.status(Response.Status.CONFLICT)
+            .entity("Attempting to create an object with a key that already exists.").type(MediaType.TEXT_PLAIN).build();
+      return create(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
     } else if (create.equalsIgnoreCase("version")) {
-      return update(bucketName, contentType, downloadName, uploadedInputStream, existingObject);
+      return update(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject);
     } else if (create.equalsIgnoreCase("auto")) {
       if (existingObject == null)
-        return create(key, bucketName, contentType, downloadName, uploadedInputStream);
+        return create(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
       else
-        return update(bucketName, contentType, downloadName, uploadedInputStream, existingObject);
+        return update(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject);
     }
 
-    return Response.status(Response.Status.BAD_REQUEST).entity("Invalid create flag").type(MediaType.TEXT_PLAIN).build();
+    return Response.status(Response.Status.BAD_REQUEST)
+        .entity("Invalid create flag").type(MediaType.TEXT_PLAIN).build();
   }
 
   private Response create(String key,
                           String bucketName,
                           String contentType,
                           String downloadName,
+                          Timestamp timestamp,
                           InputStream uploadedInputStream) throws Exception {
 
     Integer bucketId = sqlService.getBucketId(bucketName);
 
     if (uploadedInputStream == null)
-      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Error: A file must be specified for uploading.").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.PRECONDITION_FAILED)
+          .entity("A file must be specified for uploading.").type(MediaType.TEXT_PLAIN).build();
 
     if (bucketId == null)
-      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Can not find bucket " + bucketName).type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.PRECONDITION_FAILED)
+          .entity("Can not find bucket " + bucketName).type(MediaType.TEXT_PLAIN).build();
 
     ObjectStore.UploadInfo uploadInfo;
     try {
       uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
     } catch (Exception e) {
       log.error("Error during upload", e);
-      return Response.status(Response.Status.PRECONDITION_FAILED).entity("A problem occurred while uploading the file.").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.PRECONDITION_FAILED)
+          .entity("A problem occurred while uploading the file.").type(MediaType.TEXT_PLAIN).build();
     }
 
     Integer versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, key);
 
-    Object object = new Object(null, key, uploadInfo.getChecksum(), new Timestamp(new Date().getTime()), downloadName, contentType, uploadInfo.getSize(), null, null, bucketId, bucketName, versionNumber, Object.Status.USED);
+
+    Object object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), null, null, bucketId, bucketName, versionNumber, Object.Status.USED);
 
     // determine if the object should be added to the store or not
     if (objectStore.objectExists(object)) {
@@ -293,16 +334,19 @@ public class ObjectController {
   private Response update(String bucketName,
                           String contentType,
                           String downloadName,
+                          Timestamp timestamp,
                           InputStream uploadedInputStream,
                           Object object) throws Exception {
 
     Integer bucketId = sqlService.getBucketId(bucketName);
 
     if (bucketId == null)
-      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Can not find bucket " + bucketName).type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.PRECONDITION_FAILED)
+          .entity("Can not find bucket " + bucketName).type(MediaType.TEXT_PLAIN).build();
 
     if (object == null)
-      return Response.status(Response.Status.NOT_ACCEPTABLE).entity("Attempting to create a new version of an non-existing object.").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.NOT_ACCEPTABLE)
+          .entity("Attempting to create a new version of an non-existing object.").type(MediaType.TEXT_PLAIN).build();
 
     // copy over values from previous object, if they are not specified in the request
     if (contentType != null)
@@ -311,9 +355,9 @@ public class ObjectController {
     if (downloadName != null)
       object.downloadName = downloadName;
 
-    // TODO: wrap this in a transaction since versionNumber is being updated ?
+    // TODO: wrap this in a DB transaction since versionNumber is being updated ?
 
-    object.timestamp = new Timestamp(new Date().getTime());
+    object.timestamp = timestamp;
     object.versionNumber++;
     object.id = null;  // remove this since it refers to the old object
 
@@ -330,7 +374,8 @@ public class ObjectController {
     } catch (Exception e) {
       log.error("Error during upload", e);
 
-      return Response.status(Response.Status.PRECONDITION_FAILED).entity("A problem occurred while uploading the file.").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.PRECONDITION_FAILED)
+          .entity("A problem occurred while uploading the file.").type(MediaType.TEXT_PLAIN).build();
     }
 
     object.urls = "";

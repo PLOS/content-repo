@@ -167,6 +167,11 @@ public abstract class SqlService {
     PreparedStatement p = null;
     Connection connection = null;
 
+    Integer bucketId = getBucketId(bucketName);
+
+    if (bucketId == null)
+      return 0;
+
     try {
 
       connection = dataSource.getConnection();
@@ -175,7 +180,7 @@ public abstract class SqlService {
 
       p.setInt(1, Object.Status.DELETED.getValue());
       p.setString(2, key);
-      p.setInt(3, getBucketId(bucketName));
+      p.setInt(3, bucketId);
       p.setInt(4, versionNumber);
 
       return p.executeUpdate();

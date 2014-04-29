@@ -51,7 +51,7 @@ public class BucketController {
   private SqlService sqlService;
 
   @GET
-  @ApiOperation(value = "List buckets", response = List.class)
+  @ApiOperation(value = "List buckets", response = Bucket.class, responseContainer = "List")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response list() throws Exception {
     return Response.status(Response.Status.OK).entity(
@@ -67,22 +67,27 @@ public class BucketController {
   public Response create(@ApiParam(required = true) @FormParam("name") String name) {
 
     if (sqlService.getBucketId(name) != null)
-      return Response.status(Response.Status.CONFLICT).entity("Bucket already exists").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.CONFLICT)
+          .entity("Bucket already exists").type(MediaType.TEXT_PLAIN).build();
 
     if (!ObjectStore.isValidFileName(name))
-      return Response.status(Response.Status.PRECONDITION_FAILED).entity("Unable to create bucket. Name contains illegal characters: " + name).type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.PRECONDITION_FAILED)
+          .entity("Unable to create bucket. Name contains illegal characters: " + name).type(MediaType.TEXT_PLAIN).build();
 
     Bucket bucket = new Bucket(null, name);
 
     if (!objectStore.createBucket(bucket))
-      return Response.status(Response.Status.CONFLICT).entity("Unable to create bucket " + name).type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.CONFLICT)
+          .entity("Unable to create bucket " + name).type(MediaType.TEXT_PLAIN).build();
 
     if (!sqlService.insertBucket(bucket)) {
       objectStore.deleteBucket(bucket);
-      return Response.status(Response.Status.CONFLICT).entity("Unable to create bucket " + name).type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.CONFLICT)
+          .entity("Unable to create bucket " + name).type(MediaType.TEXT_PLAIN).build();
     }
 
-    return Response.status(Response.Status.CREATED).entity("Created bucket " + name).type(MediaType.TEXT_PLAIN).build();
+    return Response.status(Response.Status.CREATED)
+        .entity("Created bucket " + name).type(MediaType.TEXT_PLAIN).build();
 
   }
 
@@ -95,20 +100,25 @@ public class BucketController {
   public Response delete(@PathParam("name") String name) {
 
     if (sqlService.getBucketId(name) == null)
-      return Response.status(Response.Status.NOT_MODIFIED).entity("Cannot delete bucket. Bucket not found.").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.NOT_MODIFIED)
+          .entity("Cannot delete bucket. Bucket not found.").type(MediaType.TEXT_PLAIN).build();
 
     if (sqlService.listObjectsInBucket(name).size() != 0)
-      return Response.status(Response.Status.NOT_MODIFIED).entity("Cannot delete bucket " + name + " because it contains objects.").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.NOT_MODIFIED)
+          .entity("Cannot delete bucket " + name + " because it contains objects.").type(MediaType.TEXT_PLAIN).build();
 
     Bucket bucket = new Bucket(null, name);
 
     if (!objectStore.deleteBucket(bucket))
-      return Response.status(Response.Status.NOT_MODIFIED).entity("There was a problem removing the bucket").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.NOT_MODIFIED)
+          .entity("There was a problem removing the bucket").type(MediaType.TEXT_PLAIN).build();
 
     if (sqlService.deleteBucket(name) > 0)
-      return Response.status(Response.Status.OK).entity("Bucket " + name + " deleted.").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.OK)
+          .entity("Bucket " + name + " deleted.").type(MediaType.TEXT_PLAIN).build();
 
-    return Response.status(Response.Status.NOT_MODIFIED).type(MediaType.TEXT_PLAIN).entity("No buckets deleted.").build();
+    return Response.status(Response.Status.NOT_MODIFIED).type(MediaType.TEXT_PLAIN)
+        .entity("No buckets deleted.").build();
 
   }
 
