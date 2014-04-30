@@ -18,7 +18,7 @@ public abstract class RepoBaseTest extends JerseyTest {
 
   protected ObjectStore objectStore;
 
-  private static AnnotationConfigApplicationContext context;// = new AnnotationConfigApplicationContext(TestSpringConfig.class);
+  private static AnnotationConfigApplicationContext context;
 
   @Override
   protected javax.ws.rs.core.Application configure() {
@@ -34,7 +34,8 @@ public abstract class RepoBaseTest extends JerseyTest {
   }
 
   @AfterClass
-  public static void ac() throws Exception {
+  public static void afterClass() throws Exception {
+    // since we are manually creating the beans above, we need to close the context explicitly for PreDestory
     context.close();
   }
 
