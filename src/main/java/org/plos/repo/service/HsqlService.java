@@ -15,40 +15,28 @@ public class HsqlService extends SqlService {
   @PreDestroy
   public void destroy() throws Exception {
 
-    // kludge for dealing with HSQLDB pooling and unit tests
+    // kludge for dealing with HSQLDB pooling and unit tests since shutdown=true does not fire
 
-    PreparedStatement p = null;
-    Connection connection = null;
-
-    connection = dataSource.getConnection();
-    p = connection.prepareStatement("CHECKPOINT");
+    Connection connection = dataSource.getConnection();
+    PreparedStatement p = connection.prepareStatement("CHECKPOINT");
     p.execute();
 
-    if (p != null)
-      p.close();
-
-    if (connection != null)
-      connection.close();
-
+    p.close();
+    connection.close();
   }
 
   public void postDbInit() throws Exception {
 
     // kludges for dealing with HSQLDB
 
-    Connection connection = null;
-    PreparedStatement p = null;
-
-    connection = dataSource.getConnection();
-    p = connection.prepareStatement("select * from INFORMATION_SCHEMA.SYSTEM_INDEXINFO where INDEX_NAME = 'OBJKEYINDEX'");
-
+    Connection connection = dataSource.getConnection();
+    PreparedStatement p = connection.prepareStatement("select * from INFORMATION_SCHEMA.SYSTEM_INDEXINFO where INDEX_NAME = 'OBJKEYINDEX'");
     ResultSet result = p.executeQuery();
 
     PreparedStatement pc = null;
 
     if (result.next()) {
       pc = connection.prepareStatement("CREATE INDEX objKeyIndex ON objects(bucketId, objKey)");
-
     } else {
       log.info("Creating DB index");
       pc = connection.prepareStatement("CHECKPOINT DEFRAG");
@@ -56,14 +44,9 @@ public class HsqlService extends SqlService {
 
     pc.execute();
 
-    if (p != null)
-      p.close();
-
-    if (pc != null)
-      pc.close();
-
-    if (connection != null)
-      connection.close();
+    p.close();
+    pc.close();
+    connection.close();
 
   }
 

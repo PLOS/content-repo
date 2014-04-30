@@ -4,10 +4,10 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.junit.AfterClass;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.SqlService;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.util.List;
@@ -18,10 +18,12 @@ public abstract class RepoBaseTest extends JerseyTest {
 
   protected ObjectStore objectStore;
 
+  private static AnnotationConfigApplicationContext context;// = new AnnotationConfigApplicationContext(TestSpringConfig.class);
+
   @Override
   protected javax.ws.rs.core.Application configure() {
 
-    ApplicationContext context = new AnnotationConfigApplicationContext(TestSpringConfig.class);
+    context = new AnnotationConfigApplicationContext(TestSpringConfig.class);
 
     ResourceConfig config = new JerseyApplication().property("contextConfig", context);
 
@@ -29,6 +31,11 @@ public abstract class RepoBaseTest extends JerseyTest {
     objectStore = context.getBean(ObjectStore.class);
 
     return config;
+  }
+
+  @AfterClass
+  public static void ac() throws Exception {
+    context.close();
   }
 
   public void clearData() {
