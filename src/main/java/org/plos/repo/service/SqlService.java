@@ -220,7 +220,7 @@ public abstract class SqlService {
       ResultSet result = p.executeQuery();
 
       if (result.next())
-        return result.getInt("versionNumber");
+        return result.getInt("versionNumber") + 1;
       else
         return 0;
 
