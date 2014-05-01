@@ -44,12 +44,16 @@ public class RootController {
   @GET
   public String index() {
 
-    // TODO: display spirit animal
+    // TODO: display spirit animal (squirrel, foraging woodpecker ?)
 
     return "<h1>PLoS Content Repository REST API</h1><a href=docs>API doc</a>";
   }
 
-  // TODO: should we add /hasXReproxy ?
+  @GET
+  @Path("hasXReproxy")
+  public Boolean hasXReproxy() {
+    return objectStore.hasXReproxy();
+  }
 
   @GET
   @Path("info")

@@ -63,7 +63,7 @@ public class MogileStoreService extends ObjectStore {
   }
 
   public Boolean hasXReproxy() {
-    return true;  // TODO: make this configurable ?
+    return true;
   }
 
   public URL[] getRedirectURLs(Object object) throws Exception {
