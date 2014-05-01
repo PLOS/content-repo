@@ -336,7 +336,7 @@ public abstract class SqlService {
 
   }
 
-  public int insertObject(Object object) {
+  public int insertObject(Object object) throws SQLException {
 
     // TODO: return object or objectid from this function?
 
@@ -360,13 +360,8 @@ public abstract class SqlService {
       p.setInt(10, object.versionNumber);
       p.setInt(11, object.status.getValue());
 
-      int result = p.executeUpdate();
+      return p.executeUpdate();
 
-      return result;
-
-    } catch (SQLException e) {
-      log.error("sql error", e);
-      return 0;
     } finally {
 
       try {

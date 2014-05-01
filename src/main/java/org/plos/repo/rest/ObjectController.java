@@ -91,7 +91,8 @@ public class ObjectController {
         new GenericEntity<List<Object>>(sqlService.listAllObject()){}).build();
 
     if (sqlService.getBucketId(bucketName) == null)
-      return Response.status(Response.Status.NOT_FOUND).build();
+      return Response.status(Response.Status.NOT_FOUND)
+          .entity("Bucket not found").type(MediaType.TEXT_PLAIN).build();
 
     return Response.status(Response.Status.OK).entity(
         new GenericEntity<List<Object>>(sqlService.listObjectsInBucket(bucketName)) {
@@ -292,7 +293,6 @@ required = true)
 
     Integer versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, key);
 
-
     Object object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), null, null, bucketId, bucketName, versionNumber, Object.Status.USED);
 
     // determine if the object should be added to the store or not
@@ -358,7 +358,7 @@ required = true)
     // TODO: wrap this in a DB transaction since versionNumber is being updated ?
 
     object.timestamp = timestamp;
-    object.versionNumber++;
+    object.versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, object.key);
     object.id = null;  // remove this since it refers to the old object
 
     if (uploadedInputStream == null) {
