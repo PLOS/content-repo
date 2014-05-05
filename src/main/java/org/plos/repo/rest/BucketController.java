@@ -99,6 +99,8 @@ public class BucketController {
   })
   public Response delete(@PathParam("name") String name) {
 
+    // NOTE: it is hard to delete buckets since their objects never get completely removed
+
     if (sqlService.getBucketId(name) == null)
       return Response.status(Response.Status.NOT_MODIFIED)
           .entity("Cannot delete bucket. Bucket not found.").type(MediaType.TEXT_PLAIN).build();

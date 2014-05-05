@@ -9,11 +9,11 @@ bucketProduction = 'plos-testupload-production'
 
 r = requests.post(baseUrl + 'buckets/', data={'name' : bucketProduction})
 print (r.text)
-r = requests.post(baseUrl + 'buckets/', data={'name' : 'plos-testupload-staging'})
-print (r.text)
-r = requests.post(baseUrl + 'buckets/', data={'name' : 'plos-testupload-bad?name'})
-print (r.text)
-print (r.status_code)
+# r = requests.post(baseUrl + 'buckets/', data={'name' : 'plos-testupload-staging'})
+# print (r.text)
+# r = requests.post(baseUrl + 'buckets/', data={'name' : 'plos-testupload-bad?name'})
+# print (r.text)
+# print (r.status_code)
 
 
 files = {'file': open('/home/jfinger/looseFiles/DH3.8_DeveloperGuide.pdf', 'rb')}
@@ -44,6 +44,11 @@ print (r.text)
 files = {'file': open('/home/jfinger/looseFiles/DH3.8_DeveloperGuide.pdf', 'rb')}
 values = {'key': 'downloadName', 'bucketName' : bucketProduction, 'contentType' : 'application/pdf', 'downloadName' : '10.1371/journal.pone.0002020.g003.PDF', 'create':'version'}
 r = requests.post(baseUrl + 'objects/', files=files, data=values)
+print (r.text)
+
+# empty file
+values = {'key': 'emptyFile', 'bucketName' : bucketProduction, 'contentType' : 'application/pdf', 'create':'new'}
+r = requests.post(baseUrl + 'objects/', data=values)
 print (r.text)
 
 

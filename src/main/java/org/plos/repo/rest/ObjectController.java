@@ -84,7 +84,8 @@ public class ObjectController {
       @ApiParam(required = false) @QueryParam("bucketName") String bucketName) throws Exception {
 
 
-    // TODO: allow filtering on object status
+    // TODO: allow filtering on object status, or add paging?
+    //   and/or write list to a stream instead so it does take up memory
 
     if (bucketName == null)
       return Response.status(Response.Status.OK).entity(
@@ -217,7 +218,8 @@ required = true)
         @FormDataParam("create") String create,
       @ApiParam(value = "creation time", required = false)
         @FormDataParam("timestamp") String timestampString,
-      @FormDataParam("file") InputStream uploadedInputStream
+      @ApiParam(required = false)
+        @FormDataParam("file") InputStream uploadedInputStream
   ) throws Exception {
 
     Timestamp timestamp = new Timestamp(new Date().getTime());
@@ -285,6 +287,14 @@ required = true)
     ObjectStore.UploadInfo uploadInfo;
     try {
       uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
+      uploadedInputStream.close();
+
+      if (uploadInfo.getSize() == 0) {
+        objectStore.deleteTempUpload(uploadInfo);
+        return Response.status(Response.Status.PRECONDITION_FAILED)
+            .entity("Uploaded data must be non-empty").type(MediaType.TEXT_PLAIN).build();
+      }
+
     } catch (Exception e) {
       log.error("Error during upload", e);
       return Response.status(Response.Status.PRECONDITION_FAILED)
@@ -361,21 +371,23 @@ required = true)
     object.versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, object.key);
     object.id = null;  // remove this since it refers to the old object
 
-    if (uploadedInputStream == null) {
-      object.urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
-      sqlService.insertObject(object); // TODO: deal with 0 return values
-
-      return Response.status(Response.Status.OK).entity(object).build();
-    }
-
     ObjectStore.UploadInfo uploadInfo;
     try {
       uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
+      uploadedInputStream.close();
     } catch (Exception e) {
       log.error("Error during upload", e);
 
       return Response.status(Response.Status.PRECONDITION_FAILED)
           .entity("A problem occurred while uploading the file.").type(MediaType.TEXT_PLAIN).build();
+    }
+
+    if (uploadedInputStream == null || uploadInfo.getSize() == 0) {
+      objectStore.deleteTempUpload(uploadInfo);
+      object.urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
+      sqlService.insertObject(object); // TODO: deal with 0 return values
+
+      return Response.status(Response.Status.OK).entity(object).build();
     }
 
     object.urls = "";

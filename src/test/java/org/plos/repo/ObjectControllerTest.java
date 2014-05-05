@@ -96,6 +96,8 @@ public class ObjectControllerTest extends RepoBaseTest {
     );
 
 
+    // TODO: create with empty file, update with empty file
+
     // TODO: create the same object in two buckets, and make sure deleting one does not delete the other
 
 

@@ -1,8 +1,8 @@
 package org.plos.repo;
 
 import org.hsqldb.jdbc.JDBCDataSource;
-import org.plos.repo.service.FileSystemStoreService;
 import org.plos.repo.service.HsqlService;
+import org.plos.repo.service.InMemoryFileStoreService;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.ScriptRunner;
 import org.plos.repo.service.SqlService;
@@ -18,7 +18,8 @@ public class TestSpringConfig {
 
   @Bean
   public ObjectStore objectStore() throws Exception {
-    return new FileSystemStoreService("/tmp/repo_unittest");
+    return new InMemoryFileStoreService();
+//    return new FileSystemStoreService("/tmp/repo_unittest");
 //    return new MogileStoreService("toast", new String[]{"localhost:7001"}, 1, 1, 100);
   }
 
@@ -36,7 +37,8 @@ public class TestSpringConfig {
 //    Resource sqlFile = new ClassPathResource("setup.mysql");
 
     JDBCDataSource ds = new JDBCDataSource();
-    ds.setUrl("jdbc:hsqldb:file:/tmp/plosrepo-unittest-hsqldb;shutdown=true");
+//    ds.setUrl("jdbc:hsqldb:file:/tmp/plosrepo-unittest-hsqldb;shutdown=true");
+    ds.setUrl("jdbc:hsqldb:mem:plosrepo-unittest-hsqldb;shutdown=true");
     ds.setUser("");
     ds.setPassword("");
 
