@@ -89,10 +89,20 @@ public class ObjectControllerTest extends RepoBaseTest {
             .post(Entity.entity(new FormDataMultiPart()
                     .field("bucketName", bucketName).field("create", "new")
                     .field("key", "funky&?#key").field("contentType", "text/plain")
-                    .field("file", "", MediaType.TEXT_PLAIN_TYPE),
+                    .field("file", "object1", MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA
             )).getStatus(),
         Response.Status.CREATED.getStatusCode()
+    );
+
+    assertEquals(target("/objects").request()
+            .post(Entity.entity(new FormDataMultiPart()
+                    .field("bucketName", bucketName).field("create", "new")
+                    .field("key", "emptyFile").field("contentType", "text/plain")
+                    .field("file", "", MediaType.TEXT_PLAIN_TYPE),
+                MediaType.MULTIPART_FORM_DATA
+            )).getStatus(),
+        Response.Status.PRECONDITION_FAILED.getStatusCode()
     );
 
 
@@ -125,7 +135,7 @@ public class ObjectControllerTest extends RepoBaseTest {
     assertEquals(response.getHeaderString("Content-Disposition"), "inline; filename=object2.text");
 
     response = target("/objects/" + bucketName).queryParam("key", "funky&?#key").request().get();
-    assertEquals(response.readEntity(String.class), "");
+    assertEquals(response.readEntity(String.class), "object1");
     assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
     assertEquals(response.getHeaderString("Content-Type"), "text/plain");
     assertEquals(response.getHeaderString("Content-Disposition"), "inline; filename=funky%26%3F%23key");
