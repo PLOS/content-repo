@@ -107,6 +107,7 @@ public class ObjectController {
                        @ApiParam(required = true) @QueryParam("key") String key,
                        @QueryParam("version") Integer version,
                        @QueryParam("fetchMetadata") Boolean fetchMetadata,
+                       @ApiParam(value = "If set to 'reproxy-file' then it will attempt to return a header representing a redirected object URL")
                        @HeaderParam("X-Proxy-Capabilities") String requestXProxy
   ) throws Exception {
 

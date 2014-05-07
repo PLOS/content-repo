@@ -233,7 +233,7 @@
             <stringProp name="HTTPSampler.method">GET</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">false</boolProp>
             <boolProp name="HTTPSampler.auto_redirects">true</boolProp>
-            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">false</boolProp>
             <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
             <stringProp name="HTTPSampler.implementation">Java</stringProp>
             <boolProp name="HTTPSampler.image_parser">true</boolProp>
