@@ -223,19 +223,6 @@ required = true)
         @FormDataParam("file") InputStream uploadedInputStream
   ) throws Exception {
 
-    Timestamp timestamp = new Timestamp(new Date().getTime());
-
-    if (timestampString != null) {
-      try {
-        timestamp = Timestamp.valueOf(timestampString);
-      } catch (Exception e) {
-        return Response.status(Response.Status.BAD_REQUEST)
-            .entity("Could not parse timestamp").type(MediaType.TEXT_PLAIN).build();
-      }
-    }
-
-    // TODO: handle timestamps as input (for migrating from an existing repo)
-
     if (key == null)
       return Response.status(Response.Status.BAD_REQUEST)
           .entity("No key entered").type(MediaType.TEXT_PLAIN).build();
@@ -247,6 +234,17 @@ required = true)
     if (bucketName == null)
       return Response.status(Response.Status.BAD_REQUEST)
           .entity("No bucket specified").type(MediaType.TEXT_PLAIN).build();
+
+    Timestamp timestamp = new Timestamp(new Date().getTime());
+
+    if (timestampString != null) {
+      try {
+        timestamp = Timestamp.valueOf(timestampString);
+      } catch (Exception e) {
+        return Response.status(Response.Status.BAD_REQUEST)
+            .entity("Could not parse timestamp").type(MediaType.TEXT_PLAIN).build();
+      }
+    }
 
     Object existingObject = sqlService.getObject(bucketName, key);
 
@@ -390,8 +388,6 @@ required = true)
 
       return Response.status(Response.Status.OK).entity(object).build();
     }
-
-    object.urls = "";
 
     // determine if the object should be added to the store or not
     object.checksum = uploadInfo.getChecksum();
