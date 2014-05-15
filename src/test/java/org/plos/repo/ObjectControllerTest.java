@@ -275,7 +275,7 @@ public class ObjectControllerTest extends RepoBaseTest {
                     .field("downloadName", "object2.text")
                     .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA)).getStatus(),
-        Response.Status.OK.getStatusCode());
+        Response.Status.CREATED.getStatusCode());
 
     assertEquals(target("/objects").request()
             .post(Entity.entity(new FormDataMultiPart()
@@ -284,7 +284,7 @@ public class ObjectControllerTest extends RepoBaseTest {
                     .field("downloadName", "object2.text")
                     .field("file", "", MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA)).getStatus(),
-        Response.Status.OK.getStatusCode());
+        Response.Status.CREATED.getStatusCode());
 
     // AUTOCREATE
 
@@ -295,7 +295,7 @@ public class ObjectControllerTest extends RepoBaseTest {
                     .field("downloadName", "object2.text")
                     .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA)).getStatus(),
-        Response.Status.OK.getStatusCode());
+        Response.Status.CREATED.getStatusCode());
 
     assertEquals(target("/objects").request()
             .post(Entity.entity(new FormDataMultiPart()

@@ -386,7 +386,7 @@ required = true)
       object.urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
       sqlService.insertObject(object); // TODO: deal with 0 return values
 
-      return Response.status(Response.Status.OK).entity(object).build();
+      return Response.status(Response.Status.CREATED).entity(object).build();
     }
 
     // determine if the object should be added to the store or not
@@ -403,7 +403,7 @@ required = true)
     // add a record to the DB
     sqlService.insertObject(object); // TODO: deal with 0 return values
 
-    return Response.status(Response.Status.OK).entity(object).build();
+    return Response.status(Response.Status.CREATED).entity(object).build();
   }
 
 }
