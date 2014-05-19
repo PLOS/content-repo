@@ -21,6 +21,9 @@ import com.google.common.base.Joiner;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
+import org.apache.http.HttpStatus;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
@@ -177,6 +180,9 @@ public class ObjectController {
   @DELETE
   @Path("/{bucketName}")
   @ApiOperation(value = "Delete an object")
+  @ApiResponses(value = {
+      @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The object was unable to be deleted (see response text for more details)")
+  })
   public Response delete(@ApiParam(required = true) @PathParam("bucketName") String bucketName,
                          @ApiParam(required = true) @QueryParam("key") String key,
                          @ApiParam(required = true) @QueryParam("version") Integer version) throws Exception {
@@ -208,6 +214,11 @@ public class ObjectController {
   @ApiOperation(value = "Create a new object or a new version of an existing object",
       notes = "Set the create field to 'new' object if the object you are inserting is not already in the repo. If you want to create a new version of an existing object set create to 'version'. Setting create to 'auto' automagically determines if the object should be new or versioned. However 'auto' should only be used by the ambra-file-store. In addition you may optionally specify a timestamp for object creation time. This feature is for migrating from an existing content store. Note that the timestamp must conform to this format: yyyy-[m]m-[d]d hh:mm:ss[.f...]")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+  @ApiResponses(value = {
+      @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The object was unable to be created (see response text for more details)"),
+      @ApiResponse(code = HttpStatus.SC_PRECONDITION_FAILED, message = "The object was unable to be created (see response text for more details)"),
+      @ApiResponse(code = HttpStatus.SC_NOT_ACCEPTABLE, message = "The object was unable to be created (see response text for more details)")
+  })
   public Response createOrUpdate(
       @ApiParam(required = true) @FormDataParam("key") String key,
       @ApiParam(required = true) @FormDataParam("bucketName") String bucketName,
@@ -250,7 +261,7 @@ required = true)
 
     if (create.equalsIgnoreCase("new")) {
       if (existingObject != null)
-        return Response.status(Response.Status.CONFLICT)
+        return Response.status(Response.Status.NOT_ACCEPTABLE)
             .entity("Attempting to create an object with a key that already exists.").type(MediaType.TEXT_PLAIN).build();
       return create(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
     } else if (create.equalsIgnoreCase("version")) {

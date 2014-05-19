@@ -61,7 +61,7 @@ public class BucketController {
   @POST
   @ApiOperation(value = "Create a bucket")
   @ApiResponses(value = {
-    @ApiResponse(code = HttpStatus.SC_CONFLICT, message = "The bucket was unable to be created"),
+    @ApiResponse(code = HttpStatus.SC_CONFLICT, message = "The bucket was unable to be created (see response text for more details)"),
     @ApiResponse(code = HttpStatus.SC_PRECONDITION_FAILED, message = "Error in bucket name")
   })
   public Response create(@ApiParam(required = true) @FormParam("name") String name) {
@@ -95,7 +95,7 @@ public class BucketController {
   @Path("/{name}")
   @ApiOperation(value = "Delete a bucket")
   @ApiResponses(value = {
-    @ApiResponse(code = HttpStatus.SC_NOT_MODIFIED, message = "The bucket was unable to be deleted")
+    @ApiResponse(code = HttpStatus.SC_NOT_MODIFIED, message = "The bucket was unable to be deleted (see response text for more details)")
   })
   public Response delete(@PathParam("name") String name) {
 

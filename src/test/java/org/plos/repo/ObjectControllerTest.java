@@ -132,7 +132,7 @@ public class ObjectControllerTest extends RepoBaseTest {
                     .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA
             )).getStatus(),
-        Response.Status.CONFLICT.getStatusCode()
+        Response.Status.NOT_ACCEPTABLE.getStatusCode()
     );
 
     assertEquals(target("/objects").request()

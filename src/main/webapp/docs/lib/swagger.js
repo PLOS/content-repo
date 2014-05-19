@@ -1,5 +1,5 @@
 // swagger.js
-// version 2.0.29
+// version 2.0.30
 
 var __bind = function(fn, me){
   return function(){
@@ -904,6 +904,7 @@ SwaggerOperation.prototype.pathXml = function() {
 
 SwaggerOperation.prototype.encodePathParam = function(pathParam) {
   var encParts, part, parts, _i, _len;
+  pathParam = pathParam.toString();
   if (pathParam.indexOf("/") === -1) {
     return encodeURIComponent(pathParam);
   } else {
@@ -1475,6 +1476,16 @@ ApiKeyAuthorization.prototype.apply = function(obj, authorizations) {
   }
 };
 
+var CookieAuthorization = function(cookie) {
+  this.cookie = cookie;
+}
+
+CookieAuthorization.prototype.apply = function(obj, authorizations) {
+  obj.cookieJar = obj.cookieJar || CookieJar();
+  obj.cookieJar.setCookie(this.cookie);
+  return true;
+}
+
 /**
  * Password Authorization is a basic auth implementation
  */
@@ -1498,6 +1509,7 @@ PasswordAuthorization.prototype.apply = function(obj, authorizations) {
 var e = (typeof window !== 'undefined' ? window : exports);
 
 var sampleModels = {};
+var cookies = {};
 
 e.SampleModels = sampleModels;
 e.SwaggerHttp = SwaggerHttp;
@@ -1505,6 +1517,7 @@ e.SwaggerRequest = SwaggerRequest;
 e.authorizations = new SwaggerAuthorizations();
 e.ApiKeyAuthorization = ApiKeyAuthorization;
 e.PasswordAuthorization = PasswordAuthorization;
+e.CookieAuthorization = CookieAuthorization;
 e.JQueryHttpClient = JQueryHttpClient;
 e.ShredHttpClient = ShredHttpClient;
 e.SwaggerOperation = SwaggerOperation;
@@ -1512,4 +1525,3 @@ e.SwaggerModel = SwaggerModel;
 e.SwaggerModelProperty = SwaggerModelProperty;
 e.SwaggerResource = SwaggerResource;
 e.SwaggerApi = SwaggerApi;
-
