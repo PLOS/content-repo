@@ -36,6 +36,8 @@ public class S3StoreService extends ObjectStore {
 
   private static final String temp_upload_dir = "/tmp";
 
+  // NOTE: our object versions does not make use of S3's versioning system
+
   public S3StoreService(String aws_access_key, String aws_secret_key) {
     s3Client = new AmazonS3Client(new BasicAWSCredentials(aws_access_key, aws_secret_key));
   }

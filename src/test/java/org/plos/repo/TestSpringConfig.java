@@ -37,7 +37,6 @@ public class TestSpringConfig {
 //    Resource sqlFile = new ClassPathResource("setup.mysql");
 
     JDBCDataSource ds = new JDBCDataSource();
-//    ds.setUrl("jdbc:hsqldb:file:/tmp/plosrepo-unittest-hsqldb;shutdown=true");
     ds.setUrl("jdbc:hsqldb:mem:plosrepo-unittest-hsqldb;shutdown=true");
     ds.setUser("");
     ds.setPassword("");
