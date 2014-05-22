@@ -43,9 +43,21 @@
     <buildDate>${maven.build.timestamp}</buildDate>
     <java-version>1.7</java-version>
     <org.springframework-version>3.2.8.RELEASE</org.springframework-version>
-    <org.slf4j-version>1.5.10</org.slf4j-version>
+    <org.slf4j-version>1.7.7</org.slf4j-version>
     <org.glassfish.jersey-version>2.7</org.glassfish.jersey-version>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.jboss.arquillian</groupId>
+        <artifactId>arquillian-bom</artifactId>
+        <version>1.0.0.Final</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>
@@ -185,12 +197,12 @@
       <version>${org.slf4j-version}</version>
       <scope>runtime</scope>
     </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <version>${org.slf4j-version}</version>
-      <scope>runtime</scope>
-    </dependency>
+    <!--<dependency>-->
+      <!--<groupId>org.slf4j</groupId>-->
+      <!--<artifactId>slf4j-log4j12</artifactId>-->
+      <!--<version>${org.slf4j-version}</version>-->
+      <!--<scope>runtime</scope>-->
+    <!--</dependency>-->
 
     <dependency>
       <groupId>org.mockito</groupId>
@@ -222,6 +234,83 @@
         </exclusion>
       </exclusions>
       <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.8.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.arquillian.junit</groupId>
+      <artifactId>arquillian-junit-container</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec</groupId>
+      <artifactId>jboss-javaee-6.0</artifactId>
+      <version>1.0.0.Final</version>
+      <type>pom</type>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.arquillian.container</groupId>
+      <artifactId>arquillian-weld-ee-embedded-1.1</artifactId>
+      <version>1.0.0.CR3</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.weld</groupId>
+      <artifactId>weld-core</artifactId>
+      <version>1.1.5.Final</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>1.6.4</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.shrinkwrap</groupId>
+      <artifactId>shrinkwrap-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.shrinkwrap.resolver</groupId>
+      <artifactId>shrinkwrap-resolver-api</artifactId>
+      <version>2.2.0-alpha-2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.shrinkwrap.resolver</groupId>
+      <artifactId>shrinkwrap-resolver-api-maven</artifactId>
+      <version>2.2.0-alpha-2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.shrinkwrap.resolver</groupId>
+      <artifactId>shrinkwrap-resolver-impl-maven</artifactId>
+      <version>2.2.0-alpha-2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.shrinkwrap</groupId>
+      <artifactId>shrinkwrap-impl-base</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.arquillian.extension</groupId>
+      <artifactId>arquillian-rest-client-impl-3x</artifactId>
+      <version>1.0.0.Alpha2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.resteasy</groupId>
+      <artifactId>resteasy-jaxb-provider</artifactId>
+      <version>3.0.8.Final</version>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>
@@ -290,25 +379,6 @@
       </plugin>
 
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <version>2.12.4</version>
-        <configuration>
-          <includes>
-            <include>**/*IntegrationTest*</include>
-          </includes>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>integration-test</goal>
-              <goal>verify</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
         <groupId>org.apache.tomcat.maven</groupId>
         <artifactId>tomcat6-maven-plugin</artifactId>
         <version>2.2</version>
@@ -316,25 +386,6 @@
           <path>/</path>
           <contextFile>/etc/ambra/context.xml</contextFile>
         </configuration>
-        <executions>
-          <execution>
-            <id>tomcat-run</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>run-war-only</goal>
-            </goals>
-            <configuration>
-              <fork>true</fork>
-            </configuration>
-          </execution>
-          <execution>
-            <id>tomcat-shutdown</id>
-            <phase>post-integration-test</phase>
-            <goals>
-              <goal>shutdown</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
 
     </plugins>

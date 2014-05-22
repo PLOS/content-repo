@@ -34,12 +34,7 @@ public class InMemoryFileStoreService extends ObjectStore {
   }
 
   public boolean createBucket(Bucket bucket) {
-
-    // TODO: what to do if it already exists?
-
-    data.put(bucket.bucketName, new HashMap<String, byte[]>());
-
-    return true;
+    return (data.put(bucket.bucketName, new HashMap<String, byte[]>()) == null);
   }
 
   public Boolean hasXReproxy() {
