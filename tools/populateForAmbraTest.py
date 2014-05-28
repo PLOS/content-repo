@@ -28,36 +28,36 @@ dest.createBucket(bucketName)
 print ("article: " + article)
 
 try:
-	reps = source.assets(article)
+  reps = source.assets(article)
 except Exception as e:
-	eLog.write("article: " + str(e) + "\n")
-	# break
+  eLog.write("article: " + str(e) + "\n")
+  # break
 
 for (doi, representations) in reps.iteritems():
 
-	for key in representations:
+  for key in representations:
 
-		if dest.objectExists(bucketName, key, '0'):
-			print (key + "  already in repo, skipping upload")
-			continue
+    if dest.objectExists(bucketName, key, '0'):
+      print (key + "  already in repo, skipping upload")
+      continue
 
-		objectNoPrefix = source._stripPrefix(key, True)
+    objectNoPrefix = source._stripPrefix(key, True)
 
-		tempLocalFile = '/tmp/repo-pop-obj.temp'
+    tempLocalFile = '/tmp/repo-pop-obj.temp'
 
-		# TODO: add retry logic here
-		try :
+    # TODO: add retry logic here
+    try :
 
-			objectData = source.getAfid(objectNoPrefix, tempLocalFile, 'MD5')
+      objectData = source.getAfid(objectNoPrefix, tempLocalFile, 'MD5')
 
-			contentType = objectData[2]	# requires rhino.py be updated to provide this info
+      contentType = objectData[2]  # requires rhino.py be updated to provide this info
 
-			newObject = dest.newObject(bucketName, tempLocalFile, key, contentType, objectNoPrefix)
+      newObject = dest.uploadObject(bucketName, tempLocalFile, key, contentType, objectNoPrefix, 'new')
 
-			uploadStatus = (newObject.status_code == requests.codes.created)
+      uploadStatus = (newObject.status_code == requests.codes.created)
 
-			print (key + "  uploaded: " + str(uploadStatus) )
+      print (key + "  uploaded: " + str(uploadStatus) )
 
 
-		except Exception as e:
-			print (key + "  request failed. skipping: " + str(e))
+    except Exception as e:
+      print (key + "  request failed. skipping: " + str(e))

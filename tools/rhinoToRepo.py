@@ -80,7 +80,7 @@ for article in articles:
                 readTime = time.time() - begin
 
                 begin = time.time()
-                newObject = dest.newObject(bucketName, tempLocalFile, key, contentType, objectNoPrefix)
+                newObject = dest.uploadObject(bucketName, tempLocalFile, key, contentType, objectNoPrefix, 'new')
                 writeTime = time.time() - begin
 
                 objectJson = json.loads(newObject.text)
