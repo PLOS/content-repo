@@ -49,9 +49,7 @@ public class InMemoryFileStoreService extends ObjectStore {
 
     // TODO: what if it contains stuff?
 
-    data.remove(bucket.bucketName);
-
-    return true;
+    return (data.remove(bucket.bucketName) != null);
   }
 
   public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object)
@@ -59,11 +57,8 @@ public class InMemoryFileStoreService extends ObjectStore {
 
     byte[] tempContent = tempdata.get(uploadInfo.getTempLocation());
     data.get(bucket.bucketName).put(uploadInfo.getChecksum(), tempContent);
-    tempdata.remove(uploadInfo.getTempLocation());
+    return (tempdata.remove(uploadInfo.getTempLocation()) != null);
 
-    // TODO: what if the memory move fails?
-
-    return true;
   }
 
   public boolean deleteObject(Object object) {
@@ -71,11 +66,8 @@ public class InMemoryFileStoreService extends ObjectStore {
     if (!objectExists(object))
       return false;
 
-    data.get(object.bucketName).remove(object.checksum);
+    return data.get(object.bucketName).remove(object.checksum) != null;
 
-    // TODO: check if delete worked
-
-    return true;
   }
 
   public boolean deleteTempUpload(UploadInfo uploadInfo) {
