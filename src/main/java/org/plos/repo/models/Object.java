@@ -36,7 +36,6 @@ public class Object {
       });
 
   public Integer id; // assigned by the db
-  public String urls; // assigned by the backend storage (S3, Mogile, FS), space separated
   public String key; // what the user specifies
   public String checksum;  // of the file contents
 
@@ -58,7 +57,7 @@ public class Object {
     throw new UnsupportedOperationException("No-arg constructor should not be called");
   }
 
-  public Object(Integer id, String key, String checksum, Timestamp timestamp, String downloadName, String contentType, Long size, String urls, String tag, Integer bucketId, String bucketName, Integer versionNumber, Status status) {
+  public Object(Integer id, String key, String checksum, Timestamp timestamp, String downloadName, String contentType, Long size, String tag, Integer bucketId, String bucketName, Integer versionNumber, Status status) {
     this.id = id;
     this.key = key;
     this.checksum = checksum;
@@ -66,7 +65,6 @@ public class Object {
     this.downloadName = downloadName;
     this.contentType = contentType;
     this.size = size;
-    this.urls = urls;
     this.tag = tag;
     this.bucketId = bucketId;
     this.bucketName = bucketName;

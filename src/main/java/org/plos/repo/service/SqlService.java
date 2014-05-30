@@ -51,7 +51,7 @@ public abstract class SqlService {
   public abstract void postDbInit() throws Exception;
 
   private static org.plos.repo.models.Object mapObjectRow(ResultSet rs) throws SQLException {
-    return new org.plos.repo.models.Object(rs.getInt("ID"), rs.getString("OBJKEY"), rs.getString("CHECKSUM"), rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"), rs.getLong("SIZE"), rs.getString("URLS"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"), Object.STATUS_VALUES.get(rs.getInt("STATUS")));
+    return new org.plos.repo.models.Object(rs.getInt("ID"), rs.getString("OBJKEY"), rs.getString("CHECKSUM"), rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"), rs.getLong("SIZE"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"), Object.STATUS_VALUES.get(rs.getInt("STATUS")));
   }
 
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
@@ -346,19 +346,18 @@ public abstract class SqlService {
     try {
       connection = dataSource.getConnection();
 
-      p = connection.prepareStatement("INSERT INTO objects (objKey, checksum, timestamp, bucketId, contentType, urls, downloadName, size, tag, versionNumber, status) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+      p = connection.prepareStatement("INSERT INTO objects (objKey, checksum, timestamp, bucketId, contentType, downloadName, size, tag, versionNumber, status) VALUES (?,?,?,?,?,?,?,?,?,?)");
 
       p.setString(1, object.key);
       p.setString(2, object.checksum);
       p.setTimestamp(3, object.timestamp);
       p.setInt(4, object.bucketId);
       p.setString(5, object.contentType);
-      p.setString(6, object.urls);
-      p.setString(7, object.downloadName);
-      p.setLong(8, object.size);
-      p.setString(9, object.tag);
-      p.setInt(10, object.versionNumber);
-      p.setInt(11, object.status.getValue());
+      p.setString(6, object.downloadName);
+      p.setLong(7, object.size);
+      p.setString(8, object.tag);
+      p.setInt(9, object.versionNumber);
+      p.setInt(10, object.status.getValue());
 
       return p.executeUpdate();
 
@@ -412,8 +411,6 @@ public abstract class SqlService {
     }
 
   }
-
-//  public abstract boolean insertBucket(Bucket bucket);
 
   public boolean insertBucket(Bucket bucket) {
 

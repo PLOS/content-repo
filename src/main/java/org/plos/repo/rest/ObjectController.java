@@ -134,14 +134,8 @@ public class ObjectController {
 
     if ( requestXProxy != null && requestXProxy.equals(REPROXY_HEADER_FILE) && objectStore.hasXReproxy()) {
 
-      // if the urls are in the database use that first
-      String urls = object.urls;
-
-      // if not, check the filestore
-      if (object.urls == null || object.urls.isEmpty())
-        urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
-
-      return Response.status(Response.Status.OK).header(REPROXY_HEADER_URL, urls)
+      return Response.status(Response.Status.OK).header(REPROXY_HEADER_URL,
+          REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object)))
           .header(REPROXY_HEADER_CACHE_FOR, REPROXY_CACHE_FOR_HEADER).build();
 
     }
@@ -313,7 +307,7 @@ required = true)
 
     Integer versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, key);
 
-    Object object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), null, null, bucketId, bucketName, versionNumber, Object.Status.USED);
+    Object object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), null, bucketId, bucketName, versionNumber, Object.Status.USED);
 
     // determine if the object should be added to the store or not
     if (objectStore.objectExists(object)) {
@@ -329,7 +323,6 @@ required = true)
       objectStore.deleteTempUpload(uploadInfo);
     } else {
       objectStore.saveUploadedObject(new Bucket(null, bucketName), uploadInfo, object);
-      object.urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
     }
 
     // add a record to the DB
@@ -394,7 +387,6 @@ required = true)
 
     if (uploadedInputStream == null || uploadInfo.getSize() == 0) {
       objectStore.deleteTempUpload(uploadInfo);
-      object.urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
       sqlService.insertObject(object); // TODO: deal with 0 return values
 
       return Response.status(Response.Status.CREATED).entity(object).build();
@@ -408,8 +400,6 @@ required = true)
     } else {
       objectStore.saveUploadedObject(new Bucket(null, bucketName), uploadInfo, object);
     }
-
-    object.urls = REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object));
 
     // add a record to the DB
     sqlService.insertObject(object); // TODO: deal with 0 return values

@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS objects (
   objkey VARCHAR (255) NOT NULL,
   checksum VARCHAR (255) NOT NULL,
   timestamp timestamp NOT NULL,
-  urls VARCHAR (3000),
   downloadName VARCHAR (1000),
   contentType VARCHAR (200),
   size INTEGER NOT NULL,
