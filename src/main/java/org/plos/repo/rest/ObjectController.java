@@ -324,7 +324,7 @@ required = true)
     } else {
       if (!objectStore.saveUploadedObject(new Bucket(null, bucketName), uploadInfo, object)) {
         objectStore.deleteTempUpload(uploadInfo);
-        return Response.status(Response.Status.NOT_MODIFIED)
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
             .entity("Error saving content to data store").type(MediaType.TEXT_PLAIN).build();
       }
     }
@@ -333,7 +333,7 @@ required = true)
 
     if (sqlService.insertObject(object) == 0) {
       objectStore.deleteObject(object);
-      return Response.status(Response.Status.NOT_MODIFIED)
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
           .entity("Error saving content to database").type(MediaType.TEXT_PLAIN).build();
     }
 
@@ -408,7 +408,7 @@ required = true)
     } else {
       if (!objectStore.saveUploadedObject(new Bucket(null, bucketName), uploadInfo, object)) {
         objectStore.deleteTempUpload(uploadInfo);
-        return Response.status(Response.Status.NOT_MODIFIED)
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
             .entity("Error saving content to data store").type(MediaType.TEXT_PLAIN).build();
       }
     }
@@ -421,7 +421,7 @@ required = true)
           .entity("Error saving content to database").type(MediaType.TEXT_PLAIN).build();
     }
 
-    return Response.status(Response.Status.CREATED).entity(object).build();
+    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(object).build();
   }
 
 }
