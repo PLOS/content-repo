@@ -12,8 +12,10 @@
 
 from __future__ import print_function
 from __future__ import with_statement
+import argparse
 import sys
 import os
+import traceback
 from contentRepo import ContentRepo
 from plosapi import Rhino
 from plosapi.mkrepodb import decode_row
@@ -27,6 +29,11 @@ def _clean_date_str(mod_date):
   mod_date = mod_date.replace('T', ' ')
   mod_date = mod_date.replace('Z', '')
   return mod_date
+
+def _handle_exception(e):
+  print (e + ", error")
+  print (str(e), file=sys.stderr)
+  print (traceback.format_exc(), file=sys.stderr)
 
 def diff_new(infile, args):
   """
@@ -46,10 +53,15 @@ def diff_new(infile, args):
 
   old = dict()
   for row in infile:
-    (doi, ts, afid, md5, sha1, ct, sz, dname, fname) = decode_row(row)
-    old['10.1371/'+doi] = ts
+    try:
+      (doi, ts, afid, md5, sha1, ct, sz, dname, fname) = decode_row(row)
+      old['10.1371/'+doi] = ts
+    except ValueError, e:
+      _handle_exception(e)
+
   rhino = Rhino()
   current = dict()
+
   for (doi, mod_date) in rhino.articles(lastModified=True):
     current[doi] = _clean_date_str(mod_date)
 
@@ -58,8 +70,11 @@ def diff_new(infile, args):
     if not old.has_key(doi):
       print(doi.replace('10.1371/', '') + " (%" + str(100*i/len(current)) + " done)", file=sys.stderr)
 
-      if not _copy_from_rhino_to_repo(rhino, repo, repoBucket, doi, current[doi], args.testRun, 'new'):
-        return
+      try:
+        _copy_from_rhino_to_repo(rhino, repo, repoBucket, doi, current[doi], args.testRun, 'new')
+      except Exception, e:
+        _handle_exception(e)
+
     i = i + 1
 
   return
@@ -78,10 +93,15 @@ def diff_mod(infile, args):
 
   old = dict()
   for row in infile:
-    (doi, ts, afid, md5, sha1, ct, sz, dname, fname) = decode_row(row)
-    old['10.1371/'+doi] = ts
+    try:
+      (doi, ts, afid, md5, sha1, ct, sz, dname, fname) = decode_row(row)
+      old['10.1371/'+doi] = ts
+    except ValueError, e:
+      _handle_exception(e)
+
   rhino = Rhino()
   current = dict()
+
   for (doi, mod_date) in rhino.articles(lastModified=True):
     current[doi] = _clean_date_str(mod_date)
 
@@ -94,8 +114,11 @@ def diff_mod(infile, args):
       print(doi.replace('10.1371/', '') + "  rhino=" + current[doi] +
             "  repo=" + mod_date + " (%" + str(100*i/len(current)) + " done)", file=sys.stderr)
 
-      if not _copy_from_rhino_to_repo(rhino, repo, repoBucket, doi, current[doi], args.testRun, 'auto'):
-        return
+      try:
+        _copy_from_rhino_to_repo(rhino, repo, repoBucket, doi, current[doi], args.testRun, 'auto')
+      except Exception, e:
+        _handle_exception(e)
+
     i = i + 1
 
   return
@@ -110,35 +133,34 @@ def _copy_from_rhino_to_repo(rhino, repo, bucket, article, timestampStr, testRun
 
     for rhino_asset_key in representations:
 
-      tempLocalFile = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'repo-obj.temp')
+      try:
 
-      downloadAsset = rhino.getAfid(rhino_asset_key.replace('10.1371/', ''), tempLocalFile)
+        tempLocalFile = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'repo-obj.temp')
 
-      if downloadAsset[5] != 'OK':
-        print ("failed to download from Rhino " + rhino_asset_key, file=sys.stderr)
-        return False
+        downloadAsset = rhino.getAfid(rhino_asset_key.replace('10.1371/', ''), tempLocalFile)
 
-      if not testRun:
-        uploadAsset = repo.uploadObject(bucket, tempLocalFile, rhino_asset_key, downloadAsset[3], rhino_asset_key, createMode, timestampStr)
+        if downloadAsset[5] != 'OK':
+          raise Exception("failed to download from Rhino " + rhino_asset_key)
 
-        # for safety delete the downloaded local file
-        os.remove(tempLocalFile)
+        if not testRun:
+          uploadAsset = repo.uploadObject(bucket, tempLocalFile, rhino_asset_key, downloadAsset[3], rhino_asset_key, createMode, timestampStr)
 
-        if uploadAsset.status_code != 201:
-          print ("failed to upload to repo " + rhino_asset_key, file=sys.stderr)
-          print (str(uploadAsset.status_code) + ": " + uploadAsset.text, file=sys.stderr)
-          return False
+          # for safety delete the downloaded local file
+          os.remove(tempLocalFile)
 
-      print('{doi}, {lm}, {afid}, {m}, {s}, {mt}, {sz}, csv-data'.format(
-        doi=article.replace('10.1371/', ''), lm=timestampStr,
-        afid=rhino_asset_key.replace('10.1371/', ''), m=downloadAsset[1], s=downloadAsset[2],
-        mt=downloadAsset[3], sz=downloadAsset[4]))
+          if uploadAsset.status_code != 201:
+            raise Exception("failed to upload to repo " + rhino_asset_key + " , " + str(uploadAsset.status_code) + ": " + uploadAsset.text)
 
-  return True
+        print('{doi}, {lm}, {afid}, {m}, {s}, {mt}, {sz}, csv-data'.format(
+          doi=article.replace('10.1371/', ''), lm=timestampStr,
+          afid=rhino_asset_key.replace('10.1371/', ''), m=downloadAsset[1], s=downloadAsset[2],
+          mt=downloadAsset[3], sz=downloadAsset[4]))
+
+      except Exception, e:
+        _handle_exception(e)
 
 
 if __name__ == '__main__':
-  import argparse
 
   parser = argparse.ArgumentParser(description='Push new articles from Rhino to a content repo')
   parser.add_argument('--repoServer', default='http://localhost:8081', help='Content repo server')

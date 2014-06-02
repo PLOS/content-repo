@@ -88,14 +88,14 @@ public class FileSystemStoreService extends ObjectStore {
   public boolean deleteObject(Object object) {
 
     File file = new File(getObjectLocationString(object.bucketName, object.checksum));
-    File subDir = new File(file.getParent());
+    File parentDir = new File(file.getParent());
 
     boolean result = file.delete();
 
     // delete the parent subdirectory if it is empty
 
-    if (subDir.isDirectory() && subDir.list().length == 0)
-      subDir.delete();
+    if (parentDir.isDirectory() && parentDir.list().length == 0)
+      parentDir.delete();
 
     return result;
   }
@@ -112,8 +112,7 @@ public class FileSystemStoreService extends ObjectStore {
 
     ReadableByteChannel in = Channels.newChannel(uploadedInputStream);
     MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
-    WritableByteChannel out = Channels.newChannel(
-        new DigestOutputStream(fos, digest));
+    WritableByteChannel out = Channels.newChannel(new DigestOutputStream(fos, digest));
     ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
 
     long size = 0;
@@ -123,6 +122,8 @@ public class FileSystemStoreService extends ObjectStore {
       size += out.write(buffer);
       buffer.clear();
     }
+
+    fos.flush();
 
     final String checksum = checksumToString(digest.digest());
     final long finalSize = size;

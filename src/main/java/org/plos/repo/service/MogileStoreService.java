@@ -49,10 +49,8 @@ public class MogileStoreService extends ObjectStore {
     try {
       InputStream in = mfs.getFileStream(getObjectLocationString(object.bucketName, object.checksum));
 
-      if (in == null) {
-        in.close();
+      if (in == null)
         return false;
-      }
 
       in.close();
       return true;

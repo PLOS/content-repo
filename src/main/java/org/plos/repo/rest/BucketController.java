@@ -78,12 +78,12 @@ public class BucketController {
 
     if (!objectStore.createBucket(bucket))
       return Response.status(Response.Status.CONFLICT)
-          .entity("Unable to create bucket " + name).type(MediaType.TEXT_PLAIN).build();
+          .entity("Unable to create bucket " + name + " in object store").type(MediaType.TEXT_PLAIN).build();
 
     if (!sqlService.insertBucket(bucket)) {
       objectStore.deleteBucket(bucket);
       return Response.status(Response.Status.CONFLICT)
-          .entity("Unable to create bucket " + name).type(MediaType.TEXT_PLAIN).build();
+          .entity("Unable to create bucket " + name + " in database").type(MediaType.TEXT_PLAIN).build();
     }
 
     return Response.status(Response.Status.CREATED)

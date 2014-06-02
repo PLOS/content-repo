@@ -58,10 +58,35 @@ public abstract class SqlService {
     return new Bucket(rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"));
   }
 
+  private static void closeDbStuff(ResultSet result, PreparedStatement p, Connection con) {
+    if (result != null) {
+      try {
+        result.close();
+      } catch (SQLException e) {
+        log.error("error closing db resultset", e);
+      }
+    }
+    if (p != null) {
+      try {
+        p.close();
+      } catch (SQLException e) {
+        log.error("error closing db statement", e);
+      }
+    }
+    if (con != null) {
+      try {
+        con.close();
+      } catch (SQLException e) {
+        log.error("error closing db connection", e);
+      }
+    }
+  }
+
   public Integer getBucketId(String bucketName) {
 
     PreparedStatement p = null;
     Connection connection = null;
+    ResultSet result = null;
 
     try {
 
@@ -70,7 +95,7 @@ public abstract class SqlService {
 
       p.setString(1, bucketName);
 
-      ResultSet result = p.executeQuery();
+      result = p.executeQuery();
 
       if (result.next())
         return result.getInt("bucketId");
@@ -81,16 +106,7 @@ public abstract class SqlService {
       log.error("error getting bucket id", e);
       return null;
     } finally {
-
-      try {
-        if (p != null)
-          p.close();
-
-        if (connection != null)
-          connection.close();
-      } catch (SQLException e) {
-        log.error("error closing connection", e);
-      }
+      closeDbStuff(result, p, connection);
     }
   }
 
@@ -112,16 +128,7 @@ public abstract class SqlService {
       log.error("sql error", e);
       return 0;
     } finally {
-
-      try {
-        if (p != null)
-          p.close();
-
-        if (connection != null)
-          connection.close();
-      } catch (SQLException e) {
-        log.error("error closing connection", e);
-      }
+      closeDbStuff(null, p, connection);
     }
 
   }
@@ -148,16 +155,7 @@ public abstract class SqlService {
       log.error("sql error", e);
       return 0;
     } finally {
-
-      try {
-        if (p != null)
-          p.close();
-
-        if (connection != null)
-          connection.close();
-      } catch (SQLException e) {
-        log.error("error closing connection", e);
-      }
+      closeDbStuff(null, p, connection);
     }
 
   }
@@ -189,16 +187,7 @@ public abstract class SqlService {
       log.error("sql error", e);
       return 0;
     } finally {
-
-      try {
-        if (p != null)
-          p.close();
-
-        if (connection != null)
-          connection.close();
-      } catch (SQLException e) {
-        log.error("error closing connection", e);
-      }
+      closeDbStuff(null, p, connection);
     }
 
   }
@@ -207,6 +196,7 @@ public abstract class SqlService {
 
     PreparedStatement p = null;
     Connection connection = null;
+    ResultSet result = null;
 
     try {
 
@@ -217,7 +207,7 @@ public abstract class SqlService {
       p.setString(1, bucketName);
       p.setString(2, key);
 
-      ResultSet result = p.executeQuery();
+      result = p.executeQuery();
 
       if (result.next())
         return result.getInt("versionNumber") + 1;
@@ -228,16 +218,7 @@ public abstract class SqlService {
       log.error("sql error", e);
       return null;
     } finally {
-
-      try {
-        if (p != null)
-          p.close();
-
-        if (connection != null)
-          connection.close();
-      } catch (SQLException e) {
-        log.error("error closing connection", e);
-      }
+      closeDbStuff(result, p, connection);
     }
 
   }
@@ -246,6 +227,7 @@ public abstract class SqlService {
 
     PreparedStatement p = null;
     Connection connection = null;
+    ResultSet result = null;
 
     try {
       connection = dataSource.getConnection();
@@ -256,7 +238,7 @@ public abstract class SqlService {
       p.setString(2, key);
       p.setInt(3, Object.Status.USED.getValue());
 
-      ResultSet result = p.executeQuery();
+      result = p.executeQuery();
 
       if (result.next()) {
         Object object = mapObjectRow(result);
@@ -275,16 +257,7 @@ public abstract class SqlService {
       log.error("sql error", e);
       return null;
     } finally {
-
-      try {
-        if (p != null)
-          p.close();
-
-        if (connection != null)
-          connection.close();
-      } catch (SQLException e) {
-        log.error("error closing connection", e);
-      }
+      closeDbStuff(result, p, connection);
     }
 
   }
@@ -293,6 +266,7 @@ public abstract class SqlService {
 
     PreparedStatement p = null;
     Connection connection = null;
+    ResultSet result = null;
 
     try {
       connection = dataSource.getConnection();
@@ -303,7 +277,7 @@ public abstract class SqlService {
       p.setString(2, key);
       p.setInt(3, version);
 
-      ResultSet result = p.executeQuery();
+      result = p.executeQuery();
 
       if (result.next()) {
         Object object = mapObjectRow(result);
@@ -322,16 +296,7 @@ public abstract class SqlService {
       log.error("sql error", e);
       return null;
     } finally {
-
-      try {
-        if (p != null)
-          p.close();
-
-        if (connection != null)
-          connection.close();
-      } catch (SQLException e) {
-        log.error("error closing connection", e);
-      }
+      closeDbStuff(result, p, connection);
     }
 
   }
@@ -362,16 +327,7 @@ public abstract class SqlService {
       return p.executeUpdate();
 
     } finally {
-
-      try {
-        if (p != null)
-          p.close();
-
-        if (connection != null)
-          connection.close();
-      } catch (SQLException e) {
-        log.error("error closing connection", e);
-      }
+      closeDbStuff(null, p, connection);
     }
 
   }
@@ -380,6 +336,7 @@ public abstract class SqlService {
 
     PreparedStatement p = null;
     Connection connection = null;
+    ResultSet result = null;
 
     try {
       connection = dataSource.getConnection();
@@ -387,7 +344,7 @@ public abstract class SqlService {
       p = connection.prepareStatement("SELECT COUNT(*) FROM objects WHERE status=?");
 
       p.setInt(1, Object.Status.USED.getValue());
-      ResultSet result = p.executeQuery();
+      result = p.executeQuery();
 
       if (result.next())
         return result.getInt(1);
@@ -398,16 +355,7 @@ public abstract class SqlService {
       log.error("sql error", e);
       return null;
     } finally {
-
-      try {
-        if (p != null)
-          p.close();
-
-        if (connection != null)
-          connection.close();
-      } catch (SQLException e) {
-        log.error("error closing connection", e);
-      }
+      closeDbStuff(result, p, connection);
     }
 
   }
@@ -433,17 +381,7 @@ public abstract class SqlService {
       log.error("error inserting bucket", e);
       return false;
     } finally {
-
-      try {
-        if (p != null)
-          p.close();
-
-        if (connection != null)
-          connection.close();
-
-      } catch (SQLException e) {
-        log.error("error closing connection", e);
-      }
+      closeDbStuff(null, p, connection);
     }
 
     if (result == 0)
@@ -458,13 +396,14 @@ public abstract class SqlService {
 
     PreparedStatement p = null;
     Connection connection = null;
+    ResultSet result = null;
 
     try {
       connection = dataSource.getConnection();
 
       p = connection.prepareStatement("SELECT * FROM buckets");
 
-      ResultSet result = p.executeQuery();
+      result = p.executeQuery();
 
       while (result.next()) {
         Bucket bucket = mapBucketRow(result);
@@ -477,16 +416,7 @@ public abstract class SqlService {
       log.error("sql error", e);
       return null;
     } finally {
-
-      try {
-        if (p != null)
-          p.close();
-
-        if (connection != null)
-          connection.close();
-      } catch (SQLException e) {
-        log.error("error closing connection", e);
-      }
+      closeDbStuff(result, p, connection);
     }
 
   }
@@ -497,13 +427,14 @@ public abstract class SqlService {
 
     PreparedStatement p = null;
     Connection connection = null;
+    ResultSet result = null;
 
     try {
       connection = dataSource.getConnection();
 
       p = connection.prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
 
-      ResultSet result = p.executeQuery();
+      result = p.executeQuery();
 
       while (result.next()) {
         objects.add(mapObjectRow(result));
@@ -515,16 +446,7 @@ public abstract class SqlService {
       log.error("sql error", e);
       return null;
     } finally {
-
-      try {
-        if (p != null)
-          p.close();
-
-        if (connection != null)
-          connection.close();
-      } catch (SQLException e) {
-        log.error("error closing connection", e);
-      }
+      closeDbStuff(result, p, connection);
     }
 
   }
@@ -535,6 +457,7 @@ public abstract class SqlService {
 
     PreparedStatement p = null;
     Connection connection = null;
+    ResultSet result = null;
 
     try {
       connection = dataSource.getConnection();
@@ -544,7 +467,7 @@ public abstract class SqlService {
       p.setString(1, bucketName);
       p.setInt(2, Object.Status.USED.getValue());
 
-      ResultSet result = p.executeQuery();
+      result = p.executeQuery();
 
       while (result.next()) {
         objects.add(mapObjectRow(result));
@@ -556,16 +479,7 @@ public abstract class SqlService {
       log.error("sql error", e);
       return null;
     } finally {
-
-      try {
-        if (p != null)
-          p.close();
-
-        if (connection != null)
-          connection.close();
-      } catch (SQLException e) {
-        log.error("error closing connection", e);
-      }
+      closeDbStuff(result, p, connection);
     }
 
   }
@@ -576,6 +490,7 @@ public abstract class SqlService {
 
     PreparedStatement p = null;
     Connection connection = null;
+    ResultSet result = null;
 
     try {
       connection = dataSource.getConnection();
@@ -586,7 +501,7 @@ public abstract class SqlService {
       p.setString(2, object.key);
       p.setInt(3, Object.Status.USED.getValue());
 
-      ResultSet result = p.executeQuery();
+      result = p.executeQuery();
 
       while (result.next()) {
         objects.add(mapObjectRow(result));
@@ -598,18 +513,8 @@ public abstract class SqlService {
       log.error("sql error", e);
       return null;
     } finally {
-
-      try {
-        if (p != null)
-          p.close();
-
-        if (connection != null)
-          connection.close();
-      } catch (SQLException e) {
-        log.error("error closing connection", e);
-      }
+      closeDbStuff(result, p, connection);
     }
-
   }
 
 }
