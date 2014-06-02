@@ -31,7 +31,7 @@ def _clean_date_str(mod_date):
   return mod_date
 
 def _handle_exception(e):
-  print (e + ", error")
+  print (str(e) + ", error")
   print (str(e), file=sys.stderr)
   print (traceback.format_exc(), file=sys.stderr)
 
@@ -57,7 +57,7 @@ def diff_new(infile, args):
       (doi, ts, afid, md5, sha1, ct, sz, dname, fname) = decode_row(row)
       old['10.1371/'+doi] = ts
     except ValueError, e:
-      _handle_exception(e)
+      print("error parsing csv: " + str(e), file=sys.stderr)
 
   rhino = Rhino()
   current = dict()
@@ -73,7 +73,7 @@ def diff_new(infile, args):
       try:
         _copy_from_rhino_to_repo(rhino, repo, repoBucket, doi, current[doi], args.testRun, 'new')
       except Exception, e:
-        _handle_exception(e)
+        _handle_exception(doi + "," + e)
 
     i = i + 1
 
@@ -97,7 +97,7 @@ def diff_mod(infile, args):
       (doi, ts, afid, md5, sha1, ct, sz, dname, fname) = decode_row(row)
       old['10.1371/'+doi] = ts
     except ValueError, e:
-      _handle_exception(e)
+      print("error parsing csv: " + str(e), file=sys.stderr)
 
   rhino = Rhino()
   current = dict()
@@ -117,7 +117,7 @@ def diff_mod(infile, args):
       try:
         _copy_from_rhino_to_repo(rhino, repo, repoBucket, doi, current[doi], args.testRun, 'auto')
       except Exception, e:
-        _handle_exception(e)
+        _handle_exception(doi + "," + e)
 
     i = i + 1
 

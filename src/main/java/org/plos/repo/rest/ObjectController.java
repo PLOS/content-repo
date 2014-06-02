@@ -322,12 +322,20 @@ required = true)
       // dont bother storing the file since the data already exists in the system
       objectStore.deleteTempUpload(uploadInfo);
     } else {
-      objectStore.saveUploadedObject(new Bucket(null, bucketName), uploadInfo, object);
+      if (!objectStore.saveUploadedObject(new Bucket(null, bucketName), uploadInfo, object)) {
+        objectStore.deleteTempUpload(uploadInfo);
+        return Response.status(Response.Status.NOT_MODIFIED)
+            .entity("Error saving content to data store").type(MediaType.TEXT_PLAIN).build();
+      }
     }
 
     // add a record to the DB
 
-    sqlService.insertObject(object); // TODO: deal with 0 return values
+    if (sqlService.insertObject(object) == 0) {
+      objectStore.deleteObject(object);
+      return Response.status(Response.Status.NOT_MODIFIED)
+          .entity("Error saving content to database").type(MediaType.TEXT_PLAIN).build();
+    }
 
     return Response.status(Response.Status.CREATED).entity(object).build();
   }
@@ -398,11 +406,20 @@ required = true)
     if (objectStore.objectExists(object)) {
       objectStore.deleteTempUpload(uploadInfo);
     } else {
-      objectStore.saveUploadedObject(new Bucket(null, bucketName), uploadInfo, object);
+      if (!objectStore.saveUploadedObject(new Bucket(null, bucketName), uploadInfo, object)) {
+        objectStore.deleteTempUpload(uploadInfo);
+        return Response.status(Response.Status.NOT_MODIFIED)
+            .entity("Error saving content to data store").type(MediaType.TEXT_PLAIN).build();
+      }
     }
 
     // add a record to the DB
-    sqlService.insertObject(object); // TODO: deal with 0 return values
+
+    if (sqlService.insertObject(object) == 0) {
+      objectStore.deleteObject(object);
+      return Response.status(Response.Status.NOT_MODIFIED)
+          .entity("Error saving content to database").type(MediaType.TEXT_PLAIN).build();
+    }
 
     return Response.status(Response.Status.CREATED).entity(object).build();
   }
