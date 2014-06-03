@@ -17,6 +17,7 @@ import sys
 import os
 import traceback
 import hashlib
+import uuid
 from contentRepo import ContentRepo
 from plosapi import Rhino
 from plosapi.mkrepodb import decode_row
@@ -136,7 +137,7 @@ def _copy_from_rhino_to_repo(rhino, repo, bucket, article, timestampStr, testRun
 
       try:
 
-        tempLocalFile = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'repo-obj.temp')
+        tempLocalFile = os.path.join('/tmp', uuid.uuid1() + ".repoSyncObj")
 
         (dlFname, dlMd5, dlSha1, dlContentType, dlSize, dlStatus) = rhino.getAfid(rhino_asset_key.replace('10.1371/', ''), tempLocalFile)
 
