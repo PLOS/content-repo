@@ -332,7 +332,7 @@ required = true)
     // add a record to the DB
 
     if (sqlService.insertObject(object) == 0) {
-      objectStore.deleteObject(object);
+      //objectStore.deleteObject(object);
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
           .entity("Error saving content to database").type(MediaType.TEXT_PLAIN).build();
     }
@@ -416,7 +416,7 @@ required = true)
     // add a record to the DB
 
     if (sqlService.insertObject(object) == 0) {
-      objectStore.deleteObject(object);
+      //objectStore.deleteObject(object);
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
           .entity("Error saving content to database").type(MediaType.TEXT_PLAIN).build();
     }

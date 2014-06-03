@@ -66,7 +66,7 @@ def diff_new(infile, repo, args):
       print(doi.replace('10.1371/', '') + " (%" + str(100*i/len(current)) + " done)", file=sys.stderr)
 
       try:
-        _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, current[doi], args.testRun, 'new')
+        _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, current[doi], args.testRun, args.cacheDir, 'new')
       except Exception, e:
         _handle_exception(doi, e)
 
@@ -85,7 +85,7 @@ def diff_mod(infile, repo, args):
       (doi, ts, afid, md5, sha1, ct, sz, dname, fname) = decode_row(row)
       old['10.1371/'+doi] = ts
     except ValueError, e:
-      print("error parsing csv row: " + row + " - " + str(e), file=sys.stderr)
+      print("error parsing csv row (" + row.rstrip() + ") - " + str(e), file=sys.stderr)
 
   rhino = Rhino()
   current = dict()
@@ -103,7 +103,7 @@ def diff_mod(infile, repo, args):
             "  repo=" + mod_date + " (%" + str(100*i/len(current)) + " done)", file=sys.stderr)
 
       try:
-        _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, current[doi], args.testRun, 'auto')
+        _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, current[doi], args.testRun, args.cacheDir, 'auto')
       except Exception, e:
         _handle_exception(doi, e)
 
@@ -111,36 +111,28 @@ def diff_mod(infile, repo, args):
 
   return
 
-def _copy_from_rhino_to_repo(rhino, repo, bucket, article, timestampStr, testRun, createMode = 'new'):
+def _copy_from_rhino_to_repo(rhino, repo, bucket, article, timestampStr, testRun, assetCache, createMode = 'new'):
 
   # TODO: this is not technically correct because timestampStr is the article timestamp, not the asset timestamp
 
-  rhino_reps = rhino.assets(article.replace('10.1371/', ''))
+  articleFiles = rhino.articleFiles(article.replace('10.1371/', ''), assetCache)
 
-  for (rhino_asset_doi, representations) in rhino_reps.iteritems():
+  for (rhino_article_doi, assets) in articleFiles.iteritems():
 
-    for rhino_asset_key in representations:
+    for (rhino_asset_key, (dlFname, dlMd5, dlSha1, dlContentType, dlSize, dlStatus)) in assets:
 
       try:
-
-        tempLocalFile = os.path.join('/tmp', str(uuid.uuid1()) + ".repoSyncObj")
-
-        (dlFname, dlMd5, dlSha1, dlContentType, dlSize, dlStatus) = rhino.getAfid(rhino_asset_key.replace('10.1371/', ''), tempLocalFile)
 
         if dlStatus != 'OK':
           raise Exception("failed to download from Rhino " + rhino_asset_key)
 
         if not testRun:
-          uploadAsset = repo.uploadObject(bucket, tempLocalFile, rhino_asset_key, dlContentType, rhino_asset_key, createMode, timestampStr)
-
-          # for safety delete the downloaded local file
-          os.remove(tempLocalFile)
+          uploadAsset = repo.uploadObject(bucket, os.path.join(assetCache, rhino_article_doi, dlFname), rhino_asset_key, dlContentType, rhino_asset_key, createMode, timestampStr)
 
           if uploadAsset.status_code != 201:
             raise Exception("failed to upload to repo " + rhino_asset_key + " , " + str(uploadAsset.status_code) + ": " + uploadAsset.text)
 
           # extra check to make sure the file made it to the server in tact
-
           if dlSha1 != hashlib.sha1(repo.getObjectData(bucket, rhino_asset_key)).hexdigest():
             raise Exception("the file download check failed for " + rhino_asset_key)
 
@@ -158,6 +150,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Push new articles from Rhino to a content repo')
   parser.add_argument('--repoServer', default='http://localhost:8081', help='Content repo server')
   parser.add_argument('--repoBucket', help='Content repo bucket')
+  parser.add_argument('--cacheDir', default="assetCache", help='Save files locally here as well as transfer to repo'),
   parser.add_argument('--testRun', default=False, action='store_true', help='Show the listing of changes but dont make them')
   parser.add_argument('command', help='Command', choices=['diffnew', 'diffmod'])
   #parser.add_argument('params', nargs='*', help="parameter list for commands")
@@ -167,6 +160,10 @@ if __name__ == '__main__':
   infile = sys.stdin
 
   repo = ContentRepo(args.repoServer)
+
+  # make the directory absolute
+  if not os.path.isabs(args.cacheDir):
+    args.cacheDir = os.path.join(os.getcwd(), args.cacheDir)
 
   if args.testRun:
     print("TEST RUN! No data is being pushed.", file=sys.stderr)
