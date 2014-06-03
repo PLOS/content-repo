@@ -31,9 +31,9 @@ def _clean_date_str(mod_date):
   mod_date = mod_date.replace('Z', '')
   return mod_date
 
-def _handle_exception(e):
-  print (str(e) + ", error")
-  print (str(e), file=sys.stderr)
+def _handle_exception(key, e):
+  print (key + str(e) + ", error")
+  print (key + str(e), file=sys.stderr)
   print (traceback.format_exc(), file=sys.stderr)
 
 def diff_new(infile, repo, args):
@@ -74,7 +74,7 @@ def diff_new(infile, repo, args):
       try:
         _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, current[doi], args.testRun, 'new')
       except Exception, e:
-        _handle_exception(doi + "," + e)
+        _handle_exception(doi, e)
 
     i = i + 1
 
@@ -118,7 +118,7 @@ def diff_mod(infile, repo, args):
       try:
         _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, current[doi], args.testRun, 'auto')
       except Exception, e:
-        _handle_exception(doi + "," + e)
+        _handle_exception(doi, e)
 
     i = i + 1
 
@@ -163,7 +163,7 @@ def _copy_from_rhino_to_repo(rhino, repo, bucket, article, timestampStr, testRun
           afid=rhino_asset_key.replace('10.1371/', ''), m=dlMd5, s=dlSha1, mt=dlContentType, sz=dlSize))
 
       except Exception, e:
-        _handle_exception(e)
+        _handle_exception(rhino_asset_key, e)
 
 
 if __name__ == '__main__':
