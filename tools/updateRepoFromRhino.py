@@ -46,13 +46,6 @@ def diff_new(infile, repo, args):
 
   """
 
-  # repo = ContentRepo(args.repoServer)
-  # repoBucket = args.repoBucket
-  #
-  # if repoBucket == None:
-  #   print('No bucket set', file=sys.stderr)
-  #   return
-
   old = dict()
   for row in infile:
     try:
@@ -86,20 +79,13 @@ def diff_mod(infile, repo, args):
   List the articles that have been modified in Rhino using infile as the history
   """
 
-  # repo = ContentRepo(args.repoServer)
-  # repoBucket = args.repoBucket
-  #
-  # if repoBucket == None:
-  #   print('No bucket set', file=sys.stderr)
-  #   return
-
   old = dict()
   for row in infile:
     try:
       (doi, ts, afid, md5, sha1, ct, sz, dname, fname) = decode_row(row)
       old['10.1371/'+doi] = ts
     except ValueError, e:
-      print("error parsing csv: " + str(e), file=sys.stderr)
+      print("error parsing csv row: " + row + " - " + str(e), file=sys.stderr)
 
   rhino = Rhino()
   current = dict()
@@ -137,7 +123,7 @@ def _copy_from_rhino_to_repo(rhino, repo, bucket, article, timestampStr, testRun
 
       try:
 
-        tempLocalFile = os.path.join('/tmp', uuid.uuid1() + ".repoSyncObj")
+        tempLocalFile = os.path.join('/tmp', str(uuid.uuid1()) + ".repoSyncObj")
 
         (dlFname, dlMd5, dlSha1, dlContentType, dlSize, dlStatus) = rhino.getAfid(rhino_asset_key.replace('10.1371/', ''), tempLocalFile)
 
