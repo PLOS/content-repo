@@ -16,6 +16,7 @@ import argparse
 import sys
 import os
 import traceback
+import hashlib
 from contentRepo import ContentRepo
 from plosapi import Rhino
 from plosapi.mkrepodb import decode_row
@@ -35,7 +36,7 @@ def _handle_exception(e):
   print (str(e), file=sys.stderr)
   print (traceback.format_exc(), file=sys.stderr)
 
-def diff_new(infile, args):
+def diff_new(infile, repo, args):
   """
   List the articles that have been added to Rhino using infile as the history
 
@@ -44,12 +45,12 @@ def diff_new(infile, args):
 
   """
 
-  repo = ContentRepo(args.repoServer)
-  repoBucket = args.repoBucket
-
-  if repoBucket == None:
-    print('No bucket set', file=sys.stderr)
-    return
+  # repo = ContentRepo(args.repoServer)
+  # repoBucket = args.repoBucket
+  #
+  # if repoBucket == None:
+  #   print('No bucket set', file=sys.stderr)
+  #   return
 
   old = dict()
   for row in infile:
@@ -71,7 +72,7 @@ def diff_new(infile, args):
       print(doi.replace('10.1371/', '') + " (%" + str(100*i/len(current)) + " done)", file=sys.stderr)
 
       try:
-        _copy_from_rhino_to_repo(rhino, repo, repoBucket, doi, current[doi], args.testRun, 'new')
+        _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, current[doi], args.testRun, 'new')
       except Exception, e:
         _handle_exception(doi + "," + e)
 
@@ -79,17 +80,17 @@ def diff_new(infile, args):
 
   return
 
-def diff_mod(infile, args):
+def diff_mod(infile, repo, args):
   """
   List the articles that have been modified in Rhino using infile as the history
   """
 
-  repo = ContentRepo(args.repoServer)
-  repoBucket = args.repoBucket
-
-  if repoBucket == None:
-    print('No bucket set', file=sys.stderr)
-    return
+  # repo = ContentRepo(args.repoServer)
+  # repoBucket = args.repoBucket
+  #
+  # if repoBucket == None:
+  #   print('No bucket set', file=sys.stderr)
+  #   return
 
   old = dict()
   for row in infile:
@@ -115,7 +116,7 @@ def diff_mod(infile, args):
             "  repo=" + mod_date + " (%" + str(100*i/len(current)) + " done)", file=sys.stderr)
 
       try:
-        _copy_from_rhino_to_repo(rhino, repo, repoBucket, doi, current[doi], args.testRun, 'auto')
+        _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, current[doi], args.testRun, 'auto')
       except Exception, e:
         _handle_exception(doi + "," + e)
 
@@ -137,13 +138,13 @@ def _copy_from_rhino_to_repo(rhino, repo, bucket, article, timestampStr, testRun
 
         tempLocalFile = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'repo-obj.temp')
 
-        downloadAsset = rhino.getAfid(rhino_asset_key.replace('10.1371/', ''), tempLocalFile)
+        (dlFname, dlMd5, dlSha1, dlContentType, dlSize, dlStatus) = rhino.getAfid(rhino_asset_key.replace('10.1371/', ''), tempLocalFile)
 
-        if downloadAsset[5] != 'OK':
+        if dlStatus != 'OK':
           raise Exception("failed to download from Rhino " + rhino_asset_key)
 
         if not testRun:
-          uploadAsset = repo.uploadObject(bucket, tempLocalFile, rhino_asset_key, downloadAsset[3], rhino_asset_key, createMode, timestampStr)
+          uploadAsset = repo.uploadObject(bucket, tempLocalFile, rhino_asset_key, dlContentType, rhino_asset_key, createMode, timestampStr)
 
           # for safety delete the downloaded local file
           os.remove(tempLocalFile)
@@ -151,10 +152,15 @@ def _copy_from_rhino_to_repo(rhino, repo, bucket, article, timestampStr, testRun
           if uploadAsset.status_code != 201:
             raise Exception("failed to upload to repo " + rhino_asset_key + " , " + str(uploadAsset.status_code) + ": " + uploadAsset.text)
 
+          # extra check to make sure the file made it to the server in tact
+
+          if dlSha1 != hashlib.sha1(repo.getObjectData(bucket, rhino_asset_key)).hexdigest():
+            raise Exception("the file download check failed for " + rhino_asset_key)
+
+
         print('{doi}, {lm}, {afid}, {m}, {s}, {mt}, {sz}, csv-data'.format(
           doi=article.replace('10.1371/', ''), lm=timestampStr,
-          afid=rhino_asset_key.replace('10.1371/', ''), m=downloadAsset[1], s=downloadAsset[2],
-          mt=downloadAsset[3], sz=downloadAsset[4]))
+          afid=rhino_asset_key.replace('10.1371/', ''), m=dlMd5, s=dlSha1, mt=dlContentType, sz=dlSize))
 
       except Exception, e:
         _handle_exception(e)
@@ -173,16 +179,23 @@ if __name__ == '__main__':
 
   infile = sys.stdin
 
-  # if args.file:
-  #   infile = open(args.file, 'r')
+  repo = ContentRepo(args.repoServer)
 
   if args.testRun:
-    print("TEST RUN! No data is being pushed.")
+    print("TEST RUN! No data is being pushed.", file=sys.stderr)
+  else:
+    if args.repoBucket == None:
+      print('No bucket set', file=sys.stderr)
+      sys.exit(0)
+
+    if not repo.bucketExists(args.repoBucket):
+      print('Bucket not found ' + args.repoBucket, file=sys.stderr)
+      sys.exit(0)
 
   if args.command == 'diffnew':
-    diff_new(infile, args)
+    diff_new(infile, repo, args)
     sys.exit(0)
 
   if args.command == 'diffmod':
-    diff_mod(infile, args)
+    diff_mod(infile, repo, args)
     sys.exit(0)

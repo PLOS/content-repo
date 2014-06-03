@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 
 import requests
+import json
 
 __author__    = 'Jono Finger'
 __copyright__ = 'Copyright 2014, PLOS'
@@ -18,7 +19,23 @@ class ContentRepo:
   def listBuckets(self):
     url = self.repoServer + '/buckets/'
     r = requests.get(url)
-    print (r.text)
+    jsonData = json.loads(r.text)
+
+    bucketList = []
+
+    for b in jsonData:
+      bucketList.append(b['bucketName'])
+
+    return (bucketList)
+
+  def bucketExists(self, bucketName):
+    bucketList = self.listBuckets()
+
+    for b in bucketList:
+      if bucketName == b:
+        return True
+
+    return False
 
   def createBucket(self, bucketName, bucketId=None):
 
@@ -73,6 +90,24 @@ class ContentRepo:
 
     r = requests.get(url, params=values)
     return r
+
+  def getObjectData(self, bucketName, key, versionNumber=None):
+    """
+    Get the object data
+    Note: This only works with filestores, since it does not yet deal with reproxying
+    """
+
+    url = self.repoServer + '/objects/' + bucketName
+
+    values = {
+      'key': key
+    }
+
+    if not (versionNumber is None):
+      values['version'] = versionNumber
+
+    r = requests.get(url, params=values)
+    return r.content
 
   def objectExists(self, bucketName, key, versionNumber):
     return self._getObjectMetadataRequest(bucketName, key, versionNumber).status_code == requests.codes.ok
