@@ -28,6 +28,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
 import org.plos.repo.service.ObjectStore;
+import org.plos.repo.service.RepoInfoService;
 import org.plos.repo.service.SqlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +77,9 @@ public class ObjectController {
   @Inject
   private SqlService sqlService;
 
+  @Inject
+  private RepoInfoService repoInfoService;
+
 
   // TODO: check at startup that db is in sync with objectStore ? bill says write a python script instead
 
@@ -122,6 +126,8 @@ public class ObjectController {
 
     if (object == null)
       return Response.status(Response.Status.NOT_FOUND).build();
+
+    repoInfoService.incrementReadCount();
 
     // if they want the metadata
 
@@ -250,6 +256,8 @@ required = true)
             .entity("Could not parse timestamp").type(MediaType.TEXT_PLAIN).build();
       }
     }
+
+    repoInfoService.incrementWriteCount();
 
     Object existingObject = sqlService.getObject(bucketName, key);
 

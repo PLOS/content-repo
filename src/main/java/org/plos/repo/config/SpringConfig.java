@@ -3,6 +3,7 @@ package org.plos.repo.config;
 import org.plos.repo.service.HsqlService;
 import org.plos.repo.service.MysqlService;
 import org.plos.repo.service.ObjectStore;
+import org.plos.repo.service.RepoInfoService;
 import org.plos.repo.service.ScriptRunner;
 import org.plos.repo.service.SqlService;
 import org.slf4j.Logger;
@@ -23,6 +24,11 @@ import java.sql.Connection;
 public class SpringConfig {
 
   private static final Logger log = LoggerFactory.getLogger(SpringConfig.class);
+
+  @Bean
+  public RepoInfoService repoInfoService() {
+    return new RepoInfoService();
+  }
 
   @Bean
   public ObjectStore objectStore() throws Exception {

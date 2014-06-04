@@ -18,28 +18,21 @@
 package org.plos.repo.rest;
 
 import org.plos.repo.service.ObjectStore;
-import org.plos.repo.service.SqlService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.plos.repo.service.RepoInfoService;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 @Path("/")
 public class RootController {
-
-  private static final Logger log = LoggerFactory.getLogger(RootController.class);
 
   @Inject
   private ObjectStore objectStore;
 
   @Inject
-  private SqlService sqlService;
+  private RepoInfoService repoInfoService;
 
   @GET
   public String index() {
@@ -59,25 +52,9 @@ public class RootController {
   @Path("info")
   public Map info() throws Exception {
 
-    String projectVersion = "unknown";
+    // TODO: serve with content negotiation
 
-    try (InputStream is = getClass().getResourceAsStream("/version.properties")) {
-      Properties properties = new Properties();
-      properties.load(is);
-      projectVersion = properties.get("version") + " (" + properties.get("buildDate") + ")";
-    } catch (Exception e) {
-      log.error("Error fetching project version", e);
-    }
-
-    Map<String, String> infos = new HashMap<>();
-    infos.put("version", projectVersion);
-    infos.put("objects", sqlService.objectCount().toString());
-    infos.put("buckets", Integer.toString(sqlService.listBuckets().size()));
-    infos.put("objectStoreBackend", objectStore.getClass().toString());
-    infos.put("sqlServiceBackend", sqlService.getClass().toString());
-
-    return infos;
-
+    return repoInfoService.getSysInfo();
   }
 
 //  @GET
