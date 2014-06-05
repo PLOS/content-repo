@@ -17,6 +17,8 @@
 
 package org.plos.repo.rest;
 
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.RepoInfoService;
 
@@ -26,6 +28,7 @@ import javax.ws.rs.Path;
 import java.util.Map;
 
 @Path("/")
+@Api(value="info")
 public class RootController {
 
   @Inject
@@ -44,19 +47,27 @@ public class RootController {
 
   @GET
   @Path("hasXReproxy")
+  @ApiOperation("Show if the server supports reproxying")
   public Boolean hasXReproxy() {
     return objectStore.hasXReproxy();
   }
 
   @GET
-  @Path("info")
-  public Map info() throws Exception {
+  @Path("config")
+  @ApiOperation("Show some config info about the running service")
+  public Map config() {
 
     // TODO: serve with content negotiation
     //    GenericEntity<Map<String, String>> entity = new GenericEntity<Map<String, String>>(repoInfoService.getSysInfo()) {};
     //    Response response = Response.ok(entity).build();
 
-    return repoInfoService.getSysInfo();
+    return repoInfoService.getConfig();
   }
 
+  @GET
+  @Path("status")
+  @ApiOperation("Show some run time info about the service")
+  public Map status() throws Exception {
+    return repoInfoService.getStatus();
+  }
 }

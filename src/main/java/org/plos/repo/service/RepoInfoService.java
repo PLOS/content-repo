@@ -69,18 +69,36 @@ public class RepoInfoService {
     writeCount.incrementAndGet();
   }
 
-  public Map<String, String> getSysInfo() throws Exception {
-
+  public Map<String, String> getConfig() {
     Map<String, String> infos = new HashMap<>();
     infos.put("version", projectVersion);
-    infos.put("objects", sqlService.objectCount().toString());
-    infos.put("buckets", Integer.toString(sqlService.listBuckets().size()));
     infos.put("objectStoreBackend", objectStore.getClass().toString());
     infos.put("sqlServiceBackend", sqlService.getClass().toString());
+    return infos;
+  }
+
+  public Map<String, String> getStatus() throws Exception {
+    Map<String, String> infos = new HashMap<>();
+    infos.put("objects", sqlService.objectCount().toString());
+    infos.put("buckets", Integer.toString(sqlService.listBuckets().size()));
     infos.put("serviceStarted", startTime.toString());
     infos.put("readsSinceStart", readCount.toString());
     infos.put("writesSinceStart", writeCount.toString());
-
     return infos;
   }
+
+//  public Map<String, String> getSysInfo() throws Exception {
+//
+//    Map<String, String> infos = new HashMap<>();
+//    infos.put("version", projectVersion);
+//    infos.put("objects", sqlService.objectCount().toString());
+//    infos.put("buckets", Integer.toString(sqlService.listBuckets().size()));
+//    infos.put("objectStoreBackend", objectStore.getClass().toString());
+//    infos.put("sqlServiceBackend", sqlService.getClass().toString());
+//    infos.put("serviceStarted", startTime.toString());
+//    infos.put("readsSinceStart", readCount.toString());
+//    infos.put("writesSinceStart", writeCount.toString());
+//
+//    return infos;
+//  }
 }
