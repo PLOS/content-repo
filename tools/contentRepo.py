@@ -14,7 +14,7 @@ class ContentRepo:
     self.repoServer = repoServer
 
     # ping server to make sure it is up, will throw an exception if not found
-    requests.get(repoServer + "/info")
+    requests.get(repoServer + "/buckets")
 
   def listBuckets(self):
     url = self.repoServer + '/buckets/'

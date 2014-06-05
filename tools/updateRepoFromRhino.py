@@ -17,7 +17,7 @@ import sys
 import os
 import traceback
 import hashlib
-import uuid
+import datetime
 from contentRepo import ContentRepo
 from plosapi import Rhino
 from plosapi.mkrepodb import decode_row
@@ -27,17 +27,12 @@ __copyright__ = 'Copyright 2014, PLOS'
 __version__   = '0.1'
 
 
-def _clean_date_str(mod_date):
-  mod_date = mod_date.replace('T', ' ')
-  mod_date = mod_date.replace('Z', '')
-  return mod_date
-
 def _handle_exception(key, e):
   print (key + str(e) + ", error")
   print (key + str(e), file=sys.stderr)
   print (traceback.format_exc(), file=sys.stderr)
 
-def diff_new(infile, repo, args):
+def pushnew(infile, repo, skipList, args):
   """
   List the articles that have been added to Rhino using infile as the history
 
@@ -46,64 +41,32 @@ def diff_new(infile, repo, args):
 
   """
 
-  old = dict()
+  old = set()
+  current = set()
+  rhino = Rhino()
+
   for row in infile:
+
     try:
       (doi, ts, afid, md5, sha1, ct, sz, dname, fname) = decode_row(row)
-      old['10.1371/'+doi] = ts
+      old.add(doi)
     except ValueError, e:
       print("error parsing csv: " + str(e), file=sys.stderr)
 
-  rhino = Rhino()
-  current = dict()
-
-  for (doi, mod_date) in rhino.articles(lastModified=True):
-    current[doi] = _clean_date_str(mod_date)
-
-  i = 0
-  for (doi, mod_date) in current.iteritems():
-    if not old.has_key(doi):
-      print(doi.replace('10.1371/', '') + " (%" + str(100*i/len(current)) + " done)", file=sys.stderr)
-
-      try:
-        _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, current[doi], args.testRun, args.cacheDir, 'new')
-      except Exception, e:
-        _handle_exception(doi, e)
-
-    i = i + 1
-
-  return
-
-def diff_mod(infile, repo, args):
-  """
-  List the articles that have been modified in Rhino using infile as the history
-  """
-
-  old = dict()
-  for row in infile:
-    try:
-      (doi, ts, afid, md5, sha1, ct, sz, dname, fname) = decode_row(row)
-      old['10.1371/'+doi] = ts
-    except ValueError, e:
-      print("error parsing csv row (" + row.rstrip() + ") - " + str(e), file=sys.stderr)
-
-  rhino = Rhino()
-  current = dict()
-
-  for (doi, mod_date) in rhino.articles(lastModified=True):
-    current[doi] = _clean_date_str(mod_date)
-
-  i = 0
-  for (doi, mod_date) in old.iteritems():
-    if not current.has_key(doi):
-      #print(doi + ' missing')
+    if doi in skipList:
       continue
-    elif not current[doi] == mod_date:
-      print(doi.replace('10.1371/', '') + "  rhino=" + current[doi] +
-            "  repo=" + mod_date + " (%" + str(100*i/len(current)) + " done)", file=sys.stderr)
+
+
+  for (doi, mod_date) in rhino.articles(lastModified=True):
+    current.add(doi.replace('10.1371/', ''))
+
+  i = 0
+  for doi in current:
+    if not (doi in old):
+      print(doi + " (%" + str(100*i/len(current)) + " done)", file=sys.stderr)
 
       try:
-        _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, current[doi], args.testRun, args.cacheDir, 'auto')
+        _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, args.testRun, args.cacheDir, 'new')
       except Exception, e:
         _handle_exception(doi, e)
 
@@ -111,35 +74,65 @@ def diff_mod(infile, repo, args):
 
   return
 
-def _copy_from_rhino_to_repo(rhino, repo, bucket, article, timestampStr, testRun, assetCache, createMode = 'new'):
+def pushrepubs(infile, repo, args):
+  """
+  List the articles that have been modified in Rhino
+    The input should be a list of articles that have been republished
+  """
+
+  i = 0
+  rhino = Rhino()
+
+  mods = []
+  for doi in infile:
+    mods.append(doi.rstrip())
+
+  for doi in mods:
+
+    print(doi + " (%" + str(100*i/len(mods)) + " done)", file=sys.stderr)
+
+    try:
+      _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, args.testRun, args.cacheDir, 'auto')
+    except Exception, e:
+      _handle_exception(doi, e)
+
+    i = i + 1
+
+  return
+
+def _copy_from_rhino_to_repo(rhino, repo, bucket, article, testRun, assetCache, createMode = 'new'):
 
   # TODO: this is not technically correct because timestampStr is the article timestamp, not the asset timestamp
 
-  articleFiles = rhino.articleFiles(article.replace('10.1371/', ''), assetCache)
+  articleFiles = rhino.articleFiles(article, assetCache)
 
   for (rhino_article_doi, assets) in articleFiles.iteritems():
 
     for (rhino_asset_key, (dlFname, dlMd5, dlSha1, dlContentType, dlSize, dlStatus)) in assets:
 
+      rhino_asset_key_with_prefix = '10.1371/' + rhino_asset_key
+
       try:
+
+        timestampStr = datetime.datetime.now().strftime('%Y-%m-%d %X')
 
         if dlStatus != 'OK':
           raise Exception("failed to download from Rhino " + rhino_asset_key)
 
         if not testRun:
-          uploadAsset = repo.uploadObject(bucket, os.path.join(assetCache, rhino_article_doi, dlFname), rhino_asset_key, dlContentType, rhino_asset_key, createMode, timestampStr)
+          uploadAsset = repo.uploadObject(bucket, os.path.join(assetCache, rhino_article_doi, dlFname), rhino_asset_key_with_prefix, dlContentType, rhino_asset_key_with_prefix, createMode, timestampStr)
 
           if uploadAsset.status_code != 201:
             raise Exception("failed to upload to repo " + rhino_asset_key + " , " + str(uploadAsset.status_code) + ": " + uploadAsset.text)
 
           # extra check to make sure the file made it to the server in tact
-          if dlSha1 != hashlib.sha1(repo.getObjectData(bucket, rhino_asset_key)).hexdigest():
+          if dlSha1 != hashlib.sha1(repo.getObjectData(bucket, rhino_asset_key_with_prefix)).hexdigest():
             raise Exception("the file download check failed for " + rhino_asset_key)
 
 
         print('{doi}, {lm}, {afid}, {m}, {s}, {mt}, {sz}, csv-data'.format(
-          doi=article.replace('10.1371/', ''), lm=timestampStr,
-          afid=rhino_asset_key.replace('10.1371/', ''), m=dlMd5, s=dlSha1, mt=dlContentType, sz=dlSize))
+          doi=article, lm=timestampStr,
+          afid=rhino_asset_key, m=dlMd5, s=dlSha1, mt=dlContentType, sz=dlSize))
 
       except Exception, e:
         _handle_exception(rhino_asset_key, e)
@@ -152,18 +145,19 @@ if __name__ == '__main__':
   parser.add_argument('--repoBucket', help='Content repo bucket')
   parser.add_argument('--cacheDir', default="assetCache", help='Save files locally here as well as transfer to repo'),
   parser.add_argument('--testRun', default=False, action='store_true', help='Show the listing of changes but dont make them')
-  parser.add_argument('command', help='Command', choices=['diffnew', 'diffmod'])
+  parser.add_argument('command', help='Command', choices=['pushnew', 'pushrepubs'])
   #parser.add_argument('params', nargs='*', help="parameter list for commands")
   args = parser.parse_args()
-  #params = args.params
+
+
+  skipList = ["annotation/33d82b59-59a3-4412-9853-e78e49af76b9"]
 
   infile = sys.stdin
 
   repo = ContentRepo(args.repoServer)
 
   # make the directory absolute
-  if not os.path.isabs(args.cacheDir):
-    args.cacheDir = os.path.join(os.getcwd(), args.cacheDir)
+  args.cacheDir = os.path.abspath(os.path.expanduser(args.cacheDir))
 
   if args.testRun:
     print("TEST RUN! No data is being pushed.", file=sys.stderr)
@@ -176,10 +170,10 @@ if __name__ == '__main__':
       print('Bucket not found ' + args.repoBucket, file=sys.stderr)
       sys.exit(0)
 
-  if args.command == 'diffnew':
-    diff_new(infile, repo, args)
+  if args.command == 'pushnew':
+    pushnew(infile, repo, skipList, args)
     sys.exit(0)
 
-  if args.command == 'diffmod':
-    diff_mod(infile, repo, args)
+  if args.command == 'pushrepubs':
+    pushrepubs(infile, repo, args)
     sys.exit(0)
