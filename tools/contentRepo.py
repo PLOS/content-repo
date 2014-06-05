@@ -77,7 +77,6 @@ class ContentRepo:
     r = requests.post(url, files=files, data=values)
 
     return r
-    #return r.status_code == requests.codes.created
 
   def _getObjectMetadataRequest(self, bucketName, key, versionNumber):
     url = self.repoServer + '/objects/' + bucketName

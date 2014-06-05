@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class RepoInfoService {
 
@@ -42,9 +43,9 @@ public class RepoInfoService {
 
   private Date startTime;
 
-  private Long readCount = 0l;
+  private AtomicLong readCount = new AtomicLong(0);
 
-  private Long writeCount = 0l;
+  private AtomicLong writeCount = new AtomicLong(0);
 
   @PostConstruct
   public void init() {
@@ -61,11 +62,11 @@ public class RepoInfoService {
   }
 
   public void incrementReadCount() {
-    readCount++;
+    readCount.incrementAndGet();
   }
 
   public void incrementWriteCount() {
-    writeCount++;
+    writeCount.incrementAndGet();
   }
 
   public Map<String, String> getSysInfo() throws Exception {

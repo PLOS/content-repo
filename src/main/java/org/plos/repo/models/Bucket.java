@@ -9,8 +9,7 @@ public class Bucket {
   public String bucketName;
 
   // empty constructor required for JAXB mapping
-  public Bucket() {
-    throw new UnsupportedOperationException("No-arg constructor should not be called");
+  private Bucket() {
   }
 
   public Bucket(Integer bucketId, String bucketName) {

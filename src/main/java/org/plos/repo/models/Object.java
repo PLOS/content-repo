@@ -53,8 +53,7 @@ public class Object {
   public List<Object> versions;
 
   // empty constructor required for JAXB mapping
-  public Object() {
-    throw new UnsupportedOperationException("No-arg constructor should not be called");
+  private Object() {
   }
 
   public Object(Integer id, String key, String checksum, Timestamp timestamp, String downloadName, String contentType, Long size, String tag, Integer bucketId, String bucketName, Integer versionNumber, Status status) {

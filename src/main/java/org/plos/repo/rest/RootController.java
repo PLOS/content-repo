@@ -53,26 +53,10 @@ public class RootController {
   public Map info() throws Exception {
 
     // TODO: serve with content negotiation
+    //    GenericEntity<Map<String, String>> entity = new GenericEntity<Map<String, String>>(repoInfoService.getSysInfo()) {};
+    //    Response response = Response.ok(entity).build();
 
     return repoInfoService.getSysInfo();
   }
-
-//  @GET
-//  @Path("response")
-//  public Response response() throws Exception {
-//
-//    HashMap<String, String> data = new HashMap<String, String>(){{
-//      put("version", getProjectVersion());
-//      put("objects", sqlService.objectCount().toString());
-//      put("buckets", Integer.toString(sqlService.listBuckets().size()));
-//      put("objectStoreBackend", objectStore.getClass().toString());
-//      put("sqlServiceBackend", sqlService.getClass().toString());
-//    }};
-//
-//    GenericEntity<Map<String, String>> entity = new GenericEntity<Map<String, String>>(data) {};
-//    Response response = Response.ok(entity).build();
-//
-//    return response;
-//  }
 
 }

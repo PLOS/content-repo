@@ -37,12 +37,8 @@ public class MogileStoreService extends ObjectStore {
     }
   }
 
-  private String getBucketLocationString(String bucketName) {
-    return bucketName + "/";
-  }
-
   private String getObjectLocationString(String bucketName, String checksum) {
-    return getBucketLocationString(bucketName) + checksum;
+    return checksum + "-" + bucketName;
   }
 
   public boolean objectExists(Object object) {
