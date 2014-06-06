@@ -162,19 +162,12 @@ public class ObjectController {
 
     InputStream is = objectStore.getInputStream(object);
 
-    // TODO: find out if Jersey is closing the InputStream
-
     Response response = Response.ok(is, contentType)
         .header("Content-Disposition", "inline; filename=" + exportFileName).build();
 
-//      OutputStream os = response.getOutputStream();
-//      IOUtils.copy(is, os);
-//      response.flushBuffer();
-//      is.close();
-//      os.close();
+    // post: container will close this input stream.
 
     return response;
-
   }
 
   @DELETE
