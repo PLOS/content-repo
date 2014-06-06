@@ -2,6 +2,8 @@
 
 import requests
 import json
+import argparse
+import sys
 
 __author__    = 'Jono Finger'
 __copyright__ = 'Copyright 2014, PLOS'
@@ -17,6 +19,9 @@ class ContentRepo:
     requests.get(repoServer + "/buckets")
 
   def listBuckets(self):
+
+    # TODO: specify Accept: application/json
+
     url = self.repoServer + '/buckets/'
     r = requests.get(url)
     jsonData = json.loads(r.text)
@@ -110,3 +115,44 @@ class ContentRepo:
 
   def objectExists(self, bucketName, key, versionNumber):
     return self._getObjectMetadataRequest(bucketName, key, versionNumber).status_code == requests.codes.ok
+
+
+# The following section is a work in progress
+
+if __name__ == '__main__':
+
+  parser = argparse.ArgumentParser(description='Command line interface to content repo')
+  parser.add_argument('--server', default='http://localhost:8081', help='Content repo server')
+  parser.add_argument('--bucket', help='Content repo bucket')
+  parser.add_argument('--key', help='Object key')
+  parser.add_argument('--version', help='Object version')
+  parser.add_argument('command', help='Command', 
+    choices=['listBuckets', 'deleteBucket', 'objectInfo', 'getObject', 'newObject'])
+
+  #parser.add_argument('params', nargs='*', help="parameter list for commands")
+  args = parser.parse_args()
+
+  infile = sys.stdin
+
+  repo = ContentRepo(args.server)
+
+  if args.command == 'listBuckets':
+    buckets = repo.listBuckets()
+    for b in buckets:
+      print(b)
+
+  if args.command == 'deleteBucket':
+    result = repo.deleteBucket(args.bucket)
+    print (result)
+
+  if args.command == 'objectInfo':
+    response = repo._getObjectMetadataRequest(args.bucket, args.key, args.version)
+    print (response.text)
+
+  if args.command == 'getObject':
+    data = repo.getObjectData(args.bucket, args.key, args.version)
+    print (data)
+
+  # if args.command == 'newObject':
+  #   response = repo.uploadObject(args.bucket, infile, args.key, None, args.key, 'auto')
+  #   print (response.text)
