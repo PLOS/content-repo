@@ -32,7 +32,7 @@ def _handle_exception(key, e):
   print (key + str(e), file=sys.stderr)
   print (traceback.format_exc(), file=sys.stderr)
 
-def pushnew(infile, repo, skipList, args):
+def pushnew(infile, repo, skipSet, args):
   """
   List the articles that have been added to Rhino using infile as the history
 
@@ -51,13 +51,14 @@ def pushnew(infile, repo, skipList, args):
       (doi, ts, afid, md5, sha1, ct, sz, dname, fname) = decode_row(row)
       old.add(doi)
     except ValueError, e:
-      print("error parsing csv: " + str(e), file=sys.stderr)
-
-    if doi in skipList:
-      continue
-
+      pass
+      #print("error parsing csv: " + str(e), file=sys.stderr)
 
   for (doi, mod_date) in rhino.articles(lastModified=True):
+    if doi in skipSet:
+      print ("skipping " + doi, file=sys.stderr)
+      continue
+
     current.add(doi.replace('10.1371/', ''))
 
   i = 0
@@ -149,12 +150,12 @@ if __name__ == '__main__':
   #parser.add_argument('params', nargs='*', help="parameter list for commands")
   args = parser.parse_args()
 
-
-  skipList = ["annotation/33d82b59-59a3-4412-9853-e78e49af76b9"]
-
   infile = sys.stdin
 
   repo = ContentRepo(args.repoServer)
+
+  skipSet = set()
+  skipSet.add('10.1371/annotation/33d82b59-59a3-4412-9853-e78e49af76b9')
 
   # make the directory absolute
   args.cacheDir = os.path.abspath(os.path.expanduser(args.cacheDir))
@@ -171,7 +172,7 @@ if __name__ == '__main__':
       sys.exit(0)
 
   if args.command == 'pushnew':
-    pushnew(infile, repo, skipList, args)
+    pushnew(infile, repo, skipSet, args)
     sys.exit(0)
 
   if args.command == 'pushrepubs':
