@@ -61,14 +61,8 @@ public class BucketController {
   @ApiOperation(value = "List buckets", response = Bucket.class, responseContainer = "List")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response list() throws Exception {
-    //Lock readLock = this.rwLocks.get(name).readLock();
-    //readLock.lock();
-    //try {
-        return Response.status(Response.Status.OK).entity(
-            new GenericEntity<List<Bucket>>(sqlService.listBuckets()){}).build();
-    //} finally {
-      //readLock.unlock();
-    //}
+    return Response.status(Response.Status.OK).entity(
+        new GenericEntity<List<Bucket>>(sqlService.listBuckets()){}).build();
   }
 
   @POST

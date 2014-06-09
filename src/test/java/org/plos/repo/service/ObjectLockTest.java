@@ -14,10 +14,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.plos.repo.RepoBaseTest;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
@@ -30,10 +30,11 @@ public class ObjectLockTest extends RepoBaseTest {
     private static final String BASE_KEY_NAME = "key";
 
     private ObjectController objectCtl;
+    private RepoInfoService  repoInfoService;
 
     private ObjectStore      spyObjectStore;
     private SqlService       spySqlService;
-    private RepoInfoService  mockRepoInfoService;
+    private RepoInfoService  spyRepoInfoService;
 
     private CountDownLatch   startGate;
     private CountDownLatch   endGate;
@@ -49,22 +50,34 @@ public class ObjectLockTest extends RepoBaseTest {
         objectCtl      = new ObjectController();
         spyObjectStore = spy(this.objectStore);
         spySqlService  = spy(this.sqlService);
-        mockRepoInfoService = Mockito.mock(RepoInfoService.class);
+
+        repoInfoService    = new RepoInfoService();
+        spyRepoInfoService = spy(repoInfoService);
 
         // use reflection to inject object store and sql services ("spied on" versions)
-        // into bucket controller.
+        // into object controller and repro info service.
        
-        Field objStoreField = ObjectController.class.getDeclaredField("objectStore");
-        objStoreField.setAccessible(true);
-        objStoreField.set(objectCtl, spyObjectStore);
+        Field osObjStoreField = ObjectController.class.getDeclaredField("objectStore");
+        osObjStoreField.setAccessible(true);
+        osObjStoreField.set(objectCtl, spyObjectStore);
 
-        Field sqlServiceField = ObjectController.class.getDeclaredField("sqlService");
-        sqlServiceField.setAccessible(true);
-        sqlServiceField.set(objectCtl, spySqlService);
+        Field osSqlServiceField = ObjectController.class.getDeclaredField("sqlService");
+        osSqlServiceField.setAccessible(true);
+        osSqlServiceField.set(objectCtl, spySqlService);
+
+        Field rsObjStoreField = RepoInfoService.class.getDeclaredField("objectStore");
+        rsObjStoreField.setAccessible(true);
+        rsObjStoreField.set(repoInfoService, spyObjectStore);
+
+        Field rsSqlServiceField = RepoInfoService.class.getDeclaredField("sqlService");
+        rsSqlServiceField.setAccessible(true);
+        rsSqlServiceField.set(repoInfoService, spySqlService);
+
+        // inject repo info service into object controller
 
         Field repoInfoServiceField = ObjectController.class.getDeclaredField("repoInfoService");
         repoInfoServiceField.setAccessible(true);
-        repoInfoServiceField.set(objectCtl, mockRepoInfoService);
+        repoInfoServiceField.set(objectCtl, spyRepoInfoService);
     }
 
     // implement callback using interface and anonymous inner class
@@ -142,10 +155,14 @@ public class ObjectLockTest extends RepoBaseTest {
             assertTrue( this.objectStore.objectExists(obj) );
         }
 
-        // kind of weak assertion. could maybe assert more if inserted 
-        // pause before trying to delete.
+        //TODO - these assertions could be a bit stronger if imposed more
+        //       restrictions on threads such as briefly pausing before 
+        //       trying to delete or lookup an object.
 
         assertTrue( objDeleteCount > 0 );
+        assertTrue( getReadCount(this.repoInfoService) > 0 );
+
+        assertEquals(INSERT_THREADS, getWriteCount(this.repoInfoService));
 
         verify(spySqlService, times(READER_THREADS)).getObject(anyString(), anyString(), anyInt());
     }
@@ -228,6 +245,18 @@ public class ObjectLockTest extends RepoBaseTest {
 
         startGate.countDown(); /* start all client threads                    */
         endGate.await();       /* wait until all threads have finished (L=0)  */
+    }
+
+    private long getReadCount(RepoInfoService repoInfoService) throws NoSuchFieldException, IllegalAccessException {
+        Field readCountField = RepoInfoService.class.getDeclaredField("readCount");
+        readCountField.setAccessible(true);
+        return (long) ((AtomicLong)readCountField.get(repoInfoService)).longValue();
+    }
+
+    private long getWriteCount(RepoInfoService repoInfoService) throws NoSuchFieldException, IllegalAccessException {
+        Field writeCountField = RepoInfoService.class.getDeclaredField("writeCount");
+        writeCountField.setAccessible(true);
+        return (long) ((AtomicLong)writeCountField.get(repoInfoService)).longValue();
     }
 }
 
