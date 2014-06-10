@@ -42,6 +42,14 @@ public class ObjectLockTest extends RepoBaseTest {
     private CountDownLatch   startGate;
     private CountDownLatch   endGate;
 
+    /*
+     * JUnit only captures assertion errors raised in the main thread, so we'll 
+     * create an explicit error instance to record assertion failures in 
+     * in worker threads (only the first). Guard access with lock object.
+     */
+    private AssertionError assertionFailure;
+    private final java.lang.Object lock = new java.lang.Object();
+
     @Before public void setup() throws Exception {
 
         clearData();
@@ -193,11 +201,18 @@ public class ObjectLockTest extends RepoBaseTest {
                         startGate.await();  // don't start until startGate is 0
                         try {
                             Response response = objectCtl.createOrUpdate(cb.getKeyname(j), BUCKET_NAME,
-                                null, null, "auto", null, 
-                                new ByteArrayInputStream("12345".getBytes("UTF-8")));
+                                null, null, "auto", null, new ByteArrayInputStream("12345".getBytes("UTF-8")));
 
-                            System.out.println(String.format(">>> key:%s idx:%d response:%s", 
-                                cb.getKeyname(j), j, response));
+                            //TODO - replace jax response with return code from service layer
+                            if (response.getStatus() != 201) {
+                                synchronized(lock) {
+                                    if (assertionFailure == null) {
+                                        assertionFailure = new AssertionError(String.format(
+                                            "Expected:%d Actual:%d Reason:%s", 201, response.getStatus(),
+                                            response.getStatusInfo().getReasonPhrase()));
+                                    }
+                                }
+                            }
 
                         } finally {
                             endGate.countDown();
@@ -223,8 +238,17 @@ public class ObjectLockTest extends RepoBaseTest {
                         try {
                             Response response = objectCtl.delete(BUCKET_NAME, cb.getKeyname(j), cb.getVersion(j));
 
-                            System.out.println(String.format(">>> key:%s version:%d idx:%d response:%s", 
-                                cb.getKeyname(j), cb.getVersion(j), j, response));
+                            //TODO - replace jax response with return code from service layer
+                            if (response.getStatus() == 500) {
+                                synchronized(lock) {
+                                    if (assertionFailure == null) {
+                                        assertionFailure = new AssertionError(String.format(
+                                            "Status:%d - trying to delete bucket:%s, key:%s, version:%d reason:%s", 
+                                                500, BUCKET_NAME, cb.getKeyname(j), cb.getVersion(j),
+                                                response.getStatusInfo().getReasonPhrase()));
+                                    }
+                                }
+                            }
 
                         } finally {
                             endGate.countDown();
@@ -250,8 +274,17 @@ public class ObjectLockTest extends RepoBaseTest {
                         try {
                             Response response = objectCtl.read(BUCKET_NAME, cb.getKeyname(j), cb.getVersion(j), false, null);
 
-                            System.out.println(String.format(">>> key:%s version:%d idx:%d response:%s", 
-                                cb.getKeyname(j), cb.getVersion(j), j, response));
+                            //TODO - replace jax response with return code from service layer
+                            if (response.getStatus() == 500) {
+                                synchronized(lock) {
+                                    if (assertionFailure == null) {
+                                        assertionFailure = new AssertionError(String.format(
+                                            "Status:%d - trying to read (bucket:%s, key:%s, version:%d) reason:%s",
+                                                500, BUCKET_NAME, cb.getKeyname(j), cb.getVersion(j),
+                                                response.getStatusInfo().getReasonPhrase()));
+                                    }
+                                }
+                            }
 
                         } finally {
                             endGate.countDown();
@@ -266,6 +299,10 @@ public class ObjectLockTest extends RepoBaseTest {
 
         startGate.countDown(); /* start all client threads                    */
         endGate.await();       /* wait until all threads have finished (L=0)  */
+
+        if (this.assertionFailure != null) {
+            throw this.assertionFailure;
+        }
     }
 
     private long getReadCount(RepoInfoService repoInfoService) throws NoSuchFieldException, IllegalAccessException {
