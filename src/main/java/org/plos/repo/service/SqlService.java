@@ -421,9 +421,9 @@ public abstract class SqlService {
 
   }
 
-  public List<Object> listAllObject() {
+  public List<Object> listAllObject(Integer offset, Integer limit) {
 
-    List<Object> objects = new ArrayList<>();
+      List<Object> objects = new ArrayList<>();
 
     PreparedStatement p = null;
     Connection connection = null;
@@ -432,7 +432,13 @@ public abstract class SqlService {
     try {
       connection = dataSource.getConnection();
 
-      p = connection.prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
+      StringBuffer q = new StringBuffer();
+      q.append("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
+      if (offset != null)
+        q.append(" OFFSET " + offset);
+      if (limit != null)
+        q.append(" LIMIT " + limit);
+      p = connection.prepareStatement(q.toString());
 
       result = p.executeQuery();
 
@@ -451,7 +457,32 @@ public abstract class SqlService {
 
   }
 
-  public List<Object> listObjectsInBucket(String bucketName) {
+  public int countAllObject() {
+    PreparedStatement p = null;
+    Connection connection = null;
+    ResultSet result = null;
+
+    try {
+      connection = dataSource.getConnection();
+
+      p = connection.prepareStatement("SELECT COUNT(*) FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
+
+      result = p.executeQuery();
+
+      if (result.next()) {
+        return result.getInt(1);
+      }
+
+      return 0;
+    } catch (SQLException e) {
+      log.error("sql error", e);
+      return 0;
+    } finally {
+      closeDbStuff(result, p, connection);
+    }
+  }
+
+  public List<Object> listObjectsInBucket(String bucketName, Integer offset, Integer limit) {
 
     List<Object> objects = new ArrayList<>();
 
@@ -462,7 +493,13 @@ public abstract class SqlService {
     try {
       connection = dataSource.getConnection();
 
-      p = connection.prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND status=?");
+      StringBuffer q = new StringBuffer();
+      q.append("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND status=?");
+      if (offset != null)
+        q.append(" OFFSET " + offset);
+      if (limit != null)
+        q.append(" LIMIT " + limit);
+      p = connection.prepareStatement(q.toString());
 
       p.setString(1, bucketName);
       p.setInt(2, Object.Status.USED.getValue());
@@ -482,6 +519,34 @@ public abstract class SqlService {
       closeDbStuff(result, p, connection);
     }
 
+  }
+
+  public int countObjectsInBucket(String bucketName) {
+
+    PreparedStatement p = null;
+    Connection connection = null;
+    ResultSet result = null;
+
+    try {
+      connection = dataSource.getConnection();
+
+      p = connection.prepareStatement("SELECT COUNT(*) FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND status=?");
+
+      p.setString(1, bucketName);
+      p.setInt(2, Object.Status.USED.getValue());
+
+      result = p.executeQuery();
+
+      if (result.next()) {
+        return result.getInt(1);
+      }
+      return 0;
+    } catch (SQLException e) {
+      log.error("sql error", e);
+      return 0;
+    } finally {
+      closeDbStuff(result, p, connection);
+    }
   }
 
   public List<Object> listObjectVersions(Object object) {

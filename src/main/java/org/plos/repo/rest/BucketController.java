@@ -105,7 +105,7 @@ public class BucketController {
       return Response.status(Response.Status.NOT_MODIFIED)
           .entity("Cannot delete bucket. Bucket not found.").type(MediaType.TEXT_PLAIN).build();
 
-    if (sqlService.listObjectsInBucket(name).size() != 0)
+    if (sqlService.countObjectsInBucket(name) != 0)
       return Response.status(Response.Status.NOT_MODIFIED)
           .entity("Cannot delete bucket " + name + " because it contains objects.").type(MediaType.TEXT_PLAIN).build();
 

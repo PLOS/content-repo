@@ -71,6 +71,12 @@ public class ObjectController {
 
   private static final String REPROXY_HEADER_FILE = "reproxy-file";
 
+  // default page size = number of objects returned when no limit= parameter supplied.
+  private static final Integer DEFAULT_PAGE_SIZE = 1000;
+
+  // maximum allowed value of page size, i.e., limit= parameter
+  private static final Integer MAX_PAGE_SIZE = 10000;
+
   @Inject
   private ObjectStore objectStore;
 
@@ -88,23 +94,54 @@ public class ObjectController {
   @ApiOperation(value = "List objects", response = Object.class, responseContainer = "List")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response listObjects(
-      @ApiParam(required = false) @QueryParam("bucketName") String bucketName) throws Exception {
+      @ApiParam(required = false) @QueryParam("bucketName") String bucketName,
+      @ApiParam(required = false) @QueryParam("offset") Integer offset,
+      @ApiParam(required = false) @QueryParam("limit") Integer limit) throws Exception {
 
 
-    // TODO: allow filtering on object status, or add paging?
+    // TODO: allow filtering on object status?
     //   and/or write list to a stream instead so it does take up memory
+
+    if (offset == null)
+      offset = 0;
+    if (limit == null)
+      limit = DEFAULT_PAGE_SIZE;
+    if (offset.intValue() < 0 || limit.intValue() <= 0 || limit.intValue() > MAX_PAGE_SIZE)
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity("Invalid limit or offset").type(MediaType.TEXT_PLAIN).build();
 
     if (bucketName == null)
       return Response.status(Response.Status.OK).entity(
-        new GenericEntity<List<Object>>(sqlService.listAllObject()){}).build();
+        new GenericEntity<List<Object>>(sqlService.listAllObject(offset, limit)){}).build();
 
     if (sqlService.getBucketId(bucketName) == null)
       return Response.status(Response.Status.NOT_FOUND)
           .entity("Bucket not found").type(MediaType.TEXT_PLAIN).build();
 
     return Response.status(Response.Status.OK).entity(
-        new GenericEntity<List<Object>>(sqlService.listObjectsInBucket(bucketName)) {
+        new GenericEntity<List<Object>>(sqlService.listObjectsInBucket(bucketName, offset, limit)) {
         }).build();
+  }
+
+  @GET @Path("/count")
+  @ApiOperation(value = "Count objects", response = Integer.class)
+  @Produces({MediaType.TEXT_PLAIN})
+  public Response countObjects(
+      @ApiParam(required = false) @QueryParam("bucketName") String bucketName) throws Exception {
+
+    int result = 0;
+    if (bucketName == null) {
+      result = sqlService.countAllObject();
+    }
+    else {
+      if (sqlService.getBucketId(bucketName) == null)
+        return Response.status(Response.Status.NOT_FOUND)
+            .entity("Bucket not found").type(MediaType.TEXT_PLAIN).build();
+
+      result = sqlService.countObjectsInBucket(bucketName);
+    }
+
+    return Response.status(Response.Status.OK).entity(String.valueOf(result)).build();
   }
 
   @GET @Path("/{bucketName}")
