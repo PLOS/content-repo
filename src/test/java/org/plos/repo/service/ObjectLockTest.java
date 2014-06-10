@@ -24,6 +24,9 @@ import org.plos.repo.models.Object;
 import org.plos.repo.models.Object.Status;
 import org.plos.repo.rest.ObjectController;
 
+//TODO - HACK. Remove this when integrate with Service layer code
+import javax.ws.rs.core.Response;
+
 public class ObjectLockTest extends RepoBaseTest {
 
     private static final String BUCKET_NAME   = "bucket";
@@ -78,6 +81,8 @@ public class ObjectLockTest extends RepoBaseTest {
         Field repoInfoServiceField = ObjectController.class.getDeclaredField("repoInfoService");
         repoInfoServiceField.setAccessible(true);
         repoInfoServiceField.set(objectCtl, spyRepoInfoService);
+
+        this.startGate = new CountDownLatch(1);
     }
 
     // implement callback using interface and anonymous inner class
@@ -86,54 +91,59 @@ public class ObjectLockTest extends RepoBaseTest {
         Integer getVersion(int i);
     }
 
-    @Test public void testManyInsertsAndDeletesSameKey() throws Exception {
+    @Test public void testReaderAndWritersSameKey() throws Exception {
+
+        final int INSERT_THREADS = 25;
+        final int DELETE_THREADS = 20;
+        final int READER_THREADS = 125;
+
+        this.endGate = new CountDownLatch(INSERT_THREADS + DELETE_THREADS + READER_THREADS);
 
         Callback callback = new Callback() {
             public String  getKeyname(int i) { return BASE_KEY_NAME; } 
-            public Integer getVersion(int i) { return i;             }
+            public Integer getVersion(int i) { return i;             } 
         };
 
-        // Pass #1: insert same key n times ; Pass #2: delete same key n times
+        execute(INSERT_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
-        int[][] nThreads = { {10,0}, {0,10} };
-        Status[] expectedObjStatus = { Object.Status.USED, Object.Status.DELETED };
+        List<org.plos.repo.models.Object> objects =  this.sqlService.listAllObject();
+        assertEquals(INSERT_THREADS, objects.size());
 
-        for (int i = 0; i < nThreads.length; i++) {
+        Collections.sort(objects, new ObjectComparator());
 
-            int INSERT_THREADS = nThreads[i][0];
-            int DELETE_THREADS = nThreads[i][1];
+        int objDeleteCount = 0;
 
-            this.startGate = new CountDownLatch(1);
-            this.endGate   = new CountDownLatch(INSERT_THREADS + DELETE_THREADS);
+        for (int j = 0; j < INSERT_THREADS; j++) {
+            org.plos.repo.models.Object obj = objects.get(j);
+            if (obj.status == Object.Status.DELETED) { objDeleteCount++; }
 
-            execute(INSERT_THREADS, DELETE_THREADS, 0, callback);
-
-            List<org.plos.repo.models.Object> objects = this.sqlService.listAllObject();
-
-            // sort objects by bucket, key, and version
-            Collections.sort(objects, new ObjectComparator());
-
-            for (int j = 0; j < (INSERT_THREADS + DELETE_THREADS); j++) {
-                org.plos.repo.models.Object obj = objects.get(j);
-                assertEquals(BASE_KEY_NAME, obj.key);
-                assertEquals(expectedObjStatus[i], obj.status);
-                assertEquals(Integer.valueOf(j), obj.versionNumber);
-                assertTrue( this.objectStore.objectExists(obj) );
-            }
+            assertEquals(BASE_KEY_NAME, obj.key);
+            assertEquals(Integer.valueOf(j), obj.versionNumber);
+            assertTrue( this.objectStore.objectExists(obj) );
         }
+
+        //TODO - these assertions could be a bit stronger if imposed more
+        //       restrictions on threads such as briefly pausing before 
+        //       trying to delete or lookup an object.
+
+        assertTrue( objDeleteCount > 0 );
+        assertTrue( getReadCount(this.repoInfoService) > 0 );
+
+        assertEquals(INSERT_THREADS, getWriteCount(this.repoInfoService));
+
+        verify(spySqlService, times(READER_THREADS)).getObject(anyString(), anyString(), anyInt());
     }
 
-    @Test public void testReaderAndWriters() throws Exception {
+    @Test public void testReaderAndWritersDifferentKeys() throws Exception {
 
         final int INSERT_THREADS = 25;
         final int DELETE_THREADS = 20;
         final int READER_THREADS = 100;
 
-        this.startGate = new CountDownLatch(1);
-        this.endGate   = new CountDownLatch(INSERT_THREADS + DELETE_THREADS + READER_THREADS);
+        this.endGate = new CountDownLatch(INSERT_THREADS + DELETE_THREADS + READER_THREADS);
 
         Callback callback = new Callback() {
-            public String  getKeyname(int i) { return BASE_KEY_NAME + i; } 
+            public String  getKeyname(int i) { return BASE_KEY_NAME + String.format("%03d",i); } 
             public Integer getVersion(int i) { return 0;                 } 
         };
 
@@ -148,9 +158,9 @@ public class ObjectLockTest extends RepoBaseTest {
 
         for (int j = 0; j < INSERT_THREADS; j++) {
             org.plos.repo.models.Object obj = objects.get(j);
-
             if (obj.status == Object.Status.DELETED) { objDeleteCount++; }
 
+            assertEquals(BASE_KEY_NAME + String.format("%03d",j), obj.key);
             assertEquals(Integer.valueOf(0), obj.versionNumber);
             assertTrue( this.objectStore.objectExists(obj) );
         }
@@ -182,9 +192,12 @@ public class ObjectLockTest extends RepoBaseTest {
                     try {
                         startGate.await();  // don't start until startGate is 0
                         try {
-                            objectCtl.createOrUpdate(cb.getKeyname(j), BUCKET_NAME,
+                            Response response = objectCtl.createOrUpdate(cb.getKeyname(j), BUCKET_NAME,
                                 null, null, "auto", null, 
                                 new ByteArrayInputStream("12345".getBytes("UTF-8")));
+
+                            System.out.println(String.format(">>> key:%s idx:%d response:%s", 
+                                cb.getKeyname(j), j, response));
 
                         } finally {
                             endGate.countDown();
@@ -208,7 +221,11 @@ public class ObjectLockTest extends RepoBaseTest {
                     try {
                         startGate.await();  // don't start until startGate is 0 
                         try {
-                            objectCtl.delete(BUCKET_NAME, cb.getKeyname(j), cb.getVersion(j));
+                            Response response = objectCtl.delete(BUCKET_NAME, cb.getKeyname(j), cb.getVersion(j));
+
+                            System.out.println(String.format(">>> key:%s version:%d idx:%d response:%s", 
+                                cb.getKeyname(j), cb.getVersion(j), j, response));
+
                         } finally {
                             endGate.countDown();
                         }
@@ -231,7 +248,11 @@ public class ObjectLockTest extends RepoBaseTest {
                     try {
                         startGate.await();  // don't start until startGate is 0 
                         try {
-                            objectCtl.read(BUCKET_NAME, cb.getKeyname(j), cb.getVersion(j), false, null);
+                            Response response = objectCtl.read(BUCKET_NAME, cb.getKeyname(j), cb.getVersion(j), false, null);
+
+                            System.out.println(String.format(">>> key:%s version:%d idx:%d response:%s", 
+                                cb.getKeyname(j), cb.getVersion(j), j, response));
+
                         } finally {
                             endGate.countDown();
                         }
