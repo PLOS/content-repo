@@ -10,6 +10,7 @@ import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.SqlService;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import java.sql.SQLException;
 import java.util.List;
 
 public abstract class RepoBaseTest extends JerseyTest {
@@ -39,7 +40,7 @@ public abstract class RepoBaseTest extends JerseyTest {
     context.close();
   }
 
-  public void clearData() {
+  public void clearData() throws SQLException {
     List<org.plos.repo.models.Object> objectList = sqlService.listAllObject();
 
     for (org.plos.repo.models.Object object : objectList) {

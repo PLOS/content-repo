@@ -31,7 +31,7 @@ public class ObjectControllerTest extends RepoBaseTest {
   Gson gson = new Gson();
 
   @Before
-  public void setup() {
+  public void setup() throws Exception {
     clearData();
   }
 
@@ -153,7 +153,7 @@ public class ObjectControllerTest extends RepoBaseTest {
                     .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA
             )).getStatus(),
-        Response.Status.PRECONDITION_FAILED.getStatusCode()
+        Response.Status.BAD_REQUEST.getStatusCode()
     );
 
     assertEquals(target("/objects").request()
@@ -173,7 +173,7 @@ public class ObjectControllerTest extends RepoBaseTest {
                     .field("file", "", MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA
             )).getStatus(),
-        Response.Status.PRECONDITION_FAILED.getStatusCode()
+        Response.Status.BAD_REQUEST.getStatusCode()
     );
 
     assertEquals(target("/objects").request()

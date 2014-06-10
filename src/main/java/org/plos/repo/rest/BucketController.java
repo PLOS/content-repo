@@ -24,8 +24,10 @@ import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import org.apache.http.HttpStatus;
 import org.plos.repo.models.Bucket;
-import org.plos.repo.service.ObjectStore;
-import org.plos.repo.service.SqlService;
+import org.plos.repo.service.RepoException;
+import org.plos.repo.service.RepoService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -38,24 +40,37 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.sql.SQLException;
 import java.util.List;
 
 @Path("/buckets")
 @Api(value="/buckets")
 public class BucketController {
 
-  @Inject
-  private ObjectStore objectStore;
+  private static final Logger log = LoggerFactory.getLogger(BucketController.class);
 
   @Inject
-  private SqlService sqlService;
+  private RepoService repoService;
+
+  private Response handleServerError(Exception e) {
+    log.error("Server side error", e);
+    return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+        .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
+  }
 
   @GET
   @ApiOperation(value = "List buckets", response = Bucket.class, responseContainer = "List")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-  public Response list() throws Exception {
-    return Response.status(Response.Status.OK).entity(
-        new GenericEntity<List<Bucket>>(sqlService.listBuckets()){}).build();
+  public Response list() {
+
+    try {
+      return Response.status(Response.Status.OK).entity(
+          new GenericEntity<List<Bucket>>(repoService.listBuckets()) {
+          }).build();
+    } catch (SQLException e) {
+      return handleServerError(e);
+    }
+
   }
 
   @POST
@@ -66,28 +81,16 @@ public class BucketController {
   })
   public Response create(@ApiParam(required = true) @FormParam("name") String name) {
 
-    if (sqlService.getBucketId(name) != null)
-      return Response.status(Response.Status.CONFLICT)
-          .entity("Bucket already exists").type(MediaType.TEXT_PLAIN).build();
-
-    if (!ObjectStore.isValidFileName(name))
-      return Response.status(Response.Status.PRECONDITION_FAILED)
-          .entity("Unable to create bucket. Name contains illegal characters: " + name).type(MediaType.TEXT_PLAIN).build();
-
-    Bucket bucket = new Bucket(null, name);
-
-    if (!objectStore.createBucket(bucket))
-      return Response.status(Response.Status.CONFLICT)
-          .entity("Unable to create bucket " + name + " in object store").type(MediaType.TEXT_PLAIN).build();
-
-    if (!sqlService.insertBucket(bucket)) {
-      objectStore.deleteBucket(bucket);
-      return Response.status(Response.Status.CONFLICT)
-          .entity("Unable to create bucket " + name + " in database").type(MediaType.TEXT_PLAIN).build();
+    try {
+      repoService.createBucket(name);
+      return Response.status(Response.Status.CREATED)
+          .entity("Created bucket " + name).type(MediaType.TEXT_PLAIN_TYPE).build();
+    } catch (RepoException e) {
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
+    } catch (SQLException e) {
+      return handleServerError(e);
     }
-
-    return Response.status(Response.Status.CREATED)
-        .entity("Created bucket " + name).type(MediaType.TEXT_PLAIN).build();
 
   }
 
@@ -101,26 +104,19 @@ public class BucketController {
 
     // NOTE: it is hard to delete buckets since their objects never get completely removed
 
-    if (sqlService.getBucketId(name) == null)
-      return Response.status(Response.Status.NOT_MODIFIED)
-          .entity("Cannot delete bucket. Bucket not found.").type(MediaType.TEXT_PLAIN).build();
-
-    if (sqlService.listObjectsInBucket(name).size() != 0)
-      return Response.status(Response.Status.NOT_MODIFIED)
-          .entity("Cannot delete bucket " + name + " because it contains objects.").type(MediaType.TEXT_PLAIN).build();
-
-    Bucket bucket = new Bucket(null, name);
-
-    if (!objectStore.deleteBucket(bucket))
-      return Response.status(Response.Status.NOT_MODIFIED)
-          .entity("There was a problem removing the bucket").type(MediaType.TEXT_PLAIN).build();
-
-    if (sqlService.deleteBucket(name) > 0)
+    try {
+      repoService.deleteBucket(name);
       return Response.status(Response.Status.OK)
-          .entity("Bucket " + name + " deleted.").type(MediaType.TEXT_PLAIN).build();
-
-    return Response.status(Response.Status.NOT_MODIFIED).type(MediaType.TEXT_PLAIN)
-        .entity("No buckets deleted.").build();
+          .entity("Deleted bucket " + name).type(MediaType.TEXT_PLAIN_TYPE).build();
+    } catch (ClassNotFoundException e) {
+      return Response.status(Response.Status.NOT_FOUND)
+          .entity("Bucket not found: " + name).type(MediaType.TEXT_PLAIN_TYPE).build();
+    } catch (RepoException e) {
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
+    } catch (SQLException e) {
+      return handleServerError(e);
+    }
 
   }
 

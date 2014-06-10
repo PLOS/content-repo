@@ -38,17 +38,12 @@ public abstract class SqlService {
   protected DataSource dataSource;
 
   @Required
-  public void setDataSource(DataSource dataSource) {
-    try {
-      this.dataSource = dataSource;
-      postDbInit();
-    } catch (Exception e) {
-      log.error("Error setting up jdbc", e);
-    }
-
+  public void setDataSource(DataSource dataSource) throws SQLException {
+    this.dataSource = dataSource;
+    postDbInit();
   }
 
-  public abstract void postDbInit() throws Exception;
+  public abstract void postDbInit() throws SQLException;
 
   private static org.plos.repo.models.Object mapObjectRow(ResultSet rs) throws SQLException {
     return new org.plos.repo.models.Object(rs.getInt("ID"), rs.getString("OBJKEY"), rs.getString("CHECKSUM"), rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"), rs.getLong("SIZE"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"), Object.STATUS_VALUES.get(rs.getInt("STATUS")));
@@ -58,31 +53,18 @@ public abstract class SqlService {
     return new Bucket(rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"));
   }
 
-  private static void closeDbStuff(ResultSet result, PreparedStatement p, Connection con) {
-    if (result != null) {
-      try {
-        result.close();
-      } catch (SQLException e) {
-        log.error("error closing db resultset", e);
-      }
-    }
-    if (p != null) {
-      try {
-        p.close();
-      } catch (SQLException e) {
-        log.error("error closing db statement", e);
-      }
-    }
-    if (con != null) {
-      try {
-        con.close();
-      } catch (SQLException e) {
-        log.error("error closing db connection", e);
-      }
-    }
+  private static void closeDbStuff(ResultSet result, PreparedStatement p, Connection con) throws SQLException {
+    if (result != null)
+      result.close();
+
+    if (p != null)
+      p.close();
+
+    if (con != null)
+      con.close();
   }
 
-  public Integer getBucketId(String bucketName) {
+  public Integer getBucketId(String bucketName) throws SQLException {
 
     PreparedStatement p = null;
     Connection connection = null;
@@ -102,15 +84,12 @@ public abstract class SqlService {
       else
         return null;
 
-    } catch (SQLException e) {
-      log.error("error getting bucket id", e);
-      return null;
     } finally {
       closeDbStuff(result, p, connection);
     }
   }
 
-  public int deleteBucket(String bucketName) {
+  public int deleteBucket(String bucketName) throws SQLException {
 
     PreparedStatement p = null;
     Connection connection = null;
@@ -124,9 +103,6 @@ public abstract class SqlService {
 
       return p.executeUpdate();
 
-    } catch (SQLException e) {
-      log.error("sql error", e);
-      return 0;
     } finally {
       closeDbStuff(null, p, connection);
     }
@@ -134,7 +110,7 @@ public abstract class SqlService {
   }
 
   // FOR TESTING ONLY
-  public int deleteObject(Object object) {
+  public int deleteObject(Object object) throws SQLException {
 
     PreparedStatement p = null;
     Connection connection = null;
@@ -151,16 +127,13 @@ public abstract class SqlService {
 
       return p.executeUpdate();
 
-    } catch (SQLException e) {
-      log.error("sql error", e);
-      return 0;
     } finally {
       closeDbStuff(null, p, connection);
     }
 
   }
 
-  public int markObjectDeleted(String key, String bucketName, int versionNumber) {
+  public int markObjectDeleted(String key, String bucketName, int versionNumber) throws SQLException {
 
     PreparedStatement p = null;
     Connection connection = null;
@@ -183,16 +156,13 @@ public abstract class SqlService {
 
       return p.executeUpdate();
 
-    } catch (SQLException e) {
-      log.error("sql error", e);
-      return 0;
     } finally {
       closeDbStuff(null, p, connection);
     }
 
   }
 
-  public Integer getNextAvailableVersionNumber(String bucketName, String key) {
+  public Integer getNextAvailableVersionNumber(String bucketName, String key) throws SQLException {
 
     PreparedStatement p = null;
     Connection connection = null;
@@ -214,16 +184,13 @@ public abstract class SqlService {
       else
         return 0;
 
-    } catch (SQLException e) {
-      log.error("sql error", e);
-      return null;
     } finally {
       closeDbStuff(result, p, connection);
     }
 
   }
 
-  public Object getObject(String bucketName, String key) {
+  public Object getObject(String bucketName, String key) throws SQLException {
 
     PreparedStatement p = null;
     Connection connection = null;
@@ -253,16 +220,13 @@ public abstract class SqlService {
       else
         return null;
 
-    } catch (SQLException e) {
-      log.error("sql error", e);
-      return null;
     } finally {
       closeDbStuff(result, p, connection);
     }
 
   }
 
-  public Object getObject(String bucketName, String key, Integer version) {
+  public Object getObject(String bucketName, String key, Integer version) throws SQLException {
 
     PreparedStatement p = null;
     Connection connection = null;
@@ -292,9 +256,6 @@ public abstract class SqlService {
       else
         return null;
 
-    } catch (SQLException e) {
-      log.error("sql error", e);
-      return null;
     } finally {
       closeDbStuff(result, p, connection);
     }
@@ -351,16 +312,13 @@ public abstract class SqlService {
       else
         return null;
 
-    } catch (SQLException e) {
-      log.error("sql error", e);
-      return null;
     } finally {
       closeDbStuff(result, p, connection);
     }
 
   }
 
-  public boolean insertBucket(Bucket bucket) {
+  public boolean insertBucket(Bucket bucket) throws SQLException {
 
     int result;
 
@@ -377,20 +335,14 @@ public abstract class SqlService {
 
       result = p.executeUpdate();
 
-    } catch (SQLException e) {
-      log.error("error inserting bucket", e);
-      return false;
     } finally {
       closeDbStuff(null, p, connection);
     }
 
-    if (result == 0)
-      log.error("Error while creating bucket: database update failed");
-
     return (result > 0);
   }
 
-  public List<Bucket> listBuckets() {
+  public List<Bucket> listBuckets() throws SQLException {
 
     List<Bucket> buckets = new ArrayList<>();
 
@@ -412,16 +364,13 @@ public abstract class SqlService {
 
       return buckets;
 
-    } catch (SQLException e) {
-      log.error("sql error", e);
-      return null;
     } finally {
       closeDbStuff(result, p, connection);
     }
 
   }
 
-  public List<Object> listAllObject() {
+  public List<Object> listAllObject() throws SQLException {
 
     List<Object> objects = new ArrayList<>();
 
@@ -442,16 +391,13 @@ public abstract class SqlService {
 
       return objects;
 
-    } catch (SQLException e) {
-      log.error("sql error", e);
-      return null;
     } finally {
       closeDbStuff(result, p, connection);
     }
 
   }
 
-  public List<Object> listObjectsInBucket(String bucketName) {
+  public List<Object> listObjectsInBucket(String bucketName) throws SQLException {
 
     List<Object> objects = new ArrayList<>();
 
@@ -475,16 +421,13 @@ public abstract class SqlService {
 
       return objects;
 
-    } catch (SQLException e) {
-      log.error("sql error", e);
-      return null;
     } finally {
       closeDbStuff(result, p, connection);
     }
 
   }
 
-  public List<Object> listObjectVersions(Object object) {
+  public List<Object> listObjectVersions(Object object) throws SQLException {
 
     List<Object> objects = new ArrayList<>();
 
@@ -509,9 +452,6 @@ public abstract class SqlService {
 
       return objects;
 
-    } catch (SQLException e) {
-      log.error("sql error", e);
-      return null;
     } finally {
       closeDbStuff(result, p, connection);
     }

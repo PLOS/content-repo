@@ -16,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 public class BucketControllerTest extends RepoBaseTest {
 
   @Test
-  public void testControllerCrud() {
+  public void testControllerCrud() throws Exception {
 
     clearData();
 
@@ -30,13 +30,13 @@ public class BucketControllerTest extends RepoBaseTest {
     assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
 
     response = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", "plos-bucketunittest-bucket1")));
-    assertEquals(response.getStatus(), Response.Status.CONFLICT.getStatusCode());
+    assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
 
     response = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", "plos-bucketunittest-bucket2")));
     assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
 
     response = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", "plos-bucketunittest-bad?&name")));
-    assertEquals(response.getStatus(), Response.Status.PRECONDITION_FAILED.getStatusCode());
+    assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
 
 
     // LIST
@@ -58,10 +58,10 @@ public class BucketControllerTest extends RepoBaseTest {
     assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
 
     response = target("/buckets/plos-bucketunittest-bucket2").request().delete();
-    assertEquals(response.getStatus(), Response.Status.NOT_MODIFIED.getStatusCode());
+    assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
 
     response = target("/buckets/plos-bucketunittest-bucket3").request().delete();
-    assertEquals(response.getStatus(), Response.Status.NOT_MODIFIED.getStatusCode());
+    assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
 
 
 //    clearData(sqlService, objectStore);
