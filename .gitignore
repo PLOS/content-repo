@@ -29,4 +29,5 @@ target/
 # Conent Rep
 cp.*.txt
 debug.sh
+run.sh
 mdb.ini
