@@ -40,7 +40,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.sql.SQLException;
 import java.util.List;
 
 @Path("/buckets")
@@ -52,12 +51,6 @@ public class BucketController {
   @Inject
   private RepoService repoService;
 
-  private Response handleServerError(Exception e) {
-    log.error("Server side error", e);
-    return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-        .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
-  }
-
   @GET
   @ApiOperation(value = "List buckets", response = Bucket.class, responseContainer = "List")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -67,8 +60,8 @@ public class BucketController {
       return Response.status(Response.Status.OK).entity(
           new GenericEntity<List<Bucket>>(repoService.listBuckets()) {
           }).build();
-    } catch (SQLException e) {
-      return handleServerError(e);
+    } catch (RepoException e) {
+      return ObjectController.handleError(e);
     }
 
   }
@@ -86,10 +79,7 @@ public class BucketController {
       return Response.status(Response.Status.CREATED)
           .entity("Created bucket " + name).type(MediaType.TEXT_PLAIN_TYPE).build();
     } catch (RepoException e) {
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
-    } catch (SQLException e) {
-      return handleServerError(e);
+      return ObjectController.handleError(e);
     }
 
   }
@@ -108,14 +98,8 @@ public class BucketController {
       repoService.deleteBucket(name);
       return Response.status(Response.Status.OK)
           .entity("Deleted bucket " + name).type(MediaType.TEXT_PLAIN_TYPE).build();
-    } catch (ClassNotFoundException e) {
-      return Response.status(Response.Status.NOT_FOUND)
-          .entity("Bucket not found: " + name).type(MediaType.TEXT_PLAIN_TYPE).build();
     } catch (RepoException e) {
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
-    } catch (SQLException e) {
-      return handleServerError(e);
+      return ObjectController.handleError(e);
     }
 
   }

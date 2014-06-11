@@ -19,7 +19,7 @@ public abstract class RepoBaseTest extends JerseyTest {
 
   protected ObjectStore objectStore;
 
-  private static AnnotationConfigApplicationContext context;
+  protected static AnnotationConfigApplicationContext context;
 
   @Override
   protected javax.ws.rs.core.Application configure() {

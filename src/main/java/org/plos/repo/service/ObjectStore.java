@@ -38,7 +38,7 @@ public abstract class ObjectStore {
 
   abstract public Boolean hasXReproxy();
 
-  abstract public URL[] getRedirectURLs(org.plos.repo.models.Object object) throws Exception;
+  abstract public URL[] getRedirectURLs(org.plos.repo.models.Object object) throws RepoException;
 
   abstract public boolean objectExists(Object object);
 
@@ -46,14 +46,14 @@ public abstract class ObjectStore {
 
   abstract public boolean deleteBucket(Bucket bucket);
 
-  abstract public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws Exception;
+  abstract public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException;
 
-  abstract public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) throws Exception;
+  abstract public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object);
 
   abstract public boolean deleteObject(Object object);
 
   abstract public boolean deleteTempUpload(UploadInfo uploadInfo);
 
-  abstract public InputStream getInputStream(Object object) throws Exception;
+  abstract public InputStream getInputStream(Object object) throws RepoException;
 
 }

@@ -29,7 +29,7 @@ public class InMemoryFileStoreService extends ObjectStore {
     return (data.get(object.bucketName) != null && data.get(object.bucketName).get(object.checksum) != null);
   }
 
-  public InputStream getInputStream(Object object) throws Exception {
+  public InputStream getInputStream(Object object) {
     return new ByteArrayInputStream(data.get(object.bucketName).get(object.checksum));
   }
 
@@ -52,8 +52,7 @@ public class InMemoryFileStoreService extends ObjectStore {
     return (data.remove(bucket.bucketName) != null);
   }
 
-  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object)
-      throws Exception {
+  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
 
     byte[] tempContent = tempdata.get(uploadInfo.getTempLocation());
     data.get(bucket.bucketName).put(uploadInfo.getChecksum(), tempContent);
@@ -77,35 +76,39 @@ public class InMemoryFileStoreService extends ObjectStore {
   }
 
 
-  public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws Exception {
+  public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException {
 
-    MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
+    try {
+      MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
 
-    final String tempFileLocation = UUID.randomUUID().toString() + ".tmp";
+      final String tempFileLocation = UUID.randomUUID().toString() + ".tmp";
 
-    byte[] bytes = IOUtils.toByteArray(uploadedInputStream);
+      byte[] bytes = IOUtils.toByteArray(uploadedInputStream);
 
-    tempdata.put(tempFileLocation, bytes);
+      tempdata.put(tempFileLocation, bytes);
 
-    final String checksum = checksumToString(digest.digest(bytes));
-    final long finalSize = bytes.length;
+      final String checksum = checksumToString(digest.digest(bytes));
+      final long finalSize = bytes.length;
 
-    return new UploadInfo(){
-      @Override
-      public Long getSize() {
-        return finalSize;
-      }
+      return new UploadInfo() {
+        @Override
+        public Long getSize() {
+          return finalSize;
+        }
 
-      @Override
-      public String getTempLocation() {
-        return tempFileLocation;
-      }
+        @Override
+        public String getTempLocation() {
+          return tempFileLocation;
+        }
 
-      @Override
-      public String getChecksum() {
-        return checksum;
-      }
-    };
+        @Override
+        public String getChecksum() {
+          return checksum;
+        }
+      };
+    } catch (Exception e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    }
 
   }
 

@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.URL;
@@ -60,8 +61,12 @@ public class FileSystemStoreService extends ObjectStore {
     return new File(getObjectLocationString(object.bucketName, object.checksum)).exists();
   }
 
-  public InputStream getInputStream(Object object) throws Exception {
-    return new FileInputStream(getObjectLocationString(object.bucketName, object.checksum));
+  public InputStream getInputStream(Object object) throws RepoException {
+    try {
+      return new FileInputStream(getObjectLocationString(object.bucketName, object.checksum));
+    } catch (FileNotFoundException e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    }
   }
 
   public boolean createBucket(Bucket bucket) {
@@ -88,8 +93,7 @@ public class FileSystemStoreService extends ObjectStore {
     return dir.delete();
   }
 
-  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object)
-  throws Exception {
+  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
     File tempFile = new File(uploadInfo.getTempLocation());
 
     File newFile = new File(getObjectLocationString(bucket.bucketName, uploadInfo.getChecksum()));
@@ -122,49 +126,53 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
 
-  public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws Exception {
+  public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException {
     final String tempFileLocation = dataDirectory + "/" + UUID.randomUUID().toString() + ".tmp";
 
-    FileOutputStream fos = new FileOutputStream(tempFileLocation);
+    try {
+      FileOutputStream fos = new FileOutputStream(tempFileLocation);
 
-    ReadableByteChannel in = Channels.newChannel(uploadedInputStream);
-    MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
-    WritableByteChannel out = Channels.newChannel(new DigestOutputStream(fos, digest));
-    ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
+      ReadableByteChannel in = Channels.newChannel(uploadedInputStream);
+      MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
+      WritableByteChannel out = Channels.newChannel(new DigestOutputStream(fos, digest));
+      ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
 
-    long size = 0;
+      long size = 0;
 
-    while (in.read(buffer) != -1) {
-      buffer.flip();
-      size += out.write(buffer);
-      buffer.clear();
+      while (in.read(buffer) != -1) {
+        buffer.flip();
+        size += out.write(buffer);
+        buffer.clear();
+      }
+
+      fos.flush();
+
+      final String checksum = checksumToString(digest.digest());
+      final long finalSize = size;
+
+      in.close();
+      out.close();
+
+      return new UploadInfo() {
+        @Override
+        public Long getSize() {
+          return finalSize;
+        }
+
+        @Override
+        public String getTempLocation() {
+          return tempFileLocation;
+        }
+
+        @Override
+        public String getChecksum() {
+          return checksum;
+        }
+      };
+
+    } catch (Exception e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
     }
-
-    fos.flush();
-
-    final String checksum = checksumToString(digest.digest());
-    final long finalSize = size;
-
-    in.close();
-    out.close();
-
-    return new UploadInfo(){
-      @Override
-      public Long getSize() {
-        return finalSize;
-      }
-
-      @Override
-      public String getTempLocation() {
-        return tempFileLocation;
-      }
-
-      @Override
-      public String getChecksum() {
-        return checksum;
-      }
-    };
-
   }
 
 }

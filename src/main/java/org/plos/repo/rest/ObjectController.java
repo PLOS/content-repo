@@ -46,7 +46,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -80,10 +79,24 @@ public class ObjectController {
   // TODO: check at startup that db is in sync with objectStore ? bill says write a python script instead
 
 
-  private Response handleServerError(Exception e) {
-    log.error("Server side error", e);
-    return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-        .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
+  public static Response handleError(RepoException e) {
+
+    switch (e.getType()) {
+
+      case ClientError:
+        return Response.status(Response.Status.BAD_REQUEST)
+            .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
+
+      case ItemNotFound:
+        return Response.status(Response.Status.NOT_FOUND)
+            .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
+
+      default:  // ServerError
+        log.error("Server side error", e);
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+            .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
+    }
+
   }
 
   @GET
@@ -96,14 +109,8 @@ public class ObjectController {
       return Response.status(Response.Status.OK).entity(
           new GenericEntity<List<Object>>(repoService.listObjects(bucketName)) {
           }).build();
-    } catch (ClassNotFoundException e) {
-      return Response.status(Response.Status.NOT_FOUND)
-          .entity("Bucket not found").type(MediaType.TEXT_PLAIN_TYPE).build();
     } catch (RepoException e) {
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
-    } catch (SQLException e) {
-      return handleServerError(e);
+      return handleError(e);
     }
 
   }
@@ -123,11 +130,8 @@ public class ObjectController {
 
     try {
       object = repoService.getObject(bucketName, key, version);
-    } catch (ClassNotFoundException e) {
-      return Response.status(Response.Status.NOT_FOUND)
-          .entity("Object not found: " + key).type(MediaType.TEXT_PLAIN_TYPE).build();
-    } catch (SQLException e) {
-      return handleServerError(e);
+    } catch (RepoException e) {
+      return handleError(e);
     }
 
     repoInfoService.incrementReadCount();
@@ -138,8 +142,8 @@ public class ObjectController {
       try {
         object.versions = repoService.getObjectVersions(object);
         return Response.status(Response.Status.OK).entity(object).build();
-      } catch (SQLException e) {
-        return handleServerError(e);
+      } catch (RepoException e) {
+        return handleError(e);
       }
     }
 
@@ -151,8 +155,8 @@ public class ObjectController {
         return Response.status(Response.Status.OK).header(REPROXY_HEADER_URL,
             REPROXY_URL_JOINER.join(repoService.getObjectReproxy(object)))
             .header(REPROXY_HEADER_CACHE_FOR, REPROXY_CACHE_FOR_HEADER).build();
-      } catch (Exception e) {
-        return handleServerError(e);
+      } catch (RepoException e) {
+        return handleError(e);
       }
     }
 
@@ -169,8 +173,8 @@ public class ObjectController {
 
       // post: container will close this input stream
 
-    } catch (Exception e) {
-      return handleServerError(e);
+    } catch (RepoException e) {
+      return handleError(e);
     }
 
   }
@@ -197,11 +201,8 @@ public class ObjectController {
       repoService.deleteObject(bucketName, key, version);
       return Response.status(Response.Status.OK)
           .entity(key + " version " + version + " deleted").type(MediaType.TEXT_PLAIN).build();
-    } catch (ClassNotFoundException e) {
-      return Response.status(Response.Status.NOT_FOUND)
-          .entity("Object not found: " + key).type(MediaType.TEXT_PLAIN_TYPE).build();
-    } catch (SQLException e) {
-      return handleServerError(e);
+    } catch (RepoException e) {
+      return handleError(e);
     }
 
   }
@@ -260,15 +261,16 @@ required = true)
 
     try {
       existingObject = repoService.getObject(bucketName, key, null);
-    } catch (ClassNotFoundException e) {
-      existingObject = null;
-    } catch (SQLException e) {
-      return handleServerError(e);
+    } catch (RepoException e) {
+      if (e.getType() == RepoException.Type.ItemNotFound)
+        existingObject = null;
+      else
+        return handleError(e);
     }
 
     if (create.equalsIgnoreCase("new")) {
       if (existingObject != null)
-        return Response.status(Response.Status.NOT_ACCEPTABLE)
+        return Response.status(Response.Status.BAD_REQUEST)
             .entity("Attempting to create an object with a key that already exists.").type(MediaType.TEXT_PLAIN).build();
       return create(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
     } else if (create.equalsIgnoreCase("version")) {
@@ -298,10 +300,7 @@ required = true)
     try {
       return Response.status(Response.Status.CREATED).entity(repoService.createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream)).build();
     } catch (RepoException e) {
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
-    } catch (Exception e) {
-      return handleServerError(e);
+      return handleError(e);
     }
 
   }
@@ -326,16 +325,13 @@ required = true)
                           Object object) throws Exception {
 
     if (object == null)
-      return Response.status(Response.Status.NOT_ACCEPTABLE)
+      return Response.status(Response.Status.BAD_REQUEST)
           .entity("Attempting to create a new version of an non-existing object.").type(MediaType.TEXT_PLAIN).build();
 
     try {
       return Response.status(Response.Status.CREATED).entity(repoService.updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, object)).build();
     } catch (RepoException e) {
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
-    } catch (Exception e) {
-      return handleServerError(e);
+      return handleError(e);
     }
 
   }

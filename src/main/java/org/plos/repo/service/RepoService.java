@@ -21,7 +21,9 @@ import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
 
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.ws.rs.core.MediaType;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
@@ -41,46 +43,59 @@ public class RepoService {
   @Inject
   private SqlService sqlService;
 
-  public List<Bucket> listBuckets() throws SQLException {
-    return sqlService.listBuckets();
+  public List<Bucket> listBuckets() throws RepoException {
+    try {
+      return sqlService.listBuckets();
+    } catch (SQLException e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    }
   }
 
-  public void createBucket(String name) throws RepoException, SQLException {
+  @Transactional
+  public void createBucket(String name) throws RepoException {
 
-    if (sqlService.getBucketId(name) != null)
-      throw new RepoException("Bucket already exists");
+    try {
 
-    if (!ObjectStore.isValidFileName(name))
-      throw new RepoException("Unable to create bucket. Name contains illegal characters: " + name);
+      if (sqlService.getBucketId(name) != null)
+        throw new RepoException(RepoException.Type.ClientError, "Bucket already exists: " + name);
 
-    Bucket bucket = new Bucket(null, name);
+      if (!ObjectStore.isValidFileName(name))
+        throw new RepoException(RepoException.Type.ClientError, "Unable to create bucket. Name contains illegal characters: " + name);
 
-    if (!objectStore.createBucket(bucket))
-      throw new RepoException("Unable to create bucket " + name + " in object store");
+      Bucket bucket = new Bucket(null, name);
 
+      if (!objectStore.createBucket(bucket))
+        throw new RepoException(RepoException.Type.ClientError, "Unable to create bucket " + name + " in object store");
 
-    if (!sqlService.insertBucket(bucket)) {
-      objectStore.deleteBucket(bucket);
-      throw new RepoException("Unable to create bucket " + name + " in database");
+      if (!sqlService.insertBucket(bucket)) {
+        objectStore.deleteBucket(bucket);
+        throw new RepoException(RepoException.Type.ClientError, "Unable to create bucket " + name + " in database");
+      }
+    } catch (SQLException e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
     }
 
   }
 
-  public void deleteBucket(String name) throws RepoException, SQLException, ClassNotFoundException {
+  public void deleteBucket(String name) throws RepoException {
 
-    if (sqlService.getBucketId(name) == null)
-      throw new ClassNotFoundException();
+    try {
+      if (sqlService.getBucketId(name) == null)
+        throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found: " + name);
 
-    if (sqlService.listObjectsInBucket(name).size() != 0)
-      throw new RepoException("Cannot delete bucket " + name + " because it contains objects.");
+      if (sqlService.listObjectsInBucket(name).size() != 0)
+        throw new RepoException(RepoException.Type.ClientError, "Cannot delete bucket " + name + " because it contains objects.");
 
-    Bucket bucket = new Bucket(null, name);
+      Bucket bucket = new Bucket(null, name);
 
-    if (!objectStore.deleteBucket(bucket))
-      throw new RepoException("There was a problem removing the bucket");
+      if (!objectStore.deleteBucket(bucket))
+        throw new RepoException(RepoException.Type.ServerError, "There was a problem removing the bucket");
 
-    if (sqlService.deleteBucket(name) == 0)
-      throw new RepoException("No buckets deleted.");
+      if (sqlService.deleteBucket(name) == 0)
+        throw new RepoException(RepoException.Type.ServerError, "No buckets deleted.");
+    } catch (SQLException e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    }
 
   }
 
@@ -88,37 +103,54 @@ public class RepoService {
     return objectStore.hasXReproxy();
   }
 
-  public List<Object> listObjects(String bucketName) throws RepoException, SQLException, ClassNotFoundException {
+  public List<Object> listObjects(String bucketName) throws RepoException {
 
-    if (bucketName == null)
-      return sqlService.listAllObject();
+    try {
+      if (bucketName == null)
+        return sqlService.listAllObject();
 
-    if (sqlService.getBucketId(bucketName) == null)
-      throw new ClassNotFoundException();
+      if (sqlService.getBucketId(bucketName) == null)
+        throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found");
 
-    return sqlService.listObjectsInBucket(bucketName);
+      return sqlService.listObjectsInBucket(bucketName);
+    } catch (SQLException e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    }
   }
 
-  public Object getObject(String bucketName, String key, Integer version) throws SQLException, ClassNotFoundException {
+  public Object getObject(String bucketName, String key, Integer version) throws RepoException {
 
     Object object;
-    if (version == null)
-      object = sqlService.getObject(bucketName, key);
-    else
-      object = sqlService.getObject(bucketName, key, version);
+
+    try {
+      if (version == null)
+        object = sqlService.getObject(bucketName, key);
+      else
+        object = sqlService.getObject(bucketName, key, version);
+    } catch (SQLException e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    }
 
     if (object == null)
-      throw new ClassNotFoundException();
+      throw new RepoException(RepoException.Type.ItemNotFound, "Object not found");
 
     return object;
   }
 
-  public List<Object> getObjectVersions(Object object) throws SQLException {
-    return sqlService.listObjectVersions(object);
+  public List<Object> getObjectVersions(Object object) throws RepoException {
+    try {
+      return sqlService.listObjectVersions(object);
+    } catch (SQLException e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    }
   }
 
-  public URL[] getObjectReproxy(Object object) throws Exception {
-    return objectStore.getRedirectURLs(object);
+  public URL[] getObjectReproxy(Object object) throws RepoException {
+    try {
+      return objectStore.getRedirectURLs(object);
+    } catch (Exception e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    }
   }
 
   public String getObjectContentType(Object object) {
@@ -130,25 +162,37 @@ public class RepoService {
     return contentType;
   }
 
-  public String getObjectExportFileName(Object object) throws UnsupportedEncodingException {
+  public String getObjectExportFileName(Object object) throws RepoException {
 
     String exportFileName = object.key;
 
     if (object.downloadName != null)
       exportFileName = object.downloadName;
 
-    return URLEncoder.encode(exportFileName, "UTF-8");
+    try {
+      return URLEncoder.encode(exportFileName, "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    }
 
   }
 
-  public InputStream getObjectInputStream(Object object) throws Exception {
-    return objectStore.getInputStream(object);
+  public InputStream getObjectInputStream(Object object) throws RepoException {
+    try {
+      return objectStore.getInputStream(object);
+    } catch (Exception e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    }
   }
 
-  public void deleteObject(String bucketName, String key, Integer version) throws ClassNotFoundException, SQLException {
+  public void deleteObject(String bucketName, String key, Integer version) throws RepoException {
 
-    if (sqlService.markObjectDeleted(key, bucketName, version) == 0)
-      throw new ClassNotFoundException();
+    try {
+      if (sqlService.markObjectDeleted(key, bucketName, version) == 0)
+        throw new RepoException(RepoException.Type.ItemNotFound, "Object not found");
+    } catch (SQLException e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    }
   }
 
   public Object createNewObject(String key,
@@ -156,24 +200,38 @@ public class RepoService {
                                 String contentType,
                                 String downloadName,
                                 Timestamp timestamp,
-                                InputStream uploadedInputStream) throws Exception {
-
-    Integer bucketId = sqlService.getBucketId(bucketName);
-
-    if (bucketId == null)
-      throw new RepoException("Can not find bucket " + bucketName);
+                                InputStream uploadedInputStream) throws RepoException {
 
     ObjectStore.UploadInfo uploadInfo;
+    Integer bucketId, versionNumber;
+
+    try {
+      bucketId = sqlService.getBucketId(bucketName);
+    } catch (SQLException e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    }
+
+    if (bucketId == null)
+      throw new RepoException(RepoException.Type.ClientError, "Can not find bucket " + bucketName);
 
     uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
-    uploadedInputStream.close();
+
+    try {
+      uploadedInputStream.close();
+    } catch (IOException e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    }
 
     if (uploadInfo.getSize() == 0) {
       objectStore.deleteTempUpload(uploadInfo);
-      throw new RepoException("Uploaded data must be non-empty");
+      throw new RepoException(RepoException.Type.ClientError, "Uploaded data must be non-empty");
     }
 
-    Integer versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, key);
+    try {
+      versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, key);
+    } catch (SQLException e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    }
 
     Object object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), null, bucketId, bucketName, versionNumber, Object.Status.USED);
 
@@ -192,15 +250,19 @@ public class RepoService {
     } else {
       if (!objectStore.saveUploadedObject(new Bucket(null, bucketName), uploadInfo, object)) {
         objectStore.deleteTempUpload(uploadInfo);
-        throw new Exception("Error saving content to data store");
+        throw new RepoException(RepoException.Type.ServerError, "Error saving content to data store");
       }
     }
 
     // add a record to the DB
 
-    if (sqlService.insertObject(object) == 0) {
-      //objectStore.deleteObject(object);
-      throw new Exception("Error saving content to database");
+    try {
+      if (sqlService.insertObject(object) == 0) {
+        //objectStore.deleteObject(object);
+        throw new RepoException(RepoException.Type.ServerError, "Error saving content to database");
+      }
+    } catch (SQLException e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
     }
 
     return object;
@@ -211,52 +273,58 @@ public class RepoService {
                           String downloadName,
                           Timestamp timestamp,
                           InputStream uploadedInputStream,
-                          Object object) throws Exception {
+                          Object object) throws RepoException {
 
-    Integer bucketId = sqlService.getBucketId(bucketName);
+    try {
+      Integer bucketId = sqlService.getBucketId(bucketName);
 
-    if (bucketId == null)
-      throw new RepoException("Can not find bucket " + bucketName);
+      if (bucketId == null)
+        throw new RepoException(RepoException.Type.ClientError, "Can not find bucket " + bucketName);
 
-    // copy over values from previous object, if they are not specified in the request
-    if (contentType != null)
-      object.contentType = contentType;
+      // copy over values from previous object, if they are not specified in the request
+      if (contentType != null)
+        object.contentType = contentType;
 
-    if (downloadName != null)
-      object.downloadName = downloadName;
+      if (downloadName != null)
+        object.downloadName = downloadName;
 
-    object.timestamp = timestamp;
-    object.versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, object.key);
-    object.id = null;  // remove this since it refers to the old object
+      object.timestamp = timestamp;
+      object.versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, object.key);
+      object.id = null;  // remove this since it refers to the old object
 
-    ObjectStore.UploadInfo uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
-    uploadedInputStream.close();
+      ObjectStore.UploadInfo uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
+      uploadedInputStream.close();
 
-    // handle metadata-only update
-    if (uploadInfo.getSize() == 0) {
-      objectStore.deleteTempUpload(uploadInfo);
-      sqlService.insertObject(object); // TODO: deal with 0 return values
-
-      return object;
-    }
-
-    // determine if the object should be added to the store or not
-    object.checksum = uploadInfo.getChecksum();
-    object.size = uploadInfo.getSize();
-    if (objectStore.objectExists(object)) {
-      objectStore.deleteTempUpload(uploadInfo);
-    } else {
-      if (!objectStore.saveUploadedObject(new Bucket(null, bucketName), uploadInfo, object)) {
+      // handle metadata-only update
+      if (uploadInfo.getSize() == 0) {
         objectStore.deleteTempUpload(uploadInfo);
-        throw new Exception("Error saving content to data store");
+        sqlService.insertObject(object); // TODO: deal with 0 return values
+
+        return object;
       }
-    }
 
-    // add a record to the DB
+      // determine if the object should be added to the store or not
+      object.checksum = uploadInfo.getChecksum();
+      object.size = uploadInfo.getSize();
+      if (objectStore.objectExists(object)) {
+        objectStore.deleteTempUpload(uploadInfo);
+      } else {
+        if (!objectStore.saveUploadedObject(new Bucket(null, bucketName), uploadInfo, object)) {
+          objectStore.deleteTempUpload(uploadInfo);
+          throw new RepoException(RepoException.Type.ServerError, "Error saving content to data store");
+        }
+      }
 
-    if (sqlService.insertObject(object) == 0) {
-      //objectStore.deleteObject(object);
-      throw new Exception("Error saving content to database");
+      // add a record to the DB
+
+      if (sqlService.insertObject(object) == 0) {
+        //objectStore.deleteObject(object);
+        throw new RepoException(RepoException.Type.ServerError, "Error saving content to database");
+      }
+    } catch (SQLException e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    } catch (IOException e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
     }
 
     return object;
