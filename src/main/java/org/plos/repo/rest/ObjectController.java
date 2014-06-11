@@ -131,14 +131,14 @@ public class ObjectController {
 
     int result = 0;
     if (bucketName == null) {
-      result = sqlService.countAllObject();
+      result = sqlService.objectCount(false, null);
     }
     else {
       if (sqlService.getBucketId(bucketName) == null)
         return Response.status(Response.Status.NOT_FOUND)
             .entity("Bucket not found").type(MediaType.TEXT_PLAIN).build();
 
-      result = sqlService.countObjectsInBucket(bucketName);
+      result = sqlService.objectCount(true, bucketName);
     }
 
     return Response.status(Response.Status.OK).entity(String.valueOf(result)).build();

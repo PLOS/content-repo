@@ -332,7 +332,17 @@ public abstract class SqlService {
 
   }
 
+  // this is called from /status
   public Integer objectCount() throws Exception {
+    return objectCount(true, null);
+  }
+
+  // three ways this is called currently:
+  // 1. /status uses (true, null) => get count of used objects
+  // 2. /count uses (false, null) => get count of all objects including deleted
+  // 3. /count?bucketName=... uses (true, bucketName) => get count of used objects in bucket
+
+  public Integer objectCount(boolean usedOnly, String bucketName) throws Exception {
 
     PreparedStatement p = null;
     Connection connection = null;
@@ -341,9 +351,20 @@ public abstract class SqlService {
     try {
       connection = dataSource.getConnection();
 
-      p = connection.prepareStatement("SELECT COUNT(*) FROM objects WHERE status=?");
+      StringBuilder q = new StringBuilder("SELECT COUNT(*) FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
+      if (usedOnly)
+        q.append(" AND a.status=?");
+      if (bucketName != null)
+        q.append(" AND bucketName=?");
 
-      p.setInt(1, Object.Status.USED.getValue());
+      p = connection.prepareStatement(q.toString());
+
+      int index = 0;
+      if (usedOnly)
+        p.setInt(++index, Object.Status.USED.getValue());
+      if (bucketName != null)
+        p.setString(++index, bucketName);
+
       result = p.executeQuery();
 
       if (result.next())
@@ -357,7 +378,6 @@ public abstract class SqlService {
     } finally {
       closeDbStuff(result, p, connection);
     }
-
   }
 
   public boolean insertBucket(Bucket bucket) {
@@ -432,7 +452,7 @@ public abstract class SqlService {
     try {
       connection = dataSource.getConnection();
 
-      StringBuffer q = new StringBuffer();
+      StringBuilder q = new StringBuilder();
       q.append("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
       if (offset != null)
         q.append(" OFFSET " + offset);
@@ -457,31 +477,6 @@ public abstract class SqlService {
 
   }
 
-  public int countAllObject() {
-    PreparedStatement p = null;
-    Connection connection = null;
-    ResultSet result = null;
-
-    try {
-      connection = dataSource.getConnection();
-
-      p = connection.prepareStatement("SELECT COUNT(*) FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
-
-      result = p.executeQuery();
-
-      if (result.next()) {
-        return result.getInt(1);
-      }
-
-      return 0;
-    } catch (SQLException e) {
-      log.error("sql error", e);
-      return 0;
-    } finally {
-      closeDbStuff(result, p, connection);
-    }
-  }
-
   public List<Object> listObjectsInBucket(String bucketName, Integer offset, Integer limit) {
 
     List<Object> objects = new ArrayList<>();
@@ -493,7 +488,7 @@ public abstract class SqlService {
     try {
       connection = dataSource.getConnection();
 
-      StringBuffer q = new StringBuffer();
+      StringBuilder q = new StringBuilder();
       q.append("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND status=?");
       if (offset != null)
         q.append(" OFFSET " + offset);
@@ -519,34 +514,6 @@ public abstract class SqlService {
       closeDbStuff(result, p, connection);
     }
 
-  }
-
-  public int countObjectsInBucket(String bucketName) {
-
-    PreparedStatement p = null;
-    Connection connection = null;
-    ResultSet result = null;
-
-    try {
-      connection = dataSource.getConnection();
-
-      p = connection.prepareStatement("SELECT COUNT(*) FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND status=?");
-
-      p.setString(1, bucketName);
-      p.setInt(2, Object.Status.USED.getValue());
-
-      result = p.executeQuery();
-
-      if (result.next()) {
-        return result.getInt(1);
-      }
-      return 0;
-    } catch (SQLException e) {
-      log.error("sql error", e);
-      return 0;
-    } finally {
-      closeDbStuff(result, p, connection);
-    }
   }
 
   public List<Object> listObjectVersions(Object object) {
