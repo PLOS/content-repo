@@ -29,310 +29,310 @@ import javax.ws.rs.core.Response;
 
 public class ObjectLockTest extends RepoBaseTest {
 
-    private static final String BUCKET_NAME   = "bucket";
-    private static final String BASE_KEY_NAME = "key";
+  private static final String BUCKET_NAME   = "bucket";
+  private static final String BASE_KEY_NAME = "key";
 
-    private ObjectController objectCtl;
-    private RepoInfoService  repoInfoService;
+  private ObjectController objectCtl;
+  private RepoInfoService  repoInfoService;
 
-    private ObjectStore      spyObjectStore;
-    private SqlService       spySqlService;
-    private RepoInfoService  spyRepoInfoService;
+  private ObjectStore      spyObjectStore;
+  private SqlService       spySqlService;
+  private RepoInfoService  spyRepoInfoService;
 
-    private CountDownLatch   startGate;
-    private CountDownLatch   endGate;
+  private CountDownLatch   startGate;
+  private CountDownLatch   endGate;
 
-    /*
-     * JUnit only captures assertion errors raised in the main thread, so we'll 
-     * create an explicit error instance to record assertion failures in 
-     * in worker threads (only the first). Guard access with lock object.
-     */
-    private AssertionError assertionFailure;
-    private final java.lang.Object lock = new java.lang.Object();
+  /*
+    * JUnit only captures assertion errors raised in the main thread, so we'll 
+    * create an explicit error instance to record assertion failures in 
+    * in worker threads (only the first). Guard access with lock object.
+    */
+  private AssertionError assertionFailure;
+  private final java.lang.Object lock = new java.lang.Object();
 
-    @Before public void setup() throws Exception {
+  @Before public void setup() throws Exception {
 
-        clearData();
+    clearData();
 
-        Bucket bucket = new Bucket(null, BUCKET_NAME);
-        if (!this.objectStore.createBucket(bucket)) { throw new RuntimeException("setup failed"); } 
-        if (!this.sqlService.insertBucket(bucket))  { throw new RuntimeException("setup failed"); } 
+    Bucket bucket = new Bucket(null, BUCKET_NAME);
+    if (!this.objectStore.createBucket(bucket)) { throw new RuntimeException("setup failed"); } 
+    if (!this.sqlService.insertBucket(bucket))  { throw new RuntimeException("setup failed"); } 
 
-        objectCtl      = new ObjectController();
-        spyObjectStore = spy(this.objectStore);
-        spySqlService  = spy(this.sqlService);
+    objectCtl      = new ObjectController();
+    spyObjectStore = spy(this.objectStore);
+    spySqlService  = spy(this.sqlService);
 
-        repoInfoService    = new RepoInfoService();
-        spyRepoInfoService = spy(repoInfoService);
+    repoInfoService    = new RepoInfoService();
+    spyRepoInfoService = spy(repoInfoService);
 
-        // use reflection to inject object store and sql services ("spied on" versions)
-        // into object controller and repro info service.
-       
-        Field osObjStoreField = ObjectController.class.getDeclaredField("objectStore");
-        osObjStoreField.setAccessible(true);
-        osObjStoreField.set(objectCtl, spyObjectStore);
+    // use reflection to inject object store and sql services ("spied on" versions)
+    // into object controller and repro info service.
+    
+    Field osObjStoreField = ObjectController.class.getDeclaredField("objectStore");
+    osObjStoreField.setAccessible(true);
+    osObjStoreField.set(objectCtl, spyObjectStore);
 
-        Field osSqlServiceField = ObjectController.class.getDeclaredField("sqlService");
-        osSqlServiceField.setAccessible(true);
-        osSqlServiceField.set(objectCtl, spySqlService);
+    Field osSqlServiceField = ObjectController.class.getDeclaredField("sqlService");
+    osSqlServiceField.setAccessible(true);
+    osSqlServiceField.set(objectCtl, spySqlService);
 
-        Field rsObjStoreField = RepoInfoService.class.getDeclaredField("objectStore");
-        rsObjStoreField.setAccessible(true);
-        rsObjStoreField.set(repoInfoService, spyObjectStore);
+    Field rsObjStoreField = RepoInfoService.class.getDeclaredField("objectStore");
+    rsObjStoreField.setAccessible(true);
+    rsObjStoreField.set(repoInfoService, spyObjectStore);
 
-        Field rsSqlServiceField = RepoInfoService.class.getDeclaredField("sqlService");
-        rsSqlServiceField.setAccessible(true);
-        rsSqlServiceField.set(repoInfoService, spySqlService);
+    Field rsSqlServiceField = RepoInfoService.class.getDeclaredField("sqlService");
+    rsSqlServiceField.setAccessible(true);
+    rsSqlServiceField.set(repoInfoService, spySqlService);
 
-        // inject repo info service into object controller
+    // inject repo info service into object controller
 
-        Field repoInfoServiceField = ObjectController.class.getDeclaredField("repoInfoService");
-        repoInfoServiceField.setAccessible(true);
-        repoInfoServiceField.set(objectCtl, spyRepoInfoService);
+    Field repoInfoServiceField = ObjectController.class.getDeclaredField("repoInfoService");
+    repoInfoServiceField.setAccessible(true);
+    repoInfoServiceField.set(objectCtl, spyRepoInfoService);
 
-        this.startGate = new CountDownLatch(1);
-    }
+    this.startGate = new CountDownLatch(1);
+  }
 
     // implement callback using interface and anonymous inner class
-    public interface Callback {
-        String  getKeyname(int i);
-        Integer getVersion(int i);
+  public interface Callback {
+    String  getKeyname(int i);
+    Integer getVersion(int i);
+  }
+
+  @Test public void testReaderAndWritersSameKey() throws Exception {
+
+    final int INSERT_THREADS = 25;
+    final int DELETE_THREADS = 20;
+    final int READER_THREADS = 125;
+
+    this.endGate = new CountDownLatch(INSERT_THREADS + DELETE_THREADS + READER_THREADS);
+
+    Callback callback = new Callback() {
+      public String  getKeyname(int i) { return BASE_KEY_NAME; } 
+      public Integer getVersion(int i) { return i;             } 
+    };
+
+    execute(INSERT_THREADS, DELETE_THREADS, READER_THREADS, callback);
+
+    List<org.plos.repo.models.Object> objects =  this.sqlService.listAllObject();
+    assertEquals(INSERT_THREADS, objects.size());
+
+    Collections.sort(objects, new ObjectComparator());
+
+    int objDeleteCount = 0;
+
+    for (int j = 0; j < INSERT_THREADS; j++) {
+      org.plos.repo.models.Object obj = objects.get(j);
+      if (obj.status == Object.Status.DELETED) { objDeleteCount++; }
+
+      assertEquals(BASE_KEY_NAME, obj.key);
+      assertEquals(Integer.valueOf(j), obj.versionNumber);
+      assertTrue( this.objectStore.objectExists(obj) );
     }
 
-    @Test public void testReaderAndWritersSameKey() throws Exception {
+    //TODO - these assertions could be a bit stronger if imposed more
+    //       restrictions on threads such as briefly pausing before 
+    //       trying to delete or lookup an object.
 
-        final int INSERT_THREADS = 25;
-        final int DELETE_THREADS = 20;
-        final int READER_THREADS = 125;
+    assertTrue( objDeleteCount > 0 );
+    assertTrue( getReadCount(this.repoInfoService) > 0 );
 
-        this.endGate = new CountDownLatch(INSERT_THREADS + DELETE_THREADS + READER_THREADS);
+    assertEquals(INSERT_THREADS, getWriteCount(this.repoInfoService));
 
-        Callback callback = new Callback() {
-            public String  getKeyname(int i) { return BASE_KEY_NAME; } 
-            public Integer getVersion(int i) { return i;             } 
-        };
+    verify(spySqlService, times(READER_THREADS)).getObject(anyString(), anyString(), anyInt());
+  }
 
-        execute(INSERT_THREADS, DELETE_THREADS, READER_THREADS, callback);
+  @Test public void testReaderAndWritersDifferentKeys() throws Exception {
 
-        List<org.plos.repo.models.Object> objects =  this.sqlService.listAllObject();
-        assertEquals(INSERT_THREADS, objects.size());
+    final int INSERT_THREADS = 25;
+    final int DELETE_THREADS = 20;
+    final int READER_THREADS = 100;
 
-        Collections.sort(objects, new ObjectComparator());
+    this.endGate = new CountDownLatch(INSERT_THREADS + DELETE_THREADS + READER_THREADS);
 
-        int objDeleteCount = 0;
+    Callback callback = new Callback() {
+      public String  getKeyname(int i) { return BASE_KEY_NAME + String.format("%03d",i); } 
+      public Integer getVersion(int i) { return 0; } 
+    };
 
-        for (int j = 0; j < INSERT_THREADS; j++) {
-            org.plos.repo.models.Object obj = objects.get(j);
-            if (obj.status == Object.Status.DELETED) { objDeleteCount++; }
+    execute(INSERT_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
-            assertEquals(BASE_KEY_NAME, obj.key);
-            assertEquals(Integer.valueOf(j), obj.versionNumber);
-            assertTrue( this.objectStore.objectExists(obj) );
-        }
+    List<org.plos.repo.models.Object> objects =  this.sqlService.listAllObject();
+    assertEquals(INSERT_THREADS, objects.size());
 
-        //TODO - these assertions could be a bit stronger if imposed more
-        //       restrictions on threads such as briefly pausing before 
-        //       trying to delete or lookup an object.
+    Collections.sort(objects, new ObjectComparator());
 
-        assertTrue( objDeleteCount > 0 );
-        assertTrue( getReadCount(this.repoInfoService) > 0 );
+    int objDeleteCount = 0;
 
-        assertEquals(INSERT_THREADS, getWriteCount(this.repoInfoService));
+    for (int j = 0; j < INSERT_THREADS; j++) {
+      org.plos.repo.models.Object obj = objects.get(j);
+      if (obj.status == Object.Status.DELETED) { objDeleteCount++; }
 
-        verify(spySqlService, times(READER_THREADS)).getObject(anyString(), anyString(), anyInt());
+      assertEquals(BASE_KEY_NAME + String.format("%03d",j), obj.key);
+      assertEquals(Integer.valueOf(0), obj.versionNumber);
+      assertTrue( this.objectStore.objectExists(obj) );
     }
 
-    @Test public void testReaderAndWritersDifferentKeys() throws Exception {
+    //TODO - these assertions could be a bit stronger if imposed more
+    //       restrictions on threads such as briefly pausing before 
+    //       trying to delete or lookup an object.
 
-        final int INSERT_THREADS = 25;
-        final int DELETE_THREADS = 20;
-        final int READER_THREADS = 100;
+    assertTrue( objDeleteCount > 0 );
+    assertTrue( getReadCount(this.repoInfoService) > 0 );
 
-        this.endGate = new CountDownLatch(INSERT_THREADS + DELETE_THREADS + READER_THREADS);
+    assertEquals(INSERT_THREADS, getWriteCount(this.repoInfoService));
 
-        Callback callback = new Callback() {
-            public String  getKeyname(int i) { return BASE_KEY_NAME + String.format("%03d",i); } 
-            public Integer getVersion(int i) { return 0;                 } 
-        };
+    verify(spySqlService, times(READER_THREADS)).getObject(anyString(), anyString(), anyInt());
+  }
 
-        execute(INSERT_THREADS, DELETE_THREADS, READER_THREADS, callback);
-
-        List<org.plos.repo.models.Object> objects =  this.sqlService.listAllObject();
-        assertEquals(INSERT_THREADS, objects.size());
-
-        Collections.sort(objects, new ObjectComparator());
-
-        int objDeleteCount = 0;
-
-        for (int j = 0; j < INSERT_THREADS; j++) {
-            org.plos.repo.models.Object obj = objects.get(j);
-            if (obj.status == Object.Status.DELETED) { objDeleteCount++; }
-
-            assertEquals(BASE_KEY_NAME + String.format("%03d",j), obj.key);
-            assertEquals(Integer.valueOf(0), obj.versionNumber);
-            assertTrue( this.objectStore.objectExists(obj) );
-        }
-
-        //TODO - these assertions could be a bit stronger if imposed more
-        //       restrictions on threads such as briefly pausing before 
-        //       trying to delete or lookup an object.
-
-        assertTrue( objDeleteCount > 0 );
-        assertTrue( getReadCount(this.repoInfoService) > 0 );
-
-        assertEquals(INSERT_THREADS, getWriteCount(this.repoInfoService));
-
-        verify(spySqlService, times(READER_THREADS)).getObject(anyString(), anyString(), anyInt());
-    }
-
-    private void execute(final int insertThreads, final int deleteThreads, 
+  private void execute(final int insertThreads, final int deleteThreads, 
                          final int readerThreads, final Callback cb) 
-        throws Exception {
+    throws Exception {
 
-        /* ------------------------------------------------------------------ */
-        /*  INSERT                                                            */
-        /* ------------------------------------------------------------------ */
+    /* ------------------------------------------------------------------ */
+    /*  INSERT                                                            */
+    /* ------------------------------------------------------------------ */
 
-        for (int i = 0; i < insertThreads; i++) {
-            final int j = i;
-            final Thread t = new Thread() {
-                public void run() {
-                    try {
-                        startGate.await();  // don't start until startGate is 0
-                        try {
-                            Response response = objectCtl.createOrUpdate(cb.getKeyname(j), BUCKET_NAME,
-                                null, null, "auto", null, new ByteArrayInputStream("12345".getBytes("UTF-8")));
+    for (int i = 0; i < insertThreads; i++) {
+      final int j = i;
+      final Thread t = new Thread() {
+        public void run() {
+          try {
+            startGate.await();  // don't start until startGate is 0
+            try {
+              Response response = objectCtl.createOrUpdate(cb.getKeyname(j), BUCKET_NAME,
+                  null, null, "auto", null, new ByteArrayInputStream("12345".getBytes("UTF-8")));
 
-                            //TODO - replace jax response with return code from service layer
-                            if (response.getStatus() != 201) {
-                                synchronized(lock) {
-                                    if (assertionFailure == null) {
-                                        assertionFailure = new AssertionError(String.format(
-                                            "Expected:%d Actual:%d Reason:%s", 201, response.getStatus(),
-                                            response.getStatusInfo().getReasonPhrase()));
-                                    }
-                                }
-                            }
-
-                        } finally {
-                            endGate.countDown();
-                        }
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
+              //TODO - replace jax response with return code from service layer
+              if (response.getStatus() != 201) {
+                synchronized(lock) {
+                  if (assertionFailure == null) {
+                    assertionFailure = new AssertionError(String.format(
+                        "Expected:%d Actual:%d Reason:%s", 201, response.getStatus(),
+                        response.getStatusInfo().getReasonPhrase()));
+                  }
                 }
-            };
-            t.start();
+              }
+
+            } finally {
+              endGate.countDown();
+            }
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          }
         }
-
-        /* ------------------------------------------------------------------ */
-        /*  DELETE                                                            */
-        /* ------------------------------------------------------------------ */
-
-        for (int i = 0; i < deleteThreads; i++) {
-            final int j = i;
-            final Thread t = new Thread() {
-                public void run() {
-                    try {
-                        startGate.await();  // don't start until startGate is 0 
-                        try {
-                            Response response = objectCtl.delete(BUCKET_NAME, cb.getKeyname(j), cb.getVersion(j));
-
-                            //TODO - replace jax response with return code from service layer
-                            if (response.getStatus() == 500) {
-                                synchronized(lock) {
-                                    if (assertionFailure == null) {
-                                        assertionFailure = new AssertionError(String.format(
-                                            "Status:%d - trying to delete bucket:%s, key:%s, version:%d reason:%s", 
-                                                500, BUCKET_NAME, cb.getKeyname(j), cb.getVersion(j),
-                                                response.getStatusInfo().getReasonPhrase()));
-                                    }
-                                }
-                            }
-
-                        } finally {
-                            endGate.countDown();
-                        }
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            };
-            t.start();
-        }
-
-        /* ------------------------------------------------------------------ */
-        /*  READER                                                            */
-        /* ------------------------------------------------------------------ */
-
-        for (int i = 0; i < readerThreads; i++) {
-            final int j = (i % insertThreads);
-            final Thread t = new Thread() {
-                public void run() {
-                    try {
-                        startGate.await();  // don't start until startGate is 0 
-                        try {
-                            Response response = objectCtl.read(BUCKET_NAME, cb.getKeyname(j), cb.getVersion(j), false, null);
-
-                            //TODO - replace jax response with return code from service layer
-                            if (response.getStatus() == 500) {
-                                synchronized(lock) {
-                                    if (assertionFailure == null) {
-                                        assertionFailure = new AssertionError(String.format(
-                                            "Status:%d - trying to read (bucket:%s, key:%s, version:%d) reason:%s",
-                                                500, BUCKET_NAME, cb.getKeyname(j), cb.getVersion(j),
-                                                response.getStatusInfo().getReasonPhrase()));
-                                    }
-                                }
-                            }
-
-                        } finally {
-                            endGate.countDown();
-                        }
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            };
-            t.start();
-        }
-
-        startGate.countDown(); /* start all client threads                    */
-        endGate.await();       /* wait until all threads have finished (L=0)  */
-
-        if (this.assertionFailure != null) {
-            throw this.assertionFailure;
-        }
+      };
+      t.start();
     }
 
-    private long getReadCount(RepoInfoService repoInfoService) throws NoSuchFieldException, IllegalAccessException {
-        Field readCountField = RepoInfoService.class.getDeclaredField("readCount");
-        readCountField.setAccessible(true);
-        return (long) ((AtomicLong)readCountField.get(repoInfoService)).longValue();
+    /* ------------------------------------------------------------------ */
+    /*  DELETE                                                            */
+    /* ------------------------------------------------------------------ */
+
+    for (int i = 0; i < deleteThreads; i++) {
+      final int j = i;
+      final Thread t = new Thread() {
+        public void run() {
+          try {
+            startGate.await();  // don't start until startGate is 0 
+            try {
+              Response response = objectCtl.delete(BUCKET_NAME, cb.getKeyname(j), cb.getVersion(j));
+
+              //TODO - replace jax response with return code from service layer
+              if (response.getStatus() == 500) {
+                synchronized(lock) {
+                  if (assertionFailure == null) {
+                    assertionFailure = new AssertionError(String.format(
+                      "Status:%d - trying to delete bucket:%s, key:%s, version:%d reason:%s", 
+                        500, BUCKET_NAME, cb.getKeyname(j), cb.getVersion(j),
+                        response.getStatusInfo().getReasonPhrase()));
+                  }
+                }
+              }
+
+            } finally {
+              endGate.countDown();
+            }
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          }
+        }
+      };
+      t.start();
     }
 
-    private long getWriteCount(RepoInfoService repoInfoService) throws NoSuchFieldException, IllegalAccessException {
-        Field writeCountField = RepoInfoService.class.getDeclaredField("writeCount");
-        writeCountField.setAccessible(true);
-        return (long) ((AtomicLong)writeCountField.get(repoInfoService)).longValue();
+    /* ------------------------------------------------------------------ */
+    /*  READER                                                            */
+    /* ------------------------------------------------------------------ */
+
+    for (int i = 0; i < readerThreads; i++) {
+      final int j = (i % insertThreads);
+      final Thread t = new Thread() {
+        public void run() {
+          try {
+            startGate.await();  // don't start until startGate is 0 
+            try {
+              Response response = objectCtl.read(BUCKET_NAME, cb.getKeyname(j), cb.getVersion(j), false, null);
+
+              //TODO - replace jax response with return code from service layer
+              if (response.getStatus() == 500) {
+                synchronized(lock) {
+                  if (assertionFailure == null) {
+                    assertionFailure = new AssertionError(String.format(
+                      "Status:%d - trying to read (bucket:%s, key:%s, version:%d) reason:%s",
+                        500, BUCKET_NAME, cb.getKeyname(j), cb.getVersion(j),
+                        response.getStatusInfo().getReasonPhrase()));
+                  }
+                }
+              }
+
+            } finally {
+              endGate.countDown();
+            }
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          }
+        }
+      };
+      t.start();
     }
+
+    startGate.countDown(); /* start all client threads                    */
+    endGate.await();       /* wait until all threads have finished (L=0)  */
+
+    if (this.assertionFailure != null) {
+      throw this.assertionFailure;
+    }
+  }
+
+  private long getReadCount(RepoInfoService repoInfoService) throws NoSuchFieldException, IllegalAccessException {
+    Field readCountField = RepoInfoService.class.getDeclaredField("readCount");
+    readCountField.setAccessible(true);
+    return (long) ((AtomicLong)readCountField.get(repoInfoService)).longValue();
+  }
+
+  private long getWriteCount(RepoInfoService repoInfoService) throws NoSuchFieldException, IllegalAccessException {
+    Field writeCountField = RepoInfoService.class.getDeclaredField("writeCount");
+    writeCountField.setAccessible(true);
+    return (long) ((AtomicLong)writeCountField.get(repoInfoService)).longValue();
+  }
 }
 
 class ObjectComparator implements Comparator<org.plos.repo.models.Object> {
-    public int compare(org.plos.repo.models.Object o1, org.plos.repo.models.Object o2) {
+  public int compare(org.plos.repo.models.Object o1, org.plos.repo.models.Object o2) {
 
-        if      (o1.bucketName.compareTo(o2.bucketName) < 0) { return -1; } 
-        else if (o1.bucketName.compareTo(o2.bucketName) > 0) { return 1;  }
-        // o1.bucketName.equals(o2.bucketName)
+    if      (o1.bucketName.compareTo(o2.bucketName) < 0) { return -1; } 
+    else if (o1.bucketName.compareTo(o2.bucketName) > 0) { return 1;  }
+    // o1.bucketName.equals(o2.bucketName)
 
-        if      (o1.key.compareTo(o2.key) < 0) { return -1; } 
-        else if (o1.key.compareTo(o2.key) > 0) { return 1;  }
-        // o1.key.equals(o2.key)
+    if      (o1.key.compareTo(o2.key) < 0) { return -1; } 
+    else if (o1.key.compareTo(o2.key) > 0) { return 1;  }
+    // o1.key.equals(o2.key)
 
-        if      (o1.versionNumber.compareTo(o2.versionNumber) < 0) { return -1; } 
-        else if (o1.versionNumber.compareTo(o2.versionNumber) > 0) { return 1;  }
-        // o1.versionNumber.equals(o2.versionNumber)
+    if      (o1.versionNumber.compareTo(o2.versionNumber) < 0) { return -1; } 
+    else if (o1.versionNumber.compareTo(o2.versionNumber) > 0) { return 1;  }
+    // o1.versionNumber.equals(o2.versionNumber)
 
-        return 0;
-    }
+    return 0;
+  }
 }

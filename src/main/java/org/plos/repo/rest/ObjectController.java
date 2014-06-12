@@ -130,56 +130,56 @@ public class ObjectController {
     Lock readLock = this.rwLocks.get(bucketName + key).readLock();
     readLock.lock();
     try {
-        org.plos.repo.models.Object object;
-        if (version == null)
+      org.plos.repo.models.Object object;
+      if (version == null)
         object = sqlService.getObject(bucketName, key);
-        else
+      else
         object = sqlService.getObject(bucketName, key, version);
 
-        if (object == null)
+      if (object == null)
         return Response.status(Response.Status.NOT_FOUND).build();
 
-        repoInfoService.incrementReadCount();
+      repoInfoService.incrementReadCount();
 
-        // if they want the metadata
+      // if they want the metadata
 
-        if (fetchMetadata != null && fetchMetadata) {
+      if (fetchMetadata != null && fetchMetadata) {
         object.versions = sqlService.listObjectVersions(object);
         return Response.status(Response.Status.OK).entity(object).build();
-        }
+      }
 
-        // if they want redirect URLs
+      // if they want redirect URLs
 
-        if ( requestXProxy != null && requestXProxy.equals(REPROXY_HEADER_FILE) && objectStore.hasXReproxy()) {
+      if ( requestXProxy != null && requestXProxy.equals(REPROXY_HEADER_FILE) && objectStore.hasXReproxy()) {
 
         return Response.status(Response.Status.OK).header(REPROXY_HEADER_URL,
             REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object)))
             .header(REPROXY_HEADER_CACHE_FOR, REPROXY_CACHE_FOR_HEADER).build();
 
-        }
+      }
 
-        // else assume they want the binary data
+      // else assume they want the binary data
 
-        String exportFileName = object.key;
+      String exportFileName = object.key;
 
-        if (object.downloadName != null)
+      if (object.downloadName != null)
         exportFileName = object.downloadName;
 
-        exportFileName = URLEncoder.encode(exportFileName, "UTF-8");
+      exportFileName = URLEncoder.encode(exportFileName, "UTF-8");
 
-        String contentType = object.contentType;
+      String contentType = object.contentType;
 
-        if (object.contentType == null || object.contentType.isEmpty())
+      if (object.contentType == null || object.contentType.isEmpty())
         contentType = MediaType.APPLICATION_OCTET_STREAM;
 
-        InputStream is = objectStore.getInputStream(object);
+      InputStream is = objectStore.getInputStream(object);
 
-        Response response = Response.ok(is, contentType)
-            .header("Content-Disposition", "inline; filename=" + exportFileName).build();
+      Response response = Response.ok(is, contentType)
+          .header("Content-Disposition", "inline; filename=" + exportFileName).build();
 
-        // post: container will close this input stream.
+      // post: container will close this input stream.
 
-        return response;
+      return response;
     } finally {
       readLock.unlock();
     }
@@ -198,26 +198,26 @@ public class ObjectController {
     Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
     writeLock.lock();
     try {
-        if (key == null)
+      if (key == null)
         return Response.status(Response.Status.BAD_REQUEST)
             .entity("No key entered").type(MediaType.TEXT_PLAIN).build();
 
-        if (version == null)
+      if (version == null)
         return Response.status(Response.Status.BAD_REQUEST)
             .entity("No version entered").type(MediaType.TEXT_PLAIN).build();
 
-        if (sqlService.markObjectDeleted(key, bucketName, version) == 0)
+      if (sqlService.markObjectDeleted(key, bucketName, version) == 0)
         return Response.status(Response.Status.NOT_FOUND)
             .entity("Can not find object in database.").type(MediaType.TEXT_PLAIN).build();
 
-        // NOTE: we no longer delete objects from the object store
+      // NOTE: we no longer delete objects from the object store
 
-        // delete it from the object store if it is no longer referenced in the database
-    //    if (!sqlService.objectInUse(bucketName, checksum) && !objectStore.deleteObject(objectStore.getObjectLocationString(bucketName, checksum)))
-    //      return new ResponseEntity<>("Error: There was a problem deleting the object from the filesystem.", HttpStatus.NOT_MODIFIED);
+      // delete it from the object store if it is no longer referenced in the database
+  //    if (!sqlService.objectInUse(bucketName, checksum) && !objectStore.deleteObject(objectStore.getObjectLocationString(bucketName, checksum)))
+  //      return new ResponseEntity<>("Error: There was a problem deleting the object from the filesystem.", HttpStatus.NOT_MODIFIED);
 
-        return Response.status(Response.Status.OK)
-            .entity(key + " version " + version + " deleted").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.OK)
+          .entity(key + " version " + version + " deleted").type(MediaType.TEXT_PLAIN).build();
     } finally {
       writeLock.unlock();
     }
@@ -251,49 +251,50 @@ required = true)
     Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
     writeLock.lock();
     try {
-        if (key == null)
+      if (key == null)
         return Response.status(Response.Status.BAD_REQUEST)
             .entity("No key entered").type(MediaType.TEXT_PLAIN).build();
 
-        if (create == null)
+      if (create == null)
         return Response.status(Response.Status.BAD_REQUEST)
             .entity("No create flag entered").type(MediaType.TEXT_PLAIN).build();
 
-        if (bucketName == null)
+      if (bucketName == null)
         return Response.status(Response.Status.BAD_REQUEST)
             .entity("No bucket specified").type(MediaType.TEXT_PLAIN).build();
 
-        Timestamp timestamp = new Timestamp(new Date().getTime());
+      Timestamp timestamp = new Timestamp(new Date().getTime());
 
-        if (timestampString != null) {
+      if (timestampString != null) {
         try {
-            timestamp = Timestamp.valueOf(timestampString);
+          timestamp = Timestamp.valueOf(timestampString);
         } catch (Exception e) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity("Could not parse timestamp").type(MediaType.TEXT_PLAIN).build();
+          return Response.status(Response.Status.BAD_REQUEST)
+              .entity("Could not parse timestamp").type(MediaType.TEXT_PLAIN).build();
         }
-        }
+      }
 
-        repoInfoService.incrementWriteCount();
+      repoInfoService.incrementWriteCount();
 
-        Object existingObject = sqlService.getObject(bucketName, key);
+      Object existingObject = sqlService.getObject(bucketName, key);
 
-        if (create.equalsIgnoreCase("new")) {
+      if (create.equalsIgnoreCase("new")) {
         if (existingObject != null)
-            return Response.status(Response.Status.NOT_ACCEPTABLE)
-                .entity("Attempting to create an object with a key that already exists.").type(MediaType.TEXT_PLAIN).build();
+          return Response.status(Response.Status.NOT_ACCEPTABLE)
+              .entity("Attempting to create an object with a key that already exists.").type(MediaType.TEXT_PLAIN).build();
+
         return create(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
-        } else if (create.equalsIgnoreCase("version")) {
+      } else if (create.equalsIgnoreCase("version")) {
         return update(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject);
-        } else if (create.equalsIgnoreCase("auto")) {
+      } else if (create.equalsIgnoreCase("auto")) {
         if (existingObject == null)
-            return create(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
+          return create(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
         else
-            return update(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject);
+          return update(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject);
         }
 
-        return Response.status(Response.Status.BAD_REQUEST)
-            .entity("Invalid create flag").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity("Invalid create flag").type(MediaType.TEXT_PLAIN).build();
     } finally {
       writeLock.unlock();
     }

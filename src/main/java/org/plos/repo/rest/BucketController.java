@@ -76,28 +76,28 @@ public class BucketController {
     Lock writeLock = this.rwLocks.get(name).writeLock();
     writeLock.lock();
     try {
-        if (sqlService.getBucketId(name) != null)
-          return Response.status(Response.Status.CONFLICT)
-              .entity("Bucket already exists").type(MediaType.TEXT_PLAIN).build();
+      if (sqlService.getBucketId(name) != null)
+        return Response.status(Response.Status.CONFLICT)
+            .entity("Bucket already exists").type(MediaType.TEXT_PLAIN).build();
 
-        if (!ObjectStore.isValidFileName(name))
-          return Response.status(Response.Status.PRECONDITION_FAILED)
-              .entity("Unable to create bucket. Name contains illegal characters: " + name).type(MediaType.TEXT_PLAIN).build();
+      if (!ObjectStore.isValidFileName(name))
+        return Response.status(Response.Status.PRECONDITION_FAILED)
+            .entity("Unable to create bucket. Name contains illegal characters: " + name).type(MediaType.TEXT_PLAIN).build();
 
-        Bucket bucket = new Bucket(null, name);
+      Bucket bucket = new Bucket(null, name);
 
-        if (!objectStore.createBucket(bucket))
-          return Response.status(Response.Status.CONFLICT)
-              .entity("Unable to create bucket " + name + " in object store").type(MediaType.TEXT_PLAIN).build();
+      if (!objectStore.createBucket(bucket))
+        return Response.status(Response.Status.CONFLICT)
+            .entity("Unable to create bucket " + name + " in object store").type(MediaType.TEXT_PLAIN).build();
 
-        if (!sqlService.insertBucket(bucket)) {
-          objectStore.deleteBucket(bucket);
-          return Response.status(Response.Status.CONFLICT)
-              .entity("Unable to create bucket " + name + " in database").type(MediaType.TEXT_PLAIN).build();
-        }
+      if (!sqlService.insertBucket(bucket)) {
+        objectStore.deleteBucket(bucket);
+        return Response.status(Response.Status.CONFLICT)
+            .entity("Unable to create bucket " + name + " in database").type(MediaType.TEXT_PLAIN).build();
+      }
 
-        return Response.status(Response.Status.CREATED)
-            .entity("Created bucket " + name).type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.CREATED)
+          .entity("Created bucket " + name).type(MediaType.TEXT_PLAIN).build();
     } finally {
       writeLock.unlock();
     }
@@ -114,28 +114,28 @@ public class BucketController {
     Lock writeLock = this.rwLocks.get(name).writeLock();
     writeLock.lock();
     try {
-        // NOTE: it is hard to delete buckets since their objects never get completely removed
+      // NOTE: it is hard to delete buckets since their objects never get completely removed
 
-        if (sqlService.getBucketId(name) == null)
-          return Response.status(Response.Status.NOT_MODIFIED)
-              .entity("Cannot delete bucket. Bucket not found.").type(MediaType.TEXT_PLAIN).build();
+      if (sqlService.getBucketId(name) == null)
+        return Response.status(Response.Status.NOT_MODIFIED)
+            .entity("Cannot delete bucket. Bucket not found.").type(MediaType.TEXT_PLAIN).build();
 
-        if (sqlService.listObjectsInBucket(name).size() != 0)
-          return Response.status(Response.Status.NOT_MODIFIED)
-              .entity("Cannot delete bucket " + name + " because it contains objects.").type(MediaType.TEXT_PLAIN).build();
+      if (sqlService.listObjectsInBucket(name).size() != 0)
+        return Response.status(Response.Status.NOT_MODIFIED)
+            .entity("Cannot delete bucket " + name + " because it contains objects.").type(MediaType.TEXT_PLAIN).build();
 
-        Bucket bucket = new Bucket(null, name);
+      Bucket bucket = new Bucket(null, name);
 
-        if (!objectStore.deleteBucket(bucket))
-          return Response.status(Response.Status.NOT_MODIFIED)
-              .entity("There was a problem removing the bucket").type(MediaType.TEXT_PLAIN).build();
+      if (!objectStore.deleteBucket(bucket))
+        return Response.status(Response.Status.NOT_MODIFIED)
+            .entity("There was a problem removing the bucket").type(MediaType.TEXT_PLAIN).build();
 
-        if (sqlService.deleteBucket(name) > 0)
-          return Response.status(Response.Status.OK)
-              .entity("Bucket " + name + " deleted.").type(MediaType.TEXT_PLAIN).build();
+      if (sqlService.deleteBucket(name) > 0)
+        return Response.status(Response.Status.OK)
+            .entity("Bucket " + name + " deleted.").type(MediaType.TEXT_PLAIN).build();
 
-        return Response.status(Response.Status.NOT_MODIFIED).type(MediaType.TEXT_PLAIN)
-            .entity("No buckets deleted.").build();
+      return Response.status(Response.Status.NOT_MODIFIED).type(MediaType.TEXT_PLAIN)
+          .entity("No buckets deleted.").build();
     } finally {
       writeLock.unlock();
     }
