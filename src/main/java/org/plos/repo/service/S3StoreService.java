@@ -74,6 +74,10 @@ public class S3StoreService extends ObjectStore {
     return s3Client.getObject(object.bucketName, object.checksum).getObjectContent();
   }
 
+  public boolean bucketExists(Bucket bucket) {
+    return s3Client.doesBucketExist(bucket.bucketName);
+  }
+
   public boolean createBucket(Bucket bucket) {
 
     try {

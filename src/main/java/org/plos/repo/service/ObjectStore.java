@@ -42,6 +42,8 @@ public abstract class ObjectStore {
 
   abstract public boolean objectExists(Object object);
 
+  abstract public boolean bucketExists(Bucket bucket);
+
   abstract public boolean createBucket(Bucket bucket);
 
   abstract public boolean deleteBucket(Bucket bucket);

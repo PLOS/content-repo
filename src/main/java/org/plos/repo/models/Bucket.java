@@ -12,6 +12,10 @@ public class Bucket {
   private Bucket() {
   }
 
+  public Bucket(String bucketName) {
+    this.bucketName = bucketName;
+  }
+
   public Bucket(Integer bucketId, String bucketName) {
     this.bucketName = bucketName;
     this.bucketId = bucketId;

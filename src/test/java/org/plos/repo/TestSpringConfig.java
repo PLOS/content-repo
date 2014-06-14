@@ -65,6 +65,7 @@ public class TestSpringConfig {
 //    SqlService service = new MysqlService();
 //    Resource sqlFile = new ClassPathResource("setup.mysql");
 
+
     JDBCDataSource ds = new JDBCDataSource();
     ds.setUrl("jdbc:hsqldb:mem:plosrepo-unittest-hsqldb;shutdown=true");
     ds.setUser("");
@@ -78,7 +79,7 @@ public class TestSpringConfig {
     ScriptRunner scriptRunner = new ScriptRunner(connection, false, true);
     scriptRunner.runScript(new BufferedReader(new FileReader(sqlFile.getFile())));
 
-    connection.setAutoCommit(true);
+    connection.setAutoCommit(false);
     service.setDataSource(ds);
 
     return service;

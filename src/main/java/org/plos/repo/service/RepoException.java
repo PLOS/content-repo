@@ -3,7 +3,7 @@ package org.plos.repo.service;
 /**
  * RepoExceptions usually capture a user/client side error
  */
-public class RepoException extends RuntimeException {
+public class RepoException extends Exception {
 
   public enum Type {
     ServerError(0), ClientError(1), ItemNotFound(2);

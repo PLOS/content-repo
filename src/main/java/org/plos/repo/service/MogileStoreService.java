@@ -86,6 +86,10 @@ public class MogileStoreService extends ObjectStore {
     }
   }
 
+  public boolean bucketExists(Bucket bucket) {
+    return true;
+  }
+
   public boolean createBucket(Bucket bucket) {
     // we use file paths instead of domains so this function does not need to do anything
     return true;

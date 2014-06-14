@@ -41,6 +41,9 @@ public abstract class RepoBaseTest extends JerseyTest {
   }
 
   public void clearData() throws SQLException {
+
+    sqlService.getConnection();
+
     List<org.plos.repo.models.Object> objectList = sqlService.listAllObject();
 
     for (org.plos.repo.models.Object object : objectList) {
@@ -55,6 +58,8 @@ public abstract class RepoBaseTest extends JerseyTest {
       sqlService.deleteBucket(bucket.bucketName);
       objectStore.deleteBucket(bucket);
     }
+
+    sqlService.transactionCommit();
   }
 
   @Override

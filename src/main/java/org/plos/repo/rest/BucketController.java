@@ -26,8 +26,6 @@ import org.apache.http.HttpStatus;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.service.RepoException;
 import org.plos.repo.service.RepoService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -45,8 +43,6 @@ import java.util.List;
 @Path("/buckets")
 @Api(value="/buckets")
 public class BucketController {
-
-  private static final Logger log = LoggerFactory.getLogger(BucketController.class);
 
   @Inject
   private RepoService repoService;

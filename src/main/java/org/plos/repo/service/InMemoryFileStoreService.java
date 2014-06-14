@@ -3,8 +3,6 @@ package org.plos.repo.service;
 import org.apache.commons.io.IOUtils;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -14,8 +12,6 @@ import java.util.HashMap;
 import java.util.UUID;
 
 public class InMemoryFileStoreService extends ObjectStore {
-
-  private static final Logger log = LoggerFactory.getLogger(InMemoryFileStoreService.class);
 
   // bucketName -> data checksum -> file content
   private HashMap<String, HashMap<String, byte[]>> data = new HashMap<>();
@@ -31,6 +27,10 @@ public class InMemoryFileStoreService extends ObjectStore {
 
   public InputStream getInputStream(Object object) {
     return new ByteArrayInputStream(data.get(object.bucketName).get(object.checksum));
+  }
+
+  public boolean bucketExists(Bucket bucket) {
+    return (data.containsKey(bucket.bucketName));
   }
 
   public boolean createBucket(Bucket bucket) {

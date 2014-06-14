@@ -17,11 +17,13 @@
 
 package org.plos.repo.service;
 
+import org.apache.commons.lang.StringUtils;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,64 +39,152 @@ import java.util.List;
  */
 public class RepoService {
 
+  private static final Logger log = LoggerFactory.getLogger(RepoService.class);
+
   @Inject
   private ObjectStore objectStore;
 
   @Inject
   private SqlService sqlService;
 
-  public List<Bucket> listBuckets() throws RepoException {
+
+  private void sqlReadDone() throws RepoException {
+
     try {
-      return sqlService.listBuckets();
+      sqlService.releaseConnection();
     } catch (SQLException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(RepoException.Type.ServerError, "Error closing db connection");
+    }
+
+  }
+
+  private void sqlRollback(String data) throws RepoException {
+
+    log.error("DB rollback: " + data + "\n" +
+        StringUtils.join(Thread.currentThread().getStackTrace(), "\n\t"));
+
+    try {
+      sqlService.transactionRollback();
+    } catch (SQLException e) {
+      throw new RepoException(RepoException.Type.ServerError, "Error rolling back transaction");
     }
   }
 
-  @Transactional
+  public List<Bucket> listBuckets() throws RepoException {
+    try {
+      sqlService.getConnection();
+      return sqlService.listBuckets();
+
+    } catch (SQLException e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    } finally {
+      sqlReadDone();
+    }
+  }
+
   public void createBucket(String name) throws RepoException {
+
+    boolean rollback = false;
+
+    Bucket bucket = new Bucket(name);
 
     try {
 
+      sqlService.getConnection();
+
       if (sqlService.getBucketId(name) != null)
-        throw new RepoException(RepoException.Type.ClientError, "Bucket already exists: " + name);
+        throw new RepoException(RepoException.Type.ClientError, "Bucket already exists in db: " + name);
+
+      if (objectStore.bucketExists(bucket))
+        throw new RepoException(RepoException.Type.ClientError, "Bucket already exists in object store: " + name);
 
       if (!ObjectStore.isValidFileName(name))
         throw new RepoException(RepoException.Type.ClientError, "Unable to create bucket. Name contains illegal characters: " + name);
 
-      Bucket bucket = new Bucket(null, name);
+      rollback = true;
 
       if (!objectStore.createBucket(bucket))
         throw new RepoException(RepoException.Type.ClientError, "Unable to create bucket " + name + " in object store");
 
+
       if (!sqlService.insertBucket(bucket)) {
-        objectStore.deleteBucket(bucket);
         throw new RepoException(RepoException.Type.ClientError, "Unable to create bucket " + name + " in database");
       }
+
+      sqlService.transactionCommit();
+
+      rollback = false;
+
     } catch (SQLException e) {
       throw new RepoException(RepoException.Type.ServerError, e);
+    } finally {
+
+      if (rollback) {
+        sqlRollback("bucket " + name);
+        objectStore.deleteBucket(bucket);
+        // TODO: check to make sure objectStore.deleteBucket didnt fail
+      } else {
+
+//        try {
+//
+//          // extra check of final state
+//
+//          sqlService.getConnection();
+//
+//          if (sqlService.getBucketId(name) != null)
+//            throw new RepoException(RepoException.Type.ServerError, "Bucket failed to be created in db: " + name);
+//
+//          if (objectStore.bucketExists(bucket))
+//            throw new RepoException(RepoException.Type.ServerError, "Bucket failed to be created in object store: " + name);
+//
+//          sqlService.releaseConnection();
+//        } catch (SQLException e) {
+//          throw new RepoException(RepoException.Type.ServerError, "Error verifying bucket creation: " + name);
+//        }
+      }
     }
 
   }
 
   public void deleteBucket(String name) throws RepoException {
 
+    boolean rollback = false;
+
+    Bucket bucket = new Bucket(name);
+
     try {
+      sqlService.getConnection();
+
       if (sqlService.getBucketId(name) == null)
-        throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found: " + name);
+        throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found in db: " + name);
+
+      if (!objectStore.bucketExists(bucket))
+        throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found in object store: " + name);
 
       if (sqlService.listObjectsInBucket(name).size() != 0)
         throw new RepoException(RepoException.Type.ClientError, "Cannot delete bucket " + name + " because it contains objects.");
 
-      Bucket bucket = new Bucket(null, name);
+      rollback = true;
 
       if (!objectStore.deleteBucket(bucket))
         throw new RepoException(RepoException.Type.ServerError, "There was a problem removing the bucket");
 
       if (sqlService.deleteBucket(name) == 0)
         throw new RepoException(RepoException.Type.ServerError, "No buckets deleted.");
+
+      sqlService.transactionCommit();
+      rollback = false;
+
     } catch (SQLException e) {
       throw new RepoException(RepoException.Type.ServerError, e);
+    } finally {
+
+      if (rollback) {
+        sqlRollback("bucket " + name);
+
+        objectStore.createBucket(bucket);
+        // TODO: validate objectStore.createBucket return values
+      }
     }
 
   }
@@ -106,6 +196,9 @@ public class RepoService {
   public List<Object> listObjects(String bucketName) throws RepoException {
 
     try {
+
+      sqlService.getConnection();
+
       if (bucketName == null)
         return sqlService.listAllObject();
 
@@ -115,6 +208,8 @@ public class RepoService {
       return sqlService.listObjectsInBucket(bucketName);
     } catch (SQLException e) {
       throw new RepoException(RepoException.Type.ServerError, e);
+    } finally {
+      sqlReadDone();
     }
   }
 
@@ -123,12 +218,16 @@ public class RepoService {
     Object object;
 
     try {
+      sqlService.getConnection();
+
       if (version == null)
         object = sqlService.getObject(bucketName, key);
       else
         object = sqlService.getObject(bucketName, key, version);
     } catch (SQLException e) {
       throw new RepoException(RepoException.Type.ServerError, e);
+    } finally {
+      sqlReadDone();
     }
 
     if (object == null)
@@ -139,17 +238,23 @@ public class RepoService {
 
   public List<Object> getObjectVersions(Object object) throws RepoException {
     try {
+      sqlService.getConnection();
       return sqlService.listObjectVersions(object);
     } catch (SQLException e) {
       throw new RepoException(RepoException.Type.ServerError, e);
+    } finally {
+      sqlReadDone();
     }
   }
 
   public URL[] getObjectReproxy(Object object) throws RepoException {
     try {
+      sqlService.getConnection();
       return objectStore.getRedirectURLs(object);
     } catch (Exception e) {
       throw new RepoException(RepoException.Type.ServerError, e);
+    } finally {
+      sqlReadDone();
     }
   }
 
@@ -187,11 +292,25 @@ public class RepoService {
 
   public void deleteObject(String bucketName, String key, Integer version) throws RepoException {
 
+    boolean rollback = true;
+
     try {
+
+      sqlService.getConnection();
+
       if (sqlService.markObjectDeleted(key, bucketName, version) == 0)
         throw new RepoException(RepoException.Type.ItemNotFound, "Object not found");
+
+      sqlService.transactionCommit();
+      rollback = false;
+
     } catch (SQLException e) {
       throw new RepoException(RepoException.Type.ServerError, e);
+    } finally {
+
+      if (rollback) {
+        sqlRollback("object " + bucketName + ", " + key + ", " + version);
+      }
     }
   }
 
@@ -205,7 +324,10 @@ public class RepoService {
     ObjectStore.UploadInfo uploadInfo;
     Integer bucketId, versionNumber;
 
+    boolean rollback = true;
+
     try {
+      sqlService.getConnection();
       bucketId = sqlService.getBucketId(bucketName);
     } catch (SQLException e) {
       throw new RepoException(RepoException.Type.ServerError, e);
@@ -248,7 +370,7 @@ public class RepoService {
       // dont bother storing the file since the data already exists in the system
       objectStore.deleteTempUpload(uploadInfo);
     } else {
-      if (!objectStore.saveUploadedObject(new Bucket(null, bucketName), uploadInfo, object)) {
+      if (!objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object)) {
         objectStore.deleteTempUpload(uploadInfo);
         throw new RepoException(RepoException.Type.ServerError, "Error saving content to data store");
       }
@@ -258,11 +380,20 @@ public class RepoService {
 
     try {
       if (sqlService.insertObject(object) == 0) {
-        //objectStore.deleteObject(object);
         throw new RepoException(RepoException.Type.ServerError, "Error saving content to database");
       }
+
+      sqlService.transactionCommit();
+      rollback = false;
+
     } catch (SQLException e) {
       throw new RepoException(RepoException.Type.ServerError, e);
+    } finally {
+
+      if (rollback) {
+        sqlRollback("object " + bucketName + ", " + key);
+        // TODO: handle objectStore rollback, or not?
+      }
     }
 
     return object;
@@ -275,7 +406,10 @@ public class RepoService {
                           InputStream uploadedInputStream,
                           Object object) throws RepoException {
 
+    boolean rollback = true;
+
     try {
+      sqlService.getConnection();
       Integer bucketId = sqlService.getBucketId(bucketName);
 
       if (bucketId == null)
@@ -295,36 +429,41 @@ public class RepoService {
       ObjectStore.UploadInfo uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
       uploadedInputStream.close();
 
-      // handle metadata-only update
       if (uploadInfo.getSize() == 0) {
-        objectStore.deleteTempUpload(uploadInfo);
-        sqlService.insertObject(object); // TODO: deal with 0 return values
-
-        return object;
-      }
-
-      // determine if the object should be added to the store or not
-      object.checksum = uploadInfo.getChecksum();
-      object.size = uploadInfo.getSize();
-      if (objectStore.objectExists(object)) {
+        // handle metadata-only update
         objectStore.deleteTempUpload(uploadInfo);
       } else {
-        if (!objectStore.saveUploadedObject(new Bucket(null, bucketName), uploadInfo, object)) {
+
+        // determine if the object should be added to the store or not
+        object.checksum = uploadInfo.getChecksum();
+        object.size = uploadInfo.getSize();
+        if (objectStore.objectExists(object)) {
           objectStore.deleteTempUpload(uploadInfo);
-          throw new RepoException(RepoException.Type.ServerError, "Error saving content to data store");
+        } else {
+          if (!objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object)) {
+            objectStore.deleteTempUpload(uploadInfo);
+            throw new RepoException(RepoException.Type.ServerError, "Error saving content to data store");
+          }
         }
       }
 
       // add a record to the DB
 
       if (sqlService.insertObject(object) == 0) {
-        //objectStore.deleteObject(object);
         throw new RepoException(RepoException.Type.ServerError, "Error saving content to database");
       }
-    } catch (SQLException e) {
+
+      sqlService.transactionCommit();
+      rollback = false;
+
+    } catch (SQLException | IOException e) {
       throw new RepoException(RepoException.Type.ServerError, e);
-    } catch (IOException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+    } finally {
+
+      if (rollback) {
+        sqlRollback("object " + bucketName + ", " + object.key);
+        // TODO: handle objectStore rollback, or not?
+      }
     }
 
     return object;

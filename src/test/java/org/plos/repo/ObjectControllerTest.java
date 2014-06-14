@@ -201,6 +201,16 @@ public class ObjectControllerTest extends RepoBaseTest {
     // TODO: create the same object in two buckets, and make sure deleting one does not delete the other
 
 
+
+
+    // LIST
+
+    responseString = target("/objects/").queryParam("bucketName", bucketName).request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+    JsonArray jsonArray = gson.fromJson(responseString, JsonElement.class).getAsJsonArray();
+
+    assertEquals(jsonArray.size(), 4);
+
+
     // READ
 
     response = target("/objects/" + bucketName).queryParam("key", "object1").request().get();
@@ -286,6 +296,16 @@ public class ObjectControllerTest extends RepoBaseTest {
                 MediaType.MULTIPART_FORM_DATA)).getStatus(),
         Response.Status.CREATED.getStatusCode());
 
+
+    // VERSION LIST
+
+    responseString = target("/objects/" + bucketName).queryParam("key", "object2").queryParam("fetchMetadata", "true").request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+    JsonObject jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
+    jsonArray = jsonObject.getAsJsonArray("versions");
+
+    assertEquals(jsonArray.size(), 3);
+
+
     // AUTOCREATE
 
     assertEquals(target("/objects").request()
@@ -318,8 +338,8 @@ public class ObjectControllerTest extends RepoBaseTest {
     // VERSION LIST
 
     responseString = target("/objects/" + bucketName).queryParam("key", "object2").queryParam("fetchMetadata", "true").request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
-    JsonObject jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
-    JsonArray jsonArray = jsonObject.getAsJsonArray("versions");
+    jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
+    jsonArray = jsonObject.getAsJsonArray("versions");
 
     assertEquals(jsonArray.size(), 4);
 

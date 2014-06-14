@@ -69,6 +69,10 @@ public class FileSystemStoreService extends ObjectStore {
     }
   }
 
+  public boolean bucketExists(Bucket bucket) {
+    return (new File(getBucketLocationString(bucket.bucketName)).isDirectory());
+  }
+
   public boolean createBucket(Bucket bucket) {
 
     File dir = new File(getBucketLocationString(bucket.bucketName));
