@@ -17,9 +17,16 @@
 
 package org.plos.repo.rest;
 
-import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
+import com.google.common.util.concurrent.Striped;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiParam;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
+import org.apache.http.HttpStatus;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.service.ObjectStore;
+import org.plos.repo.service.SqlService;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -32,18 +39,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import org.apache.http.HttpStatus;
-import org.plos.repo.models.Bucket;
-import org.plos.repo.service.ObjectStore;
-import org.plos.repo.service.SqlService;
-
-import com.google.common.util.concurrent.Striped;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiParam;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
+import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
 
 @Path("/buckets")
 @Api(value="/buckets")
@@ -120,7 +118,13 @@ public class BucketController {
         return Response.status(Response.Status.NOT_MODIFIED)
             .entity("Cannot delete bucket. Bucket not found.").type(MediaType.TEXT_PLAIN).build();
 
-      if (sqlService.listObjectsInBucket(name).size() != 0)
+      Integer count = null;
+      try {
+        count = sqlService.objectCount(true, name);
+      } catch (Exception e) {
+        // ignore
+      }
+      if (count != null && count != 0)
         return Response.status(Response.Status.NOT_MODIFIED)
             .entity("Cannot delete bucket " + name + " because it contains objects.").type(MediaType.TEXT_PLAIN).build();
 

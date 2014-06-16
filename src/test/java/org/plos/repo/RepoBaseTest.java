@@ -40,7 +40,7 @@ public abstract class RepoBaseTest extends JerseyTest {
   }
 
   public void clearData() {
-    List<org.plos.repo.models.Object> objectList = sqlService.listAllObject();
+    List<org.plos.repo.models.Object> objectList = sqlService.listAllObject(null, null);
 
     for (org.plos.repo.models.Object object : objectList) {
       //sqlService.markObjectDeleted(object.key, object.checksum, object.bucketName, object.versionNumber);

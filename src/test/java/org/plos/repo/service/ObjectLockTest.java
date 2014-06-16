@@ -1,13 +1,13 @@
 package org.plos.repo.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import org.junit.Before;
+import org.junit.Test;
+import org.plos.repo.RepoBaseTest;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.models.Object;
+import org.plos.repo.rest.ObjectController;
 
+import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -16,16 +16,15 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.plos.repo.RepoBaseTest;
-import org.plos.repo.models.Bucket;
-import org.plos.repo.models.Object;
-import org.plos.repo.models.Object.Status;
-import org.plos.repo.rest.ObjectController;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 //TODO - HACK. Remove this when integrate with Service layer code
-import javax.ws.rs.core.Response;
 
 public class ObjectLockTest extends RepoBaseTest {
 
@@ -114,7 +113,7 @@ public class ObjectLockTest extends RepoBaseTest {
 
     execute(INSERT_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
-    List<org.plos.repo.models.Object> objects =  this.sqlService.listAllObject();
+    List<org.plos.repo.models.Object> objects =  this.sqlService.listAllObject(null, null);
     assertEquals(INSERT_THREADS, objects.size());
 
     Collections.sort(objects, new ObjectComparator());
@@ -157,7 +156,7 @@ public class ObjectLockTest extends RepoBaseTest {
 
     execute(INSERT_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
-    List<org.plos.repo.models.Object> objects =  this.sqlService.listAllObject();
+    List<org.plos.repo.models.Object> objects =  this.sqlService.listAllObject(null, null);
     assertEquals(INSERT_THREADS, objects.size());
 
     Collections.sort(objects, new ObjectComparator());
