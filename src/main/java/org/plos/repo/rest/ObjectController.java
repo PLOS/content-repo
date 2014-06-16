@@ -17,21 +17,13 @@
 
 package org.plos.repo.rest;
 
-import com.google.common.base.Joiner;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiParam;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
-import org.apache.http.HttpStatus;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.plos.repo.models.Bucket;
-import org.plos.repo.models.Object;
-import org.plos.repo.service.ObjectStore;
-import org.plos.repo.service.RepoInfoService;
-import org.plos.repo.service.SqlService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.InputStream;
+import java.net.URLEncoder;
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -46,11 +38,26 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.InputStream;
-import java.net.URLEncoder;
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.List;
+
+import org.junit.ComparisonFailure;
+
+import org.apache.http.HttpStatus;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.models.Object;
+import org.plos.repo.service.ObjectStore;
+import org.plos.repo.service.RepoInfoService;
+import org.plos.repo.service.SqlService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Joiner;
+import com.google.common.util.concurrent.Striped;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiParam;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 @Path("/objects")
 @Api(value="/objects")
@@ -70,6 +77,8 @@ public class ObjectController {
   private static final String REPROXY_HEADER_CACHE_FOR = "X-Reproxy-Cache-For";
 
   private static final String REPROXY_HEADER_FILE = "reproxy-file";
+
+  private Striped<ReadWriteLock> rwLocks = Striped.lazyWeakReadWriteLock(25);
 
   @Inject
   private ObjectStore objectStore;
@@ -118,56 +127,62 @@ public class ObjectController {
                        @HeaderParam("X-Proxy-Capabilities") String requestXProxy
   ) throws Exception {
 
-    org.plos.repo.models.Object object;
-    if (version == null)
-      object = sqlService.getObject(bucketName, key);
-    else
-      object = sqlService.getObject(bucketName, key, version);
+    Lock readLock = this.rwLocks.get(bucketName + key).readLock();
+    readLock.lock();
+    try {
+      org.plos.repo.models.Object object;
+      if (version == null)
+        object = sqlService.getObject(bucketName, key);
+      else
+        object = sqlService.getObject(bucketName, key, version);
 
-    if (object == null)
-      return Response.status(Response.Status.NOT_FOUND).build();
+      if (object == null)
+        return Response.status(Response.Status.NOT_FOUND).build();
 
-    repoInfoService.incrementReadCount();
+      repoInfoService.incrementReadCount();
 
-    // if they want the metadata
+      // if they want the metadata
 
-    if (fetchMetadata != null && fetchMetadata) {
-      object.versions = sqlService.listObjectVersions(object);
-      return Response.status(Response.Status.OK).entity(object).build();
+      if (fetchMetadata != null && fetchMetadata) {
+        object.versions = sqlService.listObjectVersions(object);
+        return Response.status(Response.Status.OK).entity(object).build();
+      }
+
+      // if they want redirect URLs
+
+      if ( requestXProxy != null && requestXProxy.equals(REPROXY_HEADER_FILE) && objectStore.hasXReproxy()) {
+
+        return Response.status(Response.Status.OK).header(REPROXY_HEADER_URL,
+            REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object)))
+            .header(REPROXY_HEADER_CACHE_FOR, REPROXY_CACHE_FOR_HEADER).build();
+
+      }
+
+      // else assume they want the binary data
+
+      String exportFileName = object.key;
+
+      if (object.downloadName != null)
+        exportFileName = object.downloadName;
+
+      exportFileName = URLEncoder.encode(exportFileName, "UTF-8");
+
+      String contentType = object.contentType;
+
+      if (object.contentType == null || object.contentType.isEmpty())
+        contentType = MediaType.APPLICATION_OCTET_STREAM;
+
+      InputStream is = objectStore.getInputStream(object);
+
+      Response response = Response.ok(is, contentType)
+          .header("Content-Disposition", "inline; filename=" + exportFileName).build();
+
+      // post: container will close this input stream.
+
+      return response;
+    } finally {
+      readLock.unlock();
     }
-
-    // if they want redirect URLs
-
-    if ( requestXProxy != null && requestXProxy.equals(REPROXY_HEADER_FILE) && objectStore.hasXReproxy()) {
-
-      return Response.status(Response.Status.OK).header(REPROXY_HEADER_URL,
-          REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object)))
-          .header(REPROXY_HEADER_CACHE_FOR, REPROXY_CACHE_FOR_HEADER).build();
-
-    }
-
-    // else assume they want the binary data
-
-    String exportFileName = object.key;
-
-    if (object.downloadName != null)
-      exportFileName = object.downloadName;
-
-    exportFileName = URLEncoder.encode(exportFileName, "UTF-8");
-
-    String contentType = object.contentType;
-
-    if (object.contentType == null || object.contentType.isEmpty())
-      contentType = MediaType.APPLICATION_OCTET_STREAM;
-
-    InputStream is = objectStore.getInputStream(object);
-
-    Response response = Response.ok(is, contentType)
-        .header("Content-Disposition", "inline; filename=" + exportFileName).build();
-
-    // post: container will close this input stream.
-
-    return response;
   }
 
   @DELETE
@@ -180,26 +195,32 @@ public class ObjectController {
                          @ApiParam(required = true) @QueryParam("key") String key,
                          @ApiParam(required = true) @QueryParam("version") Integer version) throws Exception {
 
-    if (key == null)
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity("No key entered").type(MediaType.TEXT_PLAIN).build();
+    Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
+    writeLock.lock();
+    try {
+      if (key == null)
+        return Response.status(Response.Status.BAD_REQUEST)
+            .entity("No key entered").type(MediaType.TEXT_PLAIN).build();
 
-    if (version == null)
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity("No version entered").type(MediaType.TEXT_PLAIN).build();
+      if (version == null)
+        return Response.status(Response.Status.BAD_REQUEST)
+            .entity("No version entered").type(MediaType.TEXT_PLAIN).build();
 
-    if (sqlService.markObjectDeleted(key, bucketName, version) == 0)
-      return Response.status(Response.Status.NOT_FOUND)
-          .entity("Can not find object in database.").type(MediaType.TEXT_PLAIN).build();
+      if (sqlService.markObjectDeleted(key, bucketName, version) == 0)
+        return Response.status(Response.Status.NOT_FOUND)
+            .entity("Can not find object in database.").type(MediaType.TEXT_PLAIN).build();
 
-    // NOTE: we no longer delete objects from the object store
+      // NOTE: we no longer delete objects from the object store
 
-    // delete it from the object store if it is no longer referenced in the database
-//    if (!sqlService.objectInUse(bucketName, checksum) && !objectStore.deleteObject(objectStore.getObjectLocationString(bucketName, checksum)))
-//      return new ResponseEntity<>("Error: There was a problem deleting the object from the filesystem.", HttpStatus.NOT_MODIFIED);
+      // delete it from the object store if it is no longer referenced in the database
+  //    if (!sqlService.objectInUse(bucketName, checksum) && !objectStore.deleteObject(objectStore.getObjectLocationString(bucketName, checksum)))
+  //      return new ResponseEntity<>("Error: There was a problem deleting the object from the filesystem.", HttpStatus.NOT_MODIFIED);
 
-    return Response.status(Response.Status.OK)
-        .entity(key + " version " + version + " deleted").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.OK)
+          .entity(key + " version " + version + " deleted").type(MediaType.TEXT_PLAIN).build();
+    } finally {
+      writeLock.unlock();
+    }
   }
 
   @POST
@@ -227,49 +248,56 @@ required = true)
         @FormDataParam("file") InputStream uploadedInputStream
   ) throws Exception {
 
-    if (key == null)
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity("No key entered").type(MediaType.TEXT_PLAIN).build();
-
-    if (create == null)
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity("No create flag entered").type(MediaType.TEXT_PLAIN).build();
-
-    if (bucketName == null)
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity("No bucket specified").type(MediaType.TEXT_PLAIN).build();
-
-    Timestamp timestamp = new Timestamp(new Date().getTime());
-
-    if (timestampString != null) {
-      try {
-        timestamp = Timestamp.valueOf(timestampString);
-      } catch (Exception e) {
+    Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
+    writeLock.lock();
+    try {
+      if (key == null)
         return Response.status(Response.Status.BAD_REQUEST)
-            .entity("Could not parse timestamp").type(MediaType.TEXT_PLAIN).build();
+            .entity("No key entered").type(MediaType.TEXT_PLAIN).build();
+
+      if (create == null)
+        return Response.status(Response.Status.BAD_REQUEST)
+            .entity("No create flag entered").type(MediaType.TEXT_PLAIN).build();
+
+      if (bucketName == null)
+        return Response.status(Response.Status.BAD_REQUEST)
+            .entity("No bucket specified").type(MediaType.TEXT_PLAIN).build();
+
+      Timestamp timestamp = new Timestamp(new Date().getTime());
+
+      if (timestampString != null) {
+        try {
+          timestamp = Timestamp.valueOf(timestampString);
+        } catch (Exception e) {
+          return Response.status(Response.Status.BAD_REQUEST)
+              .entity("Could not parse timestamp").type(MediaType.TEXT_PLAIN).build();
+        }
       }
-    }
 
-    repoInfoService.incrementWriteCount();
+      repoInfoService.incrementWriteCount();
 
-    Object existingObject = sqlService.getObject(bucketName, key);
+      Object existingObject = sqlService.getObject(bucketName, key);
 
-    if (create.equalsIgnoreCase("new")) {
-      if (existingObject != null)
-        return Response.status(Response.Status.NOT_ACCEPTABLE)
-            .entity("Attempting to create an object with a key that already exists.").type(MediaType.TEXT_PLAIN).build();
-      return create(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
-    } else if (create.equalsIgnoreCase("version")) {
-      return update(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject);
-    } else if (create.equalsIgnoreCase("auto")) {
-      if (existingObject == null)
+      if (create.equalsIgnoreCase("new")) {
+        if (existingObject != null)
+          return Response.status(Response.Status.NOT_ACCEPTABLE)
+              .entity("Attempting to create an object with a key that already exists.").type(MediaType.TEXT_PLAIN).build();
+
         return create(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
-      else
+      } else if (create.equalsIgnoreCase("version")) {
         return update(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject);
-    }
+      } else if (create.equalsIgnoreCase("auto")) {
+        if (existingObject == null)
+          return create(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
+        else
+          return update(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject);
+        }
 
-    return Response.status(Response.Status.BAD_REQUEST)
-        .entity("Invalid create flag").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity("Invalid create flag").type(MediaType.TEXT_PLAIN).build();
+    } finally {
+      writeLock.unlock();
+    }
   }
 
   private Response create(String key,
