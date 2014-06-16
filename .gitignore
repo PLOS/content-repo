@@ -12,12 +12,22 @@ overlays/
 target/
 
 # Project metadata #
-.idea/
 *.iml
 *.ipr
 *.iws
+.classpath
+.idea/
+.project
+.settings/
 
 # Temporary files #
 *~
 *.log
+*.swp
 *.temp
+
+# Conent Rep
+cp.*.txt
+debug.sh
+run.sh
+mdb.ini
