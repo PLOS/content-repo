@@ -454,10 +454,10 @@ public abstract class SqlService {
 
       StringBuilder q = new StringBuilder();
       q.append("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
-      if (offset != null)
-        q.append(" OFFSET " + offset);
       if (limit != null)
         q.append(" LIMIT " + limit);
+      if (offset != null)
+        q.append(" OFFSET " + offset);
       p = connection.prepareStatement(q.toString());
 
       result = p.executeQuery();
@@ -490,10 +490,10 @@ public abstract class SqlService {
 
       StringBuilder q = new StringBuilder();
       q.append("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND status=?");
-      if (offset != null)
-        q.append(" OFFSET " + offset);
       if (limit != null)
         q.append(" LIMIT " + limit);
+      if (offset != null)
+        q.append(" OFFSET " + offset);
       p = connection.prepareStatement(q.toString());
 
       p.setString(1, bucketName);
