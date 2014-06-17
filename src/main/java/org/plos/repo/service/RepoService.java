@@ -93,7 +93,7 @@ public class RepoService {
       sqlService.getConnection();
 
       if (sqlService.getBucketId(name) != null)
-        throw new RepoException(RepoException.Type.ClientError, "Bucket already exists in db: " + name);
+        throw new RepoException(RepoException.Type.ClientError, "Bucket already exists in database: " + name);
 
       if (objectStore.bucketExists(bucket))
         throw new RepoException(RepoException.Type.ClientError, "Bucket already exists in object store: " + name);
@@ -104,11 +104,11 @@ public class RepoService {
       rollback = true;
 
       if (!objectStore.createBucket(bucket))
-        throw new RepoException(RepoException.Type.ClientError, "Unable to create bucket " + name + " in object store");
+        throw new RepoException(RepoException.Type.ClientError, "Unable to create bucket in object store: " + name);
 
 
       if (!sqlService.insertBucket(bucket)) {
-        throw new RepoException(RepoException.Type.ClientError, "Unable to create bucket " + name + " in database");
+        throw new RepoException(RepoException.Type.ClientError, "Unable to create bucket in database: " + name);
       }
 
       sqlService.transactionCommit();
@@ -156,21 +156,21 @@ public class RepoService {
       sqlService.getConnection();
 
       if (sqlService.getBucketId(name) == null)
-        throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found in db: " + name);
+        throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found in database: " + name);
 
       if (!objectStore.bucketExists(bucket))
         throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found in object store: " + name);
 
       if (sqlService.listObjectsInBucket(name).size() != 0)
-        throw new RepoException(RepoException.Type.ClientError, "Cannot delete bucket " + name + " because it contains objects.");
+        throw new RepoException(RepoException.Type.ClientError, "Cannot delete bucket because it contains objects: " + name );
 
       rollback = true;
 
       if (!objectStore.deleteBucket(bucket))
-        throw new RepoException(RepoException.Type.ServerError, "There was a problem removing the bucket");
+        throw new RepoException(RepoException.Type.ServerError, "Unable to delete bucket in object store: " + name);
 
       if (sqlService.deleteBucket(name) == 0)
-        throw new RepoException(RepoException.Type.ServerError, "No buckets deleted.");
+        throw new RepoException(RepoException.Type.ServerError, "Unable to delete bucket in database: " + name);
 
       sqlService.transactionCommit();
       rollback = false;
@@ -324,7 +324,7 @@ public class RepoService {
     ObjectStore.UploadInfo uploadInfo;
     Integer bucketId, versionNumber;
 
-    boolean rollback = true;
+    boolean rollback = false;
 
     try {
       sqlService.getConnection();
@@ -357,6 +357,8 @@ public class RepoService {
 
     Object object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), null, bucketId, bucketName, versionNumber, Object.Status.USED);
 
+    rollback = true;
+
     // determine if the object should be added to the store or not
     if (objectStore.objectExists(object)) {
 
@@ -372,7 +374,7 @@ public class RepoService {
     } else {
       if (!objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object)) {
         objectStore.deleteTempUpload(uploadInfo);
-        throw new RepoException(RepoException.Type.ServerError, "Error saving content to data store");
+        throw new RepoException(RepoException.Type.ServerError, "Error saving content to object store");
       }
     }
 
@@ -390,6 +392,8 @@ public class RepoService {
       throw new RepoException(RepoException.Type.ServerError, e);
     } finally {
 
+      // TODO: move objectStore.deleteTempUpload(uploadInfo); here
+
       if (rollback) {
         sqlRollback("object " + bucketName + ", " + key);
         // TODO: handle objectStore rollback, or not?
@@ -406,14 +410,14 @@ public class RepoService {
                           InputStream uploadedInputStream,
                           Object object) throws RepoException {
 
-    boolean rollback = true;
+    boolean rollback = false;
 
     try {
       sqlService.getConnection();
       Integer bucketId = sqlService.getBucketId(bucketName);
 
       if (bucketId == null)
-        throw new RepoException(RepoException.Type.ClientError, "Can not find bucket " + bucketName);
+        throw new RepoException(RepoException.Type.ClientError, "Can not find bucket: " + bucketName);
 
       // copy over values from previous object, if they are not specified in the request
       if (contentType != null)
@@ -429,6 +433,8 @@ public class RepoService {
       ObjectStore.UploadInfo uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
       uploadedInputStream.close();
 
+      rollback = true;
+
       if (uploadInfo.getSize() == 0) {
         // handle metadata-only update
         objectStore.deleteTempUpload(uploadInfo);
@@ -442,7 +448,7 @@ public class RepoService {
         } else {
           if (!objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object)) {
             objectStore.deleteTempUpload(uploadInfo);
-            throw new RepoException(RepoException.Type.ServerError, "Error saving content to data store");
+            throw new RepoException(RepoException.Type.ServerError, "Error saving content to object store");
           }
         }
       }

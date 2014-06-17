@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.junit.Before;
 import org.junit.Test;
 
 import javax.ws.rs.client.Entity;
@@ -15,10 +16,13 @@ import static org.junit.Assert.assertEquals;
 
 public class BucketControllerTest extends RepoBaseTest {
 
+  @Before
+  public void setup() throws Exception {
+    clearData();
+  }
+
   @Test
   public void testControllerCrud() throws Exception {
-
-    clearData();
 
     // CREATE
 
@@ -62,9 +66,6 @@ public class BucketControllerTest extends RepoBaseTest {
 
     response = target("/buckets/plos-bucketunittest-bucket3").request().delete();
     assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
-
-
-//    clearData(sqlService, objectStore);
 
   }
 

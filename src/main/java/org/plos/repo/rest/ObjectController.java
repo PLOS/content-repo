@@ -92,7 +92,7 @@ public class ObjectController {
             .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
 
       default:  // ServerError
-        log.error("Server side error", e);
+        log.error(e.getType().toString(), e);
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
             .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
     }
