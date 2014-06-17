@@ -46,6 +46,12 @@ If you are using **Amazon S3** as the object store, set your access key and secr
         factory="org.plos.repo.config.S3StoreFactory"
         awsAccessKey="abc"
         awsSecretKey="def" />
+        
+For testing purposes there is also an **InMemoryFileStore** which you can simply use like so:
+
+    <Resource name="repo/objectStore"
+        type="org.plos.repo.service.ObjectStore"
+        factory="org.plos.repo.config.InMemoryStoreFactory" />
 
 
 

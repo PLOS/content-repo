@@ -48,8 +48,8 @@ public abstract class RepoBaseTest extends JerseyTest {
 
     for (org.plos.repo.models.Object object : objectList) {
       //sqlService.markObjectDeleted(object.key, object.checksum, object.bucketName, object.versionNumber);
-      int delD = sqlService.deleteObject(object);
-      boolean delS = objectStore.deleteObject(object);
+      sqlService.deleteObject(object);
+      objectStore.deleteObject(object);
     }
 
     List<Bucket> bucketList = sqlService.listBuckets();

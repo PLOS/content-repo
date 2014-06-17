@@ -345,7 +345,6 @@ public class RepoService {
     }
 
     if (uploadInfo.getSize() == 0) {
-      objectStore.deleteTempUpload(uploadInfo);
       throw new RepoException(RepoException.Type.ClientError, "Uploaded data must be non-empty");
     }
 
@@ -370,10 +369,9 @@ public class RepoService {
 //      }
 
       // dont bother storing the file since the data already exists in the system
-      objectStore.deleteTempUpload(uploadInfo);
+
     } else {
       if (!objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object)) {
-        objectStore.deleteTempUpload(uploadInfo);
         throw new RepoException(RepoException.Type.ServerError, "Error saving content to object store");
       }
     }
@@ -392,7 +390,7 @@ public class RepoService {
       throw new RepoException(RepoException.Type.ServerError, e);
     } finally {
 
-      // TODO: move objectStore.deleteTempUpload(uploadInfo); here
+      objectStore.deleteTempUpload(uploadInfo);
 
       if (rollback) {
         sqlRollback("object " + bucketName + ", " + key);
@@ -410,6 +408,7 @@ public class RepoService {
                           InputStream uploadedInputStream,
                           Object object) throws RepoException {
 
+    ObjectStore.UploadInfo uploadInfo = null;
     boolean rollback = false;
 
     try {
@@ -430,24 +429,21 @@ public class RepoService {
       object.versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, object.key);
       object.id = null;  // remove this since it refers to the old object
 
-      ObjectStore.UploadInfo uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
+      uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
       uploadedInputStream.close();
 
       rollback = true;
 
       if (uploadInfo.getSize() == 0) {
         // handle metadata-only update
-        objectStore.deleteTempUpload(uploadInfo);
       } else {
 
         // determine if the object should be added to the store or not
         object.checksum = uploadInfo.getChecksum();
         object.size = uploadInfo.getSize();
-        if (objectStore.objectExists(object)) {
-          objectStore.deleteTempUpload(uploadInfo);
-        } else {
+
+        if (!objectStore.objectExists(object)) {
           if (!objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object)) {
-            objectStore.deleteTempUpload(uploadInfo);
             throw new RepoException(RepoException.Type.ServerError, "Error saving content to object store");
           }
         }
@@ -465,6 +461,9 @@ public class RepoService {
     } catch (SQLException | IOException e) {
       throw new RepoException(RepoException.Type.ServerError, e);
     } finally {
+
+      if (uploadInfo != null)
+        objectStore.deleteTempUpload(uploadInfo);
 
       if (rollback) {
         sqlRollback("object " + bucketName + ", " + object.key);

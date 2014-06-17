@@ -1,4 +1,4 @@
-package org.plos.repo.service;
+package org.plos.repo;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
@@ -11,6 +11,10 @@ import org.mockito.Mockito;
 import org.plos.repo.TestSpringConfig;
 import org.plos.repo.models.*;
 import org.plos.repo.models.Object;
+import org.plos.repo.service.ObjectStore;
+import org.plos.repo.service.RepoException;
+import org.plos.repo.service.RepoService;
+import org.plos.repo.service.SqlService;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
