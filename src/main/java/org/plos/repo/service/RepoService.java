@@ -63,7 +63,7 @@ public class RepoService {
     try {
       sqlService.releaseConnection();
     } catch (SQLException e) {
-      throw new RepoException(RepoException.Type.ServerError, "Error closing db connection");
+      throw new RepoException(RepoException.Type.ServerError, e);
     }
 
   }
@@ -76,7 +76,7 @@ public class RepoService {
     try {
       sqlService.transactionRollback();
     } catch (SQLException e) {
-      throw new RepoException(RepoException.Type.ServerError, "Error rolling back transaction");
+      throw new RepoException(RepoException.Type.ServerError, e);
     }
   }
 
@@ -180,7 +180,7 @@ public class RepoService {
       if (!objectStore.bucketExists(bucket))
         throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found in object store: " + name);
 
-      if (sqlService.listObjects(name, 0, 1, false).size() != 0)
+      if (sqlService.listObjects(name, 0, 1, true).size() != 0)
         throw new RepoException(RepoException.Type.ClientError, "Cannot delete bucket because it contains objects: " + name );
 
       rollback = true;
@@ -214,7 +214,7 @@ public class RepoService {
     return objectStore.hasXReproxy();
   }
 
-  public List<Object> listObjects(String bucketName, Integer offset, Integer limit) throws RepoException {
+  public List<Object> listObjects(String bucketName, Integer offset, Integer limit, boolean includeDeleted) throws RepoException {
 
     // TODO: should this function return a list of objects and their nested versions instead of one flat last?
 
@@ -225,7 +225,7 @@ public class RepoService {
       if (bucketName != null && sqlService.getBucketId(bucketName) == null)
         throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found");
 
-      return sqlService.listObjects(bucketName, offset, limit, true);
+      return sqlService.listObjects(bucketName, offset, limit, includeDeleted);
     } catch (SQLException e) {
       throw new RepoException(RepoException.Type.ServerError, e);
     } finally {

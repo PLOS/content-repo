@@ -25,6 +25,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 import org.apache.http.HttpStatus;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.service.RepoException;
+import org.plos.repo.service.RepoInfoService;
 import org.plos.repo.service.RepoService;
 
 import javax.inject.Inject;
@@ -47,6 +48,9 @@ public class BucketController {
   @Inject
   private RepoService repoService;
 
+  @Inject
+  private RepoInfoService repoInfoService;
+
   @GET
   @ApiOperation(value = "List buckets", response = Bucket.class, responseContainer = "List")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -56,6 +60,23 @@ public class BucketController {
       return Response.status(Response.Status.OK).entity(
           new GenericEntity<List<Bucket>>(repoService.listBuckets()) {
           }).build();
+    } catch (RepoException e) {
+      return ObjectController.handleError(e);
+    }
+
+  }
+
+  @GET @Path("/{bucketName}")
+  @ApiOperation(value = "Info about the bucket")
+  public Response info(@PathParam("bucketName") String bucketName) {
+
+    try {
+
+      // TODO: serve with content negotiation
+
+      return Response.status(Response.Status.OK).entity(
+          repoInfoService.bucketInfo(bucketName)
+      ).build();
     } catch (RepoException e) {
       return ObjectController.handleError(e);
     }

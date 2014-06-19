@@ -33,15 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -112,7 +104,8 @@ public class ObjectController {
   public Response listObjects(
       @ApiParam(required = false) @QueryParam("bucketName") String bucketName,
       @ApiParam(required = false) @QueryParam("offset") Integer offset,
-      @ApiParam(required = false) @QueryParam("limit") Integer limit) {
+      @ApiParam(required = false) @QueryParam("limit") Integer limit,
+      @ApiParam(required = false) @DefaultValue("false") @QueryParam("includeDeleted") boolean includeDeleted) {
 
     if (offset == null)
       offset = 0;
@@ -129,34 +122,13 @@ public class ObjectController {
 
     try {
       return Response.status(Response.Status.OK).entity(
-          new GenericEntity<List<Object>>(repoService.listObjects(bucketName, offset, limit)) {
+          new GenericEntity<List<Object>>(repoService.listObjects(bucketName, offset, limit, includeDeleted)) {
           }).build();
     } catch (RepoException e) {
       return handleError(e);
     }
 
   }
-
-//  @GET @Path("/count")
-//  @ApiOperation(value = "Count objects", response = Integer.class)
-//  @Produces({MediaType.TEXT_PLAIN})
-//  public Response countObjects(
-//      @ApiParam(required = false) @QueryParam("bucketName") String bucketName) throws Exception {
-//
-//    int result = 0;
-//    if (bucketName == null) {
-//      result = sqlService.objectCount(false, null);
-//    }
-//    else {
-//      if (sqlService.getBucketId(bucketName) == null)
-//        return Response.status(Response.Status.NOT_FOUND)
-//            .entity("Bucket not found").type(MediaType.TEXT_PLAIN).build();
-//
-//      result = sqlService.objectCount(true, bucketName);
-//    }
-//
-//    return Response.status(Response.Status.OK).entity(String.valueOf(result)).build();
-//  }
 
   @GET @Path("/{bucketName}")
   @ApiOperation(value = "Fetch an object or its metadata", response = Object.class)

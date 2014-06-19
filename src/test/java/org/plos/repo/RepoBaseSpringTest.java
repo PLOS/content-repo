@@ -28,7 +28,7 @@ public abstract class RepoBaseSpringTest {
 
     sqlService.getConnection();
 
-    List<org.plos.repo.models.Object> objectList = sqlService.listObjects(null, null, null, false);
+    List<org.plos.repo.models.Object> objectList = sqlService.listObjects(null, null, null, true);
 
     for (org.plos.repo.models.Object object : objectList) {
 

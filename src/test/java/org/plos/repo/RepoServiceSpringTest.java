@@ -299,7 +299,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     // check external state
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb).size() == 2);
-    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null).size() == 2);
+    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, false).size() == 2);
 
     Assert.assertTrue(IOUtils.toString(repoService.getObjectInputStream(
             repoService.getObject(bucket1.bucketName, "key1", 0))).equals("data1")
@@ -401,7 +401,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     // check external state
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb).size() == 2);
-    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null).size() == 2);
+    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, false).size() == 2);
 
     Assert.assertTrue(IOUtils.toString(repoService.getObjectInputStream(
         repoService.getObject(bucket1.bucketName, "key1", 0))).equals("data1")
@@ -447,8 +447,9 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb).size() == 1);
-    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null).size() == 1);
+    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, false).size() == 1);
 
+    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, true).size() == 2);
   }
 
   @Test
@@ -479,7 +480,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     Assert.assertTrue(objectStore.objectExists(objFromDb));
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb).size() == 2);
-    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null).size() == 2);
+    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, false).size() == 2);
   }
 
   @Test

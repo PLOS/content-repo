@@ -100,7 +100,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
 
-    List<org.plos.repo.models.Object> objects = repoService.listObjects(BUCKET_NAME, null, null);
+    List<org.plos.repo.models.Object> objects = repoService.listObjects(BUCKET_NAME, null, null, false);
     assertEquals(1 + UPDATE_THREADS, objects.size());
 
     Collections.sort(objects, new ObjectComparator());
@@ -150,7 +150,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     this.endGate = new CountDownLatch(DELETE_THREADS + READER_THREADS);
     execute(0, 0, DELETE_THREADS, READER_THREADS, callback);
 
-    List<org.plos.repo.models.Object> objects = repoService.listObjects(BUCKET_NAME, null, null);
+    List<org.plos.repo.models.Object> objects = repoService.listObjects(BUCKET_NAME, null, null, false);
     assertEquals(1 + UPDATE_THREADS - DELETE_THREADS, objects.size());
 
     Collections.sort(objects, new ObjectComparator());
@@ -188,7 +188,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     execute(INSERT_THREADS, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
-    List<org.plos.repo.models.Object> objects = repoService.listObjects(BUCKET_NAME, null, null);
+    List<org.plos.repo.models.Object> objects = repoService.listObjects(BUCKET_NAME, null, null, false);
 
     assertTrue(objects.size() >= INSERT_THREADS - DELETE_THREADS);
 

@@ -310,17 +310,7 @@ public abstract class SqlService {
 
   }
 
-  // this is called from /status
-  public Integer objectCount() throws Exception {
-    return objectCount(true, null);
-  }
-
-  // three ways this is called currently:
-  // 1. /status uses (true, null) => get count of used objects
-  // 2. /count uses (false, null) => get count of all objects including deleted
-  // 3. /count?bucketName=... uses (true, bucketName) => get count of used objects in bucket
-
-  public Integer objectCount(boolean usedOnly, String bucketName) throws SQLException {
+  public Integer objectCount(boolean includeDeleted, String bucketName) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -328,7 +318,7 @@ public abstract class SqlService {
     try {
 
       StringBuilder q = new StringBuilder("SELECT COUNT(*) FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
-      if (usedOnly)
+      if (!includeDeleted)
         q.append(" AND a.status=?");
       if (bucketName != null)
         q.append(" AND bucketName=?");
@@ -336,7 +326,7 @@ public abstract class SqlService {
       p = connectionLocal.get().prepareStatement(q.toString());
 
       int index = 0;
-      if (usedOnly)
+      if (!includeDeleted)
         p.setInt(++index, Object.Status.USED.getValue());
       if (bucketName != null)
         p.setString(++index, bucketName);
@@ -400,7 +390,7 @@ public abstract class SqlService {
 
   }
 
-  public List<Object> listObjects(String bucketName, Integer offset, Integer limit, boolean onlyListUsedObjs) throws SQLException {
+  public List<Object> listObjects(String bucketName, Integer offset, Integer limit, boolean includeDeleted) throws SQLException {
 
     List<Object> objects = new ArrayList<>();
 
@@ -412,9 +402,8 @@ public abstract class SqlService {
       StringBuilder q = new StringBuilder();
       q.append("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
 
-      if (onlyListUsedObjs)
+      if (!includeDeleted)
         q.append(" AND status=?");
-
       if (bucketName != null)
         q.append(" AND bucketName=?");
       if (offset != null)
@@ -425,7 +414,7 @@ public abstract class SqlService {
 
       int i = 1;
 
-      if (onlyListUsedObjs)
+      if (!includeDeleted)
         p.setInt(i++, Object.Status.USED.getValue());
 
       if (bucketName != null)
@@ -458,7 +447,7 @@ public abstract class SqlService {
 
       p.setString(1, object.bucketName);
       p.setString(2, object.key);
-      p.setInt(3, Object.Status.USED.getValue());
+      p.setInt(3, Object.Status.USED.getValue()); // TODO: make this in input a parameter?
 
       result = p.executeQuery();
 

@@ -104,8 +104,13 @@ public class FileSystemStoreService extends ObjectStore {
 
     // create the subdirectory if it does not exist
     File subDir = new File(newFile.getParent());
-    if (!subDir.exists() && !subDir.mkdir())
-      return false;
+
+    if (!subDir.exists()) {
+      if (!subDir.mkdir()) {
+        log.error("Object subdirectory was not able to be created : " + subDir);
+        return false;
+      }
+    }
 
     return tempFile.renameTo(newFile);
   }
@@ -120,7 +125,7 @@ public class FileSystemStoreService extends ObjectStore {
     // delete the parent subdirectory if it is empty
 
     if (parentDir.isDirectory() && parentDir.list().length == 0)
-      parentDir.delete();
+      parentDir.delete(); // TODO: log an error if this fails
 
     return result;
   }

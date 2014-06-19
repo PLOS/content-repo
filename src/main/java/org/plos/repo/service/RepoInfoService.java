@@ -17,14 +17,19 @@
 
 package org.plos.repo.service;
 
+import org.plos.repo.models.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.io.InputStream;
+import java.lang.Object;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicLong;
@@ -38,6 +43,9 @@ public class RepoInfoService {
 
   @Inject
   private SqlService sqlService;
+
+  @Inject
+  private RepoService repoService;
 
   private String projectVersion = "unknown";
 
@@ -77,10 +85,51 @@ public class RepoInfoService {
     return infos;
   }
 
-  public Map<String, String> getStatus() throws Exception {
-    Map<String, String> infos = new HashMap<>();
-    infos.put("objects", sqlService.objectCount().toString());  // TODO: give obj/bucket counts
-    infos.put("buckets", Integer.toString(sqlService.listBuckets().size()));
+  public int countObjects(boolean includeDeleted, String bucketName) throws RepoException {
+
+    try {
+
+      sqlService.getConnection();
+
+      if (bucketName != null && sqlService.getBucketId(bucketName) == null)
+        throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found");
+
+      return sqlService.objectCount(includeDeleted, bucketName);
+    } catch (SQLException e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    } finally {
+      try {
+        sqlService.releaseConnection();
+      } catch (SQLException e) {
+        log.error(e.getMessage());
+        throw new RepoException(RepoException.Type.ServerError, e);
+      }
+    }
+  }
+
+  public Map<String, Object> bucketInfo(String bucketName) throws RepoException {
+
+    HashMap bucketInfo = new HashMap();
+    bucketInfo.put("bucket", bucketName);
+    bucketInfo.put("totalObjects", countObjects(true, bucketName));
+    bucketInfo.put("activeObjects", countObjects(false, bucketName));
+
+    return bucketInfo;
+  }
+
+  public Map<String, Object> getStatus() throws Exception {
+
+    List<Bucket> bucketList = repoService.listBuckets();
+    List<Map> bucketsOut = new ArrayList<>();
+
+    for (Bucket bucket : bucketList) {
+      bucketsOut.add(bucketInfo(bucket.bucketName));
+    }
+
+    Map<String, Object> infos = new HashMap<>();
+
+    infos.put("bucketCount", Integer.toString(bucketList.size()));
+    //infos.put("buckets", bucketsOut);
     infos.put("serviceStarted", startTime.toString());
     infos.put("readsSinceStart", readCount.toString());
     infos.put("writesSinceStart", writeCount.toString());
