@@ -76,28 +76,28 @@ public abstract class SqlService {
 
     if (dbConnection != null) {
       dbConnection.close();
+      connectionLocal.remove();
     }
-    connectionLocal.remove();
   }
 
   public void transactionCommit() throws SQLException {
     Connection dbConnection = connectionLocal.get();
 
-    if (dbConnection != null) {
+//    if (dbConnection != null) {
       dbConnection.commit();
-      dbConnection.close();
-    }
-    connectionLocal.remove();
+      //dbConnection.close();
+      //connectionLocal.remove();
+//    }
   }
 
   public void transactionRollback() throws SQLException {
     Connection dbConnection = connectionLocal.get();
 
-    if (dbConnection != null) {
+//    if (dbConnection != null) {
       dbConnection.rollback();
-      dbConnection.close();
-    }
-    connectionLocal.remove();
+//      dbConnection.close();
+//    }
+//    connectionLocal.remove();
   }
 
   public Integer getBucketId(String bucketName) throws SQLException {

@@ -9,15 +9,16 @@ import java.io.InputStream;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class InMemoryFileStoreService extends ObjectStore {
 
   // bucketName -> data checksum -> file content
-  private ConcurrentHashMap<String, HashMap<String, byte[]>> data = new ConcurrentHashMap<>();
+  private Map<String, Map<String, byte[]>> data = new ConcurrentHashMap<>();
 
-  private ConcurrentHashMap<String, byte[]> tempdata = new ConcurrentHashMap<>();
+  private Map<String, byte[]> tempdata = new ConcurrentHashMap<>();
 
   public InMemoryFileStoreService() {
   }

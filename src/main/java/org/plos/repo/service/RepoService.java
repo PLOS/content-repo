@@ -54,11 +54,11 @@ public class RepoService {
 
 
   public enum CreateMethod {
-    NEW, VERSION, AUTO;
+    NEW, VERSION, AUTO
   }
 
 
-  private void sqlReadDone() throws RepoException {
+  private void sqlReleaseConnection() throws RepoException {
 
     try {
       sqlService.releaseConnection();
@@ -88,7 +88,7 @@ public class RepoService {
     } catch (SQLException e) {
       throw new RepoException(RepoException.Type.ServerError, e);
     } finally {
-      sqlReadDone();
+      sqlReleaseConnection();
     }
   }
 
@@ -136,26 +136,9 @@ public class RepoService {
         sqlRollback("bucket " + name);
         objectStore.deleteBucket(bucket);
         // TODO: check to make sure objectStore.deleteBucket didnt fail
-      } else {
-
-//        try {
-//
-//          // extra check of final state
-//
-//          sqlService.getConnection();
-//
-//          if (sqlService.getBucketId(name) != null)
-//            throw new RepoException(RepoException.Type.ServerError, "Bucket failed to be created in db: " + name);
-//
-//          if (objectStore.bucketExists(bucket))
-//            throw new RepoException(RepoException.Type.ServerError, "Bucket failed to be created in object store: " + name);
-//
-//          sqlService.releaseConnection();
-//        } catch (SQLException e) {
-//          throw new RepoException(RepoException.Type.ServerError, "Error verifying bucket creation: " + name);
-//        }
       }
 
+      sqlReleaseConnection();
       writeLock.unlock();
 
     }
@@ -203,8 +186,10 @@ public class RepoService {
 
         objectStore.createBucket(bucket);
         // TODO: validate objectStore.createBucket return values
+
       }
 
+      sqlReleaseConnection();
       writeLock.unlock();
     }
 
@@ -229,7 +214,7 @@ public class RepoService {
     } catch (SQLException e) {
       throw new RepoException(RepoException.Type.ServerError, e);
     } finally {
-      sqlReadDone();
+      sqlReleaseConnection();
     }
   }
 
@@ -256,7 +241,7 @@ public class RepoService {
     } catch (SQLException e) {
       throw new RepoException(RepoException.Type.ServerError, e);
     } finally {
-      sqlReadDone();
+      sqlReleaseConnection();
       readLock.unlock();
     }
 
@@ -273,7 +258,7 @@ public class RepoService {
     } catch (SQLException e) {
       throw new RepoException(RepoException.Type.ServerError, e);
     } finally {
-      sqlReadDone();
+      sqlReleaseConnection();
       readLock.unlock();
     }
   }
@@ -285,7 +270,7 @@ public class RepoService {
     } catch (Exception e) {
       throw new RepoException(RepoException.Type.ServerError, e);
     } finally {
-      sqlReadDone();
+      sqlReleaseConnection();
     }
   }
 
@@ -346,6 +331,7 @@ public class RepoService {
         sqlRollback("object " + bucketName + ", " + key + ", " + version);
       }
 
+      sqlReleaseConnection();
       writeLock.unlock();
     }
   }
@@ -467,11 +453,6 @@ public class RepoService {
       } else {
         if (!objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object)) {
           throw new RepoException(RepoException.Type.ServerError, "Error saving content to object store");
-
-
-          //   WHY IS THIS THROWING? Perhape InMemoryStore needs to be thread safe?
-
-
         }
       }
 
@@ -496,6 +477,7 @@ public class RepoService {
         // TODO: handle objectStore rollback, or not?
       }
 
+      sqlReleaseConnection();
     }
 
     return object;
@@ -574,6 +556,7 @@ public class RepoService {
         // TODO: handle objectStore rollback, or not?
       }
 
+      sqlReleaseConnection();
     }
 
     return object;
