@@ -60,21 +60,34 @@ public class MogileStoreService extends ObjectStore {
     return true;
   }
 
-  public URL[] getRedirectURLs(Object object) throws Exception {
+  public URL[] getRedirectURLs(Object object) throws RepoException {
 
-    String[] paths = mfs.getPaths(getObjectLocationString(object.bucketName, object.checksum), true);
-    int pathCount = paths.length;
-    URL[] urls = new URL[pathCount];
+    try {
+      String[] paths = mfs.getPaths(getObjectLocationString(object.bucketName, object.checksum), true);
+      int pathCount = paths.length;
+      URL[] urls = new URL[pathCount];
 
-    for(int i = 0; i < pathCount; i++) {
-      urls[i] = new URL(paths[i]);
+      for (int i = 0; i < pathCount; i++) {
+        urls[i] = new URL(paths[i]);
+      }
+      return urls;
+
+    } catch (Exception e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
     }
 
-    return urls;
   }
 
-  public InputStream getInputStream(org.plos.repo.models.Object object) throws Exception {
-    return mfs.getFileStream(getObjectLocationString(object.bucketName, object.checksum));
+  public InputStream getInputStream(org.plos.repo.models.Object object) throws RepoException {
+    try {
+      return mfs.getFileStream(getObjectLocationString(object.bucketName, object.checksum));
+    } catch (Exception e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    }
+  }
+
+  public boolean bucketExists(Bucket bucket) {
+    return true;
   }
 
   public boolean createBucket(Bucket bucket) {
@@ -86,45 +99,49 @@ public class MogileStoreService extends ObjectStore {
     return true;
   }
 
-  public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws Exception {
+  public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException {
 
     final String tempFileLocation = UUID.randomUUID().toString() + ".tmp";
 
     // NOTE: in the future we can avoid having to read to memory by using a
     //   different MogileFS library that does not require size at creation time.
 
-    byte[] objectData = readStreamInput(uploadedInputStream);
+    try {
+      byte[] objectData = readStreamInput(uploadedInputStream);
 
-    MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
+      MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
 
-    OutputStream fos = mfs.newFile(tempFileLocation, mogileFileClass, objectData.length);
+      OutputStream fos = mfs.newFile(tempFileLocation, mogileFileClass, objectData.length);
 
-    IOUtils.write(objectData, fos);
-    fos.close();
+      IOUtils.write(objectData, fos);
+      fos.close();
 
-    final String checksum = checksumToString(digest.digest(objectData));
-    final long finalSize = objectData.length;
+      final String checksum = checksumToString(digest.digest(objectData));
+      final long finalSize = objectData.length;
 
-    return new UploadInfo(){
-      @Override
-      public Long getSize() {
-        return finalSize;
-      }
+      return new UploadInfo() {
+        @Override
+        public Long getSize() {
+          return finalSize;
+        }
 
-      @Override
-      public String getTempLocation() {
-        return tempFileLocation;
-      }
+        @Override
+        public String getTempLocation() {
+          return tempFileLocation;
+        }
 
-      @Override
-      public String getChecksum() {
-        return checksum;
-      }
-    };
+        @Override
+        public String getChecksum() {
+          return checksum;
+        }
+      };
 
+    } catch (Exception e) {
+      throw new RepoException(RepoException.Type.ServerError, e);
+    }
   }
 
-  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) throws Exception {
+  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
     try {
       mfs.rename(uploadInfo.getTempLocation(), getObjectLocationString(bucket.bucketName, uploadInfo.getChecksum()));
       return true;

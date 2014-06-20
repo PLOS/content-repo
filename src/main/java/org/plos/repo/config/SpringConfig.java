@@ -4,6 +4,7 @@ import org.plos.repo.service.HsqlService;
 import org.plos.repo.service.MysqlService;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.RepoInfoService;
+import org.plos.repo.service.RepoService;
 import org.plos.repo.service.ScriptRunner;
 import org.plos.repo.service.SqlService;
 import org.slf4j.Logger;
@@ -12,6 +13,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -21,6 +24,7 @@ import java.io.FileReader;
 import java.sql.Connection;
 
 @Configuration
+@EnableTransactionManagement
 public class SpringConfig {
 
   private static final Logger log = LoggerFactory.getLogger(SpringConfig.class);
@@ -28,6 +32,11 @@ public class SpringConfig {
   @Bean
   public RepoInfoService repoInfoService() {
     return new RepoInfoService();
+  }
+
+  @Bean
+  public RepoService repoService() {
+    return new RepoService();
   }
 
   @Bean
@@ -49,6 +58,10 @@ public class SpringConfig {
     Context envContext  = (Context)initContext.lookup("java:/comp/env");
     DataSource ds = (DataSource)envContext.lookup("jdbc/repoDB");
     Connection connection = ds.getConnection();
+
+    // TODO: change transactionmanager to javax
+    DataSourceTransactionManager transactionManager = new DataSourceTransactionManager(ds);
+
 
     String dbBackend = connection.getMetaData().getDatabaseProductName();
 

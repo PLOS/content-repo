@@ -93,7 +93,7 @@ def pushrepubs(infile, repo, args):
     print(doi + " (%" + str(100*i/len(mods)) + " done)", file=sys.stderr)
 
     try:
-      _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, args.testRun, args.cacheDir, 'auto')
+      _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, args.testRun, args.cacheDir, 'auto')  # TODO: change to 'version' ?
     except Exception, e:
       _handle_exception(doi, e)
 

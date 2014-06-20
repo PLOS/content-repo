@@ -7,6 +7,7 @@ import javax.annotation.PreDestroy;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class HsqlService extends SqlService {
 
@@ -25,7 +26,7 @@ public class HsqlService extends SqlService {
     connection.close();
   }
 
-  public void postDbInit() throws Exception {
+  public void postDbInit() throws SQLException {
 
     // kludges for dealing with HSQLDB
 

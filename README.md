@@ -21,16 +21,7 @@ The service supports multiple object store backend implementations which can be 
 
 You will need to place one of the following Resources in Tomcat's config.xml :
 
-    <Resource name="repo/objectStore"
-        type="org.plos.repo.service.ObjectStore"
-        factory="org.plos.repo.config.FileSystemStoreFactory"
-        dataDirectory="/path/to/data/directory" />
-
-    <Resource name="repo/objectStore"
-        type="org.plos.repo.service.S3StoreService"
-        factory="org.plos.repo.config.S3StoreFactory"
-        awsAccessKey="abc"
-        awsSecretKey="def" />
+If you are using **MogileFS**, set the domain and trackers accordingly. Trackers are comma separated.
 
     <Resource name="repo/objectStore"
         type="org.plos.repo.service.ObjectStore"
@@ -40,23 +31,36 @@ You will need to place one of the following Resources in Tomcat's config.xml :
         maxTrackerConnections="1"
         maxIdleConnections="1"
         maxIdleTimeMillis="100" />
+        
+If you are storing data on a **local filesystem**, set the 'dataDirectory' accordingly. When you create the directory on your filesystem make sure it is owned by 'tomcat'.
+
+    <Resource name="repo/objectStore"
+        type="org.plos.repo.service.ObjectStore"
+        factory="org.plos.repo.config.FileSystemStoreFactory"
+        dataDirectory="/path/to/data/directory" />
+
+If you are using **Amazon S3** as the object store, set your access key and secret key.
+
+    <Resource name="repo/objectStore"
+        type="org.plos.repo.service.S3StoreService"
+        factory="org.plos.repo.config.S3StoreFactory"
+        awsAccessKey="abc"
+        awsSecretKey="def" />
+        
+For testing purposes there is also an **InMemoryFileStore** which you can simply use like so:
+
+    <Resource name="repo/objectStore"
+        type="org.plos.repo.service.ObjectStore"
+        factory="org.plos.repo.config.InMemoryStoreFactory" />
+
 
 
 Database Backends
 -----------------
 
-The service supports HSQLDB and MySQL.
+The service supports HSQLDB and MySQL. You will need to place one of the following Resources in Tomcat's config.xml :
 
-You will need to place one of the following Resources in Tomcat's config.xml :
-
-    <Resource name="jdbc/repoDB"
-        auth="Container"
-        type="javax.sql.DataSource"
-        validationQuery="SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
-        driverClassName="org.hsqldb.jdbc.JDBCDriver"
-        username=""
-        password=""
-        url="jdbc:hsqldb:file:/tmp/repo-hsqldb;shutdown=true" />
+If you are using **MySQL**, you need to manually create a database (I called it 'repo' in the example below but call it what you want) and create a user with granted write permissions. 
 
     <Resource name="jdbc/repoDB"
         auth="Container"
@@ -68,3 +72,14 @@ You will need to place one of the following Resources in Tomcat's config.xml :
         username="root"
         password=""
         url="jdbc:mysql://localhost:3306/repo" />
+
+**HSQLDB** can support file and in memory databases. Set the 'url' to your configuration.
+
+    <Resource name="jdbc/repoDB"
+        auth="Container"
+        type="javax.sql.DataSource"
+        validationQuery="SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+        driverClassName="org.hsqldb.jdbc.JDBCDriver"
+        username=""
+        password=""
+        url="jdbc:hsqldb:file:/tmp/repo-hsqldb;shutdown=true" />

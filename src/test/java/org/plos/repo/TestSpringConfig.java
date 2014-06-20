@@ -22,6 +22,7 @@ import org.plos.repo.service.HsqlService;
 import org.plos.repo.service.InMemoryFileStoreService;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.RepoInfoService;
+import org.plos.repo.service.RepoService;
 import org.plos.repo.service.ScriptRunner;
 import org.plos.repo.service.SqlService;
 import org.springframework.context.annotation.Bean;
@@ -37,6 +38,11 @@ public class TestSpringConfig {
   @Bean
   public RepoInfoService repoInfoService() {
     return new RepoInfoService();
+  }
+
+  @Bean
+  public RepoService repoService() {
+    return new RepoService();
   }
 
   @Bean
@@ -59,6 +65,7 @@ public class TestSpringConfig {
 //    SqlService service = new MysqlService();
 //    Resource sqlFile = new ClassPathResource("setup.mysql");
 
+
     JDBCDataSource ds = new JDBCDataSource();
     ds.setUrl("jdbc:hsqldb:mem:plosrepo-unittest-hsqldb;shutdown=true");
     ds.setUser("");
@@ -72,7 +79,7 @@ public class TestSpringConfig {
     ScriptRunner scriptRunner = new ScriptRunner(connection, false, true);
     scriptRunner.runScript(new BufferedReader(new FileReader(sqlFile.getFile())));
 
-    connection.setAutoCommit(true);
+    connection.setAutoCommit(false);
     service.setDataSource(ds);
 
     return service;

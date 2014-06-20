@@ -17,47 +17,31 @@
 
 package org.plos.repo.rest;
 
-import java.io.InputStream;
-import java.net.URLEncoder;
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import org.junit.ComparisonFailure;
-
-import org.apache.http.HttpStatus;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.plos.repo.models.Bucket;
-import org.plos.repo.models.Object;
-import org.plos.repo.service.ObjectStore;
-import org.plos.repo.service.RepoInfoService;
-import org.plos.repo.service.SqlService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Joiner;
-import com.google.common.util.concurrent.Striped;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import org.apache.http.HttpStatus;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.plos.repo.models.Object;
+import org.plos.repo.service.RepoException;
+import org.plos.repo.service.RepoInfoService;
+import org.plos.repo.service.RepoService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.ws.rs.*;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.InputStream;
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.List;
+
 
 @Path("/objects")
 @Api(value="/objects")
@@ -84,13 +68,8 @@ public class ObjectController {
   // maximum allowed value of page size, i.e., limit= parameter
   private static final Integer MAX_PAGE_SIZE = 10000;
 
-  private Striped<ReadWriteLock> rwLocks = Striped.lazyWeakReadWriteLock(25);
-
   @Inject
-  private ObjectStore objectStore;
-
-  @Inject
-  private SqlService sqlService;
+  private RepoService repoService;
 
   @Inject
   private RepoInfoService repoInfoService;
@@ -99,58 +78,56 @@ public class ObjectController {
   // TODO: check at startup that db is in sync with objectStore ? bill says write a python script instead
 
 
+  public static Response handleError(RepoException e) {
+
+    switch (e.getType()) {
+
+      case ClientError:
+        return Response.status(Response.Status.BAD_REQUEST)
+            .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
+
+      case ItemNotFound:
+        return Response.status(Response.Status.NOT_FOUND)
+            .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
+
+      default:  // ServerError
+        log.error(e.getType().toString(), e);
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+            .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
+    }
+
+  }
+
   @GET
   @ApiOperation(value = "List objects", response = Object.class, responseContainer = "List")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response listObjects(
       @ApiParam(required = false) @QueryParam("bucketName") String bucketName,
       @ApiParam(required = false) @QueryParam("offset") Integer offset,
-      @ApiParam(required = false) @QueryParam("limit") Integer limit) throws Exception {
-
-
-    // TODO: allow filtering on object status?
-    //   and/or write list to a stream instead so it does take up memory
+      @ApiParam(required = false) @QueryParam("limit") Integer limit,
+      @ApiParam(required = false) @DefaultValue("false") @QueryParam("includeDeleted") boolean includeDeleted) {
 
     if (offset == null)
       offset = 0;
     if (limit == null)
       limit = DEFAULT_PAGE_SIZE;
-    if (offset.intValue() < 0 || limit.intValue() <= 0 || limit.intValue() > MAX_PAGE_SIZE)
+
+    if (offset < 0)
       return Response.status(Response.Status.BAD_REQUEST)
-          .entity("Invalid limit or offset").type(MediaType.TEXT_PLAIN).build();
+          .entity("Invalid offset").type(MediaType.TEXT_PLAIN).build();
 
-    if (bucketName == null)
+    if (limit <= 0 || limit > MAX_PAGE_SIZE)
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity("Invalid limit").type(MediaType.TEXT_PLAIN).build();
+
+    try {
       return Response.status(Response.Status.OK).entity(
-        new GenericEntity<List<Object>>(sqlService.listAllObject(offset, limit)){}).build();
-
-    if (sqlService.getBucketId(bucketName) == null)
-      return Response.status(Response.Status.NOT_FOUND)
-          .entity("Bucket not found").type(MediaType.TEXT_PLAIN).build();
-
-    return Response.status(Response.Status.OK).entity(
-        new GenericEntity<List<Object>>(sqlService.listObjectsInBucket(bucketName, offset, limit)) {
-        }).build();
-  }
-
-  @GET @Path("/count")
-  @ApiOperation(value = "Count objects", response = Integer.class)
-  @Produces({MediaType.TEXT_PLAIN})
-  public Response countObjects(
-      @ApiParam(required = false) @QueryParam("bucketName") String bucketName) throws Exception {
-
-    int result = 0;
-    if (bucketName == null) {
-      result = sqlService.objectCount(false, null);
-    }
-    else {
-      if (sqlService.getBucketId(bucketName) == null)
-        return Response.status(Response.Status.NOT_FOUND)
-            .entity("Bucket not found").type(MediaType.TEXT_PLAIN).build();
-
-      result = sqlService.objectCount(true, bucketName);
+          new GenericEntity<List<Object>>(repoService.listObjects(bucketName, offset, limit, includeDeleted)) {
+          }).build();
+    } catch (RepoException e) {
+      return handleError(e);
     }
 
-    return Response.status(Response.Status.OK).entity(String.valueOf(result)).build();
   }
 
   @GET @Path("/{bucketName}")
@@ -162,64 +139,61 @@ public class ObjectController {
                        @QueryParam("fetchMetadata") Boolean fetchMetadata,
                        @ApiParam(value = "If set to 'reproxy-file' then it will attempt to return a header representing a redirected object URL")
                        @HeaderParam("X-Proxy-Capabilities") String requestXProxy
-  ) throws Exception {
+  ) {
 
-    Lock readLock = this.rwLocks.get(bucketName + key).readLock();
-    readLock.lock();
+    Object object;
+
     try {
-      org.plos.repo.models.Object object;
-      if (version == null)
-        object = sqlService.getObject(bucketName, key);
-      else
-        object = sqlService.getObject(bucketName, key, version);
+      object = repoService.getObject(bucketName, key, version);
+    } catch (RepoException e) {
+      return handleError(e);
+    }
 
-      if (object == null)
-        return Response.status(Response.Status.NOT_FOUND).build();
+    repoInfoService.incrementReadCount();
 
-      repoInfoService.incrementReadCount();
+    // if they want the metadata
 
-      // if they want the metadata
-
-      if (fetchMetadata != null && fetchMetadata) {
-        object.versions = sqlService.listObjectVersions(object);
+    if (fetchMetadata != null && fetchMetadata) {
+      try {
+        object.versions = repoService.getObjectVersions(object);
         return Response.status(Response.Status.OK).entity(object).build();
+      } catch (RepoException e) {
+        return handleError(e);
       }
+    }
 
-      // if they want redirect URLs
 
-      if ( requestXProxy != null && requestXProxy.equals(REPROXY_HEADER_FILE) && objectStore.hasXReproxy()) {
+    // if they want redirect URLs
 
+    if (requestXProxy != null && requestXProxy.equals(REPROXY_HEADER_FILE) && repoService.serverSupportsReproxy()) {
+
+      try {
         return Response.status(Response.Status.OK).header(REPROXY_HEADER_URL,
-            REPROXY_URL_JOINER.join(objectStore.getRedirectURLs(object)))
+            REPROXY_URL_JOINER.join(repoService.getObjectReproxy(object)))
             .header(REPROXY_HEADER_CACHE_FOR, REPROXY_CACHE_FOR_HEADER).build();
-
+      } catch (RepoException e) {
+        return handleError(e);
       }
+    }
 
-      // else assume they want the binary data
 
-      String exportFileName = object.key;
+    // else assume they want the binary data
 
-      if (object.downloadName != null)
-        exportFileName = object.downloadName;
+    try {
 
-      exportFileName = URLEncoder.encode(exportFileName, "UTF-8");
+      String exportFileName = repoService.getObjectExportFileName(object);
+      String contentType = repoService.getObjectContentType(object);
+      InputStream is = repoService.getObjectInputStream(object);
 
-      String contentType = object.contentType;
-
-      if (object.contentType == null || object.contentType.isEmpty())
-        contentType = MediaType.APPLICATION_OCTET_STREAM;
-
-      InputStream is = objectStore.getInputStream(object);
-
-      Response response = Response.ok(is, contentType)
+      return Response.ok(is, contentType)
           .header("Content-Disposition", "inline; filename=" + exportFileName).build();
 
-      // post: container will close this input stream.
+      // the container closes this input stream
 
-      return response;
-    } finally {
-      readLock.unlock();
+    } catch (RepoException e) {
+      return handleError(e);
     }
+
   }
 
   @DELETE
@@ -230,34 +204,24 @@ public class ObjectController {
   })
   public Response delete(@ApiParam(required = true) @PathParam("bucketName") String bucketName,
                          @ApiParam(required = true) @QueryParam("key") String key,
-                         @ApiParam(required = true) @QueryParam("version") Integer version) throws Exception {
+                         @ApiParam(required = true) @QueryParam("version") Integer version) {
 
-    Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
-    writeLock.lock();
+    if (key == null)
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity("No key entered").type(MediaType.TEXT_PLAIN).build();
+
+    if (version == null)
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity("No version entered").type(MediaType.TEXT_PLAIN).build();
+
     try {
-      if (key == null)
-        return Response.status(Response.Status.BAD_REQUEST)
-            .entity("No key entered").type(MediaType.TEXT_PLAIN).build();
-
-      if (version == null)
-        return Response.status(Response.Status.BAD_REQUEST)
-            .entity("No version entered").type(MediaType.TEXT_PLAIN).build();
-
-      if (sqlService.markObjectDeleted(key, bucketName, version) == 0)
-        return Response.status(Response.Status.NOT_FOUND)
-            .entity("Can not find object in database.").type(MediaType.TEXT_PLAIN).build();
-
-      // NOTE: we no longer delete objects from the object store
-
-      // delete it from the object store if it is no longer referenced in the database
-  //    if (!sqlService.objectInUse(bucketName, checksum) && !objectStore.deleteObject(objectStore.getObjectLocationString(bucketName, checksum)))
-  //      return new ResponseEntity<>("Error: There was a problem deleting the object from the filesystem.", HttpStatus.NOT_MODIFIED);
-
+      repoService.deleteObject(bucketName, key, version);
       return Response.status(Response.Status.OK)
           .entity(key + " version " + version + " deleted").type(MediaType.TEXT_PLAIN).build();
-    } finally {
-      writeLock.unlock();
+    } catch (RepoException e) {
+      return handleError(e);
     }
+
   }
 
   @POST
@@ -283,211 +247,49 @@ required = true)
         @FormDataParam("timestamp") String timestampString,
       @ApiParam(required = false)
         @FormDataParam("file") InputStream uploadedInputStream
-  ) throws Exception {
+  ) {
 
-    Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
-    writeLock.lock();
-    try {
-      if (key == null)
-        return Response.status(Response.Status.BAD_REQUEST)
-            .entity("No key entered").type(MediaType.TEXT_PLAIN).build();
-
-      if (create == null)
-        return Response.status(Response.Status.BAD_REQUEST)
-            .entity("No create flag entered").type(MediaType.TEXT_PLAIN).build();
-
-      if (bucketName == null)
-        return Response.status(Response.Status.BAD_REQUEST)
-            .entity("No bucket specified").type(MediaType.TEXT_PLAIN).build();
-
-      Timestamp timestamp = new Timestamp(new Date().getTime());
-
-      if (timestampString != null) {
-        try {
-          timestamp = Timestamp.valueOf(timestampString);
-        } catch (Exception e) {
-          return Response.status(Response.Status.BAD_REQUEST)
-              .entity("Could not parse timestamp").type(MediaType.TEXT_PLAIN).build();
-        }
-      }
-
-      repoInfoService.incrementWriteCount();
-
-      Object existingObject = sqlService.getObject(bucketName, key);
-
-      if (create.equalsIgnoreCase("new")) {
-        if (existingObject != null)
-          return Response.status(Response.Status.NOT_ACCEPTABLE)
-              .entity("Attempting to create an object with a key that already exists.").type(MediaType.TEXT_PLAIN).build();
-
-        return create(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
-      } else if (create.equalsIgnoreCase("version")) {
-        return update(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject);
-      } else if (create.equalsIgnoreCase("auto")) {
-        if (existingObject == null)
-          return create(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
-        else
-          return update(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject);
-        }
-
+    if (key == null)
       return Response.status(Response.Status.BAD_REQUEST)
-          .entity("Invalid create flag").type(MediaType.TEXT_PLAIN).build();
-    } finally {
-      writeLock.unlock();
+          .entity("No key entered").type(MediaType.TEXT_PLAIN).build();
+
+    if (create == null)
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity("No create flag entered").type(MediaType.TEXT_PLAIN).build();
+
+    if (bucketName == null)
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity("No bucket specified").type(MediaType.TEXT_PLAIN).build();
+
+    Timestamp timestamp = new Timestamp(new Date().getTime());
+
+    if (timestampString != null) {
+      try {
+        timestamp = Timestamp.valueOf(timestampString);
+      } catch (Exception e) {
+        return Response.status(Response.Status.BAD_REQUEST)
+            .entity("Could not parse timestamp").type(MediaType.TEXT_PLAIN).build();
+      }
     }
-  }
 
-  private Response create(String key,
-                          String bucketName,
-                          String contentType,
-                          String downloadName,
-                          Timestamp timestamp,
-                          InputStream uploadedInputStream) throws Exception {
+    repoInfoService.incrementWriteCount();
 
-    Integer bucketId = sqlService.getBucketId(bucketName);
-
-    if (uploadedInputStream == null)
-      return Response.status(Response.Status.PRECONDITION_FAILED)
-          .entity("A file must be specified for uploading.").type(MediaType.TEXT_PLAIN).build();
-
-    if (bucketId == null)
-      return Response.status(Response.Status.PRECONDITION_FAILED)
-          .entity("Can not find bucket " + bucketName).type(MediaType.TEXT_PLAIN).build();
-
-    ObjectStore.UploadInfo uploadInfo;
     try {
-      uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
-      uploadedInputStream.close();
 
-      if (uploadInfo.getSize() == 0) {
-        objectStore.deleteTempUpload(uploadInfo);
-        return Response.status(Response.Status.PRECONDITION_FAILED)
-            .entity("Uploaded data must be non-empty").type(MediaType.TEXT_PLAIN).build();
+      RepoService.CreateMethod method = null;
+
+      try {
+        method = RepoService.CreateMethod.valueOf(create.toUpperCase());
+      } catch (IllegalArgumentException e) {
+        throw new RepoException(RepoException.Type.ClientError, e);
       }
 
-    } catch (Exception e) {
-      log.error("Error during upload", e);
-      return Response.status(Response.Status.PRECONDITION_FAILED)
-          .entity("A problem occurred while uploading the file.").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.CREATED).entity(repoService.createObject(method, key, bucketName, contentType, downloadName, timestamp, uploadedInputStream)).build();
+
+    } catch (RepoException e) {
+      return handleError(e);
     }
 
-    Integer versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, key);
-
-    Object object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), null, bucketId, bucketName, versionNumber, Object.Status.USED);
-
-    // determine if the object should be added to the store or not
-    if (objectStore.objectExists(object)) {
-
-//      if (FileUtils.contentEquals(tempFile, new File(objectStore.getObjectLocationString(bucketName, checksum)))) {
-//        log.info("not adding object to store since content exists");
-//      } else {
-//        log.info("checksum collision!!");
-//        status = HttpStatus.CONFLICT;
-//      }
-
-      // dont bother storing the file since the data already exists in the system
-      objectStore.deleteTempUpload(uploadInfo);
-    } else {
-      if (!objectStore.saveUploadedObject(new Bucket(null, bucketName), uploadInfo, object)) {
-        objectStore.deleteTempUpload(uploadInfo);
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-            .entity("Error saving content to data store").type(MediaType.TEXT_PLAIN).build();
-      }
-    }
-
-    // add a record to the DB
-
-    if (sqlService.insertObject(object) == 0) {
-      //objectStore.deleteObject(object);
-      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-          .entity("Error saving content to database").type(MediaType.TEXT_PLAIN).build();
-    }
-
-    return Response.status(Response.Status.CREATED).entity(object).build();
-  }
-
-  /**
-   * Take an existing key, make a copy of it and modify it as needed. This means a new version
-   * of an existing object. This new part of it could be the file itself, or some of its metadata.
-   *
-   * @param bucketName
-   * @param contentType
-   * @param downloadName
-   * @param uploadedInputStream
-   * @param object
-   * @return
-   * @throws Exception
-   */
-  private Response update(String bucketName,
-                          String contentType,
-                          String downloadName,
-                          Timestamp timestamp,
-                          InputStream uploadedInputStream,
-                          Object object) throws Exception {
-
-    Integer bucketId = sqlService.getBucketId(bucketName);
-
-    if (bucketId == null)
-      return Response.status(Response.Status.PRECONDITION_FAILED)
-          .entity("Can not find bucket " + bucketName).type(MediaType.TEXT_PLAIN).build();
-
-    if (object == null)
-      return Response.status(Response.Status.NOT_ACCEPTABLE)
-          .entity("Attempting to create a new version of an non-existing object.").type(MediaType.TEXT_PLAIN).build();
-
-    // copy over values from previous object, if they are not specified in the request
-    if (contentType != null)
-      object.contentType = contentType;
-
-    if (downloadName != null)
-      object.downloadName = downloadName;
-
-    // TODO: wrap this in a DB transaction since versionNumber is being updated ?
-
-    object.timestamp = timestamp;
-    object.versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, object.key);
-    object.id = null;  // remove this since it refers to the old object
-
-    ObjectStore.UploadInfo uploadInfo;
-    try {
-      uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
-      uploadedInputStream.close();
-    } catch (Exception e) {
-      log.error("Error during upload", e);
-
-      return Response.status(Response.Status.PRECONDITION_FAILED)
-          .entity("A problem occurred while uploading the file.").type(MediaType.TEXT_PLAIN).build();
-    }
-
-    if (uploadedInputStream == null || uploadInfo.getSize() == 0) {
-      objectStore.deleteTempUpload(uploadInfo);
-      sqlService.insertObject(object); // TODO: deal with 0 return values
-
-      return Response.status(Response.Status.CREATED).entity(object).build();
-    }
-
-    // determine if the object should be added to the store or not
-    object.checksum = uploadInfo.getChecksum();
-    object.size = uploadInfo.getSize();
-    if (objectStore.objectExists(object)) {
-      objectStore.deleteTempUpload(uploadInfo);
-    } else {
-      if (!objectStore.saveUploadedObject(new Bucket(null, bucketName), uploadInfo, object)) {
-        objectStore.deleteTempUpload(uploadInfo);
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-            .entity("Error saving content to data store").type(MediaType.TEXT_PLAIN).build();
-      }
-    }
-
-    // add a record to the DB
-
-    if (sqlService.insertObject(object) == 0) {
-      //objectStore.deleteObject(object);
-      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-          .entity("Error saving content to database").type(MediaType.TEXT_PLAIN).build();
-    }
-
-    return Response.status(Response.Status.CREATED).entity(object).build();
   }
 
 }
