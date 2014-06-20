@@ -10,13 +10,14 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class InMemoryFileStoreService extends ObjectStore {
 
   // bucketName -> data checksum -> file content
-  private HashMap<String, HashMap<String, byte[]>> data = new HashMap<>();
+  private ConcurrentHashMap<String, HashMap<String, byte[]>> data = new ConcurrentHashMap<>();
 
-  private HashMap<String, byte[]> tempdata = new HashMap<>();
+  private ConcurrentHashMap<String, byte[]> tempdata = new ConcurrentHashMap<>();
 
   public InMemoryFileStoreService() {
   }
@@ -65,7 +66,18 @@ public class InMemoryFileStoreService extends ObjectStore {
     if (!objectExists(object))
       return false;
 
-    return data.get(object.bucketName).remove(object.checksum) != null;
+
+    if (!data.get(object.bucketName).containsKey(object.checksum))
+      return false;
+
+    byte[] bytes = data.get(object.bucketName).remove(object.checksum);
+
+    if (bytes == null)
+      return false;
+
+    return true;
+
+//    return data.get(object.bucketName).remove(object.checksum) != null;
 
   }
 

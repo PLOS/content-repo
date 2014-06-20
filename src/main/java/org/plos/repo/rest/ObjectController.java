@@ -50,6 +50,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
+
 @Path("/objects")
 @Api(value="/objects")
 public class ObjectController {
@@ -68,6 +69,12 @@ public class ObjectController {
   private static final String REPROXY_HEADER_CACHE_FOR = "X-Reproxy-Cache-For";
 
   private static final String REPROXY_HEADER_FILE = "reproxy-file";
+
+  // default page size = number of objects returned when no limit= parameter supplied.
+  private static final Integer DEFAULT_PAGE_SIZE = 1000;
+
+  // maximum allowed value of page size, i.e., limit= parameter
+  private static final Integer MAX_PAGE_SIZE = 10000;
 
   @Inject
   private RepoService repoService;
@@ -103,17 +110,53 @@ public class ObjectController {
   @ApiOperation(value = "List objects", response = Object.class, responseContainer = "List")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response listObjects(
-      @ApiParam(required = false) @QueryParam("bucketName") String bucketName) {
+      @ApiParam(required = false) @QueryParam("bucketName") String bucketName,
+      @ApiParam(required = false) @QueryParam("offset") Integer offset,
+      @ApiParam(required = false) @QueryParam("limit") Integer limit) {
+
+    if (offset == null)
+      offset = 0;
+    if (limit == null)
+      limit = DEFAULT_PAGE_SIZE;
+
+    if (offset < 0)
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity("Invalid offset").type(MediaType.TEXT_PLAIN).build();
+
+    if (limit <= 0 || limit > MAX_PAGE_SIZE)
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity("Invalid limit").type(MediaType.TEXT_PLAIN).build();
 
     try {
       return Response.status(Response.Status.OK).entity(
-          new GenericEntity<List<Object>>(repoService.listObjects(bucketName)) {
+          new GenericEntity<List<Object>>(repoService.listObjects(bucketName, offset, limit)) {
           }).build();
     } catch (RepoException e) {
       return handleError(e);
     }
 
   }
+
+//  @GET @Path("/count")
+//  @ApiOperation(value = "Count objects", response = Integer.class)
+//  @Produces({MediaType.TEXT_PLAIN})
+//  public Response countObjects(
+//      @ApiParam(required = false) @QueryParam("bucketName") String bucketName) throws Exception {
+//
+//    int result = 0;
+//    if (bucketName == null) {
+//      result = sqlService.objectCount(false, null);
+//    }
+//    else {
+//      if (sqlService.getBucketId(bucketName) == null)
+//        return Response.status(Response.Status.NOT_FOUND)
+//            .entity("Bucket not found").type(MediaType.TEXT_PLAIN).build();
+//
+//      result = sqlService.objectCount(true, bucketName);
+//    }
+//
+//    return Response.status(Response.Status.OK).entity(String.valueOf(result)).build();
+//  }
 
   @GET @Path("/{bucketName}")
   @ApiOperation(value = "Fetch an object or its metadata", response = Object.class)
@@ -147,9 +190,10 @@ public class ObjectController {
       }
     }
 
+
     // if they want redirect URLs
 
-    if ( requestXProxy != null && requestXProxy.equals(REPROXY_HEADER_FILE) && repoService.serverSupportsReproxy()) {
+    if (requestXProxy != null && requestXProxy.equals(REPROXY_HEADER_FILE) && repoService.serverSupportsReproxy()) {
 
       try {
         return Response.status(Response.Status.OK).header(REPROXY_HEADER_URL,
@@ -159,6 +203,7 @@ public class ObjectController {
         return handleError(e);
       }
     }
+
 
     // else assume they want the binary data
 
@@ -171,7 +216,7 @@ public class ObjectController {
       return Response.ok(is, contentType)
           .header("Content-Disposition", "inline; filename=" + exportFileName).build();
 
-      // post: container will close this input stream
+      // the container closes this input stream
 
     } catch (RepoException e) {
       return handleError(e);
@@ -230,7 +275,7 @@ required = true)
         @FormDataParam("timestamp") String timestampString,
       @ApiParam(required = false)
         @FormDataParam("file") InputStream uploadedInputStream
-  ) throws Exception {
+  ) {
 
     if (key == null)
       return Response.status(Response.Status.BAD_REQUEST)
@@ -257,79 +302,18 @@ required = true)
 
     repoInfoService.incrementWriteCount();
 
-    Object existingObject;
-
     try {
-      existingObject = repoService.getObject(bucketName, key, null);
-    } catch (RepoException e) {
-      if (e.getType() == RepoException.Type.ItemNotFound)
-        existingObject = null;
-      else
-        return handleError(e);
-    }
 
-    if (create.equalsIgnoreCase("new")) {
-      if (existingObject != null)
-        return Response.status(Response.Status.BAD_REQUEST)
-            .entity("Attempting to create an object with a key that already exists.").type(MediaType.TEXT_PLAIN).build();
-      return create(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
-    } else if (create.equalsIgnoreCase("version")) {
-      return update(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject);
-    } else if (create.equalsIgnoreCase("auto")) {
-      if (existingObject == null)
-        return create(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
-      else
-        return update(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject);
-    }
+      RepoService.CreateMethod method = null;
 
-    return Response.status(Response.Status.BAD_REQUEST)
-        .entity("Invalid create flag").type(MediaType.TEXT_PLAIN).build();
-  }
+      try {
+        method = RepoService.CreateMethod.valueOf(create.toUpperCase());
+      } catch (IllegalArgumentException e) {
+        throw new RepoException(RepoException.Type.ClientError, e);
+      }
 
-  private Response create(String key,
-                          String bucketName,
-                          String contentType,
-                          String downloadName,
-                          Timestamp timestamp,
-                          InputStream uploadedInputStream) {
+      return Response.status(Response.Status.CREATED).entity(repoService.createObject(method, key, bucketName, contentType, downloadName, timestamp, uploadedInputStream)).build();
 
-    if (uploadedInputStream == null)
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity("A file must be specified for uploading.").type(MediaType.TEXT_PLAIN).build();
-
-    try {
-      return Response.status(Response.Status.CREATED).entity(repoService.createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream)).build();
-    } catch (RepoException e) {
-      return handleError(e);
-    }
-
-  }
-
-  /**
-   * Take an existing key, make a copy of it and modify it as needed. This means a new version
-   * of an existing object. This new part of it could be the file itself, or some of its metadata.
-   *
-   * @param bucketName
-   * @param contentType
-   * @param downloadName
-   * @param uploadedInputStream
-   * @param object
-   * @return
-   * @throws Exception
-   */
-  private Response update(String bucketName,
-                          String contentType,
-                          String downloadName,
-                          Timestamp timestamp,
-                          InputStream uploadedInputStream,
-                          Object object) throws Exception {
-
-    if (object == null)
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity("Attempting to create a new version of an non-existing object.").type(MediaType.TEXT_PLAIN).build();
-
-    try {
-      return Response.status(Response.Status.CREATED).entity(repoService.updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, object)).build();
     } catch (RepoException e) {
       return handleError(e);
     }

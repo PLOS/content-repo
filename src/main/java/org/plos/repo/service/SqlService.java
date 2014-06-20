@@ -310,16 +310,37 @@ public abstract class SqlService {
 
   }
 
+  // this is called from /status
   public Integer objectCount() throws Exception {
+    return objectCount(true, null);
+  }
+
+  // three ways this is called currently:
+  // 1. /status uses (true, null) => get count of used objects
+  // 2. /count uses (false, null) => get count of all objects including deleted
+  // 3. /count?bucketName=... uses (true, bucketName) => get count of used objects in bucket
+
+  public Integer objectCount(boolean usedOnly, String bucketName) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
 
-      p = connectionLocal.get().prepareStatement("SELECT COUNT(*) FROM objects WHERE status=?");
+      StringBuilder q = new StringBuilder("SELECT COUNT(*) FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
+      if (usedOnly)
+        q.append(" AND a.status=?");
+      if (bucketName != null)
+        q.append(" AND bucketName=?");
 
-      p.setInt(1, Object.Status.USED.getValue());
+      p = connectionLocal.get().prepareStatement(q.toString());
+
+      int index = 0;
+      if (usedOnly)
+        p.setInt(++index, Object.Status.USED.getValue());
+      if (bucketName != null)
+        p.setString(++index, bucketName);
+
       result = p.executeQuery();
 
       if (result.next())
@@ -330,7 +351,6 @@ public abstract class SqlService {
     } finally {
       closeDbStuff(result, p);
     }
-
   }
 
   public boolean insertBucket(Bucket bucket) throws SQLException {
@@ -380,7 +400,7 @@ public abstract class SqlService {
 
   }
 
-  public List<Object> listAllObject() throws SQLException {
+  public List<Object> listObjects(String bucketName, Integer offset, Integer limit, boolean onlyListUsedObjs) throws SQLException {
 
     List<Object> objects = new ArrayList<>();
 
@@ -389,35 +409,27 @@ public abstract class SqlService {
 
     try {
 
-      p = connectionLocal.get().prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
+      StringBuilder q = new StringBuilder();
+      q.append("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
 
-      result = p.executeQuery();
+      if (onlyListUsedObjs)
+        q.append(" AND status=?");
 
-      while (result.next()) {
-        objects.add(mapObjectRow(result));
-      }
+      if (bucketName != null)
+        q.append(" AND bucketName=?");
+      if (offset != null)
+        q.append(" OFFSET " + offset);
+      if (limit != null)
+        q.append(" LIMIT " + limit);
+      p = connectionLocal.get().prepareStatement(q.toString());
 
-      return objects;
+      int i = 1;
 
-    } finally {
-      closeDbStuff(result, p);
-    }
+      if (onlyListUsedObjs)
+        p.setInt(i++, Object.Status.USED.getValue());
 
-  }
-
-  public List<Object> listObjectsInBucket(String bucketName) throws SQLException {
-
-    List<Object> objects = new ArrayList<>();
-
-    PreparedStatement p = null;
-    ResultSet result = null;
-
-    try {
-
-      p = connectionLocal.get().prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND status=?");
-
-      p.setString(1, bucketName);
-      p.setInt(2, Object.Status.USED.getValue());
+      if (bucketName != null)
+        p.setString(i++, bucketName);
 
       result = p.executeQuery();
 

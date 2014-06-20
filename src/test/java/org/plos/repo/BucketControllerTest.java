@@ -14,11 +14,11 @@ import javax.ws.rs.core.Response;
 
 import static org.junit.Assert.assertEquals;
 
-public class BucketControllerTest extends RepoBaseTest {
+public class BucketControllerTest extends RepoBaseJerseyTest {
 
   @Before
   public void setup() throws Exception {
-    clearData();
+    RepoBaseSpringTest.clearData(objectStore, sqlService);
   }
 
   @Test

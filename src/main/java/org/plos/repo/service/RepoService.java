@@ -17,6 +17,7 @@
 
 package org.plos.repo.service;
 
+import com.google.common.util.concurrent.Striped;
 import org.apache.commons.lang.StringUtils;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
@@ -33,6 +34,8 @@ import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
 
 /**
  * This service handles all communication to the objectstore and sqlservice
@@ -41,11 +44,18 @@ public class RepoService {
 
   private static final Logger log = LoggerFactory.getLogger(RepoService.class);
 
+  private Striped<ReadWriteLock> rwLocks = Striped.lazyWeakReadWriteLock(32);
+
   @Inject
   private ObjectStore objectStore;
 
   @Inject
   private SqlService sqlService;
+
+
+  public enum CreateMethod {
+    NEW, VERSION, AUTO;
+  }
 
 
   private void sqlReadDone() throws RepoException {
@@ -83,6 +93,9 @@ public class RepoService {
   }
 
   public void createBucket(String name) throws RepoException {
+
+    Lock writeLock = this.rwLocks.get(name).writeLock();
+    writeLock.lock();
 
     boolean rollback = false;
 
@@ -142,11 +155,17 @@ public class RepoService {
 //          throw new RepoException(RepoException.Type.ServerError, "Error verifying bucket creation: " + name);
 //        }
       }
+
+      writeLock.unlock();
+
     }
 
   }
 
   public void deleteBucket(String name) throws RepoException {
+
+    Lock writeLock = this.rwLocks.get(name).writeLock();
+    writeLock.lock();
 
     boolean rollback = false;
 
@@ -161,7 +180,7 @@ public class RepoService {
       if (!objectStore.bucketExists(bucket))
         throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found in object store: " + name);
 
-      if (sqlService.listObjectsInBucket(name).size() != 0)
+      if (sqlService.listObjects(name, 0, 1, false).size() != 0)
         throw new RepoException(RepoException.Type.ClientError, "Cannot delete bucket because it contains objects: " + name );
 
       rollback = true;
@@ -185,6 +204,8 @@ public class RepoService {
         objectStore.createBucket(bucket);
         // TODO: validate objectStore.createBucket return values
       }
+
+      writeLock.unlock();
     }
 
   }
@@ -193,19 +214,18 @@ public class RepoService {
     return objectStore.hasXReproxy();
   }
 
-  public List<Object> listObjects(String bucketName) throws RepoException {
+  public List<Object> listObjects(String bucketName, Integer offset, Integer limit) throws RepoException {
+
+    // TODO: should this function return a list of objects and their nested versions instead of one flat last?
 
     try {
 
       sqlService.getConnection();
 
-      if (bucketName == null)
-        return sqlService.listAllObject();
-
-      if (sqlService.getBucketId(bucketName) == null)
+      if (bucketName != null && sqlService.getBucketId(bucketName) == null)
         throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found");
 
-      return sqlService.listObjectsInBucket(bucketName);
+      return sqlService.listObjects(bucketName, offset, limit, true);
     } catch (SQLException e) {
       throw new RepoException(RepoException.Type.ServerError, e);
     } finally {
@@ -214,6 +234,9 @@ public class RepoService {
   }
 
   public Object getObject(String bucketName, String key, Integer version) throws RepoException {
+
+    Lock readLock = this.rwLocks.get(bucketName + key).readLock();
+    readLock.lock();
 
     Object object;
 
@@ -224,19 +247,26 @@ public class RepoService {
         object = sqlService.getObject(bucketName, key);
       else
         object = sqlService.getObject(bucketName, key, version);
+
+      if (object == null)
+        throw new RepoException(RepoException.Type.ItemNotFound, "Object not found");
+
+      return object;
+
     } catch (SQLException e) {
       throw new RepoException(RepoException.Type.ServerError, e);
     } finally {
       sqlReadDone();
+      readLock.unlock();
     }
 
-    if (object == null)
-      throw new RepoException(RepoException.Type.ItemNotFound, "Object not found");
-
-    return object;
   }
 
   public List<Object> getObjectVersions(Object object) throws RepoException {
+
+    Lock readLock = this.rwLocks.get(object.bucketName + object.key).readLock();
+    readLock.lock();
+
     try {
       sqlService.getConnection();
       return sqlService.listObjectVersions(object);
@@ -244,6 +274,7 @@ public class RepoService {
       throw new RepoException(RepoException.Type.ServerError, e);
     } finally {
       sqlReadDone();
+      readLock.unlock();
     }
   }
 
@@ -292,6 +323,9 @@ public class RepoService {
 
   public void deleteObject(String bucketName, String key, Integer version) throws RepoException {
 
+    Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
+    writeLock.lock();
+
     boolean rollback = true;
 
     try {
@@ -311,55 +345,115 @@ public class RepoService {
       if (rollback) {
         sqlRollback("object " + bucketName + ", " + key + ", " + version);
       }
+
+      writeLock.unlock();
     }
   }
 
-  public Object createNewObject(String key,
+  public Object createObject(CreateMethod method,
+                             String key,
+                             String bucketName,
+                             String contentType,
+                             String downloadName,
+                             Timestamp timestamp,
+                             InputStream uploadedInputStream) throws RepoException {
+
+
+    Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
+    writeLock.lock();
+
+    Object existingObject;
+
+    try {
+
+      try {
+        existingObject = getObject(bucketName, key, null);
+      } catch (RepoException e) {
+        if (e.getType() == RepoException.Type.ItemNotFound)
+          existingObject = null;
+        else
+          throw e;
+      }
+
+      switch (method) {
+
+        case NEW:
+          if (existingObject != null)
+            throw new RepoException(RepoException.Type.ClientError, "Attempting to create an object with a key that already exists.");
+          return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
+
+        case VERSION:
+          return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject);
+
+        case AUTO:
+          if (existingObject == null)
+            return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
+          else
+            return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject);
+
+        default:
+          throw new RepoException(RepoException.Type.ClientError, "Invalid creation method: " + method.toString());
+      }
+    } finally {
+      writeLock.unlock();
+    }
+
+  }
+
+
+  private Object createNewObject(String key,
                                 String bucketName,
                                 String contentType,
                                 String downloadName,
                                 Timestamp timestamp,
                                 InputStream uploadedInputStream) throws RepoException {
 
-    ObjectStore.UploadInfo uploadInfo;
+    if (uploadedInputStream == null)
+      throw new RepoException(RepoException.Type.ClientError, "No data specified");
+
+    ObjectStore.UploadInfo uploadInfo = null;
     Integer bucketId, versionNumber;
+
+    Object object;
 
     boolean rollback = false;
 
     try {
-      sqlService.getConnection();
-      bucketId = sqlService.getBucketId(bucketName);
-    } catch (SQLException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
-    }
 
-    if (bucketId == null)
-      throw new RepoException(RepoException.Type.ClientError, "Can not find bucket " + bucketName);
+      try {
+        sqlService.getConnection();
+        bucketId = sqlService.getBucketId(bucketName);
+      } catch (SQLException e) {
+        throw new RepoException(RepoException.Type.ServerError, e);
+      }
 
-    uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
+      if (bucketId == null)
+        throw new RepoException(RepoException.Type.ClientError, "Can not find bucket " + bucketName);
 
-    try {
-      uploadedInputStream.close();
-    } catch (IOException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
-    }
+      uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
 
-    if (uploadInfo.getSize() == 0) {
-      throw new RepoException(RepoException.Type.ClientError, "Uploaded data must be non-empty");
-    }
+      try {
+        uploadedInputStream.close();
+      } catch (IOException e) {
+        throw new RepoException(RepoException.Type.ServerError, e);
+      }
 
-    try {
-      versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, key);
-    } catch (SQLException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
-    }
+      if (uploadInfo.getSize() == 0) {
+        throw new RepoException(RepoException.Type.ClientError, "Uploaded data must be non-empty");
+      }
 
-    Object object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), null, bucketId, bucketName, versionNumber, Object.Status.USED);
+      try {
+        versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, key);
+      } catch (SQLException e) {
+        throw new RepoException(RepoException.Type.ServerError, e);
+      }
 
-    rollback = true;
+      object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), null, bucketId, bucketName, versionNumber, Object.Status.USED);
 
-    // determine if the object should be added to the store or not
-    if (objectStore.objectExists(object)) {
+      rollback = true;
+
+      // determine if the object should be added to the store or not
+      if (objectStore.objectExists(object)) {
 
 //      if (FileUtils.contentEquals(tempFile, new File(objectStore.getObjectLocationString(bucketName, checksum)))) {
 //        log.info("not adding object to store since content exists");
@@ -368,17 +462,21 @@ public class RepoService {
 //        status = HttpStatus.CONFLICT;
 //      }
 
-      // dont bother storing the file since the data already exists in the system
+        // dont bother storing the file since the data already exists in the system
 
-    } else {
-      if (!objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object)) {
-        throw new RepoException(RepoException.Type.ServerError, "Error saving content to object store");
+      } else {
+        if (!objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object)) {
+          throw new RepoException(RepoException.Type.ServerError, "Error saving content to object store");
+
+
+          //   WHY IS THIS THROWING? Perhape InMemoryStore needs to be thread safe?
+
+
+        }
       }
-    }
 
-    // add a record to the DB
+      // add a record to the DB
 
-    try {
       if (sqlService.insertObject(object) == 0) {
         throw new RepoException(RepoException.Type.ServerError, "Error saving content to database");
       }
@@ -390,23 +488,29 @@ public class RepoService {
       throw new RepoException(RepoException.Type.ServerError, e);
     } finally {
 
-      objectStore.deleteTempUpload(uploadInfo);
+      if (uploadInfo != null)
+        objectStore.deleteTempUpload(uploadInfo);
 
       if (rollback) {
         sqlRollback("object " + bucketName + ", " + key);
         // TODO: handle objectStore rollback, or not?
       }
+
     }
 
     return object;
   }
 
-  public Object updateObject(String bucketName,
+  private Object updateObject(String bucketName,
                           String contentType,
                           String downloadName,
                           Timestamp timestamp,
                           InputStream uploadedInputStream,
                           Object object) throws RepoException {
+
+
+    if (object == null)
+      throw new RepoException(RepoException.Type.ClientError, "Cannot create a new version of an existing object");
 
     ObjectStore.UploadInfo uploadInfo = null;
     boolean rollback = false;
@@ -469,6 +573,7 @@ public class RepoService {
         sqlRollback("object " + bucketName + ", " + object.key);
         // TODO: handle objectStore rollback, or not?
       }
+
     }
 
     return object;

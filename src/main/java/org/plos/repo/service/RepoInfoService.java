@@ -79,7 +79,7 @@ public class RepoInfoService {
 
   public Map<String, String> getStatus() throws Exception {
     Map<String, String> infos = new HashMap<>();
-    infos.put("objects", sqlService.objectCount().toString());
+    infos.put("objects", sqlService.objectCount().toString());  // TODO: give obj/bucket counts
     infos.put("buckets", Integer.toString(sqlService.listBuckets().size()));
     infos.put("serviceStarted", startTime.toString());
     infos.put("readsSinceStart", readCount.toString());

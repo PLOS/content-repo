@@ -20,7 +20,7 @@ import java.nio.charset.Charset;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class ObjectControllerTest extends RepoBaseTest {
+public class ObjectControllerTest extends RepoBaseJerseyTest {
 
   private final String bucketName = "plos-objstoreunittest-bucket1";
 
@@ -32,7 +32,7 @@ public class ObjectControllerTest extends RepoBaseTest {
 
   @Before
   public void setup() throws Exception {
-    clearData();
+    RepoBaseSpringTest.clearData(objectStore, sqlService);
   }
 
   @Test
@@ -349,6 +349,54 @@ public class ObjectControllerTest extends RepoBaseTest {
     response = target("/objects/" + bucketName).queryParam("key", "object1").queryParam("version", "0").request().delete();
     assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
 
+    // GET count
+//
+//    responseString = target("/objects/count").request().get(String.class);
+//    int startCount1 = Integer.valueOf(responseString).intValue();
+//    responseString = target("/objects/count").queryParam("bucketName", bucketName).request().get(String.class);
+//    int startCount2 = Integer.valueOf(responseString).intValue();
+//    int count = 100;
+//    for (int i=0; i<count; ++i) {
+//      assertEquals(target("/objects").request()
+//          .post(Entity.entity(new FormDataMultiPart()
+//              .field("bucketName", bucketName).field("create", "new")
+//              .field("key", "count" + (i < 10 ? "0" : "") + i).field("contentType", "text/plain")
+//              .field("timestamp", "2012-09-08 11:00:00")
+//              .field("file", "value" + i, MediaType.TEXT_PLAIN_TYPE),
+//              MediaType.MULTIPART_FORM_DATA
+//          )).getStatus(),
+//          Response.Status.CREATED.getStatusCode()
+//      );
+//    }
+//
+//    // delete all even keys
+//    for (int i=0; i<count; i += 2) {
+//      response = target("/objects/" + bucketName).queryParam("key", "count" + (i < 10 ? "0" : "") + i).queryParam("version", "0").request().delete();
+//      assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+//    }
+//
+//    responseString = target("/objects/count").request().get(String.class);
+//    int endCount1 = Integer.valueOf(responseString).intValue();
+//    assertEquals(endCount1-startCount1, count);
+//    responseString = target("/objects/count").queryParam("bucketName", bucketName).request().get(String.class);
+//    int endCount2 = Integer.valueOf(responseString).intValue();
+//    assertEquals(endCount2-startCount2, count/2); // half of them are deleted, and not counted
+//
+//    int subset = 10;
+//    responseString = target("/objects").queryParam("limit", "" + subset).queryParam("offset", startCount1 + "").request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+//    jsonArray = gson.fromJson(responseString, JsonElement.class).getAsJsonArray();
+//    assertEquals(jsonArray.size(), subset);
+//    for (int i=0; i<subset; ++i) {
+//      assertEquals(jsonArray.get(i).getAsJsonObject().get("key").getAsString(), "count" + (i < 10 ? "0" : "") + i);
+//    }
+//
+//    responseString = target("/objects").queryParam("bucketName", bucketName).queryParam("limit", "" + subset).queryParam("offset", 10).request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+//    jsonArray = gson.fromJson(responseString, JsonElement.class).getAsJsonArray();
+//    // response is alphabetical by key, so countNN is before any other
+//    assertEquals(jsonArray.size(), subset);
+//    for (int i=0, j=21; i<subset; ++i, j+=2) {
+//      assertEquals(jsonArray.get(i).getAsJsonObject().get("key").getAsString(), "count" + (j < 10 ? "0" : "") + j);
+//    }
 
     // TODO: tests to add
     //   object deduplication
