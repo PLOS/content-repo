@@ -82,22 +82,12 @@ public abstract class SqlService {
 
   public void transactionCommit() throws SQLException {
     Connection dbConnection = connectionLocal.get();
-
-//    if (dbConnection != null) {
-      dbConnection.commit();
-      //dbConnection.close();
-      //connectionLocal.remove();
-//    }
+    dbConnection.commit();
   }
 
   public void transactionRollback() throws SQLException {
     Connection dbConnection = connectionLocal.get();
-
-//    if (dbConnection != null) {
-      dbConnection.rollback();
-//      dbConnection.close();
-//    }
-//    connectionLocal.remove();
+    dbConnection.rollback();
   }
 
   public Integer getBucketId(String bucketName) throws SQLException {
@@ -406,10 +396,10 @@ public abstract class SqlService {
         q.append(" AND status=?");
       if (bucketName != null)
         q.append(" AND bucketName=?");
-      if (offset != null)
-        q.append(" OFFSET " + offset);
       if (limit != null)
         q.append(" LIMIT " + limit);
+      if (offset != null)
+        q.append(" OFFSET " + offset);
       p = connectionLocal.get().prepareStatement(q.toString());
 
       int i = 1;

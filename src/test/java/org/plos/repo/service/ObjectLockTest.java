@@ -109,7 +109,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       org.plos.repo.models.Object obj = objects.get(j);
 
       assertEquals(BASE_KEY_NAME, obj.key);
-      assertTrue(Integer.valueOf(j) == obj.versionNumber);
+      assertEquals(Integer.valueOf(j), obj.versionNumber);
       assertTrue(this.objectStore.objectExists(obj));
 
       List<Object> versions = repoService.getObjectVersions(obj);

@@ -67,18 +67,7 @@ public class InMemoryFileStoreService extends ObjectStore {
     if (!objectExists(object))
       return false;
 
-
-    if (!data.get(object.bucketName).containsKey(object.checksum))
-      return false;
-
-    byte[] bytes = data.get(object.bucketName).remove(object.checksum);
-
-    if (bytes == null)
-      return false;
-
-    return true;
-
-//    return data.get(object.bucketName).remove(object.checksum) != null;
+    return data.get(object.bucketName).remove(object.checksum) != null;
 
   }
 
