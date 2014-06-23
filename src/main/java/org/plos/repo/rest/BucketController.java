@@ -71,9 +71,6 @@ public class BucketController {
   public Response info(@PathParam("bucketName") String bucketName) {
 
     try {
-
-      // TODO: serve with content negotiation
-
       return Response.status(Response.Status.OK).entity(
           repoInfoService.bucketInfo(bucketName)
       ).build();

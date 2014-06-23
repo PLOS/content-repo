@@ -61,7 +61,7 @@ public class BucketLockTest extends RepoBaseSpringTest {
 
     execute(INSERT_THREADS, DELETE_THREADS, READER_THREADS);
 
-    verify(spySqlService, times(INSERT_THREADS)).getBucketId(anyString());
+    verify(spySqlService, times(INSERT_THREADS)).getBucket(anyString());
     verify(spyObjectStore, times(1)).createBucket(any(Bucket.class));
     verify(spySqlService, times(1)).insertBucket(any(Bucket.class));
     verify(spyObjectStore, never()).deleteBucket(any(Bucket.class));
@@ -83,7 +83,7 @@ public class BucketLockTest extends RepoBaseSpringTest {
     execute(INSERT_THREADS, DELETE_THREADS, READER_THREADS);
 
     // get bucket id is called for each delete plus initial create call
-    verify(spySqlService, times(DELETE_THREADS + 1)).getBucketId(anyString());
+    verify(spySqlService, times(DELETE_THREADS + 1)).getBucket(anyString());
     verify(spyObjectStore, times(1)).deleteBucket(any(Bucket.class));
     verify(spySqlService, times(1)).deleteBucket(anyString());
   }

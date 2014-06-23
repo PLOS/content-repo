@@ -90,21 +90,21 @@ public abstract class SqlService {
     dbConnection.rollback();
   }
 
-  public Integer getBucketId(String bucketName) throws SQLException {
+  public Bucket getBucket(String bucketName) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
 
-      p = connectionLocal.get().prepareStatement("SELECT bucketId FROM buckets WHERE bucketName=?");
+      p = connectionLocal.get().prepareStatement("SELECT * FROM buckets WHERE bucketName=?");
 
       p.setString(1, bucketName);
 
       result = p.executeQuery();
 
       if (result.next())
-        return result.getInt("bucketId");
+        return mapBucketRow(result);
       else
         return null;
 
@@ -156,9 +156,9 @@ public abstract class SqlService {
 
     PreparedStatement p = null;
 
-    Integer bucketId = getBucketId(bucketName);
+    Bucket bucket = getBucket(bucketName);
 
-    if (bucketId == null)
+    if (bucket == null)
       return 0;
 
     try {
@@ -167,7 +167,7 @@ public abstract class SqlService {
 
       p.setInt(1, Object.Status.DELETED.getValue());
       p.setString(2, key);
-      p.setInt(3, bucketId);
+      p.setInt(3, bucket.bucketId);
       p.setInt(4, versionNumber);
 
       return p.executeUpdate();

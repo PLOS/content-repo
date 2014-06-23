@@ -105,7 +105,7 @@ public class RepoService {
 
       sqlService.getConnection();
 
-      if (sqlService.getBucketId(name) != null)
+      if (sqlService.getBucket(name) != null)
         throw new RepoException(RepoException.Type.ClientError, "Bucket already exists in database: " + name);
 
       if (objectStore.bucketExists(bucket))
@@ -157,7 +157,7 @@ public class RepoService {
     try {
       sqlService.getConnection();
 
-      if (sqlService.getBucketId(name) == null)
+      if (sqlService.getBucket(name) == null)
         throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found in database: " + name);
 
       if (!objectStore.bucketExists(bucket))
@@ -207,7 +207,7 @@ public class RepoService {
 
       sqlService.getConnection();
 
-      if (bucketName != null && sqlService.getBucketId(bucketName) == null)
+      if (bucketName != null && sqlService.getBucket(bucketName) == null)
         throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found");
 
       return sqlService.listObjects(bucketName, offset, limit, includeDeleted);
@@ -397,7 +397,8 @@ public class RepoService {
       throw new RepoException(RepoException.Type.ClientError, "No data specified");
 
     ObjectStore.UploadInfo uploadInfo = null;
-    Integer bucketId, versionNumber;
+    Integer versionNumber;
+    Bucket bucket;
 
     Object object;
 
@@ -407,12 +408,12 @@ public class RepoService {
 
       try {
         sqlService.getConnection();
-        bucketId = sqlService.getBucketId(bucketName);
+        bucket = sqlService.getBucket(bucketName);
       } catch (SQLException e) {
         throw new RepoException(RepoException.Type.ServerError, e);
       }
 
-      if (bucketId == null)
+      if (bucket == null)
         throw new RepoException(RepoException.Type.ClientError, "Can not find bucket " + bucketName);
 
       uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
@@ -433,7 +434,7 @@ public class RepoService {
         throw new RepoException(RepoException.Type.ServerError, e);
       }
 
-      object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), null, bucketId, bucketName, versionNumber, Object.Status.USED);
+      object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), null, bucket.bucketId, bucketName, versionNumber, Object.Status.USED);
 
       rollback = true;
 
@@ -498,7 +499,7 @@ public class RepoService {
 
     try {
       sqlService.getConnection();
-      Integer bucketId = sqlService.getBucketId(bucketName);
+      Integer bucketId = sqlService.getBucket(bucketName).bucketId;
 
       if (bucketId == null)
         throw new RepoException(RepoException.Type.ClientError, "Can not find bucket: " + bucketName);
