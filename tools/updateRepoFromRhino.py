@@ -37,7 +37,7 @@ def pushnew(infile, repo, skipSet, args):
   List the articles that have been added to Rhino using infile as the history
 
   Output should be redirected to a CSV file for example:
-    cat ~/Desktop/article*.csv | PYTHONPATH=path/to/src/rhino/tools/python:path/to/content-repo/tools python updateRepoFromRhino.py --repoServer=http://localhost:8081 --repoBucket=org.plos.mybucket diffnew >> ~/Desktop/articles-new-5-28-2014.csv
+    cat ~/Desktop/article*.csv | PYTHONPATH=path/to/src/rhino/tools/python:path/to/content-repo/tools python updateRepoFromRhino.py --cacheDir=assetCacheDir --repoServer=http://localhost:8081 --repoBucket=org.plos.mybucket pushnew >> ~/Desktop/articles-new-5-28-2014.csv
 
   """
 
@@ -56,7 +56,7 @@ def pushnew(infile, repo, skipSet, args):
 
   for (doi, mod_date) in rhino.articles(lastModified=True):
     if doi in skipSet:
-      print ("skipping " + doi, file=sys.stderr)
+      print ("skipping " + doi + " because in skipset", file=sys.stderr)
       continue
 
     current.add(doi.replace('10.1371/', ''))
@@ -103,8 +103,6 @@ def pushrepubs(infile, repo, args):
 
 def _copy_from_rhino_to_repo(rhino, repo, bucket, article, testRun, assetCache, createMode = 'new'):
 
-  # TODO: this is not technically correct because timestampStr is the article timestamp, not the asset timestamp
-
   articleFiles = rhino.articleFiles(article, assetCache)
 
   for (rhino_article_doi, assets) in articleFiles.iteritems():
@@ -119,6 +117,18 @@ def _copy_from_rhino_to_repo(rhino, repo, bucket, article, testRun, assetCache, 
 
         if dlStatus != 'OK':
           raise Exception("failed to download from Rhino " + rhino_asset_key)
+
+        if createMode != "new": # if pushing repubs, dont push the same twice
+
+          try:
+            origObjMeta = repo.getObjectMetadata(bucket, rhino_asset_key_with_prefix)
+
+            if origObjMeta['checksum'] == dlSha1:
+              print ("skipping " + rhino_asset_key + " since checksum matches", file=sys.stderr)
+              continue
+
+          except LookupError:
+            pass  # if the asset is not found in the repo, dont skip it
 
         if not testRun:
           uploadAsset = repo.uploadObject(bucket, os.path.join(assetCache, rhino_article_doi, dlFname), rhino_asset_key_with_prefix, dlContentType, rhino_asset_key_with_prefix, createMode, timestampStr)
@@ -142,9 +152,9 @@ def _copy_from_rhino_to_repo(rhino, repo, bucket, article, testRun, assetCache, 
 if __name__ == '__main__':
 
   parser = argparse.ArgumentParser(description='Push new articles from Rhino to a content repo')
-  parser.add_argument('--repoServer', default='http://localhost:8081', help='Content repo server')
-  parser.add_argument('--repoBucket', help='Content repo bucket')
-  parser.add_argument('--cacheDir', default="assetCache", help='Save files locally here as well as transfer to repo'),
+  parser.add_argument('--repoServer', required=True, help='Content repo server')
+  parser.add_argument('--repoBucket', required=True, help='Content repo bucket')
+  parser.add_argument('--cacheDir', required=True, help='Save files locally here as well as transfer to repo'),
   parser.add_argument('--testRun', default=False, action='store_true', help='Show the listing of changes but dont make them')
   parser.add_argument('command', help='Command', choices=['pushnew', 'pushrepubs'])
   #parser.add_argument('params', nargs='*', help="parameter list for commands")

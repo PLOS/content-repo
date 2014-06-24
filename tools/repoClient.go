@@ -11,6 +11,9 @@ import (
 	"net/url"
 	"bytes"
 	"mime/multipart"
+	"io"
+	"os"
+	"path/filepath"
 )
 
 var server string
@@ -72,9 +75,54 @@ func postContent(url string, vals url.Values) ([]byte, error, int, string) {
 	return body, nil, resp.StatusCode, resp.Status
 }
 
-func postObject(url string, vals url.Values, file File) ([]byte, error, int, string) {
+func postObject(url string, params map[string]string, paramName, path string) ([]byte, error, int, string) {
 
+	fmt.Println("opening file ",  path)
 
+	file, err := os.Open(path)
+	if err != nil {
+	  return nil, err, 0, ""
+	}
+	defer file.Close()
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile(paramName, filepath.Base(path))
+	if err != nil {
+	  return nil, err, 0, ""
+	}
+	_, err = io.Copy(part, file)
+
+	for key, val := range params {
+	  _ = writer.WriteField(key, val)
+	}
+	err = writer.Close()
+	if err != nil {
+	  return nil, err, 0, ""
+	}
+
+	req, err := http.NewRequest("POST", url, body)
+
+	if err != nil {
+		return nil, err, 0, ""
+	}
+
+	req.Header.Add("Content-Type", writer.FormDataContentType())
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err, 0, ""
+	}
+
+	defer resp.Body.Close()
+
+	body_resp, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err, 0, ""
+	}
+
+	return body_resp, nil, resp.StatusCode, resp.Status
 }
 
 func show_info() {
@@ -149,18 +197,24 @@ func create_bucket() {
 	}
 }
 
-func new_object() {
+func create_object(mode string) {
 
-	file, err := os.Open(file_path)
+	// file, err := os.Open(file_path)
 
-	if err != nil {
-		return nil, err
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer file.Close()
+
+	params := map[string]string {
+		"bucketName": bucket, 
+		"key": key,
+		"create": mode,
 	}
-	defer file.Close()
 
 
-	content, err, statusCode, _ := postContent(server+"/objects",
-		url.Values{"bucketName": {bucket}, "key": {key}, "create": {"auto"}})
+	content, err, statusCode, _ := postObject(server+"/objects",
+		params, "file", file_path)
 
 	if err != nil {
 		panic(err)
@@ -171,6 +225,51 @@ func new_object() {
 	}
 }
 
+func delete(url string, vals url.Values) ([]byte, error, int, string) {
+
+	req, err := http.NewRequest("DELETE", url, bytes.NewBufferString(vals.Encode()))
+	if err != nil {
+		return nil, err, 0, ""
+	}
+
+	//req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	//req.Header.Add("Accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err, 0, ""
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err, 0, ""
+	}
+
+	return body, nil, resp.StatusCode, resp.Status
+}
+
+func delete_object() {
+
+	// TODO: fix this function
+	
+	fmt.Println("key ", key)
+
+	content, err, statusCode, _ := delete(server+"/objects/"+bucket,
+		url.Values{"key": {key}, "version": {version}})
+
+	if err != nil {
+		panic(err)
+	} else if statusCode != 200 {
+		fmt.Println("Error: ", statusCode, string(content))
+	} else {
+		fmt.Println(string(content))
+	}
+
+}
+
 
 func main() {
 
@@ -178,6 +277,9 @@ func main() {
 
 	flag.StringVar(&server, "server", "http://localhost:8080", "repo server")
 	flag.StringVar(&bucket, "bucket", "mybucket", "bucket")
+	flag.StringVar(&key, "key", "", "object key")
+	flag.StringVar(&version, "version", "0", "object version")
+	flag.StringVar(&file_path, "file", "", "the local file location")
 	flag.Parse()
 
 	if len(flag.Args()) == 0 {
@@ -199,7 +301,11 @@ func main() {
 	case "newbucket":
 		create_bucket()
 	case "newobject":
-		new_object()
+		create_object("new")
+	case "versionobject":
+		create_object("version")
+	case "deleteobject":
+		delete_object()
 	default:
 		fmt.Println("Command unrecognized: " + command)
 	}
