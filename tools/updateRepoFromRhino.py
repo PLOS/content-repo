@@ -56,7 +56,7 @@ def pushnew(infile, repo, skipSet, args):
 
   for (doi, mod_date) in rhino.articles(lastModified=True):
     if doi in skipSet:
-      print ("skipping " + doi + " because in skipset", file=sys.stderr)
+      print ('skipping ' + doi + ' because in skipset', file=sys.stderr)
       continue
 
     current.add(doi.replace('10.1371/', ''))
@@ -64,10 +64,12 @@ def pushnew(infile, repo, skipSet, args):
   i = 0
   for doi in current:
     if not (doi in old):
-      print(doi + " (%" + str(100*i/len(current)) + " done)", file=sys.stderr)
+
+      # NOTE: the reported percentage is calculated over the total articles in the corpus
+      print(doi + ' (%' + str(100*i/len(current)) + ' done)', file=sys.stderr)
 
       try:
-        _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, args.testRun, args.cacheDir, 'new')
+        _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, args.testRun, args.cacheDir, args.command)
       except Exception, e:
         _handle_exception(doi, e)
 
@@ -79,6 +81,9 @@ def pushrepubs(infile, repo, args):
   """
   List the articles that have been modified in Rhino
     The input should be a list of articles that have been republished
+
+  Protip: You can generate a list of repubs to be used as input for this like so:
+  > ls -rt /mnt/corpus/repubs/ | sed -r 's/(p[a-z]+\.[0-9]+).*/journal.\1/'
   """
 
   i = 0
@@ -93,7 +98,7 @@ def pushrepubs(infile, repo, args):
     print(doi + " (%" + str(100*i/len(mods)) + " done)", file=sys.stderr)
 
     try:
-      _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, args.testRun, args.cacheDir, 'auto')  # TODO: change to 'version' ?
+      _copy_from_rhino_to_repo(rhino, repo, args.repoBucket, doi, args.testRun, args.cacheDir, args.command)
     except Exception, e:
       _handle_exception(doi, e)
 
@@ -101,7 +106,11 @@ def pushrepubs(infile, repo, args):
 
   return
 
-def _copy_from_rhino_to_repo(rhino, repo, bucket, article, testRun, assetCache, createMode = 'new'):
+def _copy_from_rhino_to_repo(rhino, repo, bucket, article, testRun, assetCache, operation):
+
+  if operation == 'pushnew':
+    createMode = 'new'
+
 
   articleFiles = rhino.articleFiles(article, assetCache)
 
@@ -116,19 +125,21 @@ def _copy_from_rhino_to_repo(rhino, repo, bucket, article, testRun, assetCache, 
         timestampStr = datetime.datetime.now().strftime('%Y-%m-%d %X')
 
         if dlStatus != 'OK':
-          raise Exception("failed to download from Rhino " + rhino_asset_key)
+          raise Exception('failed to download from Rhino ' + rhino_asset_key)
 
-        if createMode != "new": # if pushing repubs, dont push the same twice
+        if operation == 'pushrepubs': # if pushing repubs, dont push the same twice
 
           try:
             origObjMeta = repo.getObjectMetadata(bucket, rhino_asset_key_with_prefix)
 
+            createMode = 'version'
+
             if origObjMeta['checksum'] == dlSha1:
-              print ("skipping " + rhino_asset_key + " since checksum matches", file=sys.stderr)
+              print ('skipping ' + rhino_asset_key + ' since checksum matches', file=sys.stderr)
               continue
 
           except LookupError:
-            pass  # if the asset is not found in the repo, dont skip it
+            createMode = 'new'  # if the asset is not found in the repo, dont skip it
 
         if not testRun:
           uploadAsset = repo.uploadObject(bucket, os.path.join(assetCache, rhino_article_doi, dlFname), rhino_asset_key_with_prefix, dlContentType, rhino_asset_key_with_prefix, createMode, timestampStr)
@@ -171,11 +182,7 @@ if __name__ == '__main__':
   args.cacheDir = os.path.abspath(os.path.expanduser(args.cacheDir))
 
   if args.testRun:
-    print("TEST RUN! No data is being pushed.", file=sys.stderr)
-  else:
-    if args.repoBucket == None:
-      print('No bucket set', file=sys.stderr)
-      sys.exit(0)
+    print('TEST RUN! No data is being pushed.', file=sys.stderr)
 
     if not repo.bucketExists(args.repoBucket):
       print('Bucket not found ' + args.repoBucket, file=sys.stderr)
