@@ -25,6 +25,9 @@ import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import org.apache.http.HttpStatus;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.plos.repo.models.Object;
 import org.plos.repo.service.RepoException;
 import org.plos.repo.service.RepoInfoService;
@@ -35,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
@@ -68,6 +72,8 @@ public class ObjectController {
   // maximum allowed value of page size, i.e., limit= parameter
   private static final Integer MAX_PAGE_SIZE = 10000;
 
+  private static final DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss z");
+
   @Inject
   private RepoService repoService;
 
@@ -97,6 +103,7 @@ public class ObjectController {
     }
 
   }
+
 
   @GET
   @ApiOperation(value = "List objects", response = Object.class, responseContainer = "List")
@@ -138,7 +145,8 @@ public class ObjectController {
                        @QueryParam("version") Integer version,
                        @QueryParam("fetchMetadata") Boolean fetchMetadata,
                        @ApiParam(value = "If set to 'reproxy-file' then it will attempt to return a header representing a redirected object URL")
-                       @HeaderParam("X-Proxy-Capabilities") String requestXProxy
+                       @HeaderParam("X-Proxy-Capabilities") String requestXProxy,
+                       @HeaderParam("If-Modified-Since") String ifModifiedSinceStr
   ) {
 
     Object object;
@@ -149,6 +157,10 @@ public class ObjectController {
       return handleError(e);
     }
 
+    DateTime objDateTime = new DateTime(object.timestamp);
+    String httpDateStr = dateTimeFormatter.print(objDateTime);
+    boolean notModifiedSince = objDateTime.isBefore(dateTimeFormatter.parseDateTime(ifModifiedSinceStr));
+
     repoInfoService.incrementReadCount();
 
     // if they want the metadata
@@ -156,7 +168,9 @@ public class ObjectController {
     if (fetchMetadata != null && fetchMetadata) {
       try {
         object.versions = repoService.getObjectVersions(object);
-        return Response.status(Response.Status.OK).entity(object).build();
+        return Response.status(Response.Status.OK)
+            .header(HttpHeaders.LAST_MODIFIED, httpDateStr)
+            .entity(object).build();
       } catch (RepoException e) {
         return handleError(e);
       }
@@ -168,9 +182,16 @@ public class ObjectController {
     if (requestXProxy != null && requestXProxy.equals(REPROXY_HEADER_FILE) && repoService.serverSupportsReproxy()) {
 
       try {
-        return Response.status(Response.Status.OK).header(REPROXY_HEADER_URL,
-            REPROXY_URL_JOINER.join(repoService.getObjectReproxy(object)))
-            .header(REPROXY_HEADER_CACHE_FOR, REPROXY_CACHE_FOR_HEADER).build();
+        Response.Status status = Response.Status.OK;
+
+        if (notModifiedSince)
+          status = Response.Status.NOT_MODIFIED;
+
+        return Response.status(status)
+            .header(HttpHeaders.LAST_MODIFIED, httpDateStr)
+            .header(REPROXY_HEADER_URL, REPROXY_URL_JOINER.join(repoService.getObjectReproxy(object)))
+            .header(REPROXY_HEADER_CACHE_FOR, REPROXY_CACHE_FOR_HEADER)
+            .build();
       } catch (RepoException e) {
         return handleError(e);
       }
@@ -181,12 +202,16 @@ public class ObjectController {
 
     try {
 
+      if (notModifiedSince)
+        return Response.notModified().header(HttpHeaders.LAST_MODIFIED, httpDateStr).build();
+
       String exportFileName = repoService.getObjectExportFileName(object);
       String contentType = repoService.getObjectContentType(object);
       InputStream is = repoService.getObjectInputStream(object);
 
       return Response.ok(is, contentType)
-          .header("Content-Disposition", "inline; filename=" + exportFileName).build();
+          .header(HttpHeaders.LAST_MODIFIED, httpDateStr)
+          .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + exportFileName).build();
 
       // the container closes this input stream
 
