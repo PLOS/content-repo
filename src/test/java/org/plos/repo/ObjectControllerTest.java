@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2006-2014 by Public Library of Science
+ * http://plos.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.plos.repo;
 
 import com.google.gson.Gson;
@@ -101,70 +118,64 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     assertEquals(target("/objects").queryParam("bucketName", "nonExistingBucket").request().get().getStatus(), Response.Status.NOT_FOUND.getStatusCode());
   }
 
-//  @Test
-//  public void offsetAndCount() {
-//
-//
-//
-//    // TODO: run this once content negotiation works with Maps for /bucket/{bucketName}
-//
-//
-//
-//    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
-//
-//    int startCount = Integer.valueOf(
-//        gson.fromJson(target("/buckets/" + bucketName).request(MediaType.APPLICATION_JSON_TYPE).get(String.class),
-//            JsonElement.class).getAsJsonObject().get("activeObjects").toString());
-//
-//    int count = 100;
-//    for (int i=0; i<count; ++i) {
-//      assertEquals(target("/objects").request()
-//              .post(Entity.entity(new FormDataMultiPart()
-//                      .field("bucketName", bucketName).field("create", "new")
-//                      .field("key", "count" + (i < 10 ? "0" : "") + i).field("contentType", "text/plain")
-//                      .field("timestamp", "2012-09-08 11:00:00")
-//                      .field("file", "value" + i, MediaType.TEXT_PLAIN_TYPE),
-//                  MediaType.MULTIPART_FORM_DATA
-//              )).getStatus(),
-//          Response.Status.CREATED.getStatusCode()
-//      );
-//    }
-//
-//    // delete all even keys
-//    for (int i=0; i<count; i += 2) {
-//      Response response = target("/objects/" + bucketName).queryParam("key", "count" + (i < 10 ? "0" : "") + i).queryParam("version", "0").request().delete();
-//      assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
-//    }
-//
-//    int endCountTotal = Integer.valueOf(
-//        gson.fromJson(target("/buckets/" + bucketName).request().get(String.class),
-//            JsonElement.class).getAsJsonObject().get("totalObjects").toString());
-//
-//    assertEquals(endCountTotal-startCount, count);
-//
-//    int endCountActive = Integer.valueOf(
-//        gson.fromJson(target("/buckets/" + bucketName).request().get(String.class),
-//            JsonElement.class).getAsJsonObject().get("activeObjects").toString());
-//
-//    assertEquals(endCountActive-startCount, count/2); // half of them are deleted, and not counted
-//
-//    int subset = 10;
-//    String responseString = target("/objects").queryParam("limit", "" + subset).queryParam("offset", startCount + "").queryParam("includeDeleted", "true").request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
-//    JsonArray jsonArray = gson.fromJson(responseString, JsonElement.class).getAsJsonArray();
-//    assertEquals(jsonArray.size(), subset);
-//    for (int i=0; i<subset; ++i) {
-//      assertEquals(jsonArray.get(i).getAsJsonObject().get("key").getAsString(), "count" + (i < 10 ? "0" : "") + i);
-//    }
-//
-//    responseString = target("/objects").queryParam("bucketName", bucketName).queryParam("limit", "" + subset).queryParam("offset", 10).request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
-//    jsonArray = gson.fromJson(responseString, JsonElement.class).getAsJsonArray();
-//    // response is alphabetical by key, so countNN is before any other
-//    assertEquals(jsonArray.size(), subset);
-//    for (int i=0, j=21; i<subset; ++i, j+=2) {
-//      assertEquals(jsonArray.get(i).getAsJsonObject().get("key").getAsString(), "count" + (j < 10 ? "0" : "") + j);
-//    }
-//
-//  }
+  @Test
+  public void offsetAndCount() {
+
+    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
+
+    int startCount = Integer.valueOf(
+        gson.fromJson(target("/buckets/" + bucketName).request(MediaType.APPLICATION_JSON_TYPE).get(String.class),
+            JsonElement.class).getAsJsonObject().get("activeObjects").toString());
+
+    int count = 100;
+    for (int i=0; i<count; ++i) {
+      assertEquals(target("/objects").request()
+              .post(Entity.entity(new FormDataMultiPart()
+                      .field("bucketName", bucketName).field("create", "new")
+                      .field("key", "count" + (i < 10 ? "0" : "") + i).field("contentType", "text/plain")
+                      .field("timestamp", "2012-09-08 11:00:00")
+                      .field("file", "value" + i, MediaType.TEXT_PLAIN_TYPE),
+                  MediaType.MULTIPART_FORM_DATA
+              )).getStatus(),
+          Response.Status.CREATED.getStatusCode()
+      );
+    }
+
+    // delete all even keys
+    for (int i=0; i<count; i += 2) {
+      Response response = target("/objects/" + bucketName).queryParam("key", "count" + (i < 10 ? "0" : "") + i).queryParam("version", "0").request().delete();
+      assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+    }
+
+    int endCountTotal = Integer.valueOf(
+        gson.fromJson(target("/buckets/" + bucketName).request(MediaType.APPLICATION_JSON_TYPE).get(String.class),
+            JsonElement.class).getAsJsonObject().get("totalObjects").toString());
+
+    assertEquals(endCountTotal-startCount, count);
+
+    int endCountActive = Integer.valueOf(
+        gson.fromJson(target("/buckets/" + bucketName).request(MediaType.APPLICATION_JSON_TYPE).get(String.class),
+            JsonElement.class).getAsJsonObject().get("activeObjects").toString());
+
+    assertEquals(endCountActive-startCount, count/2); // half of them are deleted, and not counted
+
+    int subset = 10;
+    String responseString = target("/objects").queryParam("limit", "" + subset).queryParam("offset", startCount + "").queryParam("includeDeleted", "true").request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+    JsonArray jsonArray = gson.fromJson(responseString, JsonElement.class).getAsJsonArray();
+    assertEquals(jsonArray.size(), subset);
+    for (int i=0; i<subset; ++i) {
+      assertEquals(jsonArray.get(i).getAsJsonObject().get("key").getAsString(), "count" + (i < 10 ? "0" : "") + i);
+    }
+
+    responseString = target("/objects").queryParam("bucketName", bucketName).queryParam("limit", "" + subset).queryParam("offset", 10).request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+    jsonArray = gson.fromJson(responseString, JsonElement.class).getAsJsonArray();
+    // response is alphabetical by key, so countNN is before any other
+    assertEquals(jsonArray.size(), subset);
+    for (int i=0, j=21; i<subset; ++i, j+=2) {
+      assertEquals(jsonArray.get(i).getAsJsonObject().get("key").getAsString(), "count" + (j < 10 ? "0" : "") + j);
+    }
+
+  }
 
   @Test
   public void testControllerCrud() throws Exception {
