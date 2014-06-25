@@ -20,7 +20,6 @@ import hashlib
 import datetime
 from contentRepo import ContentRepo
 from plosapi import Rhino
-from plosapi.mkrepodb import decode_row
 
 __author__    = 'Jono Finger'
 __copyright__ = 'Copyright 2014, PLOS'
@@ -48,7 +47,8 @@ def pushnew(infile, repo, skipSet, args):
   for row in infile:
 
     try:
-      (doi, ts, afid, md5, sha1, ct, sz, dname, fname) = decode_row(row)
+      cols = row.split(',')
+      doi = cols[0]
       old.add(doi)
     except ValueError, e:
       pass
