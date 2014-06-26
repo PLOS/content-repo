@@ -159,7 +159,10 @@ public class ObjectController {
 
     DateTime objDateTime = new DateTime(object.timestamp);
     String httpDateStr = dateTimeFormatter.print(objDateTime);
-    boolean notModifiedSince = objDateTime.isBefore(dateTimeFormatter.parseDateTime(ifModifiedSinceStr));
+    boolean notModifiedSince = false;
+
+    if (ifModifiedSinceStr != null)
+      objDateTime.isBefore(dateTimeFormatter.parseDateTime(ifModifiedSinceStr));
 
     repoInfoService.incrementReadCount();
 
