@@ -162,7 +162,7 @@ public class ObjectController {
     boolean notModifiedSince = false;
 
     if (ifModifiedSinceStr != null)
-      objDateTime.isBefore(dateTimeFormatter.parseDateTime(ifModifiedSinceStr));
+      notModifiedSince = objDateTime.isBefore(dateTimeFormatter.parseDateTime(ifModifiedSinceStr));
 
     repoInfoService.incrementReadCount();
 
