@@ -20,12 +20,13 @@ package org.plos.repo.rest;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import org.plos.repo.service.ObjectStore;
+import org.plos.repo.service.RepoException;
 import org.plos.repo.service.RepoInfoService;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import java.util.Map;
+import javax.ws.rs.core.Response;
 
 @Path("/")
 @Api(value="info")
@@ -55,19 +56,19 @@ public class RootController {
   @GET
   @Path("config")
   @ApiOperation("Show some config info about the running service")
-  public Map config() {
-
-    // TODO: serve with content negotiation
-    //    GenericEntity<Map<String, String>> entity = new GenericEntity<Map<String, String>>(repoInfoService.getSysInfo()) {};
-    //    Response response = Response.ok(entity).build();
-
-    return repoInfoService.getConfig();
+  public Response config() {
+    return Response.ok(repoInfoService.getConfig()).build();
   }
 
   @GET
   @Path("status")
   @ApiOperation("Show some run time info about the service")
-  public Map status() throws Exception {
-    return repoInfoService.getStatus();
+  public Response status() {
+    try {
+      return Response.ok(repoInfoService.getStatus()).build();
+    } catch (RepoException e) {
+      return ObjectController.handleError(e);
+    }
   }
+
 }

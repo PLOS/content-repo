@@ -8,6 +8,9 @@ public class Bucket {
   public Integer bucketId;
   public String bucketName;
 
+  public Integer activeObjects;   // used only by RepoInfoService
+  public Integer totalObjects;    // used only by RepoInfoService
+
   // empty constructor required for JAXB mapping
   private Bucket() {
   }
