@@ -39,7 +39,7 @@ public class ThreadLocalTest extends RepoBaseSpringTest {
   private CountDownLatch startGate;
   private CountDownLatch endGate;
 
-  @Before
+  @Before @SuppressWarnings("unchecked")
   public void setup() throws Exception {
 
     // clear data calls sqlService.getConnection()
