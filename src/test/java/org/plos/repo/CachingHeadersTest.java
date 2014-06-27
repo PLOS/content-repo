@@ -110,6 +110,22 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
   }
 
   @Test
+  public void testReadNoIfModifiedSinceHeaderNoRepoxyHeaders() throws Exception {
+
+    when(mockRepoService.getObject(anyString(), anyString(), anyInt()))
+      .thenReturn(getObject(modifiedSinceDateTime));
+
+    registerObjectInSpring(mockRepoService);
+
+    Response response = target("/objects/" + BUCKET_NAME)
+                          .queryParam("key", KEY_NAME).queryParam("version", "0")
+                          .request()
+                          .get();
+
+    assertEquals(Status.OK.getStatusCode(), response.getStatus());
+  }
+
+  @Test
   public void testReadWithObjectModifiedAfterIfModifiedSinceHeaderNoRepoxyHeaders() throws Exception {
 
     when(mockRepoService.getObject(anyString(), anyString(), anyInt()))
