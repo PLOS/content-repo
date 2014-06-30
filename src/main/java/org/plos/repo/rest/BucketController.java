@@ -67,7 +67,8 @@ public class BucketController {
   }
 
   @GET @Path("/{bucketName}")
-  @ApiOperation(value = "Info about the bucket")
+  @ApiOperation(value = "Info about the bucket", response = Bucket.class)
+  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response info(@PathParam("bucketName") String bucketName) {
 
     try {
