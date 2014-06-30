@@ -93,6 +93,7 @@ public class RepoInfoService {
     config.version = projectVersion;
     config.objectStoreBackend = objectStore.getClass().toString();
     config.sqlServiceBackend = sqlService.getClass().toString();
+    config.hasXReproxy = objectStore.hasXReproxy();
     return config;
   }
 

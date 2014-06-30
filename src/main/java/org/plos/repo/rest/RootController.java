@@ -19,6 +19,8 @@ package org.plos.repo.rest;
 
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
+import org.plos.repo.models.ServiceConfigInfo;
+import org.plos.repo.models.ServiceStatus;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.RepoException;
 import org.plos.repo.service.RepoInfoService;
@@ -26,7 +28,10 @@ import org.plos.repo.service.RepoInfoService;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 
 @Path("/")
 @Api(value="info")
@@ -39,30 +44,33 @@ public class RootController {
   private RepoInfoService repoInfoService;
 
   @GET
-  public String index() {
+  public Response index() {
 
     // TODO: display spirit animal (squirrel, foraging woodpecker ?)
 
-    return "<h1>PLoS Content Repository REST API</h1><a href=docs>API doc</a>";
+    return Response.temporaryRedirect(UriBuilder.fromPath("/docs").build()).build();
   }
 
   @GET
   @Path("hasXReproxy")
   @ApiOperation("Show if the server supports reproxying")
   public Boolean hasXReproxy() {
+    // TODO: depcricate this function and point file-store to /config
     return objectStore.hasXReproxy();
   }
 
   @GET
   @Path("config")
-  @ApiOperation("Show some config info about the running service")
+  @ApiOperation(value = "Show some config info about the running service", response = ServiceConfigInfo.class)
+  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response config() {
     return Response.ok(repoInfoService.getConfig()).build();
   }
 
   @GET
   @Path("status")
-  @ApiOperation("Show some run time info about the service")
+  @ApiOperation(value = "Show some run time info about the service", response = ServiceStatus.class)
+  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response status() {
     try {
       return Response.ok(repoInfoService.getStatus()).build();

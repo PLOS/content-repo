@@ -24,4 +24,5 @@ public class ServiceConfigInfo {
   public String version;
   public String objectStoreBackend;
   public String sqlServiceBackend;
+  public boolean hasXReproxy;
 }
