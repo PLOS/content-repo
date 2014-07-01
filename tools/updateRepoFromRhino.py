@@ -8,6 +8,36 @@
 
   Input CSV data should be sent to stdin and output put should be sent to your desired CSV
   via stdout.
+
+
+README for updating a corpus repo from /mnt/corpus
+
+	/mnt/corpus explained
+
+		article-snapshot-2-complete.csv - the starting point for input rhino articles
+		bill-data/	- the place to dump cached article directories after updateRempFromRhino dumps to an assetCache dir
+		mysql-data/	- the directory that mysql should be using when its service starts
+		old_filestore/	- a dir that can be used by the old ambra-file-store when looking for a filesystem implementation (sans MogileFS?)
+		plos_repo/	- the directory where the repo stores its filesystem assets
+		repubs/	- the list of republished files. we use this to generate an input list for updateRepoFromRhino
+		update/	- this directory contains all the data that should added to article-snapshot-2-complete.csv and the cache that can be added to bill-data/
+
+
+	To run the update script, check out rhino and content-repo to a local directory. Enter the content-repo/tools directory and pull the new articles like so:
+
+		> cat /mnt/corpus/article-snapshot-2-complete.csv /mnt/corpus/update/articles-new-*.csv | PYTHONPATH=/home/jfinger/rhino/tools/python:/home/jfinger/content-repo/tools python updateRepoFromRhino.py --cacheDir=/mnt/corpus/update/articles-new-6-24-2014-1 --repoServer=http://localhost:8080 --repoBucket=corpus pushnew >> /mnt/corpus/update/articles-new-6-24-2014-1.csv
+
+
+	To push repubs do the following:
+
+		create the list of repubs you want to push. to get a full list:
+		> ls -rt /mnt/corpus/repubs/ | sed -r 's/(p[a-z]+\.[0-9]+).*/journal.\1/' > /mnt/corpus/update/repubs.lst
+
+		open the repubs.lst file and curate it down to the list by the dates you want to cover. to see the files listed by date do > ls -rtl /mnt/corpus/repubs/
+
+		push the repubs:
+			cat /mnt/corpus/update/repubs.lst | PYTHONPATH=/home/jfinger/rhino/tools/python:/home/jfinger/content-repo/tools python updateRepoFromRhino.py --cacheDir=/mnt/corpus/update/articles-repubs-6-24-2014-1 --repoServer=http://localhost:8080 --repoBucket=corpus pushrepubs >> /mnt/corpus/update/articles-repubs-6-24-2014-1.csv
+
 """
 
 from __future__ import print_function
