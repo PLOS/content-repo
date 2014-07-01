@@ -23,7 +23,7 @@ class ContentRepo:
     # TODO: specify Accept: application/json
 
     url = self.repoServer + '/buckets/'
-    r = requests.get(url)
+    r = requests.get(url, headers={'Accept': 'application/json'})
     jsonData = json.loads(r.text)
 
     bucketList = []
@@ -79,21 +79,27 @@ class ContentRepo:
       'create': create
     }
 
-    r = requests.post(url, files=files, data=values)
+    r = requests.post(url, files=files, data=values, headers={'Accept': 'application/json'})
 
     return r
 
-  def _getObjectMetadataRequest(self, bucketName, key, versionNumber):
+  def getObjectMetadata(self, bucketName, key, versionNumber=None):
     url = self.repoServer + '/objects/' + bucketName
 
     values = {
-      'key': key, 
-      'version': versionNumber,
+      'key': key,
       'fetchMetadata': 'true'
     }
 
-    r = requests.get(url, params=values)
-    return r
+    if not (versionNumber is None):
+      values['version'] = versionNumber
+
+    r = requests.get(url, params=values, headers={'Accept': 'application/json'})
+
+    if r.status_code != requests.codes.ok:
+      raise LookupError(str(r.status_code) + " " + r.text)
+
+    return json.loads(r.text)
 
   def getObjectData(self, bucketName, key, versionNumber=None):
     """
@@ -114,7 +120,12 @@ class ContentRepo:
     return r.content
 
   def objectExists(self, bucketName, key, versionNumber):
-    return self._getObjectMetadataRequest(bucketName, key, versionNumber).status_code == requests.codes.ok
+
+    try:
+      self.getObjectMetadata(bucketName, key, versionNumber)
+      return True
+    except:
+      return False
 
 
 # The following section is a work in progress
@@ -146,8 +157,7 @@ if __name__ == '__main__':
     print (result)
 
   if args.command == 'objectInfo':
-    response = repo._getObjectMetadataRequest(args.bucket, args.key, args.version)
-    print (response.text)
+    print (repo.getObjectMetadata(args.bucket, args.key, args.version))
 
   if args.command == 'getObject':
     data = repo.getObjectData(args.bucket, args.key, args.version)
