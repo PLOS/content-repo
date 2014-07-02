@@ -38,6 +38,25 @@ If you are storing data on a **local filesystem**, set the 'dataDirectory' accor
         type="org.plos.repo.service.ObjectStore"
         factory="org.plos.repo.config.FileSystemStoreFactory"
         dataDirectory="/path/to/data/directory" />
+        
+Note: The local filesystem implementation can also be used to serve reproxied objects. You need to have something serve files out of the data directory as static files. One way to do this is to use Nginx, by placing something like this in your /etc/nginx/sites-enables/repo.conf:
+
+    server {
+        location /objdata/ {
+            alias /path/to/data/directory;
+        }
+    }
+    
+Then when you configure the FileSystemStoreFactory, set the reproxyBaseUrl variable:
+
+    <Resource name="repo/objectStore"
+        type="org.plos.repo.service.ObjectStore"
+        factory="org.plos.repo.config.FileSystemStoreFactory"
+        dataDirectory="/path/to/data/directory"
+        reproxyBaseUrl = "http://localhost/objdata/" />
+
+Now you should be able to make object GET requests and ask for reproxied URLs.
+        
 
 If you are using **Amazon S3** as the object store, set your access key and secret key.
 
