@@ -31,7 +31,7 @@ README for updating a corpus repo from /mnt/corpus
 	To push repubs do the following:
 
 		create the list of repubs you want to push. to get a full list:
-		> ls -rt /mnt/corpus/repubs/ | sed -r 's/(p[a-z]+\.[0-9]+).*/journal.\1/' > /mnt/corpus/update/repubs.lst
+		> ssh stage.plos.org ls -rt /var/spool/ambra/pmc-revisions | sed -r 's/(p[a-z]+\.[0-9]+).*/journal.\1/' > /mnt/corpus/update/repubs.lst
 
 		open the repubs.lst file and curate it down to the list by the dates you want to cover. to see the files listed by date do > ls -rtl /mnt/corpus/repubs/
 
