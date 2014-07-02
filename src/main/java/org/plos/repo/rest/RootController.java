@@ -48,7 +48,7 @@ public class RootController {
 
     // TODO: display spirit animal (squirrel, foraging woodpecker ?)
 
-    return Response.temporaryRedirect(UriBuilder.fromPath("/docs").build()).build();
+    return Response.temporaryRedirect(UriBuilder.fromPath("docs").build()).build();
   }
 
   @GET
