@@ -221,7 +221,7 @@ if __name__ == '__main__':
     try:
       ingestibles = rhino.ingestibles()
       for i in ingestibles:
-        print(i)
+        pass  # forces yield to be evaled
 
     except Exception,e :
       print (e, file=sys.stderr)
