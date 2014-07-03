@@ -116,7 +116,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
       repoService.createBucket(bucket1.bucketName);
       Assert.fail();
     } catch (RepoException e) {
-      Assert.assertTrue(e.getType() == RepoException.Type.ClientError);
+      Assert.assertTrue(e.getType() == RepoException.Type.ServerError);
       Assert.assertTrue(e.getMessage().startsWith("Unable to create bucket in object store"));
     }
 
@@ -143,7 +143,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
       repoService.createBucket(bucket1.bucketName);
       Assert.fail();
     } catch (RepoException e) {
-      Assert.assertTrue(e.getType() == RepoException.Type.ClientError);
+      Assert.assertTrue(e.getType() == RepoException.Type.ServerError);
       Assert.assertTrue(e.getMessage().startsWith("Unable to create bucket in database"));
     }
 
@@ -191,8 +191,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
       repoService.deleteBucket(bucket1.bucketName);
       Assert.fail();
     } catch (RepoException e) {
-      Assert.assertTrue(e.getType() == RepoException.Type.ItemNotFound);
-      Assert.assertTrue(e.getMessage().startsWith("Bucket not found in database"));
+      Assert.assertTrue(e.getType() == RepoException.Type.BucketNotFound);
     }
 
   }
@@ -339,8 +338,8 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
       repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, null, null, new Timestamp(new Date().getTime()), IOUtils.toInputStream("data1"));
       Assert.fail();
     } catch (RepoException e) {
-      Assert.assertTrue(e.getType() == RepoException.Type.ClientError);
-      Assert.assertTrue(e.getMessage().startsWith("Can not find bucket"));
+      Assert.assertTrue(e.getType() == RepoException.Type.BucketNotFound);
+      Assert.assertTrue(e.getMessage().equals(RepoException.Type.BucketNotFound.getMessage()));
     }
 
     // check state
