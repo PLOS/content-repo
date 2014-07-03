@@ -61,18 +61,13 @@ def _handle_exception(key, e):
   print (key + str(e), file=sys.stderr)
   print (traceback.format_exc(), file=sys.stderr)
 
-def pushnew(infile, repo, skipSet, args):
+def pushnew(infile, repo, rhino, skipSet, args):
   """
   List the articles that have been added to Rhino using infile as the history
-
-  Output should be redirected to a CSV file for example:
-    cat ~/Desktop/article*.csv | PYTHONPATH=path/to/src/rhino/tools/python:path/to/content-repo/tools python updateRepoFromRhino.py --cacheDir=assetCacheDir --repoServer=http://localhost:8081 --repoBucket=org.plos.mybucket pushnew >> ~/Desktop/articles-new-5-28-2014.csv
-
   """
 
   old = set()
   current = set()
-  rhino = Rhino()
 
   for row in infile:
 
@@ -107,17 +102,13 @@ def pushnew(infile, repo, skipSet, args):
 
   return
 
-def pushrepubs(infile, repo, args):
+def pushrepubs(infile, repo, rhino, args):
   """
   List the articles that have been modified in Rhino
     The input should be a list of articles that have been republished
-
-  Protip: You can generate a list of repubs to be used as input for this like so:
-  > ls -rt /mnt/corpus/repubs/ | sed -r 's/(p[a-z]+\.[0-9]+).*/journal.\1/'
   """
 
   i = 0
-  rhino = Rhino()
 
   mods = []
   for doi in infile:
@@ -196,6 +187,7 @@ if __name__ == '__main__':
   parser.add_argument('--repoServer', required=True, help='Content repo server')
   parser.add_argument('--repoBucket', required=True, help='Content repo bucket')
   parser.add_argument('--cacheDir', required=True, help='Save files locally here as well as transfer to repo'),
+  parser.add_argument('--rhinoServer', required=False, help='Rhino server location')
   parser.add_argument('--testRun', default=False, action='store_true', help='Show the listing of changes but dont make them')
   parser.add_argument('command', help='Command', choices=['pushnew', 'pushrepubs'])
   #parser.add_argument('params', nargs='*', help="parameter list for commands")
@@ -204,6 +196,11 @@ if __name__ == '__main__':
   infile = sys.stdin
 
   repo = ContentRepo(args.repoServer)
+
+  if args.rhinoServer is None:
+    rhino = Rhino()
+  else:
+    rhino = Rhino(rhinoServer=args.rhinoServer)
 
   skipSet = set()
   skipSet.add('10.1371/annotation/33d82b59-59a3-4412-9853-e78e49af76b9')
@@ -218,10 +215,23 @@ if __name__ == '__main__':
       print('Bucket not found ' + args.repoBucket, file=sys.stderr)
       sys.exit(0)
 
+  else:
+
+    # ping the rhino server to make sure it is up
+    try:
+      ingestibles = rhino.ingestibles()
+      for i in ingestibles:
+        print(i)
+
+    except Exception,e :
+      print (e, file=sys.stderr)
+      sys.exit(0)
+
+
   if args.command == 'pushnew':
-    pushnew(infile, repo, skipSet, args)
+    pushnew(infile, repo, rhino, skipSet, args)
     sys.exit(0)
 
   if args.command == 'pushrepubs':
-    pushrepubs(infile, repo, args)
+    pushrepubs(infile, repo, rhino, args)
     sys.exit(0)
