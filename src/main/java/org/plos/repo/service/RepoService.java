@@ -228,13 +228,16 @@ public class RepoService {
     try {
       sqlService.getConnection();
 
-      if (version == null)
+      if (version == null) {
         object = sqlService.getObject(bucketName, key);
-      else
+        if (object == null)
+          throw new RepoException(RepoException.Type.ItemNotFound, "Object not found");
+      }
+      else {
         object = sqlService.getObject(bucketName, key, version);
-
-      if (object == null)
-        throw new RepoException(RepoException.Type.ItemNotFound, "Object not found");
+        if (object == null)
+          throw new RepoException(RepoException.Type.ItemNotFound, "Object version not found");
+      }
 
       return object;
 
