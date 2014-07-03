@@ -318,7 +318,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
             }
           } catch (RepoException e) {
 
-            if (e.getType() != RepoException.Type.ItemNotFound) {
+            if (e.getType() != RepoException.Type.ObjectNotFound) {
 
               synchronized (lock) {
                 if (assertionFailure == null) {
@@ -377,7 +377,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
             }
           } catch (RepoException e) {
 
-            if (e.getType() != RepoException.Type.ItemNotFound) {
+            if (e.getType() != RepoException.Type.ObjectNotFound) {
 
               synchronized (lock) {
                 if (assertionFailure == null) {

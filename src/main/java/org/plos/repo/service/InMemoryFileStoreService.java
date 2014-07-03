@@ -109,7 +109,7 @@ public class InMemoryFileStoreService extends ObjectStore {
         }
       };
     } catch (Exception e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     }
 
   }
