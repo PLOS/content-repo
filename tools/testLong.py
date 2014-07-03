@@ -6,9 +6,9 @@ import time
 import logging
 from os import urandom
 try:
-    from cStringIO import StringIO
+  from cStringIO import StringIO
 except:
-    from StringIO import StringIO
+  from StringIO import StringIO
 import contentRepo
 
 #--------------------------------------
@@ -24,10 +24,10 @@ types = ['application/pdf', 'image/png', 'text/xml']
 # randomly pick a size from this - (probability, min, max)
 # with 0.5 probability, pick in range [1000, 5000], etc.
 sizes = [
-    (0.5, 1000, 5000),
-    (0.4, 5000, 200000),
-    (0.09, 200000, 1000000),
-    (0.01, 1000000, 200000000)
+  (0.5, 1000, 5000),
+  (0.4, 5000, 200000),
+  (0.09, 200000, 1000000),
+  (0.01, 1000000, 200000000)
 ]
 
 # object key's prefix. change for each new test to avoid intefering with previous
@@ -57,70 +57,70 @@ logger = logging.getLogger('test')
 # also get one of the previously uploaded data
 # raise RuntimeError if there is a problem
 def run(index):
-    # create a key to be used for the object
-    key = '%s%09d'%(key_prefix, index,) # data key
+  # create a key to be used for the object
+  key = '%s%09d'%(key_prefix, index,) # data key
 
-    # random type and download file name
-    type_ = random.choice(types)
-    download = key + '.' + type_.split('/')[1]
+  # random type and download file name
+  type_ = random.choice(types)
+  download = key + '.' + type_.split('/')[1]
 
-    # random size from the sizes bucket
-    size = random.randint(sizes[0][1], sizes[-1][2])
-    rand = random.random()
-    for r, m, n in sizes:
-        if rand <= r:
-            size = random.randint(m, n)
-            break
-        rand -= r
+  # random size from the sizes bucket
+  size = random.randint(sizes[0][1], sizes[-1][2])
+  rand = random.random()
+  for r, m, n in sizes:
+    if rand <= r:
+      size = random.randint(m, n)
+      break
+    rand -= r
 
-    # random content (binary) of this size
-    data = urandom(size)
+  # random content (binary) of this size
+  data = urandom(size)
 
-    logger.debug('[%d] key=%r size=%r type=%r', index, key, size, type_)
+  logger.debug('[%d] key=%r size=%r type=%r', index, key, size, type_)
 
-    # attempt to upload with "new" to create
-    r = repo.uploadObject(bucket, StringIO(data), key, type_, download, "new")
-    logger.debug('create status_code=%r', r.status_code)
+  # attempt to upload with "new" to create
+  r = repo.uploadObject(bucket, StringIO(data), key, type_, download, "new")
+  logger.debug('create status_code=%r', r.status_code)
 
-    if r.status_code == 400 and r.content and r.content.startswith('Attempting to '):
-        # create new failed, upload again with "version" to update
-        r = repo.uploadObject(bucket, StringIO(data), key, type_, download, "version")
+  if r.status_code == 400 and r.content and r.content.startswith('Attempting to '):
+    # create new failed, upload again with "version" to update
+    r = repo.uploadObject(bucket, StringIO(data), key, type_, download, "version")
 
-    if r.status_code != 200 and r.status_code != 201:
-        # failed to create or update
-        raise RuntimeWarning('upload failed key=%r status=%r body=%r'%(key, r.status_code, r.content))
+  if r.status_code != 200 and r.status_code != 201:
+    # failed to create or update
+    raise RuntimeWarning('upload failed key=%r status=%r body=%r'%(key, r.status_code, r.content))
 
-    # get the meta data of just uploaded object
-    try:
-        metadata = repo.getObjectMetadata(bucket, key)
-        logger.debug('[%d] get-metadata %r', index, metadata)
-    except:
-        raise RuntimeWarning('get-metadata failed key=%r error=%r'%(key, sys.exc_info()[1]))
+  # get the meta data of just uploaded object
+  try:
+    metadata = repo.getObjectMetadata(bucket, key)
+    logger.debug('[%d] get-metadata %r', index, metadata)
+  except:
+    raise RuntimeWarning('get-metadata failed key=%r error=%r'%(key, sys.exc_info()[1]))
 
-    # get the content of just uploaded object
-    try:
-        content = repo.getObjectData(bucket, key)
-    except:
-        raise RuntimeWarning('get failed key=%r error=%r'%(key, sys.exc_info()[1]))
+  # get the content of just uploaded object
+  try:
+    content = repo.getObjectData(bucket, key)
+  except:
+    raise RuntimeWarning('get failed key=%r error=%r'%(key, sys.exc_info()[1]))
 
 
-    # verify the size is correct
-    if len(content) != size:
-        raise RuntimeWarning('get returned wrong size %r!=%r'%(content and len(content), size))
+  # verify the size is correct
+  if len(content) != size:
+    raise RuntimeWarning('get returned wrong size %r!=%r'%(content and len(content), size))
 
-    # randomly try get on a previous key
-    key = '%s%09d'%(key_prefix, random.randint(1, index),) # data key
+  # randomly try get on a previous key
+  key = '%s%09d'%(key_prefix, random.randint(1, index),) # data key
 
-    try:
-        metadata = repo.getObjectMetadata(bucket, key)
-        logger.debug('[%d] alt get-metadata %r', index, metadata)
-    except:
-        raise RuntimeWarning('get-alt-metadata failed key=%r error=%r'%(key, sys.exc_info()[1]))
+  try:
+    metadata = repo.getObjectMetadata(bucket, key)
+    logger.debug('[%d] alt get-metadata %r', index, metadata)
+  except:
+    raise RuntimeWarning('get-alt-metadata failed key=%r error=%r'%(key, sys.exc_info()[1]))
 
-    try:
-        content = repo.getObjectData(bucket, key)
-    except:
-        raise RuntimeWarning('get-alt failed key=%r error=%r'%(key, sys.exc_info()[1]))
+  try:
+    content = repo.getObjectData(bucket, key)
+  except:
+    raise RuntimeWarning('get-alt failed key=%r error=%r'%(key, sys.exc_info()[1]))
 
 
 #--------------------------------------
@@ -128,34 +128,34 @@ def run(index):
 #--------------------------------------
 
 if __name__ == '__main__':
-    # configure logging
-    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=loglevel)
+  # configure logging
+  logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=loglevel)
 
-    # check the bucket name, use the first one available
-    repo = contentRepo.ContentRepo(base_url)
-    bucket = repo.listBuckets()[0]
-    logger.info('bucket=%r', bucket)
+  # check the bucket name, use the first one available
+  repo = contentRepo.ContentRepo(base_url)
+  bucket = repo.listBuckets()[0]
+  logger.info('bucket=%r', bucket)
 
-    # loop through each iteration
-    index = 0
-    nextwait = wait
-    while True:
-        # wait between iterations
-        time.sleep(nextwait)
-        index += 1
-        if index > iterations:
-            break
-        if index % show_on == 0:
-            logger.warning('iterations %d', index)
+  # loop through each iteration
+  index = 0
+  nextwait = wait
+  while True:
+    # wait between iterations
+    time.sleep(nextwait)
+    index += 1
+    if index > iterations:
+      break
+    if index % show_on == 0:
+      logger.warning('iterations %d', index)
 
-        try:
-            run(index)
-            nextwait = wait
-        except RuntimeWarning, w:
-            logger.warning('[%d] %s', index, w.message)
-            nextwait = min(60, nextwait*2)
-            logger.warning('changed nextwait to %r', nextwait)
-        except:
-            logger.exception('[%d] exception', index)
-            nextwait = min(60, nextwait*2)
-            logger.warning('changed nextwait to %r', nextwait)
+    try:
+      run(index)
+      nextwait = wait
+    except RuntimeWarning, w:
+      logger.warning('[%d] %s', index, w.message)
+      nextwait = min(60, nextwait*2)
+      logger.warning('changed nextwait to %r', nextwait)
+    except:
+      logger.exception('[%d] exception', index)
+      nextwait = min(60, nextwait*2)
+      logger.warning('changed nextwait to %r', nextwait)
