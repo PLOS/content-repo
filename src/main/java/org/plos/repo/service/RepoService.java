@@ -369,6 +369,8 @@ public class RepoService {
           return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
 
         case VERSION:
+          if (existingObject == null)
+            throw new RepoException(RepoException.Type.ClientError, "Attempting to version an object that does not exist.");
           return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject);
 
         case AUTO:
@@ -490,18 +492,13 @@ public class RepoService {
                           InputStream uploadedInputStream,
                           Object object) throws RepoException {
 
-
-    if (object == null)
-      throw new RepoException(RepoException.Type.ClientError, "Cannot create a new version of an existing object");
-
     ObjectStore.UploadInfo uploadInfo = null;
     boolean rollback = false;
 
     try {
       sqlService.getConnection();
-      Integer bucketId = sqlService.getBucket(bucketName).bucketId;
 
-      if (bucketId == null)
+      if (sqlService.getBucket(bucketName) == null)
         throw new RepoException(RepoException.Type.ClientError, "Can not find bucket: " + bucketName);
 
       // copy over values from previous object, if they are not specified in the request
