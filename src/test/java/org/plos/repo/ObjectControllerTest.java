@@ -420,6 +420,16 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     assertEquals(jsonArray.size(), 4);
 
 
+
+    // NEW VERSIONS METHOD
+    
+    responseString = target("/objects/meta/" + bucketName).queryParam("key", "object2").request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+    jsonObject = gson.fromJson(responseString, JsonElement.class).getAsJsonObject();
+    jsonArray = jsonObject.getAsJsonArray("versions");
+
+    assertEquals(jsonArray.size(), 4);
+
+
     // DELETE
 
     response = target("/objects/" + bucketName).queryParam("key", "object1").queryParam("version", "0").request().delete();
