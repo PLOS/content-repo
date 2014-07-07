@@ -102,11 +102,11 @@ public class RepoInfoService {
     ServiceStatus status = new ServiceStatus();
 
     List<Bucket> bucketList = repoService.listBuckets();
-    status.bucketCount = Integer.toString(bucketList.size());
+    status.bucketCount = bucketList.size();
 
     status.serviceStarted = startTime.toString();
-    status.readsSinceStart = readCount.toString();
-    status.writesSinceStart = writeCount.toString();
+    status.readsSinceStart = readCount;
+    status.writesSinceStart = writeCount;
 
     return status;
   }

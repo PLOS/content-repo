@@ -99,7 +99,7 @@ public class RepoService {
     }
   }
 
-  public void createBucket(String name) throws RepoException {
+  public Bucket createBucket(String name) throws RepoException {
 
     Lock writeLock = this.rwLocks.get(name).writeLock();
     writeLock.lock();
@@ -133,6 +133,8 @@ public class RepoService {
       sqlService.transactionCommit();
 
       rollback = false;
+
+      return sqlService.getBucket(name);
 
     } catch (SQLException e) {
       throw new RepoException(e);

@@ -29,6 +29,7 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.plos.repo.models.Object;
+import org.plos.repo.models.RepoError;
 import org.plos.repo.service.RepoException;
 import org.plos.repo.service.RepoInfoService;
 import org.plos.repo.service.RepoService;
@@ -78,22 +79,22 @@ public class ObjectController {
 
   public static Response handleError(RepoException e) {
 
+    Response.Status status = Response.Status.BAD_REQUEST;
+
     switch (e.getType()) {
 
       case BucketNotFound:
       case ObjectNotFound:
-        return Response.status(Response.Status.NOT_FOUND)
-            .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
+        status = Response.Status.NOT_FOUND;
+        break;
 
       case ServerError:
+        status = Response.Status.INTERNAL_SERVER_ERROR;
         log.error(e.getType().toString(), e);
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-            .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
-
-      default:  // ClientErrors
-        return Response.status(Response.Status.BAD_REQUEST)
-            .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
+        break;
     }
+
+    return Response.status(status).entity(new RepoError(e)).build();
 
   }
 

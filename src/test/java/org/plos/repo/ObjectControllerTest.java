@@ -108,6 +108,9 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
     assertEquals(target("/objects/" + bucketName).queryParam("version", "0").request().delete().getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
 
+    // TODO: assert NoKeyEntered
+
+
     assertEquals(target("/objects/" + bucketName).queryParam("key", "object1").request().delete().getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
 
     assertEquals(target("/objects/" + bucketName).queryParam("key", "object5").queryParam("version", "0").request().delete().getStatus(), Response.Status.NOT_FOUND.getStatusCode());

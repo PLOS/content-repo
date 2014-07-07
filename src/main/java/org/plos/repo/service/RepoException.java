@@ -41,6 +41,10 @@ public class RepoException extends Exception {
     public String getMessage() {
       return message;
     }
+
+    public int getValue() {
+      return value;
+    }
   }
 
 

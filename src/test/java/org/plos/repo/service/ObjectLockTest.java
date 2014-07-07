@@ -233,7 +233,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
               }
             } catch (RepoException e) {
 
-              if (e.getType() != RepoException.Type.ClientError) {
+              if (e.getType() == RepoException.Type.ServerError) {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
@@ -280,7 +280,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
             } catch (RepoException e) {
 
-              if (e.getType() != RepoException.Type.ClientError) {
+              if (e.getType() == RepoException.Type.ServerError) {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
