@@ -48,6 +48,9 @@ loglevel = logging.WARNING
 
 logger = logging.getLogger('test')
 
+# number of bytes written so far
+written = 0
+
 #--------------------------------------
 # EACH ITERATION: create/update, get
 #--------------------------------------
@@ -57,6 +60,7 @@ logger = logging.getLogger('test')
 # also get one of the previously uploaded data
 # raise RuntimeError if there is a problem
 def run(index):
+  global written
   # create a key to be used for the object
   key = '%s%09d'%(key_prefix, index,) # data key
 
@@ -89,6 +93,8 @@ def run(index):
   if r.status_code != 200 and r.status_code != 201:
     # failed to create or update
     raise RuntimeWarning('upload failed key=%r status=%r body=%r'%(key, r.status_code, r.content))
+
+  written += size
 
   # get the meta data of just uploaded object
   try:
@@ -146,7 +152,7 @@ if __name__ == '__main__':
     if index > iterations:
       break
     if index % show_on == 0:
-      logger.warning('iterations %d', index)
+      logger.warning('iterations %d - written %d', index, written)
 
     try:
       run(index)
