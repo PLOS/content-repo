@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 
+#
+# Content repo duration tester
+#
+# Instructions:
+#   Install the repo python client (in soa-tools) or set your PYTHONPATH.
+#   Make sure a test instance of the repo is up with an empty bucket.
+#
+
 import sys
 import random
 import time
