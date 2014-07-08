@@ -17,7 +17,6 @@
 
 package org.plos.repo;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -25,6 +24,7 @@ import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.junit.Before;
 import org.junit.Test;
+import org.plos.repo.service.RepoException;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Form;
@@ -45,8 +45,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
   private final String testData2 = "test data two goes\nhere.";
 
-  Gson gson = new Gson();
-
   @Before
   public void setup() throws Exception {
     RepoBaseSpringTest.clearData(objectStore, sqlService);
@@ -54,71 +52,174 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void createWithBadTimestamp() {
-    assertEquals(target("/objects").request()
+    assertRepoError(target("/objects").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
             .post(Entity.entity(new FormDataMultiPart()
                     .field("bucketName", bucketName).field("create", "new")
                     .field("key", "badTimeStamp").field("timestamp", "abc")
                     .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA
-            )).getStatus(),
-        Response.Status.BAD_REQUEST.getStatusCode()
-    );
+            )),
+        Response.Status.BAD_REQUEST, RepoException.Type.CouldNotParseTimestamp
+        );
   }
 
   @Test
   public void createWithNoKey() {
-    assertEquals(target("/objects").request()
+    assertRepoError(target("/objects").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
             .post(Entity.entity(new FormDataMultiPart()
                     .field("bucketName", bucketName).field("create", "new")
                     .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA
-            )).getStatus(),
-        Response.Status.BAD_REQUEST.getStatusCode()
+            )),
+        Response.Status.BAD_REQUEST, RepoException.Type.NoKeyEntered
     );
   }
 
   @Test
   public void createWithNoBucket() {
-    assertEquals(target("/objects").request()
+    assertRepoError(target("/objects").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
             .post(Entity.entity(new FormDataMultiPart()
                     .field("create", "new")
                     .field("key", "someKey")
                     .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA
-            )).getStatus(),
-        Response.Status.BAD_REQUEST.getStatusCode()
+            )),
+        Response.Status.BAD_REQUEST, RepoException.Type.NoBucketEntered
+    );
+  }
+
+  @Test
+  public void createWithInvalidBucket() {
+    assertRepoError(target("/objects").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(new FormDataMultiPart()
+                    .field("bucketName", "bucket2")
+                    .field("create", "new")
+                    .field("key", "object1")
+                    .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
+                MediaType.MULTIPART_FORM_DATA
+            )),
+        Response.Status.NOT_FOUND, RepoException.Type.BucketNotFound
     );
   }
 
   @Test
   public void createWithNoCreateFlag() {
-    assertEquals(target("/objects").request()
+    assertRepoError(target("/objects").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
             .post(Entity.entity(new FormDataMultiPart()
                     .field("bucketName", bucketName)
                     .field("key", "noCreateFlag")
                     .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA
-            )).getStatus(),
-        Response.Status.BAD_REQUEST.getStatusCode()
+            )),
+        Response.Status.BAD_REQUEST, RepoException.Type.NoCreationMethodEntered
     );
+  }
+
+  @Test
+  public void createWithExistingKey() {
+
+    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
+
+    assertEquals(target("/objects").request()
+            .post(Entity.entity(new FormDataMultiPart()
+                    .field("bucketName", bucketName).field("create", "new")
+                    .field("key", "object1").field("contentType", "text/plain")
+                    .field("timestamp", "2012-09-08 11:00:00")
+                    .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
+                MediaType.MULTIPART_FORM_DATA
+            )).getStatus(),
+        Response.Status.CREATED.getStatusCode()
+    );
+
+    assertRepoError(target("/objects").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(new FormDataMultiPart()
+                    .field("bucketName", bucketName).field("create", "new")
+                    .field("key", "object1").field("contentType", "text/plain")
+                    .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
+                MediaType.MULTIPART_FORM_DATA
+            )),
+        Response.Status.BAD_REQUEST, RepoException.Type.CantCreateNewObjectWithUsedKey
+    );
+  }
+
+  @Test
+  public void createWithEmptyData() {
+
+    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
+
+    assertRepoError(target("/objects").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(new FormDataMultiPart()
+                    .field("bucketName", bucketName).field("create", "new")
+                    .field("key", "emptyFile").field("contentType", "text/plain")
+                    .field("file", "", MediaType.TEXT_PLAIN_TYPE),
+                MediaType.MULTIPART_FORM_DATA
+            )),
+        Response.Status.BAD_REQUEST, RepoException.Type.ObjectDataEmpty
+    );
+  }
+
+  @Test
+  public void createVersionWithoutOrig() {
+
+    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
+
+    assertRepoError(target("/objects").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(new FormDataMultiPart()
+                    .field("bucketName", bucketName).field("create", "version")
+                    .field("key", "object3").field("contentType", "text/something")
+                    .field("downloadName", "object2.text")
+                    .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
+                MediaType.MULTIPART_FORM_DATA)),
+        Response.Status.BAD_REQUEST, RepoException.Type.CantCreateVersionWithNoOrig);
+
+  }
+
+  @Test
+  public void createWithInvalidCreateMethod() {
+
+    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
+
+    assertRepoError(target("/objects").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(new FormDataMultiPart()
+                    .field("bucketName", bucketName).field("create", "badrequest")
+                    .field("key", "object2").field("contentType", "text/something")
+                    .field("downloadName", "object2.text")
+                    .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
+                MediaType.MULTIPART_FORM_DATA)),
+        Response.Status.BAD_REQUEST, RepoException.Type.InvalidCreationMethod);
+  }
+
+  @Test
+  public void invalidOffset() {
+
+    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
+
+    assertRepoError(target("/objects").queryParam("bucketName", bucketName).queryParam("offset", "-1").request().accept(MediaType.APPLICATION_JSON_TYPE).get(), Response.Status.BAD_REQUEST, RepoException.Type.InvalidOffset);
+
   }
 
   @Test
   public void deleteWithErrors() {
 
-    assertEquals(target("/objects/" + bucketName).queryParam("version", "0").request().delete().getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
+    assertRepoError(target("/objects/" + bucketName).queryParam("version", "0").request().accept(MediaType.APPLICATION_JSON_TYPE).delete(), Response.Status.BAD_REQUEST, RepoException.Type.NoKeyEntered);
 
-    // TODO: assert NoKeyEntered
+    assertRepoError(target("/objects/" + bucketName).queryParam("key", "object1").request().accept(MediaType.APPLICATION_JSON_TYPE).delete(), Response.Status.BAD_REQUEST, RepoException.Type.NoVersionEntered);
 
-
-    assertEquals(target("/objects/" + bucketName).queryParam("key", "object1").request().delete().getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
-
-    assertEquals(target("/objects/" + bucketName).queryParam("key", "object5").queryParam("version", "0").request().delete().getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+    assertRepoError(target("/objects/" + bucketName).queryParam("key", "object5").queryParam("version", "0").request().accept(MediaType.APPLICATION_JSON_TYPE).delete(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
   }
 
   @Test
   public void listNoBucket() {
-    assertEquals(target("/objects").queryParam("bucketName", "nonExistingBucket").request().get().getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+    assertRepoError(target("/objects").queryParam("bucketName", "nonExistingBucket").request().accept(MediaType.APPLICATION_JSON_TYPE).get(), Response.Status.NOT_FOUND, RepoException.Type.BucketNotFound);
   }
 
   @Test
@@ -181,7 +282,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
   }
 
   @Test
-  public void testControllerCrud() throws Exception {
+  public void crudHappyPath() throws Exception {
 
     String responseString = target("/objects").request(MediaType.APPLICATION_JSON_TYPE).get(String.class);
     assertEquals(responseString, "[]");
@@ -207,32 +308,12 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     assertEquals(target("/objects").request()
             .post(Entity.entity(new FormDataMultiPart()
                     .field("bucketName", bucketName).field("create", "new")
-                    .field("key", "object1").field("contentType", "text/plain")
-                    .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA
-            )).getStatus(),
-        Response.Status.BAD_REQUEST.getStatusCode()
-    );
-
-    assertEquals(target("/objects").request()
-            .post(Entity.entity(new FormDataMultiPart()
-                    .field("bucketName", bucketName).field("create", "new")
                     .field("key", "object2").field("contentType", "text/something")
                     .field("downloadName", "object2.text")
                     .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA
             )).getStatus(),
         Response.Status.CREATED.getStatusCode()
-    );
-
-    assertEquals(target("/objects").request()
-            .post(Entity.entity(new FormDataMultiPart()
-                    .field("bucketName", "bucket2").field("create", "new")
-                    .field("key", "object1").field("contentType", "text/plain")
-                    .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA
-            )).getStatus(),
-        Response.Status.BAD_REQUEST.getStatusCode()
     );
 
     assertEquals(target("/objects").request()
@@ -248,31 +329,11 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     assertEquals(target("/objects").request()
             .post(Entity.entity(new FormDataMultiPart()
                     .field("bucketName", bucketName).field("create", "new")
-                    .field("key", "emptyFile").field("contentType", "text/plain")
-                    .field("file", "", MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA
-            )).getStatus(),
-        Response.Status.BAD_REQUEST.getStatusCode()
-    );
-
-    assertEquals(target("/objects").request()
-            .post(Entity.entity(new FormDataMultiPart()
-                    .field("bucketName", bucketName).field("create", "new")
                     .field("key", "emptyContentType")
                     .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA
             )).getStatus(),
         Response.Status.CREATED.getStatusCode()
-    );
-
-    assertEquals(target("/objects").request()
-            .post(Entity.entity(new FormDataMultiPart()
-                    .field("bucketName", bucketName).field("create", "new")
-                    .field("key", "badTimeStamp").field("timestamp", "abc")
-                    .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA
-            )).getStatus(),
-        Response.Status.BAD_REQUEST.getStatusCode()
     );
 
     // TODO: create with empty file, update with empty file
@@ -351,15 +412,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     assertEquals(target("/objects").request()
             .post(Entity.entity(new FormDataMultiPart()
                     .field("bucketName", bucketName).field("create", "version")
-                    .field("key", "object3").field("contentType", "text/something")
-                    .field("downloadName", "object2.text")
-                    .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA)).getStatus(),
-        Response.Status.BAD_REQUEST.getStatusCode());
-
-    assertEquals(target("/objects").request()
-            .post(Entity.entity(new FormDataMultiPart()
-                    .field("bucketName", bucketName).field("create", "version")
                     .field("key", "object2").field("contentType", "text/something")
                     .field("downloadName", "object2.text")
                     .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
@@ -395,15 +447,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
                     .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA)).getStatus(),
         Response.Status.CREATED.getStatusCode());
-
-    assertEquals(target("/objects").request()
-            .post(Entity.entity(new FormDataMultiPart()
-                    .field("bucketName", bucketName).field("create", "badrequest")
-                    .field("key", "object2").field("contentType", "text/something")
-                    .field("downloadName", "object2.text")
-                    .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA)).getStatus(),
-        Response.Status.BAD_REQUEST.getStatusCode());
 
     assertEquals(target("/objects").request()
             .post(Entity.entity(new FormDataMultiPart()

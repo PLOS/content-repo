@@ -117,8 +117,9 @@ public class ObjectController {
 
     try {
       return Response.status(Response.Status.OK).entity(
-          new GenericEntity<List<Object>>(repoService.listObjects(bucketName, offset, limit, includeDeleted)) {
-          }).build();
+          new GenericEntity<List<Object>>(
+              repoService.listObjects(bucketName, offset, limit, includeDeleted)
+          ) {}).build();
     } catch (RepoException e) {
       return handleError(e);
     }
@@ -229,8 +230,7 @@ public class ObjectController {
 
     try {
       repoService.deleteObject(bucketName, key, version);
-      return Response.status(Response.Status.OK)
-          .entity(key + " version " + version + " deleted").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.OK).build();
     } catch (RepoException e) {
       return handleError(e);
     }
@@ -268,7 +268,7 @@ required = true)
       RepoService.CreateMethod method;
 
       if (create == null)
-        throw new RepoException(RepoException.Type.NoCreateFlagEntered);
+        throw new RepoException(RepoException.Type.NoCreationMethodEntered);
 
       try {
         method = RepoService.CreateMethod.valueOf(create.toUpperCase());

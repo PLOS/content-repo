@@ -169,7 +169,7 @@ public class RepoService {
         throw new RepoException(RepoException.Type.BucketNotFound);
 
       if (!objectStore.bucketExists(bucket))
-        throw new RepoException(RepoException.Type.BucketNotFound);
+        throw new RepoException("Bucket exists in database but not in object store: " + name);
 
       if (sqlService.listObjects(name, 0, 1, true).size() != 0)
         throw new RepoException(RepoException.Type.CantDeleteNonEmptyBucket);
@@ -330,9 +330,11 @@ public class RepoService {
     Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
     writeLock.lock();
 
-    boolean rollback = true;
+    boolean rollback = false;
 
     try {
+
+      sqlService.getConnection();
 
       if (key == null)
         throw new RepoException(RepoException.Type.NoKeyEntered);
@@ -340,7 +342,7 @@ public class RepoService {
       if (version == null)
         throw new RepoException(RepoException.Type.NoVersionEntered);
 
-      sqlService.getConnection();
+      rollback = true;
 
       if (sqlService.markObjectDeleted(key, bucketName, version) == 0)
         throw new RepoException(RepoException.Type.ObjectNotFound);

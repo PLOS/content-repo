@@ -15,7 +15,7 @@ public class RepoException extends Exception {
     NoBucketEntered(10, "No bucket entered"),
     NoKeyEntered(11, "No object key entered"),
     NoVersionEntered(12, "No object version entered"),
-    NoCreateFlagEntered(13, "No creation method entered"),
+    NoCreationMethodEntered(13, "No creation method entered"),
     InvalidCreationMethod(14, "Invalid creation method"),
     CouldNotParseTimestamp(15, "Could not parse timestamp"),
     InvalidOffset(16, "Invalid offset"),
