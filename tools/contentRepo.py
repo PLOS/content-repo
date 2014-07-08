@@ -69,7 +69,13 @@ class ContentRepo:
 
     url = self.repoServer + '/objects/'
 
-    files = {'file': open(fileLocation, 'rb')}
+    # fileLocation may be a string (path) or a file-like object
+    if isinstance(fileLocation, basestring):
+      fp = open(fileLocation, 'rb')
+    else:
+      fp = fileLocation
+
+    files = {'file': fp}
     values = {
       'key': key, 
       'bucketName': bucketName,
