@@ -60,7 +60,7 @@ public class RepoInfoService {
     try {
       sqlService.releaseConnection();
     } catch (SQLException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     }
 
   }
@@ -102,11 +102,11 @@ public class RepoInfoService {
     ServiceStatus status = new ServiceStatus();
 
     List<Bucket> bucketList = repoService.listBuckets();
-    status.bucketCount = Integer.toString(bucketList.size());
+    status.bucketCount = bucketList.size();
 
     status.serviceStarted = startTime.toString();
-    status.readsSinceStart = readCount.toString();
-    status.writesSinceStart = writeCount.toString();
+    status.readsSinceStart = readCount;
+    status.writesSinceStart = writeCount;
 
     return status;
   }
@@ -119,7 +119,7 @@ public class RepoInfoService {
       Bucket bucket = sqlService.getBucket(bucketName);
 
       if (bucket == null)
-        throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found");
+        throw new RepoException(RepoException.Type.BucketNotFound);
 
       bucket.totalObjects = sqlService.objectCount(true, bucketName);
       bucket.activeObjects = sqlService.objectCount(false, bucketName);
@@ -127,7 +127,7 @@ public class RepoInfoService {
       return bucket;
 
     } catch (SQLException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     } finally {
       sqlReleaseConnection();
     }
