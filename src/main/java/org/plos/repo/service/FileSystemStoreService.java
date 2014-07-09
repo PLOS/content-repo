@@ -69,7 +69,7 @@ public class FileSystemStoreService extends ObjectStore {
     try {
       return new FileInputStream(getObjectLocationString(object.bucketName, object.checksum));
     } catch (FileNotFoundException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     }
   }
 
@@ -197,7 +197,7 @@ public class FileSystemStoreService extends ObjectStore {
       };
 
     } catch (Exception e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     }
   }
 

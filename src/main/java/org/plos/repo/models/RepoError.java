@@ -14,16 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.plos.repo.models;
 
+import org.plos.repo.service.RepoException;
+
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.concurrent.atomic.AtomicLong;
 
 @XmlRootElement
-public class ServiceStatus {
-  public int bucketCount;
-  public String serviceStarted;
-  public AtomicLong readsSinceStart;
-  public AtomicLong writesSinceStart;
+public class RepoError {
+
+  public int repoErrorCode;
+  public String message;
+
+  // empty constructor required for JAXB mapping
+  private RepoError() {
+  }
+
+  public RepoError(RepoException e) {
+    repoErrorCode = e.getType().getValue();
+    message = e.getType().getMessage();
+  }
 }

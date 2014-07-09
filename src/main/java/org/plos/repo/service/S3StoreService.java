@@ -66,7 +66,7 @@ public class S3StoreService extends ObjectStore {
     try {
       return new URL[]{new URL(s3Client.getResourceUrl(object.bucketName, object.checksum))};
     } catch (MalformedURLException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     }
   }
 
@@ -155,7 +155,7 @@ public class S3StoreService extends ObjectStore {
       };
 
     } catch (Exception e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     }
   }
 
