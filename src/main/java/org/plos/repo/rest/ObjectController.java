@@ -126,13 +126,39 @@ public class ObjectController {
 
   }
 
+  @GET @Path("/meta/{bucketName}")
+  @ApiOperation(value = "Fetch info about an object and its versions", response = Object.class)
+  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+  public Response readMetadata(
+      @ApiParam(required = true) @PathParam("bucketName") String bucketName,
+      @ApiParam(required = true) @QueryParam("key") String key,
+      @QueryParam("version") Integer version
+  ) {
+
+    try {
+
+      Object object = repoService.getObject(bucketName, key, version);
+
+      DateTime objDateTime = new DateTime(object.timestamp);
+      String httpDateStr = dateTimeFormatter.print(objDateTime);
+
+      object.versions = repoService.getObjectVersions(object);
+      return Response.status(Response.Status.OK)
+          .header(HttpHeaders.LAST_MODIFIED, httpDateStr)
+          .entity(object).build();
+    } catch (RepoException e) {
+      return handleError(e);
+    }
+
+  }
+
   @GET @Path("/{bucketName}")
   @ApiOperation(value = "Fetch an object or its metadata", response = Object.class)
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response read(@ApiParam(required = true) @PathParam("bucketName") String bucketName,
                        @ApiParam(required = true) @QueryParam("key") String key,
                        @QueryParam("version") Integer version,
-                       @QueryParam("fetchMetadata") Boolean fetchMetadata,
+                       @QueryParam("fetchMetadata") Boolean fetchMetadata,  // TODO: deprecate this somehow
                        @ApiParam(value = "If set to 'reproxy-file' then it will attempt to return a header representing a redirected object URL")
                        @HeaderParam("X-Proxy-Capabilities") String requestXProxy,
                        @HeaderParam("If-Modified-Since") String ifModifiedSinceStr
