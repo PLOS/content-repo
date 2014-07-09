@@ -27,6 +27,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
@@ -42,8 +43,11 @@ public class FileSystemStoreService extends ObjectStore {
 
   private String dataDirectory;
 
-  public FileSystemStoreService(String dataDirectory) {
+  private String reproxyBaseUrl;
+
+  public FileSystemStoreService(String dataDirectory, String reproxyBaseUrl) {
     this.dataDirectory = dataDirectory;
+    this.reproxyBaseUrl = reproxyBaseUrl;
 
     File dir = new File(dataDirectory);
     dir.mkdir();
@@ -85,11 +89,24 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
   public Boolean hasXReproxy() {
-    return false;
+    return reproxyBaseUrl != null;
   }
 
-  public URL[] getRedirectURLs(Object object) {
-    return new URL[]{}; // since the filesystem is not reproxyable
+  public URL[] getRedirectURLs(Object object) throws RepoException {
+
+    if (!hasXReproxy())
+      return new URL[]{}; // since the filesystem is not reproxyable
+
+    try {
+
+      URL[] urls = new URL[1];
+      urls[0] = new URL(reproxyBaseUrl + "/" + object.bucketName + "/" + object.checksum.substring(0, 2) + "/" + object.checksum);
+      return urls;
+
+    } catch (MalformedURLException e) {
+      throw new RepoException(RepoException.Type.ServerError);
+    }
+
   }
 
   public boolean deleteBucket(Bucket bucket) {
