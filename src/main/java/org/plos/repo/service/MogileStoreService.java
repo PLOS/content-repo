@@ -73,7 +73,7 @@ public class MogileStoreService extends ObjectStore {
       return urls;
 
     } catch (Exception e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     }
 
   }
@@ -82,7 +82,7 @@ public class MogileStoreService extends ObjectStore {
     try {
       return mfs.getFileStream(getObjectLocationString(object.bucketName, object.checksum));
     } catch (Exception e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     }
   }
 
@@ -137,7 +137,7 @@ public class MogileStoreService extends ObjectStore {
       };
 
     } catch (Exception e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     }
   }
 

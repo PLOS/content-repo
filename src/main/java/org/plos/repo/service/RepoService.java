@@ -46,6 +46,13 @@ public class RepoService {
 
   private Striped<ReadWriteLock> rwLocks = Striped.lazyWeakReadWriteLock(32);
 
+  // default page size = number of objects returned when no limit= parameter supplied.
+  private static final Integer DEFAULT_PAGE_SIZE = 1000;
+
+  // maximum allowed value of page size, i.e., limit= parameter
+  private static final Integer MAX_PAGE_SIZE = 10000;
+
+
   @Inject
   private ObjectStore objectStore;
 
@@ -63,7 +70,7 @@ public class RepoService {
     try {
       sqlService.releaseConnection();
     } catch (SQLException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     }
 
   }
@@ -76,7 +83,7 @@ public class RepoService {
     try {
       sqlService.transactionRollback();
     } catch (SQLException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     }
   }
 
@@ -86,13 +93,13 @@ public class RepoService {
       return sqlService.listBuckets();
 
     } catch (SQLException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     } finally {
       sqlReleaseConnection();
     }
   }
 
-  public void createBucket(String name) throws RepoException {
+  public Bucket createBucket(String name) throws RepoException {
 
     Lock writeLock = this.rwLocks.get(name).writeLock();
     writeLock.lock();
@@ -103,33 +110,34 @@ public class RepoService {
 
     try {
 
+      if (!ObjectStore.isValidFileName(name))
+        throw new RepoException(RepoException.Type.IllegalBucketName);
+
       sqlService.getConnection();
 
       if (sqlService.getBucket(name) != null)
-        throw new RepoException(RepoException.Type.ClientError, "Bucket already exists in database: " + name);
+        throw new RepoException(RepoException.Type.BucketAlreadyExists);
 
       if (objectStore.bucketExists(bucket))
-        throw new RepoException(RepoException.Type.ClientError, "Bucket already exists in object store: " + name);
-
-      if (!ObjectStore.isValidFileName(name))
-        throw new RepoException(RepoException.Type.ClientError, "Unable to create bucket. Name contains illegal characters: " + name);
+        throw new RepoException("Bucket exists in object store but not in database: " + name);
 
       rollback = true;
 
       if (!objectStore.createBucket(bucket))
-        throw new RepoException(RepoException.Type.ClientError, "Unable to create bucket in object store: " + name);
-
+        throw new RepoException("Unable to create bucket in object store: " + name);
 
       if (!sqlService.insertBucket(bucket)) {
-        throw new RepoException(RepoException.Type.ClientError, "Unable to create bucket in database: " + name);
+        throw new RepoException("Unable to create bucket in database: " + name);
       }
 
       sqlService.transactionCommit();
 
       rollback = false;
 
+      return sqlService.getBucket(name);
+
     } catch (SQLException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     } finally {
 
       if (rollback) {
@@ -158,27 +166,27 @@ public class RepoService {
       sqlService.getConnection();
 
       if (sqlService.getBucket(name) == null)
-        throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found in database: " + name);
+        throw new RepoException(RepoException.Type.BucketNotFound);
 
       if (!objectStore.bucketExists(bucket))
-        throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found in object store: " + name);
+        throw new RepoException("Bucket exists in database but not in object store: " + name);
 
       if (sqlService.listObjects(name, 0, 1, true).size() != 0)
-        throw new RepoException(RepoException.Type.ClientError, "Cannot delete bucket because it contains objects: " + name );
+        throw new RepoException(RepoException.Type.CantDeleteNonEmptyBucket);
 
       rollback = true;
 
       if (!objectStore.deleteBucket(bucket))
-        throw new RepoException(RepoException.Type.ServerError, "Unable to delete bucket in object store: " + name);
+        throw new RepoException("Unable to delete bucket in object store: " + name);
 
       if (sqlService.deleteBucket(name) == 0)
-        throw new RepoException(RepoException.Type.ServerError, "Unable to delete bucket in database: " + name);
+        throw new RepoException("Unable to delete bucket in database: " + name);
 
       sqlService.transactionCommit();
       rollback = false;
 
     } catch (SQLException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     } finally {
 
       if (rollback) {
@@ -203,16 +211,27 @@ public class RepoService {
 
     // TODO: should this function return a list of objects and their nested versions instead of one flat last?
 
+    if (offset == null)
+      offset = 0;
+    if (limit == null)
+      limit = DEFAULT_PAGE_SIZE;
+
     try {
+
+      if (offset < 0)
+        throw new RepoException(RepoException.Type.InvalidOffset);
+
+      if (limit <= 0 || limit > MAX_PAGE_SIZE)
+        throw new RepoException(RepoException.Type.InvalidLimit);
 
       sqlService.getConnection();
 
       if (bucketName != null && sqlService.getBucket(bucketName) == null)
-        throw new RepoException(RepoException.Type.ItemNotFound, "Bucket not found");
+        throw new RepoException(RepoException.Type.BucketNotFound);
 
       return sqlService.listObjects(bucketName, offset, limit, includeDeleted);
     } catch (SQLException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     } finally {
       sqlReleaseConnection();
     }
@@ -228,21 +247,18 @@ public class RepoService {
     try {
       sqlService.getConnection();
 
-      if (version == null) {
+      if (version == null)
         object = sqlService.getObject(bucketName, key);
-        if (object == null)
-          throw new RepoException(RepoException.Type.ItemNotFound, "Object not found");
-      }
-      else {
+      else
         object = sqlService.getObject(bucketName, key, version);
-        if (object == null)
-          throw new RepoException(RepoException.Type.ItemNotFound, "Object version not found");
-      }
+
+      if (object == null)
+        throw new RepoException(RepoException.Type.ObjectNotFound);
 
       return object;
 
     } catch (SQLException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     } finally {
       sqlReleaseConnection();
       readLock.unlock();
@@ -259,7 +275,7 @@ public class RepoService {
       sqlService.getConnection();
       return sqlService.listObjectVersions(object);
     } catch (SQLException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     } finally {
       sqlReleaseConnection();
       readLock.unlock();
@@ -271,7 +287,7 @@ public class RepoService {
       sqlService.getConnection();
       return objectStore.getRedirectURLs(object);
     } catch (Exception e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     } finally {
       sqlReleaseConnection();
     }
@@ -296,7 +312,7 @@ public class RepoService {
     try {
       return URLEncoder.encode(exportFileName, "UTF-8");
     } catch (UnsupportedEncodingException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     }
 
   }
@@ -305,7 +321,7 @@ public class RepoService {
     try {
       return objectStore.getInputStream(object);
     } catch (Exception e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     }
   }
 
@@ -314,20 +330,28 @@ public class RepoService {
     Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
     writeLock.lock();
 
-    boolean rollback = true;
+    boolean rollback = false;
 
     try {
 
       sqlService.getConnection();
 
+      if (key == null)
+        throw new RepoException(RepoException.Type.NoKeyEntered);
+
+      if (version == null)
+        throw new RepoException(RepoException.Type.NoVersionEntered);
+
+      rollback = true;
+
       if (sqlService.markObjectDeleted(key, bucketName, version) == 0)
-        throw new RepoException(RepoException.Type.ItemNotFound, "Object not found");
+        throw new RepoException(RepoException.Type.ObjectNotFound);
 
       sqlService.transactionCommit();
       rollback = false;
 
     } catch (SQLException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     } finally {
 
       if (rollback) {
@@ -355,10 +379,16 @@ public class RepoService {
 
     try {
 
+      if (key == null)
+        throw new RepoException(RepoException.Type.NoKeyEntered);
+
+      if (bucketName == null)
+        throw new RepoException(RepoException.Type.NoBucketEntered);
+
       try {
         existingObject = getObject(bucketName, key, null);
       } catch (RepoException e) {
-        if (e.getType() == RepoException.Type.ItemNotFound)
+        if (e.getType() == RepoException.Type.ObjectNotFound)
           existingObject = null;
         else
           throw e;
@@ -368,12 +398,12 @@ public class RepoService {
 
         case NEW:
           if (existingObject != null)
-            throw new RepoException(RepoException.Type.ClientError, "Attempting to create an object with a key that already exists.");
+            throw new RepoException(RepoException.Type.CantCreateNewObjectWithUsedKey);
           return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream);
 
         case VERSION:
           if (existingObject == null)
-            throw new RepoException(RepoException.Type.ClientError, "Attempting to version an object that does not exist.");
+            throw new RepoException(RepoException.Type.CantCreateVersionWithNoOrig);
           return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject);
 
         case AUTO:
@@ -383,7 +413,7 @@ public class RepoService {
             return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject);
 
         default:
-          throw new RepoException(RepoException.Type.ClientError, "Invalid creation method: " + method.toString());
+          throw new RepoException(RepoException.Type.InvalidCreationMethod);
       }
     } finally {
       writeLock.unlock();
@@ -397,9 +427,6 @@ public class RepoService {
                                 String downloadName,
                                 Timestamp timestamp,
                                 InputStream uploadedInputStream) throws RepoException {
-
-    if (uploadedInputStream == null)
-      throw new RepoException(RepoException.Type.ClientError, "No data specified");
 
     ObjectStore.UploadInfo uploadInfo = null;
     Integer versionNumber;
@@ -415,28 +442,28 @@ public class RepoService {
         sqlService.getConnection();
         bucket = sqlService.getBucket(bucketName);
       } catch (SQLException e) {
-        throw new RepoException(RepoException.Type.ServerError, e);
+        throw new RepoException(e);
       }
 
       if (bucket == null)
-        throw new RepoException(RepoException.Type.ClientError, "Can not find bucket " + bucketName);
+        throw new RepoException(RepoException.Type.BucketNotFound);
 
       uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
 
       try {
         uploadedInputStream.close();
       } catch (IOException e) {
-        throw new RepoException(RepoException.Type.ServerError, e);
+        throw new RepoException(e);
       }
 
       if (uploadInfo.getSize() == 0) {
-        throw new RepoException(RepoException.Type.ClientError, "Uploaded data must be non-empty");
+        throw new RepoException(RepoException.Type.ObjectDataEmpty);
       }
 
       try {
         versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, key);
       } catch (SQLException e) {
-        throw new RepoException(RepoException.Type.ServerError, e);
+        throw new RepoException(e);
       }
 
       object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), null, bucket.bucketId, bucketName, versionNumber, Object.Status.USED);
@@ -457,21 +484,21 @@ public class RepoService {
 
       } else {
         if (!objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object)) {
-          throw new RepoException(RepoException.Type.ServerError, "Error saving content to object store");
+          throw new RepoException("Error saving content to object store");
         }
       }
 
       // add a record to the DB
 
       if (sqlService.insertObject(object) == 0) {
-        throw new RepoException(RepoException.Type.ServerError, "Error saving content to database");
+        throw new RepoException("Error saving content to database");
       }
 
       sqlService.transactionCommit();
       rollback = false;
 
     } catch (SQLException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     } finally {
 
       if (uploadInfo != null)
@@ -502,7 +529,7 @@ public class RepoService {
       sqlService.getConnection();
 
       if (sqlService.getBucket(bucketName) == null)
-        throw new RepoException(RepoException.Type.ClientError, "Can not find bucket: " + bucketName);
+        throw new RepoException(RepoException.Type.BucketNotFound);
 
       // copy over values from previous object, if they are not specified in the request
       if (contentType != null)
@@ -530,7 +557,7 @@ public class RepoService {
 
         if (!objectStore.objectExists(object)) {
           if (!objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object)) {
-            throw new RepoException(RepoException.Type.ServerError, "Error saving content to object store");
+            throw new RepoException("Error saving content to object store");
           }
         }
       }
@@ -538,14 +565,14 @@ public class RepoService {
       // add a record to the DB
 
       if (sqlService.insertObject(object) == 0) {
-        throw new RepoException(RepoException.Type.ServerError, "Error saving content to database");
+        throw new RepoException("Error saving content to database");
       }
 
       sqlService.transactionCommit();
       rollback = false;
 
     } catch (SQLException | IOException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(e);
     } finally {
 
       if (uploadInfo != null)

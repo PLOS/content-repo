@@ -29,6 +29,7 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.plos.repo.models.Object;
+import org.plos.repo.models.RepoError;
 import org.plos.repo.service.RepoException;
 import org.plos.repo.service.RepoInfoService;
 import org.plos.repo.service.RepoService;
@@ -66,11 +67,6 @@ public class ObjectController {
 
   private static final String REPROXY_HEADER_FILE = "reproxy-file";
 
-  // default page size = number of objects returned when no limit= parameter supplied.
-  private static final Integer DEFAULT_PAGE_SIZE = 1000;
-
-  // maximum allowed value of page size, i.e., limit= parameter
-  private static final Integer MAX_PAGE_SIZE = 10000;
 
   private static final DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss z");
 
@@ -83,21 +79,22 @@ public class ObjectController {
 
   public static Response handleError(RepoException e) {
 
+    Response.Status status = Response.Status.BAD_REQUEST;
+
     switch (e.getType()) {
 
-      case ClientError:
-        return Response.status(Response.Status.BAD_REQUEST)
-            .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
+      case BucketNotFound:
+      case ObjectNotFound:
+        status = Response.Status.NOT_FOUND;
+        break;
 
-      case ItemNotFound:
-        return Response.status(Response.Status.NOT_FOUND)
-            .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
-
-      default:  // ServerError
+      case ServerError:
+        status = Response.Status.INTERNAL_SERVER_ERROR;
         log.error(e.getType().toString(), e);
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-            .entity(e.getMessage()).type(MediaType.TEXT_PLAIN_TYPE).build();
+        break;
     }
+
+    return Response.status(status).entity(new RepoError(e)).build();
 
   }
 
@@ -115,25 +112,14 @@ public class ObjectController {
       @ApiParam(required = false) @QueryParam("bucketName") String bucketName,
       @ApiParam(required = false) @QueryParam("offset") Integer offset,
       @ApiParam(required = false) @QueryParam("limit") Integer limit,
-      @ApiParam(required = false) @DefaultValue("false") @QueryParam("includeDeleted") boolean includeDeleted) {
-
-    if (offset == null)
-      offset = 0;
-    if (limit == null)
-      limit = DEFAULT_PAGE_SIZE;
-
-    if (offset < 0)
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity("Invalid offset").type(MediaType.TEXT_PLAIN).build();
-
-    if (limit <= 0 || limit > MAX_PAGE_SIZE)
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity("Invalid limit").type(MediaType.TEXT_PLAIN).build();
+      @ApiParam(required = false) @DefaultValue("false") @QueryParam("includeDeleted") boolean includeDeleted
+  ) {
 
     try {
       return Response.status(Response.Status.OK).entity(
-          new GenericEntity<List<Object>>(repoService.listObjects(bucketName, offset, limit, includeDeleted)) {
-          }).build();
+          new GenericEntity<List<Object>>(
+              repoService.listObjects(bucketName, offset, limit, includeDeleted)
+          ) {}).build();
     } catch (RepoException e) {
       return handleError(e);
     }
@@ -236,22 +222,15 @@ public class ObjectController {
     @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The object was unable to be deleted (see response text for more details)"),
     @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
   })
-  public Response delete(@ApiParam(required = true) @PathParam("bucketName") String bucketName,
-                         @ApiParam(required = true) @QueryParam("key") String key,
-                         @ApiParam(required = true) @QueryParam("version") Integer version) {
-
-    if (key == null)
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity("No key entered").type(MediaType.TEXT_PLAIN).build();
-
-    if (version == null)
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity("No version entered").type(MediaType.TEXT_PLAIN).build();
+  public Response delete(
+      @ApiParam(required = true) @PathParam("bucketName") String bucketName,
+      @ApiParam(required = true) @QueryParam("key") String key,
+      @ApiParam(required = true) @QueryParam("version") Integer version
+  ) {
 
     try {
       repoService.deleteObject(bucketName, key, version);
-      return Response.status(Response.Status.OK)
-          .entity(key + " version " + version + " deleted").type(MediaType.TEXT_PLAIN).build();
+      return Response.status(Response.Status.OK).build();
     } catch (RepoException e) {
       return handleError(e);
     }
@@ -284,40 +263,30 @@ required = true)
         @FormDataParam("file") InputStream uploadedInputStream
   ) {
 
-    if (key == null)
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity("No key entered").type(MediaType.TEXT_PLAIN).build();
-
-    if (create == null)
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity("No create flag entered").type(MediaType.TEXT_PLAIN).build();
-
-    if (bucketName == null)
-      return Response.status(Response.Status.BAD_REQUEST)
-          .entity("No bucket specified").type(MediaType.TEXT_PLAIN).build();
-
-    Timestamp timestamp = new Timestamp(new Date().getTime());
-
-    if (timestampString != null) {
-      try {
-        timestamp = Timestamp.valueOf(timestampString);
-      } catch (Exception e) {
-        return Response.status(Response.Status.BAD_REQUEST)
-            .entity("Could not parse timestamp").type(MediaType.TEXT_PLAIN).build();
-      }
-    }
-
-    repoInfoService.incrementWriteCount();
-
     try {
 
-      RepoService.CreateMethod method = null;
+      RepoService.CreateMethod method;
+
+      if (create == null)
+        throw new RepoException(RepoException.Type.NoCreationMethodEntered);
 
       try {
         method = RepoService.CreateMethod.valueOf(create.toUpperCase());
       } catch (IllegalArgumentException e) {
-        throw new RepoException(RepoException.Type.ClientError, e);
+        throw new RepoException(RepoException.Type.InvalidCreationMethod);
       }
+
+      Timestamp timestamp = new Timestamp(new Date().getTime());
+
+      if (timestampString != null) {
+        try {
+          timestamp = Timestamp.valueOf(timestampString);
+        } catch (IllegalArgumentException e) {
+          throw new RepoException(RepoException.Type.CouldNotParseTimestamp);
+        }
+      }
+
+      repoInfoService.incrementWriteCount();
 
       return Response.status(Response.Status.CREATED).entity(repoService.createObject(method, key, bucketName, contentType, downloadName, timestamp, uploadedInputStream)).build();
 

@@ -87,12 +87,13 @@ public class BucketController {
     @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The bucket was unable to be created (see response text for more details)"),
     @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
   })
+  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response create(@ApiParam(required = true) @FormParam("name") String name) {
 
     try {
-      repoService.createBucket(name);
-      return Response.status(Response.Status.CREATED)
-          .entity("Created bucket " + name).type(MediaType.TEXT_PLAIN_TYPE).build();
+      return Response.status(Response.Status.CREATED).entity(
+          repoService.createBucket(name)
+      ).build();
     } catch (RepoException e) {
       return ObjectController.handleError(e);
     }
@@ -111,8 +112,7 @@ public class BucketController {
 
     try {
       repoService.deleteBucket(name);
-      return Response.status(Response.Status.OK)
-          .entity("Deleted bucket " + name).type(MediaType.TEXT_PLAIN_TYPE).build();
+      return Response.status(Response.Status.OK).build();
     } catch (RepoException e) {
       return ObjectController.handleError(e);
     }
