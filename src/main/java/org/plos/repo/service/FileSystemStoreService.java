@@ -104,7 +104,7 @@ public class FileSystemStoreService extends ObjectStore {
       return urls;
 
     } catch (MalformedURLException e) {
-      throw new RepoException(RepoException.Type.ServerError, e);
+      throw new RepoException(RepoException.Type.ServerError);
     }
 
   }
