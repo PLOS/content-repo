@@ -26,6 +26,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 import org.apache.http.HttpStatus;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.joda.time.DateTime;
+import org.joda.time.ReadableInstant;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.plos.repo.models.Object;
@@ -176,8 +177,10 @@ public class ObjectController {
     String httpDateStr = dateTimeFormatter.print(objDateTime);
     boolean notModifiedSince = false;
 
-    if (ifModifiedSinceStr != null)
-      notModifiedSince = objDateTime.isBefore(dateTimeFormatter.parseDateTime(ifModifiedSinceStr));
+    if (ifModifiedSinceStr != null) {
+      ReadableInstant ifModifiedSince = dateTimeFormatter.parseDateTime(ifModifiedSinceStr);
+      notModifiedSince = objDateTime.isBefore(ifModifiedSince) || objDateTime.isEqual(ifModifiedSince);
+    }
 
     repoInfoService.incrementReadCount();
 

@@ -17,20 +17,6 @@
 
 package org.plos.repo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.when;
-
-import java.net.URL;
-import java.sql.Timestamp;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -40,6 +26,19 @@ import org.mockito.Mockito;
 import org.plos.repo.models.Object;
 import org.plos.repo.service.RepoService;
 import org.springframework.beans.factory.config.SingletonBeanRegistry;
+
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import java.net.URL;
+import java.sql.Timestamp;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.when;
 
 public class CachingHeadersTest extends RepoBaseJerseyTest  {
 
@@ -106,7 +105,7 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
                           .header("If-Modified-Since", RFC1123_DATE_TIME_FORMATTER.print(modifiedSinceDateTime))
                           .get();
 
-    assertEquals(Status.OK.getStatusCode(), response.getStatus());
+    assertEquals(Status.NOT_MODIFIED.getStatusCode(), response.getStatus());
   }
 
   @Test
