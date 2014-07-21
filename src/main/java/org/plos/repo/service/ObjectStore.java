@@ -40,21 +40,22 @@ public abstract class ObjectStore {
 
   abstract public URL[] getRedirectURLs(org.plos.repo.models.Object object) throws RepoException;
 
-  abstract public boolean objectExists(Object object);
+  abstract public Boolean objectExists(Object object);
 
-  abstract public boolean bucketExists(Bucket bucket);
+  // we use Boolean here
+  abstract public Boolean bucketExists(Bucket bucket);
 
-  abstract public boolean createBucket(Bucket bucket);
+  abstract public Boolean createBucket(Bucket bucket);
 
-  abstract public boolean deleteBucket(Bucket bucket);
+  abstract public Boolean deleteBucket(Bucket bucket);
 
   abstract public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException;
 
-  abstract public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object);
+  abstract public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object);
 
-  abstract public boolean deleteObject(Object object);
+  abstract public Boolean deleteObject(Object object);
 
-  abstract public boolean deleteTempUpload(UploadInfo uploadInfo);
+  abstract public Boolean deleteTempUpload(UploadInfo uploadInfo);
 
   abstract public InputStream getInputStream(Object object) throws RepoException;
 

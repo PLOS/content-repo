@@ -102,6 +102,26 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
   }
 
   @Test
+  public void createBucketWithBucketlessObjectStore() throws Exception {
+
+    ObjectStore spyObjectStore = Mockito.spy(objectStore);
+
+    BDDMockito.willReturn(null).given(spyObjectStore).bucketExists(Mockito.any(Bucket.class));
+
+    Field objStoreField = RepoService.class.getDeclaredField("objectStore");
+    objStoreField.setAccessible(true);
+    objStoreField.set(repoService, spyObjectStore);
+
+    try {
+      Bucket bucketResponse = repoService.createBucket(bucket1.bucketName);
+      Assert.assertEquals(bucket1.bucketName, bucketResponse.bucketName);
+    } catch (RepoException e) {
+      Assert.fail(e.getMessage());
+    }
+
+  }
+
+  @Test
   public void createBucketErrorInObjStore() throws Exception {
 
     ObjectStore spyObjectStore = Mockito.spy(objectStore);
