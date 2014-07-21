@@ -43,7 +43,7 @@ public class S3StoreService extends ObjectStore {
     s3Client = new AmazonS3Client(new BasicAWSCredentials(aws_access_key, aws_secret_key));
   }
 
-  public boolean objectExists(Object object) {
+  public Boolean objectExists(Object object) {
     try {
       S3Object obj = s3Client.getObject(object.bucketName, object.checksum);
 
@@ -74,11 +74,11 @@ public class S3StoreService extends ObjectStore {
     return s3Client.getObject(object.bucketName, object.checksum).getObjectContent();
   }
 
-  public boolean bucketExists(Bucket bucket) {
+  public Boolean bucketExists(Bucket bucket) {
     return s3Client.doesBucketExist(bucket.bucketName);
   }
 
-  public boolean createBucket(Bucket bucket) {
+  public Boolean createBucket(Bucket bucket) {
 
     try {
       CreateBucketRequest bucketRequest = new CreateBucketRequest(bucket.bucketName, Region.US_West);
@@ -93,7 +93,7 @@ public class S3StoreService extends ObjectStore {
 
   }
 
-  public boolean deleteBucket(Bucket bucket) {
+  public Boolean deleteBucket(Bucket bucket) {
 
     try {
       s3Client.deleteBucket(bucket.bucketName);
@@ -159,7 +159,7 @@ public class S3StoreService extends ObjectStore {
     }
   }
 
-  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
+  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
 
     int retries = 5;
     int tryCount = 0;
@@ -214,11 +214,11 @@ public class S3StoreService extends ObjectStore {
     return false;
   }
 
-  public boolean deleteTempUpload(UploadInfo uploadInfo) {
+  public Boolean deleteTempUpload(UploadInfo uploadInfo) {
     return new File(uploadInfo.getTempLocation()).delete();
   }
 
-  public boolean deleteObject(Object object) {
+  public Boolean deleteObject(Object object) {
     try {
       s3Client.deleteObject(object.bucketName, object.checksum);
       return true;

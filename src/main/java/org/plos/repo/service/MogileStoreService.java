@@ -41,7 +41,7 @@ public class MogileStoreService extends ObjectStore {
     return checksum + "-" + bucketName;
   }
 
-  public boolean objectExists(Object object) {
+  public Boolean objectExists(Object object) {
     try {
       InputStream in = mfs.getFileStream(getObjectLocationString(object.bucketName, object.checksum));
 
@@ -86,17 +86,17 @@ public class MogileStoreService extends ObjectStore {
     }
   }
 
-  public boolean bucketExists(Bucket bucket) {
-    return true;
+  public Boolean bucketExists(Bucket bucket) {
+    return null;
   }
 
-  public boolean createBucket(Bucket bucket) {
+  public Boolean createBucket(Bucket bucket) {
     // we use file paths instead of domains so this function does not need to do anything
-    return true;
+    return null;
   }
 
-  public boolean deleteBucket(Bucket bucket) {
-    return true;
+  public Boolean deleteBucket(Bucket bucket) {
+    return null;
   }
 
   public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException {
@@ -141,7 +141,7 @@ public class MogileStoreService extends ObjectStore {
     }
   }
 
-  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
+  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
     try {
       mfs.rename(uploadInfo.getTempLocation(), getObjectLocationString(bucket.bucketName, uploadInfo.getChecksum()));
       return true;
@@ -150,7 +150,7 @@ public class MogileStoreService extends ObjectStore {
     }
   }
 
-  public boolean deleteTempUpload(UploadInfo uploadInfo) {
+  public Boolean deleteTempUpload(UploadInfo uploadInfo) {
     try {
       mfs.delete(uploadInfo.getTempLocation());
       return true;
@@ -159,7 +159,7 @@ public class MogileStoreService extends ObjectStore {
     }
   }
 
-  public boolean deleteObject(Object object) {
+  public Boolean deleteObject(Object object) {
     try {
       mfs.delete(getObjectLocationString(object.bucketName, object.checksum));
       return true;

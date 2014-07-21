@@ -61,7 +61,7 @@ public class FileSystemStoreService extends ObjectStore {
     return getBucketLocationString(bucketName) + checksum.substring(0, 2) + "/" + checksum;
   }
 
-  public boolean objectExists(Object object) {
+  public Boolean objectExists(Object object) {
     return new File(getObjectLocationString(object.bucketName, object.checksum)).exists();
   }
 
@@ -73,11 +73,11 @@ public class FileSystemStoreService extends ObjectStore {
     }
   }
 
-  public boolean bucketExists(Bucket bucket) {
+  public Boolean bucketExists(Bucket bucket) {
     return (new File(getBucketLocationString(bucket.bucketName)).isDirectory());
   }
 
-  public boolean createBucket(Bucket bucket) {
+  public Boolean createBucket(Bucket bucket) {
 
     File dir = new File(getBucketLocationString(bucket.bucketName));
     boolean result = dir.mkdir();
@@ -109,12 +109,12 @@ public class FileSystemStoreService extends ObjectStore {
 
   }
 
-  public boolean deleteBucket(Bucket bucket) {
+  public Boolean deleteBucket(Bucket bucket) {
     File dir = new File(getBucketLocationString(bucket.bucketName));
     return dir.delete();
   }
 
-  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
+  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
     File tempFile = new File(uploadInfo.getTempLocation());
 
     File newFile = new File(getObjectLocationString(bucket.bucketName, uploadInfo.getChecksum()));
@@ -132,7 +132,7 @@ public class FileSystemStoreService extends ObjectStore {
     return tempFile.renameTo(newFile);
   }
 
-  public boolean deleteObject(Object object) {
+  public Boolean deleteObject(Object object) {
 
     File file = new File(getObjectLocationString(object.bucketName, object.checksum));
     File parentDir = new File(file.getParent());
@@ -147,7 +147,7 @@ public class FileSystemStoreService extends ObjectStore {
     return result;
   }
 
-  public boolean deleteTempUpload(UploadInfo uploadInfo) {
+  public Boolean deleteTempUpload(UploadInfo uploadInfo) {
     return new File(uploadInfo.getTempLocation()).delete();
   }
 

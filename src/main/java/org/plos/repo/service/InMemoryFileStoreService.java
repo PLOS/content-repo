@@ -23,7 +23,7 @@ public class InMemoryFileStoreService extends ObjectStore {
   public InMemoryFileStoreService() {
   }
 
-  public boolean objectExists(Object object) {
+  public Boolean objectExists(Object object) {
     return (data.get(object.bucketName) != null && data.get(object.bucketName).get(object.checksum) != null);
   }
 
@@ -31,11 +31,11 @@ public class InMemoryFileStoreService extends ObjectStore {
     return new ByteArrayInputStream(data.get(object.bucketName).get(object.checksum));
   }
 
-  public boolean bucketExists(Bucket bucket) {
+  public Boolean bucketExists(Bucket bucket) {
     return (data.containsKey(bucket.bucketName));
   }
 
-  public boolean createBucket(Bucket bucket) {
+  public Boolean createBucket(Bucket bucket) {
     return (data.put(bucket.bucketName, new HashMap<String, byte[]>()) == null);
   }
 
@@ -47,14 +47,14 @@ public class InMemoryFileStoreService extends ObjectStore {
     return new URL[]{}; // since the filesystem is not reproxyable
   }
 
-  public boolean deleteBucket(Bucket bucket) {
+  public Boolean deleteBucket(Bucket bucket) {
 
     // TODO: what if it contains stuff?
 
     return (data.remove(bucket.bucketName) != null);
   }
 
-  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
+  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
 
     byte[] tempContent = tempdata.get(uploadInfo.getTempLocation());
     data.get(bucket.bucketName).put(uploadInfo.getChecksum(), tempContent);
@@ -62,7 +62,7 @@ public class InMemoryFileStoreService extends ObjectStore {
 
   }
 
-  public boolean deleteObject(Object object) {
+  public Boolean deleteObject(Object object) {
 
     if (!objectExists(object))
       return false;
@@ -71,7 +71,7 @@ public class InMemoryFileStoreService extends ObjectStore {
 
   }
 
-  public boolean deleteTempUpload(UploadInfo uploadInfo) {
+  public Boolean deleteTempUpload(UploadInfo uploadInfo) {
     tempdata.remove(uploadInfo.getTempLocation());
 
     return true;

@@ -118,12 +118,12 @@ public class RepoService {
       if (sqlService.getBucket(name) != null)
         throw new RepoException(RepoException.Type.BucketAlreadyExists);
 
-      if (objectStore.bucketExists(bucket))
+      if (Boolean.TRUE.equals(objectStore.bucketExists(bucket)))
         throw new RepoException("Bucket exists in object store but not in database: " + name);
 
       rollback = true;
 
-      if (!objectStore.createBucket(bucket))
+      if (Boolean.FALSE.equals(objectStore.createBucket(bucket)))
         throw new RepoException("Unable to create bucket in object store: " + name);
 
       if (!sqlService.insertBucket(bucket)) {
@@ -168,7 +168,7 @@ public class RepoService {
       if (sqlService.getBucket(name) == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
 
-      if (!objectStore.bucketExists(bucket))
+      if (Boolean.FALSE.equals(objectStore.bucketExists(bucket)))
         throw new RepoException("Bucket exists in database but not in object store: " + name);
 
       if (sqlService.listObjects(name, 0, 1, true).size() != 0)
@@ -176,7 +176,7 @@ public class RepoService {
 
       rollback = true;
 
-      if (!objectStore.deleteBucket(bucket))
+      if (Boolean.FALSE.equals(objectStore.deleteBucket(bucket)))
         throw new RepoException("Unable to delete bucket in object store: " + name);
 
       if (sqlService.deleteBucket(name) == 0)
@@ -483,7 +483,7 @@ public class RepoService {
         // dont bother storing the file since the data already exists in the system
 
       } else {
-        if (!objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object)) {
+        if (Boolean.FALSE.equals(objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object))) {
           throw new RepoException("Error saving content to object store");
         }
       }
@@ -555,8 +555,8 @@ public class RepoService {
         object.checksum = uploadInfo.getChecksum();
         object.size = uploadInfo.getSize();
 
-        if (!objectStore.objectExists(object)) {
-          if (!objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object)) {
+        if (Boolean.FALSE.equals(objectStore.objectExists(object))) {
+          if (Boolean.FALSE.equals(objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object))) {
             throw new RepoException("Error saving content to object store");
           }
         }
