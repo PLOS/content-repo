@@ -25,7 +25,7 @@
   <artifactId>content-repo</artifactId>
   <name>content-repo</name>
   <packaging>war</packaging>
-  <version>1.1.1-SNAPSHOT</version>
+  <version>1.1.1</version>
 
   <description>Versioning content repository for PLoS data</description>
 
