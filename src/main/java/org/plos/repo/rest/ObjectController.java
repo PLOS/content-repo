@@ -25,10 +25,6 @@ import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import org.apache.http.HttpStatus;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.joda.time.DateTime;
-import org.joda.time.ReadableInstant;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.plos.repo.models.Object;
 import org.plos.repo.models.RepoError;
 import org.plos.repo.service.RepoException;
@@ -45,6 +41,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -68,8 +66,7 @@ public class ObjectController {
 
   private static final String REPROXY_HEADER_FILE = "reproxy-file";
 
-
-  private static final DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss z");
+  private static final String RFC1123_DATE_TIME_FORMAT =  "EEE, dd MMM yyyy HH:mm:ss z";
 
   @Inject
   private RepoService repoService;
@@ -140,12 +137,9 @@ public class ObjectController {
 
       Object object = repoService.getObject(bucketName, key, version);
 
-      DateTime objDateTime = new DateTime(object.timestamp);
-      String httpDateStr = dateTimeFormatter.print(objDateTime);
-
       object.versions = repoService.getObjectVersions(object);
       return Response.status(Response.Status.OK)
-          .header(HttpHeaders.LAST_MODIFIED, httpDateStr)
+          .lastModified(object.timestamp)
           .entity(object).build();
     } catch (RepoException e) {
       return handleError(e);
@@ -167,19 +161,21 @@ public class ObjectController {
 
     Object object;
 
-    try {
-      object = repoService.getObject(bucketName, key, version);
-    } catch (RepoException e) {
-      return handleError(e);
-    }
-
-    DateTime objDateTime = new DateTime(object.timestamp);
-    String httpDateStr = dateTimeFormatter.print(objDateTime);
     boolean notModifiedSince = false;
 
-    if (ifModifiedSinceStr != null) {
-      ReadableInstant ifModifiedSince = dateTimeFormatter.parseDateTime(ifModifiedSinceStr);
-      notModifiedSince = objDateTime.isBefore(ifModifiedSince) || objDateTime.isEqual(ifModifiedSince);
+    try {
+      object = repoService.getObject(bucketName, key, version);
+
+      if (ifModifiedSinceStr != null) {
+
+        Date ifModifiedSince = new SimpleDateFormat(RFC1123_DATE_TIME_FORMAT).parse(ifModifiedSinceStr);
+        notModifiedSince = object.timestamp.compareTo(ifModifiedSince) <= 0;
+      }
+
+    } catch (ParseException e) {
+      return handleError(new RepoException(RepoException.Type.CouldNotParseTimestamp));
+    } catch (RepoException e) {
+      return handleError(e);
     }
 
     repoInfoService.incrementReadCount();
@@ -190,7 +186,7 @@ public class ObjectController {
       try {
         object.versions = repoService.getObjectVersions(object);
         return Response.status(Response.Status.OK)
-            .header(HttpHeaders.LAST_MODIFIED, httpDateStr)
+            .lastModified(object.timestamp)
             .entity(object).build();
       } catch (RepoException e) {
         return handleError(e);
@@ -209,7 +205,7 @@ public class ObjectController {
           status = Response.Status.NOT_MODIFIED;
 
         return Response.status(status)
-            .header(HttpHeaders.LAST_MODIFIED, httpDateStr)
+            .lastModified(object.timestamp)
             .header(REPROXY_HEADER_URL, REPROXY_URL_JOINER.join(repoService.getObjectReproxy(object)))
             .header(REPROXY_HEADER_CACHE_FOR, REPROXY_CACHE_FOR_HEADER)
             .build();
@@ -224,14 +220,14 @@ public class ObjectController {
     try {
 
       if (notModifiedSince)
-        return Response.notModified().header(HttpHeaders.LAST_MODIFIED, httpDateStr).build();
+        return Response.notModified().lastModified(object.timestamp).build();
 
       String exportFileName = repoService.getObjectExportFileName(object);
       String contentType = repoService.getObjectContentType(object);
       InputStream is = repoService.getObjectInputStream(object);
 
       return Response.ok(is, contentType)
-          .header(HttpHeaders.LAST_MODIFIED, httpDateStr)
+          .lastModified(object.timestamp)
           .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + exportFileName).build();
 
       // the container closes this input stream
