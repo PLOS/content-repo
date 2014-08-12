@@ -1,0 +1,19 @@
+CHANGES
+
+Content-repo
+
+This document only lists high level changes that may effect the API consumers and administrators. For an exhaustive list of all changes see the version control log.
+
+1.1.1 (7/21/2014)
+* Fixed bucket creation bug when using a MogileFS backend.
+* Fixed If-Modified-Since time comparison behavior.
+* Fixed XML rendering of /status endpoint.
+
+1.1.0 (7/10/2014)
+* Refactored error handler to return repo specific error codes in message body instead of relying only on HTTP codes and free text.
+* Added /objects/meta/ as a new endpoint so /objects/?fetchmetadata=true can be depricated.
+* Make file system optionally reproxyable. A static file server can now be used to serve assets off the file system store. This way reproxying can be used/tested without MogileFS.
+
+1.0.0 (7/7/2014)
+* Initial release
+
