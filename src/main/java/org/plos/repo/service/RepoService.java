@@ -422,11 +422,11 @@ public class RepoService {
   }
 
   private Object createNewObject(String key,
-                                String bucketName,
-                                String contentType,
-                                String downloadName,
-                                Timestamp timestamp,
-                                InputStream uploadedInputStream) throws RepoException {
+                                 String bucketName,
+                                 String contentType,
+                                 String downloadName,
+                                 Timestamp timestamp,
+                                 InputStream uploadedInputStream) throws RepoException {
 
     ObjectStore.UploadInfo uploadInfo = null;
     Integer versionNumber;
@@ -516,44 +516,31 @@ public class RepoService {
   }
 
   private Object updateObject(String bucketName,
-                          String contentType,
-                          String downloadName,
-                          Timestamp timestamp,
-                          InputStream uploadedInputStream,
-                          Object object) throws RepoException {
+                              String contentType,
+                              String downloadName,
+                              Timestamp timestamp,
+                              InputStream uploadedInputStream,
+                              Object object) throws RepoException {
 
     ObjectStore.UploadInfo uploadInfo = null;
     boolean rollback = false;
 
+    Object newObject = null;
+
     try {
-      sqlService.getConnection();
-
-      if (sqlService.getBucket(bucketName) == null)
-        throw new RepoException(RepoException.Type.BucketNotFound);
-
-      // copy over values from previous object, if they are not specified in the request
-      if (contentType != null)
-        object.contentType = contentType;
-
-      if (downloadName != null)
-        object.downloadName = downloadName;
-
-      object.timestamp = timestamp;
-      object.versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, object.key);
-      object.id = null;  // remove this since it refers to the old object
 
       uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
       uploadedInputStream.close();
 
-      rollback = true;
-
+      String checksum = null;
+      Long size = null;
       if (uploadInfo.getSize() == 0) {
         // handle metadata-only update
       } else {
 
         // determine if the object should be added to the store or not
-        object.checksum = uploadInfo.getChecksum();
-        object.size = uploadInfo.getSize();
+        checksum = uploadInfo.getChecksum();
+        size = uploadInfo.getSize();
 
         if (Boolean.FALSE.equals(objectStore.objectExists(object))) {
           if (Boolean.FALSE.equals(objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object))) {
@@ -562,9 +549,23 @@ public class RepoService {
         }
       }
 
-      // add a record to the DB
+      newObject = new Object(null, object.key, checksum, null, downloadName, contentType, size, null, object.bucketId, bucketName, null, Object.Status.USED);
 
-      if (sqlService.insertObject(object) == 0) {
+      if (object.areSimilar(newObject)){
+        return object;
+      }
+
+      rollback = true;
+
+      sqlService.getConnection();
+
+      if (sqlService.getBucket(bucketName) == null)
+        throw new RepoException(RepoException.Type.BucketNotFound);
+
+      // add a record to the DB
+      newObject.versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, object.key);
+
+      if (sqlService.insertObject(newObject) == 0) {
         throw new RepoException("Error saving content to database");
       }
 
@@ -584,320 +585,356 @@ public class RepoService {
       }
 
       sqlReleaseConnection();
+
     }
 
-    return object;
+    return newObject;
   }
 
-    /**
-     * Returns a list of collections for the given bucket name <code>bucketName</code>. In case pagination
-     * parameters <code>offset</code> and <code>limit</code> are not present, it loads the default pagination data.
-     * @param bucketName a single String representing the bucket name in where to look the collection
-     * @param offset an Integer used to determine the offset of the response
-     * @param limit an Integer used to determine the limit of the response
-     * @return a list of {@link org.plos.repo.models.Collection}
-     * @throws RepoException
-     */
-    public List<Collection> listCollections(String bucketName, Integer offset, Integer limit) throws RepoException {
+  /**
+   * Returns a list of collections for the given bucket name <code>bucketName</code>. In case pagination
+   * parameters <code>offset</code> and <code>limit</code> are not present, it loads the default pagination data.
+   * @param bucketName a single String representing the bucket name in where to look the collection
+   * @param offset an Integer used to determine the offset of the response
+   * @param limit an Integer used to determine the limit of the response
+   * @return a list of {@link org.plos.repo.models.Collection}
+   * @throws RepoException
+   */
+  public List<Collection> listCollections(String bucketName, Integer offset, Integer limit) throws RepoException {
 
-        if (offset == null)
-            offset = 0;
-        if (limit == null)
-            limit = DEFAULT_PAGE_SIZE;
+    if (offset == null)
+      offset = 0;
+    if (limit == null)
+      limit = DEFAULT_PAGE_SIZE;
 
-        try {
+    try {
 
-            validatePagination(offset, limit);
+      validatePagination(offset, limit);
 
-            sqlService.getConnection();
+      sqlService.getConnection();
 
-            validateBucketData(bucketName, sqlService);
+      validateBucketData(bucketName, sqlService);
 
-            return sqlService.listCollections(bucketName, offset, limit);
+      return sqlService.listCollections(bucketName, offset, limit);
 
-        } catch (SQLException e) {
-            throw new RepoException(e);
-        } finally {
-            sqlReleaseConnection();
-        }
-
+    } catch (SQLException e) {
+      throw new RepoException(e);
+    } finally {
+      sqlReleaseConnection();
     }
 
-    /**
-     * Returns a collection identiied by <code>bucketName</code> and <code>key</code>. If <code>version</code> is null, it returns the latest
-     * version available, if it is not, it returns the requested version.
-     * @param bucketName a single String representing the bucket name in where to look the collection
-     * @param key key a single String identifying the collection key
-     * @param version an int value representing the version number of the collection
-     * @return a collection {@link org.plos.repo.models.Collection} or null is the desired collection does not exists
-     * @throws RepoException
-     */
-    public Collection getCollection(String bucketName, String key, Integer version) throws RepoException {
+  }
 
-        Lock readLock = this.rwLocks.get(bucketName + key).readLock();
-        readLock.lock();
+  /**
+   * Returns a collection identiied by <code>bucketName</code> and <code>key</code>. If <code>version</code> is null, it returns the latest
+   * version available, if it is not, it returns the requested version.
+   * @param bucketName a single String representing the bucket name in where to look the collection
+   * @param key key a single String identifying the collection key
+   * @param version an int value representing the version number of the collection
+   * @return a collection {@link org.plos.repo.models.Collection} or null is the desired collection does not exists
+   * @throws RepoException
+   */
+  public Collection getCollection(String bucketName, String key, Integer version) throws RepoException {
 
-        Collection collection;
+    Lock readLock = this.rwLocks.get(bucketName + key).readLock();
+    readLock.lock();
 
-        try {
-            sqlService.getConnection();
+    Collection collection;
 
-            if (key == null)
-                throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
+    try {
+      sqlService.getConnection();
 
-            if (version == null)
-                collection = sqlService.getCollection(bucketName, key);
-            else
-                collection = sqlService.getCollection(bucketName, key, version);
+      if (key == null)
+        throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
 
-            if (collection == null)
-                throw new RepoException(RepoException.Type.CollectionNotFound);
+      if (version == null)
+        collection = sqlService.getCollection(bucketName, key);
+      else
+        collection = sqlService.getCollection(bucketName, key, version);
 
-            collection.setVersions(this.getCollectionVersions(collection));
+      if (collection == null)
+        throw new RepoException(RepoException.Type.CollectionNotFound);
 
-            return collection;
+      collection.setVersions(this.getCollectionVersions(collection));
 
-        } catch (SQLException e) {
-            throw new RepoException(e);
-        } finally {
-            sqlReleaseConnection();
-            readLock.unlock();
-        }
+      return collection;
 
+    } catch (SQLException e) {
+      throw new RepoException(e);
+    } finally {
+      sqlReleaseConnection();
+      readLock.unlock();
     }
 
-    /**
-     * Returns a list of all collection versions for the given <code>collection</code>
-     * @param collection a single {@link org.plos.repo.models.Collection}
-     * @return a list of {@link org.plos.repo.models.Collection}
-     * @throws RepoException
-     */
-    public List<Collection> getCollectionVersions(Collection collection) throws RepoException {
+  }
 
-        Lock readLock = this.rwLocks.get(collection.getBucketName() + collection.getKey()).readLock();
-        readLock.lock();
+  /**
+   * Returns a list of all collection versions for the given <code>collection</code>
+   * @param collection a single {@link org.plos.repo.models.Collection}
+   * @return a list of {@link org.plos.repo.models.Collection}
+   * @throws RepoException
+   */
+  public List<Collection> getCollectionVersions(Collection collection) throws RepoException {
 
-        try {
-            sqlService.getConnection();
-            return sqlService.listCollectionVersions(collection);
-        } catch (SQLException e) {
-            throw new RepoException(e);
-        } finally {
-            sqlReleaseConnection();
-            readLock.unlock();
-        }
+    Lock readLock = this.rwLocks.get(collection.getBucketName() + collection.getKey()).readLock();
+    readLock.lock();
+
+    try {
+      sqlService.getConnection();
+      return sqlService.listCollectionVersions(collection);
+    } catch (SQLException e) {
+      throw new RepoException(e);
+    } finally {
+      sqlReleaseConnection();
+      readLock.unlock();
+    }
+  }
+
+  /**
+   * Deletes the collection define by <code>bucketName</code> , <code>key</code> , <code>version</code>
+   * @param bucketName a single String identifying the bucket name where the collection is.
+   * @param key a single String identifying the collection key
+   * @param version an int value representing the version number of the collection
+   * @throws RepoException
+   */
+  public void deleteCollection(String bucketName, String key, Integer version) throws RepoException {
+
+    Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
+    writeLock.lock();
+
+    boolean rollback = false;
+
+    try {
+
+      sqlService.getConnection();
+
+      if (key == null)
+        throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
+
+      if (version == null)
+        throw new RepoException(RepoException.Type.NoCollectionVersionEntered);
+
+      rollback = true;
+
+      if (sqlService.markCollectionDeleted(key, bucketName, version) == 0)
+        throw new RepoException(RepoException.Type.CollectionNotFound);
+
+      sqlService.transactionCommit();
+      rollback = false;
+
+    } catch (SQLException e) {
+      throw new RepoException(e);
+    } finally {
+
+      if (rollback) {
+        sqlRollback("object " + bucketName + ", " + key + ", " + version);
+      }
+
+      sqlReleaseConnection();
+      writeLock.unlock();
+    }
+  }
+
+  protected void validatePagination(Integer offset, Integer limit) throws RepoException {
+    if (offset < 0)
+      throw new RepoException(RepoException.Type.InvalidOffset);
+
+    if (limit <= 0 || limit > MAX_PAGE_SIZE)
+      throw new RepoException(RepoException.Type.InvalidLimit);
+  }
+
+  protected void validateBucketData(String bucketName, SqlService sqlService) throws RepoException, SQLException{
+    if (bucketName != null && sqlService.getBucket(bucketName) == null)
+      throw new RepoException(RepoException.Type.BucketNotFound);
+  }
+
+  public Collection createCollection(CreateMethod method, SmallCollection smallCollection) throws RepoException {
+
+    String key = smallCollection.getKey();
+    String bucketName = smallCollection.getBucketName();
+    Timestamp timestamp = smallCollection.getTimestamp();
+    List<SmallObject> smallObjects = smallCollection.getObjects();
+
+    Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
+    writeLock.lock();
+
+    Collection existingCollection;
+
+    try {
+
+      if (key == null)
+        throw new RepoException(RepoException.Type.NoKeyEntered);
+
+      if (bucketName == null)
+        throw new RepoException(RepoException.Type.NoBucketEntered);
+
+      try {
+        existingCollection = getCollection(bucketName, key, null);
+      } catch (RepoException e) {
+        if (e.getType() == RepoException.Type.CollectionNotFound)
+          existingCollection = null;
+        else
+          throw e;
+      }
+
+      verifyObjects(smallObjects);
+
+      switch (method) {
+
+        case NEW:
+          if (existingCollection != null)
+            throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
+          return createNewCollection(key, bucketName, timestamp, smallObjects);
+
+        case VERSION:
+          if (existingCollection == null)
+            throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
+          return updateCollection(key, bucketName, timestamp, existingCollection, smallObjects);
+
+        case AUTO:
+          if (existingCollection == null)
+            return createNewCollection(key, bucketName, timestamp, smallCollection.getObjects());
+          else
+            return updateCollection(key, bucketName, timestamp, existingCollection, smallObjects);
+
+        default:
+          throw new RepoException(RepoException.Type.InvalidCreationMethod);
+      }
+    } finally {
+      writeLock.unlock();
     }
 
-    /**
-     * Deletes the collection define by <code>bucketName</code> , <code>key</code> , <code>version</code>
-     * @param bucketName a single String identifying the bucket name where the collection is.
-     * @param key a single String identifying the collection key
-     * @param version an int value representing the version number of the collection
-     * @throws RepoException
-     */
-    public void deleteCollection(String bucketName, String key, Integer version) throws RepoException {
+  }
 
-        Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
-        writeLock.lock();
+  private void verifyObjects(List<SmallObject> objects) throws RepoException {
 
-        boolean rollback = false;
+    if (objects == null || objects.size() == 0 ){
+      throw new RepoException(RepoException.Type.CantCreateCollectionWithNoObjects);
+    }
+  }
 
-        try {
+  private Collection createNewCollection(String key,
+                                         String bucketName,
+                                         Timestamp timestamp,
+                                         List<SmallObject> objects) throws RepoException {
 
-            sqlService.getConnection();
+    Bucket bucket = null;
 
-            if (key == null)
-                throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
-
-            if (version == null)
-                throw new RepoException(RepoException.Type.NoCollectionVersionEntered);
-
-            rollback = true;
-
-            if (sqlService.markCollectionDeleted(key, bucketName, version) == 0)
-                throw new RepoException(RepoException.Type.CollectionNotFound);
-
-            sqlService.transactionCommit();
-            rollback = false;
-
-        } catch (SQLException e) {
-            throw new RepoException(e);
-        } finally {
-
-            if (rollback) {
-                sqlRollback("object " + bucketName + ", " + key + ", " + version);
-            }
-
-            sqlReleaseConnection();
-            writeLock.unlock();
-        }
+    try {
+      sqlService.getConnection();
+      bucket = sqlService.getBucket(bucketName);
+    } catch (SQLException e) {
+      throw new RepoException(e);
     }
 
-    protected void validatePagination(Integer offset, Integer limit) throws RepoException {
-        if (offset < 0)
-            throw new RepoException(RepoException.Type.InvalidOffset);
+    if (bucket == null)
+      throw new RepoException(RepoException.Type.BucketNotFound);
 
-        if (limit <= 0 || limit > MAX_PAGE_SIZE)
-            throw new RepoException(RepoException.Type.InvalidLimit);
+    return createCollection(key, bucketName, timestamp, bucket.bucketId, objects);
+  }
+
+  private Collection updateCollection(String key,
+                                      String bucketName,
+                                      Timestamp timestamp,
+                                      Collection existingCollection,
+                                      List<SmallObject> objects) throws RepoException {
+
+    if (areCollectionsSimilar(key, bucketName, objects, existingCollection)){
+      return existingCollection;
     }
 
-    protected void validateBucketData(String bucketName, SqlService sqlService) throws RepoException, SQLException{
-        if (bucketName != null && sqlService.getBucket(bucketName) == null)
-            throw new RepoException(RepoException.Type.BucketNotFound);
-    }
+    return createCollection(key, bucketName, timestamp, existingCollection.getBucketId(), objects);
 
-    public Collection createCollection(CreateMethod method, SmallCollection smallCollection) throws RepoException {
+  }
 
-        String key = smallCollection.getKey();
-        String bucketName = smallCollection.getBucketName();
-        Timestamp timestamp = smallCollection.getTimestamp();
-        List<SmallObject> smallObjects = smallCollection.getObjects();
-
-        Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
-        writeLock.lock();
-
-        Collection existingCollection;
-
-        try {
-
-            if (key == null)
-                throw new RepoException(RepoException.Type.NoKeyEntered);
-
-            if (bucketName == null)
-                throw new RepoException(RepoException.Type.NoBucketEntered);
-
-            try {
-                existingCollection = getCollection(bucketName, key, null);
-            } catch (RepoException e) {
-                if (e.getType() == RepoException.Type.CollectionNotFound)
-                    existingCollection = null;
-                else
-                    throw e;
-            }
-
-            verifyObjects(smallObjects);
-
-            switch (method) {
-
-                case NEW:
-                    if (existingCollection != null)
-                        throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
-                    return createNewCollection(key, bucketName, timestamp, smallObjects);
-
-                case VERSION:
-                    if (existingCollection == null)
-                        throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
-                    return updateCollection(key, bucketName, timestamp, existingCollection, smallObjects);
-
-                case AUTO:
-                    if (existingCollection == null)
-                        return createNewCollection(key, bucketName, timestamp, smallCollection.getObjects());
-                    else
-                        return updateCollection(key, bucketName, timestamp, existingCollection, smallObjects);
-
-                default:
-                    throw new RepoException(RepoException.Type.InvalidCreationMethod);
-            }
-        } finally {
-            writeLock.unlock();
-        }
-
-    }
-
-    private void verifyObjects(List<SmallObject> objects) throws RepoException {
-
-        if (objects == null || objects.size() == 0 ){
-            throw new RepoException(RepoException.Type.CantCreateCollectionWithNoObjects);
-        }
-    }
-
-    private Collection createNewCollection(String key,
-                                           String bucketName,
-                                           Timestamp timestamp,
-                                           List<SmallObject> objects) throws RepoException {
-
-        Bucket bucket = null;
-
-        try {
-            sqlService.getConnection();
-            bucket = sqlService.getBucket(bucketName);
-        } catch (SQLException e) {
-            throw new RepoException(e);
-        }
-
-        if (bucket == null)
-            throw new RepoException(RepoException.Type.BucketNotFound);
-
-        return createCollection(key, bucketName, timestamp, bucket.bucketId, objects);
-    }
-
-    private Collection updateCollection(String key,
+  private Boolean areCollectionsSimilar(String key,
                                         String bucketName,
-                                        Timestamp timestamp,
-                                        Collection existingCollection,
-                                        List<SmallObject> objects) throws RepoException {
+                                        List<SmallObject> objects,
+                                        Collection existingCollection){
 
-        // TODO : if existingCollection == the one we want to create then return the existing one and do nothing
+    Boolean similar = existingCollection.getKey().equals(key) &&
+        existingCollection.getKey().equals(bucketName) &&
+        existingCollection.getStatus().equals(Collection.Status.USED) &&
+        objects.size() == existingCollection.getObjects().size();
 
-        return createCollection(key, bucketName, timestamp, existingCollection.getBucketId(), objects);
+    int i = 0;
 
+    for ( ; i <  objects.size() & similar ; i++){
+
+      SmallObject smallObject = objects.get(i);
+
+      int y = 0;
+      for( ; y < existingCollection.getObjects().size() & similar; y++ ){
+        Object object = existingCollection.getObjects().get(y);
+        if (object.key.equals(smallObject.getKey()) &&
+            object.bucketName.equals(smallObject.getBucketName()) &&
+            object.versionNumber.equals(smallObject.getVersionNumber())){
+          break;
+
+        }
+      }
+
+      if ( y == existingCollection.getObjects().size()){
+        similar = false;
+      }
     }
 
-    private Collection createCollection(String key,
-                                        String bucketName,
-                                        Timestamp timestamp,
-                                        Integer bucketId,
-                                        List<SmallObject> smallObjects) throws RepoException {
 
-        Integer versionNumber;
+    return similar;
 
-        Collection collection;
+  }
 
-        boolean rollback = false;
+  private Collection createCollection(String key,
+                                      String bucketName,
+                                      Timestamp timestamp,
+                                      Integer bucketId,
+                                      List<SmallObject> smallObjects) throws RepoException {
 
-        try {
+    Integer versionNumber;
+    Collection collection;
+    boolean rollback = false;
 
-            try {
-                versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, key);   // change to support collections
-            } catch (SQLException e) {
-                throw new RepoException(e);
-            }
+    try {
 
-            collection = new Collection(null, key, timestamp, bucketId, bucketName, versionNumber, Collection.Status.USED);
+      try {
+        versionNumber = sqlService.getNextAvailableVersionNumber(bucketName, key);   // change to support collections
+      } catch (SQLException e) {
+        throw new RepoException(e);
+      }
 
-            rollback = true;
+      collection = new Collection(null, key, timestamp, bucketId, bucketName, versionNumber, Collection.Status.USED);
 
-            // add a record to the DB
-            Integer collId = sqlService.insertCollection(collection, smallObjects);
-            if (collId == -1) {
-                throw new RepoException("Error saving content to database");
-            }
+      rollback = true;
 
-            for (SmallObject smallObject : smallObjects){
+      // add a record to the DB
+      Integer collId = sqlService.insertCollection(collection, smallObjects);
+      if (collId == -1) {
+        throw new RepoException("Error saving content to database");
+      }
 
-                if (sqlService.insertCollectionObjects(collId, smallObject.getKey(), smallObject.getBucketName(), smallObject.getVersionNumber()) == 0){
-                    throw new RepoException(RepoException.Type.ObjectCollectionNotFound);
-                }
+      for (SmallObject smallObject : smallObjects){
 
-            }
-
-            sqlService.transactionCommit();
-            rollback = false;
-
-        } catch (SQLException e) {
-            throw new RepoException(e);
-        } finally {
-
-            if (rollback) {
-                sqlRollback("collection " + bucketName + ", " + key);
-            }
-
-            sqlReleaseConnection();
+        if (sqlService.insertCollectionObjects(collId, smallObject.getKey(), smallObject.getBucketName(), smallObject.getVersionNumber()) == 0){
+          throw new RepoException(RepoException.Type.ObjectCollectionNotFound);
         }
 
-        return collection;
+      }
 
+      sqlService.transactionCommit();
+      rollback = false;
 
+    } catch (SQLException e) {
+      throw new RepoException(e);
+    } finally {
+
+      if (rollback) {
+        sqlRollback("collection " + bucketName + ", " + key);
+      }
+      sqlReleaseConnection();
     }
+
+    return collection;
+
+  }
 
 }

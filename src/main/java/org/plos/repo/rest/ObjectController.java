@@ -101,10 +101,10 @@ public class ObjectController {
   @GET
   @ApiOperation(value = "List objects", response = Object.class, responseContainer = "List")
   @ApiResponses(value = {
-    @ApiResponse(code = HttpStatus.SC_OK, message = "Success"),
-    @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "Bucket not found"),
-    @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "Bad request (see message)"),
-    @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
+      @ApiResponse(code = HttpStatus.SC_OK, message = "Success"),
+      @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "Bucket not found"),
+      @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "Bad request (see message)"),
+      @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
   })
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response listObjects(
@@ -243,10 +243,10 @@ public class ObjectController {
   @Path("/{bucketName}")
   @ApiOperation(value = "Delete an object")
   @ApiResponses(value = {
-    @ApiResponse(code = HttpStatus.SC_OK, message = "Object successfully deleted"),
-    @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "The object was not found"),
-    @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The object was unable to be deleted (see response text for more details)"),
-    @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
+      @ApiResponse(code = HttpStatus.SC_OK, message = "Object successfully deleted"),
+      @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "The object was not found"),
+      @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The object was unable to be deleted (see response text for more details)"),
+      @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
   })
   public Response delete(
       @ApiParam(required = true) @PathParam("bucketName") String bucketName,
@@ -269,24 +269,24 @@ public class ObjectController {
       notes = "Set the create field to 'new' object if the object you are inserting is not already in the repo. If you want to create a new version of an existing object set create to 'version'. Setting create to 'auto' automagically determines if the object should be new or versioned. However 'auto' should only be used by the ambra-file-store. In addition you may optionally specify a timestamp for object creation time. This feature is for migrating from an existing content store. Note that the timestamp must conform to this format: yyyy-[m]m-[d]d hh:mm:ss[.f...]")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   @ApiResponses(value = {
-    @ApiResponse(code = HttpStatus.SC_CREATED, message = "Object successfully created"),
-    @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "The object not found"),
-    @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The object was unable to be created (see response text for more details)"),
-    @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
+      @ApiResponse(code = HttpStatus.SC_CREATED, message = "Object successfully created"),
+      @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "The object not found"),
+      @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The object was unable to be created (see response text for more details)"),
+      @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
   })
   public Response createOrUpdate(
       @ApiParam(required = true) @FormDataParam("key") String key,
       @ApiParam(required = true) @FormDataParam("bucketName") String bucketName,
       @ApiParam(value = "MIME type") @FormDataParam("contentType") String contentType,
       @ApiParam(value = "name of file when downloaded", required = false)
-        @FormDataParam("downloadName") String downloadName,
+      @FormDataParam("downloadName") String downloadName,
       @ApiParam(value = "creation method", allowableValues = "new,version,auto", defaultValue = "new",
-required = true)
-        @FormDataParam("create") String create,
+          required = true)
+      @FormDataParam("create") String create,
       @ApiParam(value = "creation time", required = false)
-        @FormDataParam("timestamp") String timestampString,
+      @FormDataParam("timestamp") String timestampString,
       @ApiParam(required = false)
-        @FormDataParam("file") InputStream uploadedInputStream
+      @FormDataParam("file") InputStream uploadedInputStream
   ) {
 
     try {

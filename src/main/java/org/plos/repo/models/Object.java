@@ -23,6 +23,7 @@ import com.google.common.collect.Maps;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.EnumSet;
 import java.util.List;
@@ -86,6 +87,21 @@ public class Object {
     this.bucketName = bucketName;
     this.versionNumber = versionNumber;
     this.status = status;
+  }
+
+  public Boolean areSimilar(Object object){
+
+      // TODO : verify fields
+
+      return this.key.equals(object.key) &&
+              this.bucketName.equals(object.bucketName) &&
+              this.contentType.equals(object.contentType) &&
+              this.downloadName.equals(object.downloadName) &&
+              this.checksum.equals(object.checksum) &&
+              this.status.equals(object.status);
+
+
+
   }
 
 }
