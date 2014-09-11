@@ -21,3 +21,23 @@ CREATE TABLE IF NOT EXISTS objects (
   UNIQUE KEY keySum (bucketId, objkey, versionNumber),
   PRIMARY KEY (id)
 );
+
+CREATE TABLE IF NOT EXISTS collections (
+  id INTEGER NOT NULL AUTO_INCREMENT,
+  bucketId INTEGER NOT NULL,
+  collkey VARCHAR (255) NOT NULL,
+  timestamp timestamp NOT NULL,
+  versionNumber INTEGER NOT NULL,
+  status TINYINT DEFAULT 0 NOT NULL,
+  UNIQUE KEY keySum (bucketId, collkey, versionNumber),
+  PRIMARY KEY (id),
+  FOREIGN KEY (bucketId) REFERENCES buckets(bucketId)
+);
+
+CREATE TABLE IF NOT EXISTS collectionObject (
+  collectionId INTEGER REFERENCES collections.id,
+  objectId INTEGER REFERENCES objects.id,
+  UNIQUE KEY keySum (collectionId, objectId),
+  FOREIGN KEY (collectionId) REFERENCES collections(id),
+  FOREIGN KEY (objectId) REFERENCES objects(id)
+);

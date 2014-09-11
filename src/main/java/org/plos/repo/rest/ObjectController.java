@@ -83,6 +83,7 @@ public class ObjectController {
 
       case BucketNotFound:
       case ObjectNotFound:
+      case CollectionNotFound:
         status = Response.Status.NOT_FOUND;
         break;
 

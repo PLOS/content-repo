@@ -10,6 +10,8 @@ public class RepoException extends Exception {
     ServerError(0, "Server error"), // this message is not used
     ObjectNotFound(1, "Object not found"),
     BucketNotFound(2, "Bucket not found"),
+    CollectionNotFound(3, "Collection not found"),
+    ObjectCollectionNotFound(4, "One of the objects of the Collection was not found"),
 
     // user errors for entered parameters
     NoBucketEntered(10, "No bucket entered"),
@@ -22,13 +24,17 @@ public class RepoException extends Exception {
     InvalidLimit(17, "Invalid limit"),
     IllegalBucketName(18, "Bucket name contains illegal characters"),
     ObjectDataEmpty(19, "Object data must be non-empty"),
+    NoCollectionKeyEntered(20, "No collection key entered"),
+    NoCollectionVersionEntered(21, "No collection version entered"),
 
     // user errors for system state
     CantDeleteNonEmptyBucket(20, "Can not delete bucket since it contains objects"),
     CantCreateNewObjectWithUsedKey(21, "Can not create an object with a key that already exists"),
     CantCreateVersionWithNoOrig(22, "Can not version an object that does not exist"),
-    BucketAlreadyExists(23, "Bucket already exists");
-
+    BucketAlreadyExists(23, "Bucket already exists"),
+    CantCreateNewCollectionWithUsedKey(24, "Can not create a collection with a key that already exists"),
+    CantCreateCollectionVersionWithNoOrig(25, "Can not version a collection that does not exist"),
+    CantCreateCollectionWithNoObjects(26, "Can not create a collection that does not have objects");
 
     private final int value;
     private final String message;
