@@ -71,6 +71,15 @@ public abstract class BaseRepoService {
     }
   }
 
+
+  protected void validatePagination(Integer offset, Integer limit) throws RepoException {
+    if (offset < 0)
+      throw new RepoException(RepoException.Type.InvalidOffset);
+
+    if (limit <= 0 || limit > MAX_PAGE_SIZE)
+      throw new RepoException(RepoException.Type.InvalidLimit);
+  }
+
   public abstract Logger getLog();
 
 }

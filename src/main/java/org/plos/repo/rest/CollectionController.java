@@ -63,12 +63,13 @@ public class CollectionController {
     public Response listCollections(
             @ApiParam(required = false) @QueryParam("bucketName") String bucketName,
             @ApiParam(required = false) @QueryParam("offset") Integer offset,
-            @ApiParam(required = false) @QueryParam("limit") Integer limit ) {
+            @ApiParam(required = false) @QueryParam("limit") Integer limit,
+            @ApiParam(required = false) @DefaultValue("false") @QueryParam("includeDeleted") boolean includeDeleted) {
 
         try {
             return Response.status(Response.Status.OK).entity(
             new GenericEntity<List<Collection>>(
-                collectionRepoService.listCollections(bucketName, offset, limit)) {})
+                collectionRepoService.listCollections(bucketName, offset, limit, includeDeleted)) {})
                     .build();
 
         } catch (RepoException e) {
@@ -156,16 +157,6 @@ public class CollectionController {
             } catch (IllegalArgumentException e) {
                 throw new RepoException(RepoException.Type.InvalidCreationMethod);
             }
-
-        inputCollection.setTimestamp(new Timestamp(new Date().getTime()));
-
-        if (inputCollection.getTimestampString() != null) {
-            try {
-                inputCollection.setTimestamp(Timestamp.valueOf(inputCollection.getTimestampString()));
-            } catch (IllegalArgumentException e) {
-                throw new RepoException(RepoException.Type.CouldNotParseTimestamp);
-            }
-        }
 
         repoInfoService.incrementWriteCount();
 

@@ -180,11 +180,7 @@ public class RepoService extends BaseRepoService {
 
     try {
 
-      if (offset < 0)
-        throw new RepoException(RepoException.Type.InvalidOffset);
-
-      if (limit <= 0 || limit > MAX_PAGE_SIZE)
-        throw new RepoException(RepoException.Type.InvalidLimit);
+      validatePagination(offset, limit);
 
       sqlService.getConnection();
 
@@ -493,10 +489,7 @@ public class RepoService extends BaseRepoService {
 
       // since this method can be used some property of the meta data, the content or both together,
       //if any of the input properties are null, we should populate them with the data of the previous version of the object
-      // TODO : is it possible to update the content and just some properties of the metadata, and take the others from the previous versions ?
       // TODO: if the object is equals to the last version, do we need to update the timestamp?
-
-      rollback = true;
 
       newObject = new Object(null, object.key, null, timestamp, downloadName, contentType, null, null , object.bucketId, bucketName, null, Object.Status.USED);
 
@@ -509,14 +502,14 @@ public class RepoService extends BaseRepoService {
       if (downloadName == null)
         newObject.downloadName = object.downloadName;
 
-      uploadInfo = objectStore.uploadTempObject(uploadedInputStream);  // TODO : if the uploadedInputStream is null, beacuse they want just to update the metadata, this fails
-      uploadedInputStream.close();
       rollback = true;
-      if (uploadInfo.getSize() == 0) {
+      if (uploadedInputStream == null) {
       // handle metadata-only update, the content would be the same as the last version of the object
         newObject.checksum = object.checksum;
       } else {
         // determine if the new object should be added to the store or not
+        uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
+        uploadedInputStream.close();
         newObject.checksum = uploadInfo.getChecksum();
         newObject.size = uploadInfo.getSize();
         if (Boolean.FALSE.equals(objectStore.objectExists(newObject))) {

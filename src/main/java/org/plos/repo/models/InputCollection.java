@@ -29,7 +29,6 @@ import java.util.List;
 public class InputCollection {
 
     private String key; // what the user specifies
-    @XmlJavaTypeAdapter(TimestampAdapter.class)
     private Timestamp timestamp;   // created time
     private String timestampString;   // created time
     private String bucketName;
@@ -38,12 +37,6 @@ public class InputCollection {
 
     // empty constructor required for JAXB mapping
     public InputCollection() {
-    }
-
-    public InputCollection(Integer id, String key, Timestamp timestamp, String bucketName, Integer versionNumber) {
-        this.key = key;
-        this.timestamp = timestamp;
-        this.bucketName = bucketName;
     }
 
     public String getKey() {

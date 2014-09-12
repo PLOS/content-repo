@@ -18,13 +18,8 @@
 package org.plos.repo;
 
 import org.hsqldb.jdbc.JDBCDataSource;
-import org.plos.repo.service.HsqlService;
-import org.plos.repo.service.InMemoryFileStoreService;
-import org.plos.repo.service.ObjectStore;
-import org.plos.repo.service.RepoInfoService;
-import org.plos.repo.service.RepoService;
-import org.plos.repo.service.ScriptRunner;
-import org.plos.repo.service.SqlService;
+import org.plos.repo.models.InputCollectionValidator;
+import org.plos.repo.service.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -44,6 +39,12 @@ public class TestSpringConfig {
   public RepoService repoService() {
     return new RepoService();
   }
+
+  @Bean
+  public CollectionRepoService collectionRepoService() { return new CollectionRepoService();}
+
+  @Bean
+  public InputCollectionValidator inputCollectionValidator(){ return new InputCollectionValidator(); }
 
   @Bean
   public ObjectStore objectStore() throws Exception {

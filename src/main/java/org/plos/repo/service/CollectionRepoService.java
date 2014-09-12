@@ -22,8 +22,10 @@ import org.plos.repo.models.Object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -32,6 +34,9 @@ import java.util.List;
 public class CollectionRepoService extends BaseRepoService {
 
   private static final Logger log = LoggerFactory.getLogger(CollectionRepoService.class);
+
+  @Inject
+  private InputCollectionValidator inputCollectionValidator;
 
   /**
    * Returns a list of collections for the given bucket name <code>bucketName</code>. In case pagination
@@ -42,7 +47,7 @@ public class CollectionRepoService extends BaseRepoService {
    * @return a list of {@link org.plos.repo.models.Collection}
    * @throws org.plos.repo.service.RepoException
    */
-  public List<Collection> listCollections(String bucketName, Integer offset, Integer limit) throws RepoException {
+  public List<Collection> listCollections(String bucketName, Integer offset, Integer limit, Boolean includeDeleted) throws RepoException {
 
     if (offset == null)
       offset = 0;
@@ -55,9 +60,10 @@ public class CollectionRepoService extends BaseRepoService {
 
       sqlService.getConnection();
 
-      validateBucketData(bucketName, sqlService);
+      if (bucketName != null && sqlService.getBucket(bucketName) == null)
+        throw new RepoException(RepoException.Type.BucketNotFound);
 
-      return sqlService.listCollections(bucketName, offset, limit);
+      return sqlService.listCollections(bucketName, offset, limit, includeDeleted);
 
     } catch (SQLException e) {
       throw new RepoException(e);
@@ -166,37 +172,20 @@ public class CollectionRepoService extends BaseRepoService {
     }
   }
 
-  protected void validatePagination(Integer offset, Integer limit) throws RepoException {
-    if (offset < 0)
-      throw new RepoException(RepoException.Type.InvalidOffset);
-
-    if (limit <= 0 || limit > MAX_PAGE_SIZE)
-      throw new RepoException(RepoException.Type.InvalidLimit);
-  }
-
-  protected void validateBucketData(String bucketName, SqlService sqlService) throws RepoException, SQLException{
-    if (bucketName != null && sqlService.getBucket(bucketName) == null)
-      throw new RepoException(RepoException.Type.BucketNotFound);
-  }
-
   public Collection createCollection(CreateMethod method, InputCollection inputCollection) throws RepoException {
 
-    String key = inputCollection.getKey();
-    String bucketName = inputCollection.getBucketName();
-    Timestamp timestamp = inputCollection.getTimestamp();
-    List<InputObject> inputObjects = inputCollection.getObjects();
+    inputCollectionValidator.validate(inputCollection);
 
     Collection existingCollection;
 
+    // set the timestamp if it does not exists
+    if (inputCollection.getTimestamp() == null){
+      inputCollection.setTimestamp(new Timestamp(new Date().getTime()));
+    }
 
-    if (key == null)
-      throw new RepoException(RepoException.Type.NoKeyEntered);
-
-    if (bucketName == null)
-      throw new RepoException(RepoException.Type.NoBucketEntered);
-
+    // fetch the collection if it already exists
     try {
-      existingCollection = getCollection(bucketName, key, null);
+      existingCollection = getCollection(inputCollection.getBucketName(), inputCollection.getKey(), null);
     } catch (RepoException e) {
       if (e.getType() == RepoException.Type.CollectionNotFound)
         existingCollection = null;
@@ -204,38 +193,30 @@ public class CollectionRepoService extends BaseRepoService {
         throw e;
     }
 
-      verifyObjects(inputObjects);
+    switch (method) {
 
-      switch (method) {
+      case NEW:
+        if (existingCollection != null)
+          throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
+        return createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), inputCollection.getTimestamp(), inputCollection.getObjects());
 
-        case NEW:
-          if (existingCollection != null)
-            throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
-          return createNewCollection(key, bucketName, timestamp, inputObjects);
+      case VERSION:
+        if (existingCollection == null)
+          throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
+        return updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), inputCollection.getTimestamp(), existingCollection, inputCollection.getObjects());
 
-        case VERSION:
-          if (existingCollection == null)
-            throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
-          return updateCollection(key, bucketName, timestamp, existingCollection, inputObjects);
+      case AUTO:
+        if (existingCollection == null)
+          return createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), inputCollection.getTimestamp(), inputCollection.getObjects());
+        else
+          return updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), inputCollection.getTimestamp(), existingCollection, inputCollection.getObjects());
 
-        case AUTO:
-          if (existingCollection == null)
-            return createNewCollection(key, bucketName, timestamp, inputCollection.getObjects());
-          else
-            return updateCollection(key, bucketName, timestamp, existingCollection, inputObjects);
-
-        default:
-          throw new RepoException(RepoException.Type.InvalidCreationMethod);
-      }
-
+      default:
+        throw new RepoException(RepoException.Type.InvalidCreationMethod);
     }
 
-  private void verifyObjects(List<InputObject> objects) throws RepoException {
-
-    if (objects == null || objects.size() == 0 ){
-      throw new RepoException(RepoException.Type.CantCreateCollectionWithNoObjects);
-    }
   }
+
 
   private Collection createNewCollection(String key,
                                          String bucketName,
