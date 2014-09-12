@@ -17,20 +17,16 @@
 
 package org.plos.repo.models;
 
-import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
 
 /**
  * Collection of objects.
  */
 @XmlRootElement
-public class SmallCollection {
+public class InputCollection {
 
     private String key; // what the user specifies
     @XmlJavaTypeAdapter(TimestampAdapter.class)
@@ -38,13 +34,13 @@ public class SmallCollection {
     private String timestampString;   // created time
     private String bucketName;
     private String create;
-    private List<SmallObject> objects;
+    private List<InputObject> objects;
 
     // empty constructor required for JAXB mapping
-    public SmallCollection() {
+    public InputCollection() {
     }
 
-    public SmallCollection(Integer id, String key, Timestamp timestamp, String bucketName, Integer versionNumber) {
+    public InputCollection(Integer id, String key, Timestamp timestamp, String bucketName, Integer versionNumber) {
         this.key = key;
         this.timestamp = timestamp;
         this.bucketName = bucketName;
@@ -66,7 +62,7 @@ public class SmallCollection {
         return create;
     }
 
-    public List<SmallObject> getObjects() {
+    public List<InputObject> getObjects() {
         return objects;
     }
 
@@ -86,7 +82,7 @@ public class SmallCollection {
         this.create = create;
     }
 
-    public void setObjects(List<SmallObject> objects) {
+    public void setObjects(List<InputObject> objects) {
         this.objects = objects;
     }
 

@@ -179,12 +179,12 @@ public class CollectionRepoService extends BaseRepoService {
       throw new RepoException(RepoException.Type.BucketNotFound);
   }
 
-  public Collection createCollection(CreateMethod method, SmallCollection smallCollection) throws RepoException {
+  public Collection createCollection(CreateMethod method, InputCollection inputCollection) throws RepoException {
 
-    String key = smallCollection.getKey();
-    String bucketName = smallCollection.getBucketName();
-    Timestamp timestamp = smallCollection.getTimestamp();
-    List<SmallObject> smallObjects = smallCollection.getObjects();
+    String key = inputCollection.getKey();
+    String bucketName = inputCollection.getBucketName();
+    Timestamp timestamp = inputCollection.getTimestamp();
+    List<InputObject> inputObjects = inputCollection.getObjects();
 
     Collection existingCollection;
 
@@ -204,25 +204,25 @@ public class CollectionRepoService extends BaseRepoService {
         throw e;
     }
 
-      verifyObjects(smallObjects);
+      verifyObjects(inputObjects);
 
       switch (method) {
 
         case NEW:
           if (existingCollection != null)
             throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
-          return createNewCollection(key, bucketName, timestamp, smallObjects);
+          return createNewCollection(key, bucketName, timestamp, inputObjects);
 
         case VERSION:
           if (existingCollection == null)
             throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
-          return updateCollection(key, bucketName, timestamp, existingCollection, smallObjects);
+          return updateCollection(key, bucketName, timestamp, existingCollection, inputObjects);
 
         case AUTO:
           if (existingCollection == null)
-            return createNewCollection(key, bucketName, timestamp, smallCollection.getObjects());
+            return createNewCollection(key, bucketName, timestamp, inputCollection.getObjects());
           else
-            return updateCollection(key, bucketName, timestamp, existingCollection, smallObjects);
+            return updateCollection(key, bucketName, timestamp, existingCollection, inputObjects);
 
         default:
           throw new RepoException(RepoException.Type.InvalidCreationMethod);
@@ -230,7 +230,7 @@ public class CollectionRepoService extends BaseRepoService {
 
     }
 
-  private void verifyObjects(List<SmallObject> objects) throws RepoException {
+  private void verifyObjects(List<InputObject> objects) throws RepoException {
 
     if (objects == null || objects.size() == 0 ){
       throw new RepoException(RepoException.Type.CantCreateCollectionWithNoObjects);
@@ -240,7 +240,7 @@ public class CollectionRepoService extends BaseRepoService {
   private Collection createNewCollection(String key,
                                          String bucketName,
                                          Timestamp timestamp,
-                                         List<SmallObject> objects) throws RepoException {
+                                         List<InputObject> objects) throws RepoException {
 
     Bucket bucket = null;
 
@@ -263,7 +263,7 @@ public class CollectionRepoService extends BaseRepoService {
                                       String bucketName,
                                       Timestamp timestamp,
                                       Collection existingCollection,
-                                      List<SmallObject> objects) throws RepoException {
+                                      List<InputObject> objects) throws RepoException {
 
     if (areCollectionsSimilar(key, bucketName, objects, existingCollection)){
       return existingCollection;
@@ -275,7 +275,7 @@ public class CollectionRepoService extends BaseRepoService {
 
   private Boolean areCollectionsSimilar(String key,
                                         String bucketName,
-                                        List<SmallObject> objects,
+                                        List<InputObject> objects,
                                         Collection existingCollection){
 
     Boolean similar = existingCollection.getKey().equals(key) &&
@@ -287,14 +287,14 @@ public class CollectionRepoService extends BaseRepoService {
 
     for ( ; i <  objects.size() & similar ; i++){
 
-      SmallObject smallObject = objects.get(i);
+      InputObject inputObject = objects.get(i);
 
       int y = 0;
       for( ; y < existingCollection.getObjects().size(); y++ ){
         Object object = existingCollection.getObjects().get(y);
-        if (object.key.equals(smallObject.getKey()) &&
-            object.bucketName.equals(smallObject.getBucketName()) &&
-            object.versionNumber.equals(smallObject.getVersionNumber())){
+        if (object.key.equals(inputObject.getKey()) &&
+            object.bucketName.equals(inputObject.getBucketName()) &&
+            object.versionNumber.equals(inputObject.getVersionNumber())){
           break;
 
         }
@@ -314,7 +314,7 @@ public class CollectionRepoService extends BaseRepoService {
                                       String bucketName,
                                       Timestamp timestamp,
                                       Integer bucketId,
-                                      List<SmallObject> smallObjects) throws RepoException {
+                                      List<InputObject> inputObjects) throws RepoException {
 
     Integer versionNumber;
     Collection collection;
@@ -335,14 +335,14 @@ public class CollectionRepoService extends BaseRepoService {
       rollback = true;
 
       // add a record to the DB
-      Integer collId = sqlService.insertCollection(collection, smallObjects);
+      Integer collId = sqlService.insertCollection(collection, inputObjects);
       if (collId == -1) {
         throw new RepoException("Error saving content to database");
       }
 
-      for (SmallObject smallObject : smallObjects){
+      for (InputObject inputObject : inputObjects){
 
-        if (sqlService.insertCollectionObjects(collId, smallObject.getKey(), smallObject.getBucketName(), smallObject.getVersionNumber()) == 0){
+        if (sqlService.insertCollectionObjects(collId, inputObject.getKey(), inputObject.getBucketName(), inputObject.getVersionNumber()) == 0){
           throw new RepoException(RepoException.Type.ObjectCollectionNotFound);
         }
 

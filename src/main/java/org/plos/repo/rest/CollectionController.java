@@ -20,7 +20,7 @@ package org.plos.repo.rest;
 import com.wordnik.swagger.annotations.*;
 import org.apache.http.HttpStatus;
 import org.plos.repo.models.Collection;
-import org.plos.repo.models.SmallCollection;
+import org.plos.repo.models.InputCollection;
 import org.plos.repo.service.CollectionRepoService;
 import org.plos.repo.service.RepoException;
 import org.plos.repo.service.RepoInfoService;
@@ -142,26 +142,26 @@ public class CollectionController {
             @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The collection was unable to be created (see response text for more details)"),
             @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
     })
-    public Response createOrUpdateCollection(@ApiParam("collection") SmallCollection smallCollection){
+    public Response createOrUpdateCollection(@ApiParam("collection") InputCollection inputCollection){
 
         try {
 
             RepoService.CreateMethod method;
 
-            if (smallCollection.getCreate() == null)
+            if (inputCollection.getCreate() == null)
                 throw new RepoException(RepoException.Type.NoCreationMethodEntered);
 
             try {
-                method = RepoService.CreateMethod.valueOf(smallCollection.getCreate().toUpperCase());
+                method = RepoService.CreateMethod.valueOf(inputCollection.getCreate().toUpperCase());
             } catch (IllegalArgumentException e) {
                 throw new RepoException(RepoException.Type.InvalidCreationMethod);
             }
 
-        smallCollection.setTimestamp(new Timestamp(new Date().getTime()));
+        inputCollection.setTimestamp(new Timestamp(new Date().getTime()));
 
-        if (smallCollection.getTimestampString() != null) {
+        if (inputCollection.getTimestampString() != null) {
             try {
-                smallCollection.setTimestamp(Timestamp.valueOf(smallCollection.getTimestampString()));
+                inputCollection.setTimestamp(Timestamp.valueOf(inputCollection.getTimestampString()));
             } catch (IllegalArgumentException e) {
                 throw new RepoException(RepoException.Type.CouldNotParseTimestamp);
             }
@@ -169,7 +169,7 @@ public class CollectionController {
 
         repoInfoService.incrementWriteCount();
 
-        return Response.status(Response.Status.CREATED).entity(collectionRepoService.createCollection(method, smallCollection)).build();
+        return Response.status(Response.Status.CREATED).entity(collectionRepoService.createCollection(method, inputCollection)).build();
 
         } catch (RepoException e) {
             return ObjectController.handleError(e);

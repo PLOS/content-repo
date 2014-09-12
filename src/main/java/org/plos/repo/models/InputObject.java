@@ -20,17 +20,17 @@ package org.plos.repo.models;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class SmallObject {
+public class InputObject {
 
   private String key; // what the user specifies
   private String bucketName;
   private Integer versionNumber;
 
   // empty constructor required for JAXB mapping
-  public SmallObject() {
+  public InputObject() {
   }
 
-  public SmallObject(String key, String bucketName, Integer versionNumber) {
+  public InputObject(String key, String bucketName, Integer versionNumber) {
     this.key = key;
     this.bucketName = bucketName;
     this.versionNumber = versionNumber;

@@ -20,7 +20,7 @@ package org.plos.repo.service;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Collection;
 import org.plos.repo.models.Object;
-import org.plos.repo.models.SmallObject;
+import org.plos.repo.models.InputObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
@@ -715,7 +715,7 @@ public abstract class SqlService {
     }
   }
 
-    public int insertCollection(Collection collection, List<SmallObject> smallObjects) throws SQLException {
+    public int insertCollection(Collection collection, List<InputObject> inputObjects) throws SQLException {
 
         PreparedStatement p = null;
         ResultSet keys = null;
