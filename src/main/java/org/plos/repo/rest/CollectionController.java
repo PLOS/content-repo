@@ -20,8 +20,8 @@ package org.plos.repo.rest;
 import com.wordnik.swagger.annotations.*;
 import org.apache.http.HttpStatus;
 import org.plos.repo.models.Collection;
-import org.plos.repo.models.RepoError;
 import org.plos.repo.models.SmallCollection;
+import org.plos.repo.service.CollectionRepoService;
 import org.plos.repo.service.RepoException;
 import org.plos.repo.service.RepoInfoService;
 import org.plos.repo.service.RepoService;
@@ -45,7 +45,7 @@ public class CollectionController {
     private static final Logger log = LoggerFactory.getLogger(CollectionController.class);
 
     @Inject
-    private RepoService repoService;
+    private CollectionRepoService collectionRepoService;
 
     @Inject
     private RepoInfoService repoInfoService;
@@ -68,7 +68,7 @@ public class CollectionController {
         try {
             return Response.status(Response.Status.OK).entity(
             new GenericEntity<List<Collection>>(
-                    repoService.listCollections(bucketName, offset, limit)) {})
+                collectionRepoService.listCollections(bucketName, offset, limit)) {})
                     .build();
 
         } catch (RepoException e) {
@@ -95,9 +95,9 @@ public class CollectionController {
 
         try {
 
-            Collection collection = repoService.getCollection(bucketName, key, version);
+            Collection collection = collectionRepoService.getCollection(bucketName, key, version);
 
-            collection.setVersions(repoService.getCollectionVersions(collection));
+            collection.setVersions(collectionRepoService.getCollectionVersions(collection));
             return Response.status(Response.Status.OK)
                     .lastModified(collection.getTimestamp())
                     .entity(collection).build();
@@ -123,7 +123,7 @@ public class CollectionController {
             @ApiParam(required = true) @QueryParam("version") Integer version) {
 
         try {
-            repoService.deleteCollection(bucketName, key, version);
+            collectionRepoService.deleteCollection(bucketName, key, version);
             return Response.status(Response.Status.OK).build();
         } catch (RepoException e) {
             return ObjectController.handleError(e);
@@ -169,7 +169,7 @@ public class CollectionController {
 
         repoInfoService.incrementWriteCount();
 
-        return Response.status(Response.Status.CREATED).entity(repoService.createCollection(method, smallCollection)).build();
+        return Response.status(Response.Status.CREATED).entity(collectionRepoService.createCollection(method, smallCollection)).build();
 
         } catch (RepoException e) {
             return ObjectController.handleError(e);

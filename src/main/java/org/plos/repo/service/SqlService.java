@@ -181,14 +181,21 @@ public abstract class SqlService {
 
   }
 
-  public Integer getNextAvailableVersionNumber(String bucketName, String key) throws SQLException {
+  private Integer getNextAvailableVersionNumber(String bucketName, String key, String tableName, String keyName) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
 
-      p = connectionLocal.get().prepareStatement("SELECT versionNumber FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=? ORDER BY versionNumber DESC LIMIT 1");
+      StringBuilder query = new StringBuilder();
+      query.append("SELECT versionNumber FROM  ");
+      query.append(tableName);
+      query.append(" a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND ");
+      query.append(keyName);
+      query.append("=? ORDER BY versionNumber DESC LIMIT 1");
+
+      p = connectionLocal.get().prepareStatement(query.toString());
 
       p.setString(1, bucketName);
       p.setString(2, key);
@@ -204,6 +211,14 @@ public abstract class SqlService {
       closeDbStuff(result, p);
     }
 
+  }
+
+  public Integer getCollectionNextAvailableVersion(String bucketName, String key) throws SQLException{
+    return getNextAvailableVersionNumber(bucketName, key, "collections", "collKey");
+  }
+
+  public Integer getObjectNextAvailableVersion(String bucketName, String key) throws SQLException{
+    return getNextAvailableVersionNumber(bucketName, key, "objects", "objKey");
   }
 
   public Object getObject(String bucketName, String key) throws SQLException {
