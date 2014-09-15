@@ -43,7 +43,7 @@ public class BucketLockTest extends RepoBaseSpringTest {
     objStoreField.setAccessible(true);
     objStoreField.set(repoService, spyObjectStore);
 
-    Field sqlServiceField = RepoService.class.getDeclaredField("sqlService");
+    Field sqlServiceField = BaseRepoService.class.getDeclaredField("sqlService");
     sqlServiceField.setAccessible(true);
     sqlServiceField.set(repoService, spySqlService);
 

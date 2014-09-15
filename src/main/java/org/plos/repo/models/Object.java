@@ -93,14 +93,36 @@ public class Object {
 
       // TODO : verify fields
 
-      return this.key.equals(object.key) &&
-              this.bucketName.equals(object.bucketName) &&
-              this.contentType.equals(object.contentType) &&
-              this.downloadName.equals(object.downloadName) &&
-              this.checksum.equals(object.checksum) &&
-              this.status.equals(object.status);
+      Boolean equals = this.key.equals(object.key) &&
+                        this.bucketName.equals(object.bucketName) &&
+                        this.status.equals(object.status);
 
 
+    if (equals) {
+      if ((this.contentType != null && object.contentType == null) && (this.contentType == null && object.contentType != null)) {
+        equals = equals && this.contentType.equals(object.contentType);
+      } else {
+        equals = false;
+      }
+    }
+
+    if (equals) {
+      if ((this.downloadName != null && object.downloadName == null) && (this.downloadName == null && object.downloadName != null)) {
+        equals = equals && this.downloadName.equals(object.downloadName);
+      } else {
+        return false;
+      }
+    }
+
+    if (equals){
+      if ((this.checksum != null && object.checksum == null) && (this.checksum == null && object.checksum != null)) {
+        equals = equals && this.checksum.equals(object.checksum);
+      } else {
+        return false;
+      }
+    }
+
+    return equals;
 
   }
 

@@ -25,10 +25,7 @@ import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
-import org.plos.repo.service.ObjectStore;
-import org.plos.repo.service.RepoException;
-import org.plos.repo.service.RepoService;
-import org.plos.repo.service.SqlService;
+import org.plos.repo.service.*;
 
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
@@ -49,7 +46,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     objStoreField.setAccessible(true);
     objStoreField.set(repoService, objectStore);
 
-    Field sqlServiceField = RepoService.class.getDeclaredField("sqlService");
+    Field sqlServiceField = BaseRepoService.class.getDeclaredField("sqlService");
     sqlServiceField.setAccessible(true);
     sqlServiceField.set(repoService, sqlService);
 
@@ -155,7 +152,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     BDDMockito.willReturn(false).given(spySqlService).insertBucket(Mockito.any(Bucket.class));
 
-    Field sqlServiceField = RepoService.class.getDeclaredField("sqlService");
+    Field sqlServiceField = BaseRepoService.class.getDeclaredField("sqlService");
     sqlServiceField.setAccessible(true);
     sqlServiceField.set(repoService, spySqlService);
 
@@ -284,7 +281,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     BDDMockito.willReturn(0).given(spySqlService).insertObject(Mockito.any(Object.class));
 
-    Field sqlServiceField = RepoService.class.getDeclaredField("sqlService");
+    Field sqlServiceField = BaseRepoService.class.getDeclaredField("sqlService");
     sqlServiceField.setAccessible(true);
     sqlServiceField.set(repoService, spySqlService);
 
@@ -386,7 +383,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     BDDMockito.willReturn(0).given(spySqlService).insertObject(Mockito.any(Object.class));
 
-    Field sqlServiceField = RepoService.class.getDeclaredField("sqlService");
+    Field sqlServiceField = BaseRepoService.class.getDeclaredField("sqlService");
     sqlServiceField.setAccessible(true);
     sqlServiceField.set(repoService, spySqlService);
 
@@ -444,7 +441,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     );
 
     Assert.assertTrue(IOUtils.toString(repoService.getObjectInputStream(
-        repoService.getObject(bucket1.bucketName, "key1", 1))).equals("data1")
+        repoService.getObject(bucket1.bucketName, "key1", 1))).equals("")
     );
 
     Assert.assertTrue(repoService.getObjectContentType(objFromDb).equals("new content type"));

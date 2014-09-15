@@ -162,11 +162,14 @@ public abstract class SqlService {
 
     try {
 
-      p = connectionLocal.get().prepareStatement("DELETE FROM collectionObjects WHERE collectionId=?");
+      p = connectionLocal.get().prepareStatement("DELETE FROM collectionObject WHERE collectionId=?");
       p.setInt(1, collection.getId());
       p.executeUpdate();
 
-      return p.executeUpdate("DELETE FROM collections WHERE id=?");
+      p = connectionLocal.get().prepareStatement("DELETE FROM collections WHERE id=?");
+      p.setInt(1, collection.getId());
+      return p.executeUpdate();
+
 
     } finally {
       closeDbStuff(null, p);
