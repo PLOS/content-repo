@@ -20,7 +20,7 @@ package org.plos.repo;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import org.apache.commons.io.IOUtils;
+import junit.framework.Assert;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,14 +32,11 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.charset.Charset;
-import java.sql.Timestamp;
 import java.util.Arrays;
+import java.util.Iterator;
 
+import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 public class CollectionControllerTest extends RepoBaseJerseyTest {
 
@@ -291,85 +288,90 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   }
 
-/*
-
   @Test
-  public void createWithExistingKey() {
+  public void getAllCollections(){
 
+    // create needed data
     target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
-
-    assertEquals(target("/objects").request()
-            .post(Entity.entity(new FormDataMultiPart()
+    target("/objects").request()
+        .post(Entity.entity(new FormDataMultiPart()
                     .field("bucketName", bucketName).field("create", "new")
                     .field("key", "object1").field("contentType", "text/plain")
                     .field("timestamp", "2012-09-08 11:00:00")
                     .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA
-            )).getStatus(),
+                MediaType.MULTIPART_FORM_DATA)
+        );
+
+    InputCollection inputCollection = new InputCollection();
+    inputCollection.setBucketName(bucketName);
+    inputCollection.setKey("collection1");
+    inputCollection.setCreate("new");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("object1",bucketName, 0)}));
+    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
+
+    assertEquals(target("/collections").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(collectionEntity).getStatus(),
         Response.Status.CREATED.getStatusCode()
     );
 
-    assertRepoError(target("/objects").request()
-            .accept(MediaType.APPLICATION_JSON_TYPE)
-            .post(Entity.entity(new FormDataMultiPart()
+    Response response = target("/collections").queryParam("bucketName", bucketName)
+                        .request(MediaType.APPLICATION_JSON_TYPE)
+                        .accept(MediaType.APPLICATION_JSON_TYPE)
+                        .get();
+    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+    assertEquals(response.getHeaderString("Content-Type"), "application/json");
+
+    JsonArray responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonArray();
+    assertNotNull(responseObj);
+    assertEquals(1, responseObj.size());
+    Iterator<JsonElement> iterator = responseObj.iterator();
+    JsonObject next = iterator.next().getAsJsonObject();
+
+    assertEquals("collection1", next.get("key").getAsString());
+
+
+  }
+
+ /* @Test
+  public void deleteCollection(){
+
+    // create needed data
+    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
+    target("/objects").request()
+        .post(Entity.entity(new FormDataMultiPart()
                     .field("bucketName", bucketName).field("create", "new")
                     .field("key", "object1").field("contentType", "text/plain")
+                    .field("timestamp", "2012-09-08 11:00:00")
                     .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA
-            )),
-        Response.Status.BAD_REQUEST, RepoException.Type.CantCreateNewObjectWithUsedKey
+                MediaType.MULTIPART_FORM_DATA)
+        );
+
+    InputCollection inputCollection = new InputCollection();
+    inputCollection.setBucketName(bucketName);
+    inputCollection.setKey("existingKey");
+    inputCollection.setCreate("new");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("object1",bucketName, 0)}));
+    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
+
+    assertEquals(target("/collections").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(collectionEntity).getStatus(),
+        Response.Status.CREATED.getStatusCode()
     );
-  }
 
-  @Test
-  public void createWithEmptyData() {
-
-    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
-
-    assertRepoError(target("/objects").request()
+    assertRepoError(target("/collections").request()
             .accept(MediaType.APPLICATION_JSON_TYPE)
-            .post(Entity.entity(new FormDataMultiPart()
-                    .field("bucketName", bucketName).field("create", "new")
-                    .field("key", "emptyFile").field("contentType", "text/plain")
-                    .field("file", "", MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA
-            )),
-        Response.Status.BAD_REQUEST, RepoException.Type.ObjectDataEmpty
+            .post(collectionEntity),
+        Response.Status.BAD_REQUEST,
+        RepoException.Type.CantCreateNewCollectionWithUsedKey
     );
-  }
 
-  @Test
-  public void createVersionWithoutOrig() {
+  }*/
 
-    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
+/*
 
-    assertRepoError(target("/objects").request()
-            .accept(MediaType.APPLICATION_JSON_TYPE)
-            .post(Entity.entity(new FormDataMultiPart()
-                    .field("bucketName", bucketName).field("create", "version")
-                    .field("key", "object3").field("contentType", "text/something")
-                    .field("downloadName", "object2.text")
-                    .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA)),
-        Response.Status.BAD_REQUEST, RepoException.Type.CantCreateVersionWithNoOrig);
 
-  }
-
-  @Test
-  public void createWithInvalidCreateMethod() {
-
-    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
-
-    assertRepoError(target("/objects").request()
-            .accept(MediaType.APPLICATION_JSON_TYPE)
-            .post(Entity.entity(new FormDataMultiPart()
-                    .field("bucketName", bucketName).field("create", "badrequest")
-                    .field("key", "object2").field("contentType", "text/something")
-                    .field("downloadName", "object2.text")
-                    .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA)),
-        Response.Status.BAD_REQUEST, RepoException.Type.InvalidCreationMethod);
-  }
 
   @Test
   public void invalidOffset() {
