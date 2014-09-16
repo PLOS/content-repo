@@ -29,7 +29,7 @@ public abstract class RepoBaseSpringTest {
     sqlService.getConnection();
 
     // remove collections from DB
-    List<org.plos.repo.models.Collection> collectionList = sqlService.listCollections(null,null,null,true);
+    List<org.plos.repo.models.Collection> collectionList = sqlService.listCollections(null,null,null,true,null);
 
     for (org.plos.repo.models.Collection collection : collectionList) {
 

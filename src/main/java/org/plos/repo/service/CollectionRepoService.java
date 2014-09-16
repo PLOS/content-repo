@@ -38,16 +38,19 @@ public class CollectionRepoService extends BaseRepoService {
   @Inject
   private InputCollectionValidator inputCollectionValidator;
 
+
   /**
    * Returns a list of collections for the given bucket name <code>bucketName</code>. In case pagination
    * parameters <code>offset</code> and <code>limit</code> are not present, it loads the default pagination data.
    * @param bucketName a single String representing the bucket name in where to look the collection
    * @param offset an Integer used to determine the offset of the response
    * @param limit an Integer used to determine the limit of the response
+   * @param includeDeleted a boolean value that defines whether to include deleted collections or not
+   * @param tag a single String used to filter the response when collection's tag matches the given param
    * @return a list of {@link org.plos.repo.models.Collection}
    * @throws org.plos.repo.service.RepoException
    */
-  public List<Collection> listCollections(String bucketName, Integer offset, Integer limit, Boolean includeDeleted) throws RepoException {
+  public List<Collection> listCollections(String bucketName, Integer offset, Integer limit, Boolean includeDeleted, String tag) throws RepoException {
 
     if (offset == null)
       offset = 0;
@@ -63,7 +66,7 @@ public class CollectionRepoService extends BaseRepoService {
       if (bucketName != null && sqlService.getBucket(bucketName) == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
 
-      return sqlService.listCollections(bucketName, offset, limit, includeDeleted);
+      return sqlService.listCollections(bucketName, offset, limit, includeDeleted, tag);
 
     } catch (SQLException e) {
       throw new RepoException(e);
@@ -74,15 +77,16 @@ public class CollectionRepoService extends BaseRepoService {
   }
 
   /**
-   * Returns a collection identiied by <code>bucketName</code> and <code>key</code>. If <code>version</code> is null, it returns the latest
+   * Returns a collection identified by <code>bucketName</code> and <code>key</code>. If <code>version</code> is null, it returns the latest
    * version available, if it is not, it returns the requested version.
    * @param bucketName a single String representing the bucket name in where to look the collection
    * @param key key a single String identifying the collection key
    * @param version an int value representing the version number of the collection
+   * @param tag a single String used to filter the response when collection's tag matches the given param
    * @return a collection {@link org.plos.repo.models.Collection} or null is the desired collection does not exists
    * @throws org.plos.repo.service.RepoException
    */
-  public Collection getCollection(String bucketName, String key, Integer version) throws RepoException {
+  public Collection getCollection(String bucketName, String key, Integer version, String tag) throws RepoException {
 
     Collection collection;
 
@@ -93,9 +97,9 @@ public class CollectionRepoService extends BaseRepoService {
         throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
 
       if (version == null)
-        collection = sqlService.getCollection(bucketName, key);
+        collection = sqlService.getCollection(bucketName, key, tag);
       else
-        collection = sqlService.getCollection(bucketName, key, version);
+        collection = sqlService.getCollection(bucketName, key, version, tag);
 
       if (collection == null)
         throw new RepoException(RepoException.Type.CollectionNotFound);
@@ -185,7 +189,7 @@ public class CollectionRepoService extends BaseRepoService {
 
     // fetch the collection if it already exists
     try {
-      existingCollection = getCollection(inputCollection.getBucketName(), inputCollection.getKey(), null);
+      existingCollection = getCollection(inputCollection.getBucketName(), inputCollection.getKey(), null, inputCollection.getTag());
     } catch (RepoException e) {
       if (e.getType() == RepoException.Type.CollectionNotFound)
         existingCollection = null;
@@ -198,18 +202,18 @@ public class CollectionRepoService extends BaseRepoService {
       case NEW:
         if (existingCollection != null)
           throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
-        return createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), inputCollection.getTimestamp(), inputCollection.getObjects());
+        return createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), inputCollection.getTimestamp(), inputCollection.getObjects(), inputCollection.getTag());
 
       case VERSION:
         if (existingCollection == null)
           throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
-        return updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), inputCollection.getTimestamp(), existingCollection, inputCollection.getObjects());
+        return updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), inputCollection.getTimestamp(), existingCollection, inputCollection.getObjects(), inputCollection.getTag());
 
       case AUTO:
         if (existingCollection == null)
-          return createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), inputCollection.getTimestamp(), inputCollection.getObjects());
+          return createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), inputCollection.getTimestamp(), inputCollection.getObjects(), inputCollection.getTag());
         else
-          return updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), inputCollection.getTimestamp(), existingCollection, inputCollection.getObjects());
+          return updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), inputCollection.getTimestamp(), existingCollection, inputCollection.getObjects(), inputCollection.getTag());
 
       default:
         throw new RepoException(RepoException.Type.InvalidCreationMethod);
@@ -221,7 +225,8 @@ public class CollectionRepoService extends BaseRepoService {
   private Collection createNewCollection(String key,
                                          String bucketName,
                                          Timestamp timestamp,
-                                         List<InputObject> objects) throws RepoException {
+                                         List<InputObject> objects,
+                                         String tag) throws RepoException {
 
     Bucket bucket = null;
 
@@ -237,32 +242,42 @@ public class CollectionRepoService extends BaseRepoService {
     if (bucket == null)
       throw new RepoException(RepoException.Type.BucketNotFound);
 
-    return createCollection(key, bucketName, timestamp, bucket.bucketId, objects);
+    return createCollection(key, bucketName, timestamp, bucket.bucketId, objects, tag);
   }
 
   private Collection updateCollection(String key,
                                       String bucketName,
                                       Timestamp timestamp,
                                       Collection existingCollection,
-                                      List<InputObject> objects) throws RepoException {
+                                      List<InputObject> objects,
+                                      String tag) throws RepoException {
 
-    if (areCollectionsSimilar(key, bucketName, objects, existingCollection)){
+    if (areCollectionsSimilar(key, bucketName, objects, tag, existingCollection)){
       return existingCollection;
     }
 
-    return createCollection(key, bucketName, timestamp, existingCollection.getBucketId(), objects);
+    return createCollection(key, bucketName, timestamp, existingCollection.getBucketId(), objects, tag);
 
   }
 
   private Boolean areCollectionsSimilar(String key,
                                         String bucketName,
                                         List<InputObject> objects,
-                                        Collection existingCollection){
+                                        String tag,
+                                        Collection existingCollection
+                                        ){
 
     Boolean similar = existingCollection.getKey().equals(key) &&
         existingCollection.getBucketName().equals(bucketName) &&
         existingCollection.getStatus().equals(Collection.Status.USED) &&
         objects.size() == existingCollection.getObjects().size();
+
+
+    if ( similar &&  ( existingCollection.getTag() != null && tag != null) ) {
+      similar = existingCollection.getTag().equals(tag);
+    } else {
+      similar = !( (existingCollection.getTag() != null && tag == null) || (existingCollection.getTag() == null && tag !=null)) ;
+    }
 
     int i = 0;
 
@@ -295,7 +310,8 @@ public class CollectionRepoService extends BaseRepoService {
                                       String bucketName,
                                       Timestamp timestamp,
                                       Integer bucketId,
-                                      List<InputObject> inputObjects) throws RepoException {
+                                      List<InputObject> inputObjects,
+                                      String tag) throws RepoException {
 
     Integer versionNumber;
     Collection collection;
@@ -311,7 +327,7 @@ public class CollectionRepoService extends BaseRepoService {
         throw new RepoException(e);
       }
 
-      collection = new Collection(null, key, timestamp, bucketId, bucketName, versionNumber, Collection.Status.USED);
+      collection = new Collection(null, key, timestamp, bucketId, bucketName, versionNumber, Collection.Status.USED, tag);
 
       rollback = true;
 
@@ -333,7 +349,7 @@ public class CollectionRepoService extends BaseRepoService {
 
       rollback = false;
 
-      return getCollection(bucketName, key, versionNumber);
+      return getCollection(bucketName, key, versionNumber, tag);
 
     } catch (SQLException e) {
       throw new RepoException(e);

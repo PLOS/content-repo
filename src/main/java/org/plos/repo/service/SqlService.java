@@ -51,7 +51,9 @@ public abstract class SqlService {
   }
 
   private static org.plos.repo.models.Collection mapCollectionRow(ResultSet rs) throws SQLException {
-    return new org.plos.repo.models.Collection(rs.getInt("ID"), rs.getString("COLLKEY"), rs.getTimestamp("TIMESTAMP"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"), Collection.STATUS_VALUES.get(rs.getInt("STATUS")));
+    return new org.plos.repo.models.Collection(rs.getInt("ID"), rs.getString("COLLKEY"), rs.getTimestamp("TIMESTAMP"),
+                                               rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"),
+                                                Collection.STATUS_VALUES.get(rs.getInt("STATUS")), rs.getString("TAG"));
   }
 
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
@@ -470,10 +472,11 @@ public abstract class SqlService {
    * @param offset an Integer used to determine the offset of the response
    * @param limit an Integer used to determine the limit of the response
    * @param includeDeleted a Boolean used to define is the response will include delete collections or not
+   * @param tag a single String used to filter the collections regarding the tag property
    * @return a list of {@link Collection}
    * @throws SQLException
    */
-  public List<Collection> listCollections(String bucketName, Integer offset, Integer limit, Boolean includeDeleted) throws SQLException {
+  public List<Collection> listCollections(String bucketName, Integer offset, Integer limit, Boolean includeDeleted, String tag) throws SQLException {
 
     List<Collection> collections = new ArrayList<>();
 
@@ -489,10 +492,13 @@ public abstract class SqlService {
         q.append(" AND status=?");
       if (bucketName != null)
         q.append(" AND bucketName=?");
+      if (tag != null)
+        q.append(" AND TAG=?");
       if (limit != null)
         q.append(" LIMIT " + limit);
       if (offset != null)
         q.append(" OFFSET " + offset);
+
       p = connectionLocal.get().prepareStatement(q.toString());
 
       int i = 1;
@@ -501,6 +507,9 @@ public abstract class SqlService {
 
       if (bucketName != null)
         p.setString(i++, bucketName);
+
+      if (tag != null)
+        p.setString(i++, tag);
 
       result = p.executeQuery();
 
@@ -562,21 +571,32 @@ public abstract class SqlService {
    * Fetch the lastest version of the collection defined by <code>bucketName</code> & <code>key</code>
    * @param bucketName a single String representing the bucket name where the collection is stored
    * @param key a single String identifying the collection key
+   * @param tag a single String used to filter the collections regarding the tag property. If tag = null, no filter is needed.
    * @return {@link org.plos.repo.models.Collection}
    * @throws SQLException
    */
-  public Collection getCollection(String bucketName, String key) throws SQLException {
+  public Collection getCollection(String bucketName, String key, String tag) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
 
-      p = connectionLocal.get().prepareStatement("SELECT * FROM collections a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND collKey=? AND status=? ORDER BY versionNumber DESC LIMIT 1");
+      StringBuilder query = new StringBuilder();
+      query.append("SELECT * FROM collections a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND collKey=? AND status=?");
+      if (tag != null){
+        query.append(" AND tag=?");
+      }
+      query.append(" ORDER BY versionNumber DESC LIMIT 1");
+
+      p = connectionLocal.get().prepareStatement(query.toString());
 
       p.setString(1, bucketName);
       p.setString(2, key);
       p.setInt(3, Object.Status.USED.getValue());
+      if (tag != null){
+        p.setString(4,tag);
+      }
 
       result = p.executeQuery();
 
@@ -606,21 +626,34 @@ public abstract class SqlService {
    * @param bucketName a single String representing the bucket name where the collection is stored
    * @param key a single String identifying the collection key
    * @param version an integer representing the collection version
+   * @param tag a single String used to filter the collections regarding the tag property. if tag = null, no filter is needed.
    * @return {@link org.plos.repo.models.Collection}
    * @throws SQLException
    */
-  public Collection getCollection(String bucketName, String key, Integer version) throws SQLException {
+  public Collection getCollection(String bucketName, String key, Integer version, String tag) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
 
-      p = connectionLocal.get().prepareStatement("SELECT * FROM collections a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND collKey=? AND versionNumber=?");
+
+
+      StringBuilder query = new StringBuilder();
+      query.append("SELECT * FROM collections a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND collKey=? AND versionNumber=?");
+      if (tag != null){
+        query.append(" AND tag=?");
+      }
+
+      p = connectionLocal.get().prepareStatement(query.toString());
 
       p.setString(1, bucketName);
       p.setString(2, key);
       p.setInt(3, version);
+
+      if (tag != null){
+          p.setString(4, tag);
+      }
 
       result = p.executeQuery();
 
@@ -751,7 +784,7 @@ public abstract class SqlService {
 
     try {
       p =
-          connectionLocal.get().prepareStatement("INSERT INTO collections (bucketId, collkey, timestamp, status, versionNumber) VALUES (?,?,?,?,?)",
+          connectionLocal.get().prepareStatement("INSERT INTO collections (bucketId, collkey, timestamp, status, versionNumber, tag) VALUES (?,?,?,?,?,?)",
               Statement.RETURN_GENERATED_KEYS);
 
       p.setInt(1, collection.getBucketId());
@@ -759,6 +792,7 @@ public abstract class SqlService {
       p.setTimestamp(3, collection.getTimestamp());
       p.setInt(4, collection.getStatus().getValue());
       p.setInt(5, collection.getVersionNumber());
+      p.setString(6, collection.getTag());
 
       p.executeUpdate();
       keys = p.getGeneratedKeys();

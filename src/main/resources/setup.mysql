@@ -26,6 +26,7 @@ collkey VARCHAR (255) NOT NULL,
 timestamp timestamp NOT NULL,
 versionNumber INTEGER NOT NULL,
 status TINYINT DEFAULT 0 NOT NULL,
+tag VARCHAR (200),
 UNIQUE KEY keySum (bucketId, collkey, versionNumber),
 PRIMARY KEY (id),
 FOREIGN KEY (bucketId) REFERENCES buckets(bucketId)

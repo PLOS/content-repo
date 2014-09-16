@@ -23,6 +23,7 @@ collkey VARCHAR (255) NOT NULL,
 timestamp timestamp NOT NULL,
 status TINYINT DEFAULT 0 NOT NULL,
 versionNumber INTEGER NOT NULL,
+tag VARCHAR (200),
 CONSTRAINT keySumColl UNIQUE (bucketId, collkey, versionNumber),
 FOREIGN KEY (bucketId) REFERENCES buckets(bucketId)
 );

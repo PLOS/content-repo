@@ -66,6 +66,7 @@ public class Collection {
   private String bucketName;
   private Integer versionNumber;
   private Status status;
+  private String tag;
 
   private List<Object> objects;
 
@@ -75,7 +76,7 @@ public class Collection {
   public Collection() {
   }
 
-  public Collection(Integer id, String key, Timestamp timestamp, Integer bucketId, String bucketName, Integer versionNumber, Status status) {
+  public Collection(Integer id, String key, Timestamp timestamp, Integer bucketId, String bucketName, Integer versionNumber, Status status, String tag) {
     this.id = id;
     this.key = key;
     this.timestamp = timestamp;
@@ -83,7 +84,7 @@ public class Collection {
     this.bucketName = bucketName;
     this.versionNumber = versionNumber;
     this.status = status;
-    this.versions = new ArrayList<Collection>();
+    this.tag = tag;
   }
 
   public Integer getId(){
@@ -161,5 +162,13 @@ public class Collection {
 
   public void setVersions(List<Collection> versions) {
     this.versions = versions;
+  }
+
+  public String getTag() {
+    return tag;
+  }
+
+  public void setTag(String tag) {
+    this.tag = tag;
   }
 }

@@ -28,62 +28,71 @@ import java.util.List;
 @XmlRootElement
 public class InputCollection {
 
-    private String key; // what the user specifies
-    private Timestamp timestamp;   // created time
-    private String timestampString;   // created time
-    private String bucketName;
-    private String create;
-    private List<InputObject> objects;
+  private String key; // what the user specifies
+  private Timestamp timestamp;   // created time
+  private String timestampString;   // created time
+  private String bucketName;
+  private String create;
+  private String tag;
+  private List<InputObject> objects;
 
-    // empty constructor required for JAXB mapping
-    public InputCollection() {
-    }
+  // empty constructor required for JAXB mapping
+  public InputCollection() {
+  }
 
-    public String getKey() {
-        return key;
-    }
+  public String getKey() {
+    return key;
+  }
 
-    public Timestamp getTimestamp() {
-        return timestamp;
-    }
+  public Timestamp getTimestamp() {
+    return timestamp;
+  }
 
-    public String getBucketName() {
-        return bucketName;
-    }
+  public String getBucketName() {
+    return bucketName;
+  }
 
-    public String getCreate() {
-        return create;
-    }
+  public String getCreate() {
+    return create;
+  }
 
-    public List<InputObject> getObjects() {
-        return objects;
-    }
+  public List<InputObject> getObjects() {
+    return objects;
+  }
 
-    public void setKey(String key) {
-        this.key = key;
-    }
+  public void setKey(String key) {
+    this.key = key;
+  }
 
-    public void setTimestamp(Timestamp timestamp) {
-        this.timestamp = timestamp;
-    }
+  public void setTimestamp(Timestamp timestamp) {
+    this.timestamp = timestamp;
+  }
 
-    public void setBucketName(String bucketName) {
-        this.bucketName = bucketName;
-    }
+  public void setBucketName(String bucketName) {
+    this.bucketName = bucketName;
+  }
 
-    public void setCreate(String create) {
-        this.create = create;
-    }
+  public void setCreate(String create) {
+    this.create = create;
+  }
 
-    public void setObjects(List<InputObject> objects) {
-        this.objects = objects;
-    }
+  public void setObjects(List<InputObject> objects) {
+    this.objects = objects;
+  }
 
-    public String getTimestampString() {
-        return timestampString;
-    }
+  public String getTimestampString() {
+    return timestampString;
+  }
 
-    public void setTimestampString(String timestampString) {
-        this.timestampString = timestampString;
-    }
+  public void setTimestampString(String timestampString) {
+    this.timestampString = timestampString;
+  }
+
+  public String getTag() {
+    return tag;
+  }
+
+  public void setTag(String tag) {
+    this.tag = tag;
+  }
 }

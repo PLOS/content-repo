@@ -64,12 +64,13 @@ public class CollectionController {
             @ApiParam(required = false) @QueryParam("bucketName") String bucketName,
             @ApiParam(required = false) @QueryParam("offset") Integer offset,
             @ApiParam(required = false) @QueryParam("limit") Integer limit,
-            @ApiParam(required = false) @DefaultValue("false") @QueryParam("includeDeleted") boolean includeDeleted) {
+            @ApiParam(required = false) @DefaultValue("false") @QueryParam("includeDeleted") boolean includeDeleted,
+            @ApiParam(required = false) @QueryParam("tag") String tag) {
 
         try {
             return Response.status(Response.Status.OK).entity(
             new GenericEntity<List<Collection>>(
-                collectionRepoService.listCollections(bucketName, offset, limit, includeDeleted)) {})
+                collectionRepoService.listCollections(bucketName, offset, limit, includeDeleted, tag)) {})
                     .build();
 
         } catch (RepoException e) {
@@ -92,11 +93,12 @@ public class CollectionController {
     public Response listCollections(
             @ApiParam(required = true) @PathParam("bucketName") String bucketName,
             @ApiParam(required = true) @QueryParam("key") String key,
-            @QueryParam("version") Integer version) {
+            @QueryParam("version") Integer version,
+            @QueryParam("tag") String tag) {
 
         try {
 
-            Collection collection = collectionRepoService.getCollection(bucketName, key, version);
+            Collection collection = collectionRepoService.getCollection(bucketName, key, version, tag);
 
             collection.setVersions(collectionRepoService.getCollectionVersions(collection));
             return Response.status(Response.Status.OK)
