@@ -276,7 +276,7 @@ public class CollectionRepoService extends BaseRepoService {
     if ( similar &&  ( existingCollection.getTag() != null && tag != null) ) {
       similar = existingCollection.getTag().equals(tag);
     } else {
-      similar = !( (existingCollection.getTag() != null && tag == null) || (existingCollection.getTag() == null && tag !=null)) ;
+      similar = similar && !( (existingCollection.getTag() != null && tag == null) || (existingCollection.getTag() == null && tag !=null)) ;
     }
 
     int i = 0;
