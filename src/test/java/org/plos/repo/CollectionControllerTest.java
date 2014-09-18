@@ -161,7 +161,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   @Test
   public void createWithExistingKey(){
 
-    generateBucketsAndObjects();
+    generateBucketsAndObjects(bucketName, objectName1, objectName2);
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
@@ -188,7 +188,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   @Test
   public void versionNonExistingCollection(){
 
-    generateBucketsAndObjects();
+    generateBucketsAndObjects(bucketName, objectName1, objectName2);
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
@@ -209,7 +209,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   @Test
   public void autoCreateCollection(){
 
-    generateBucketsAndObjects();
+    generateBucketsAndObjects(bucketName, objectName1, objectName2);
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
@@ -229,7 +229,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   @Test
   public void autoVersionExistingKeyCollection(){
 
-    generateBucketsAndObjects();
+    generateBucketsAndObjects(bucketName, objectName1, objectName2);
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
@@ -256,7 +256,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   @Test
   public void createColletionNonexistingObject(){
 
-    generateBucketsAndObjects();
+    generateBucketsAndObjects(bucketName, objectName1, objectName2);
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
@@ -277,7 +277,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   @Test
   public void getAllCollections(){
 
-    generateBucketsAndObjects();
+    generateBucketsAndObjects(bucketName, objectName1, objectName2);
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
@@ -318,6 +318,184 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   }
 
   @Test
+  public void getCollectionsWithPagination(){
+
+    generateBucketsAndObjects(bucketName, objectName1, objectName2);
+
+    InputCollection inputCollection = new InputCollection();
+    inputCollection.setBucketName(bucketName);
+    inputCollection.setKey("collection1");
+    inputCollection.setCreate("new");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject(objectName1,bucketName, 0)}));
+    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
+
+    assertEquals(target("/collections").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(collectionEntity).getStatus(),
+        Response.Status.CREATED.getStatusCode()
+    );
+
+    inputCollection.setKey("collection2");
+    assertEquals(target("/collections")
+            .request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(collectionEntity).getStatus(),
+        Response.Status.CREATED.getStatusCode()
+    );
+
+    Response response = target("/collections")
+        .queryParam("bucketName", bucketName)
+        .queryParam("offset", "1")
+        .queryParam("limit", "1")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+    assertEquals(response.getHeaderString("Content-Type"), "application/json");
+
+    JsonArray responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonArray();
+    assertNotNull(responseObj);
+    assertEquals(1, responseObj.size());
+    Iterator<JsonElement> iterator = responseObj.iterator();
+    JsonObject next = iterator.next().getAsJsonObject();
+    assertEquals("collection2", next.get("key").getAsString());
+
+  }
+
+  @Test
+  public void getCollectionsInvalidPagination(){
+
+    assertRepoError(target("/collections")
+        .queryParam("bucketName", bucketName)
+        .queryParam("offset", "-1")
+        .queryParam("limit", "1")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get(),
+        Response.Status.BAD_REQUEST, RepoException.Type.InvalidOffset
+    );
+
+    assertRepoError(target("/collections")
+            .queryParam("bucketName", bucketName)
+            .queryParam("offset", "1")
+            .queryParam("limit", "100000")
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .get(),
+        Response.Status.BAD_REQUEST, RepoException.Type.InvalidLimit
+    );
+
+    assertRepoError(target("/collections")
+            .queryParam("bucketName", bucketName)
+            .queryParam("offset", "1")
+            .queryParam("limit", "-1")
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .get(),
+        Response.Status.BAD_REQUEST, RepoException.Type.InvalidLimit
+    );
+
+  }
+
+  @Test
+  public void getCollectionsUsingTag(){
+
+    generateBucketsAndObjects(bucketName, objectName1, objectName2);
+
+    InputCollection inputCollection = new InputCollection();
+    inputCollection.setBucketName(bucketName);
+    inputCollection.setKey("collection1");
+    inputCollection.setCreate("new");
+    inputCollection.setTag("AOP");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject(objectName1,bucketName, 0)}));
+    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
+
+    assertEquals(target("/collections").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(collectionEntity).getStatus(),
+        Response.Status.CREATED.getStatusCode()
+    );
+
+    inputCollection.setKey("collection2");
+    inputCollection.setTag("FINAL");
+    assertEquals(target("/collections")
+            .request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(collectionEntity).getStatus(),
+        Response.Status.CREATED.getStatusCode()
+    );
+
+    Response response = target("/collections")
+        .queryParam("bucketName", bucketName)
+        .queryParam("tag", "FINAL")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+    assertEquals(response.getHeaderString("Content-Type"), "application/json");
+
+    JsonArray responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonArray();
+    assertNotNull(responseObj);
+    assertEquals(1, responseObj.size());
+    Iterator<JsonElement> iterator = responseObj.iterator();
+    JsonObject next = iterator.next().getAsJsonObject();
+    assertEquals("collection2", next.get("key").getAsString());
+
+  }
+
+  @Test
+  public void getCollectionsUsingBucket(){
+
+    generateBucketsAndObjects(bucketName, objectName1, objectName2);
+
+    InputCollection inputCollection = new InputCollection();
+    inputCollection.setBucketName(bucketName);
+    inputCollection.setKey("collection1");
+    inputCollection.setCreate("new");
+    inputCollection.setTag("AOP");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject(objectName1,bucketName, 0)}));
+    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
+
+    assertEquals(target("/collections").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(collectionEntity).getStatus(),
+        Response.Status.CREATED.getStatusCode()
+    );
+
+    generateBucketsAndObjects("bucket2", "object3", "object4");
+
+    InputCollection inputCollection2 = new InputCollection();
+    inputCollection2.setBucketName("bucket2");
+    inputCollection2.setKey("collection2");
+    inputCollection2.setCreate("new");
+    inputCollection2.setTag("AOP");
+    inputCollection2.setObjects(Arrays.asList(new InputObject[]{new InputObject("object3","bucket2", 0)}));
+    Entity<InputCollection> collectionEntity2 = Entity.entity(inputCollection2, MediaType.APPLICATION_JSON_TYPE);
+
+    assertEquals(target("/collections").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(collectionEntity2).getStatus(),
+        Response.Status.CREATED.getStatusCode()
+    );
+
+    Response response = target("/collections")
+        .queryParam("bucketName", "bucket2")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+    assertEquals(response.getHeaderString("Content-Type"), "application/json");
+
+    JsonArray responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonArray();
+    assertNotNull(responseObj);
+    assertEquals(1, responseObj.size());
+    Iterator<JsonElement> iterator = responseObj.iterator();
+    JsonObject next = iterator.next().getAsJsonObject();
+    assertEquals("collection2", next.get("key").getAsString());
+
+  }
+
+  @Test
   public void getCollectionUsingVersion(){
 
     generateCollectionData();
@@ -340,6 +518,19 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   }
 
   @Test
+  public void getCollectionNoKey(){
+
+    assertRepoError(target("/collections/" + bucketName)
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .get(),
+        Response.Status.BAD_REQUEST, RepoException.Type.NoCollectionKeyEntered
+    );
+
+  }
+
+
+  @Test
   public void getLastCollection(){
 
     generateCollectionData();
@@ -360,7 +551,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   }
 
-  private void generateBucketsAndObjects(){
+  private void generateBucketsAndObjects(String bucketName, String objectName1, String objectName2){
 
     // create needed data
     target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
@@ -386,7 +577,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   private void generateCollectionData(){
 
-    generateBucketsAndObjects();
+    generateBucketsAndObjects(bucketName, objectName1, objectName2);
 
     // create collection 1
     InputCollection inputCollection = new InputCollection();
@@ -494,6 +685,55 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
             .request(MediaType.APPLICATION_JSON_TYPE)
             .accept(MediaType.APPLICATION_JSON_TYPE)
             .get(),
+        Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound
+    );
+
+  }
+
+  @Test
+  public void deleteCollectionBadRequest(){
+
+    assertRepoError(target("/collections/" + bucketName)
+            .queryParam("version", "0")
+            .queryParam("bucketName", bucketName)
+            .request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .delete(),
+        Response.Status.BAD_REQUEST, RepoException.Type.NoCollectionKeyEntered
+    );
+
+    assertRepoError(target("/collections/" + bucketName)
+            .queryParam("key", "collection1")
+            .queryParam("bucketName", bucketName)
+            .request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .delete(),
+        Response.Status.BAD_REQUEST, RepoException.Type.NoCollectionVersionEntered
+    );
+
+  }
+
+  @Test
+  public void deleteCollectionNotFound(){
+
+    assertRepoError(target("/collections/" + bucketName)
+            .queryParam("key", "collection1")
+            .queryParam("version", "0")
+            .request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .delete(),
+        Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound
+    );
+
+    generateCollectionData();
+
+    assertRepoError(target("/collections/" + bucketName)
+            .queryParam("key", "inexColl")
+            .queryParam("version", "0")
+            .queryParam("bucketName", bucketName)
+            .request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .delete(),
         Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound
     );
 
