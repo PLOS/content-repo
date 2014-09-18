@@ -189,7 +189,7 @@ public class CollectionRepoService extends BaseRepoService {
 
     // fetch the collection if it already exists
     try {
-      existingCollection = getCollection(inputCollection.getBucketName(), inputCollection.getKey(), null, inputCollection.getTag());
+      existingCollection = getCollection(inputCollection.getBucketName(), inputCollection.getKey(), null, null); // don't want to take in count the tag for getting the existing collection
     } catch (RepoException e) {
       if (e.getType() == RepoException.Type.CollectionNotFound)
         existingCollection = null;

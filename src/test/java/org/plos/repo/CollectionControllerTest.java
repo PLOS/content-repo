@@ -20,7 +20,6 @@ package org.plos.repo;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import junit.framework.Assert;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,6 +40,8 @@ import static org.junit.Assert.assertEquals;
 public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   private final String bucketName = "plos-objstoreunittest-bucket1";
+  private final String objectName1 = "object1";
+  private final String objectName2 = "object2";
 
   private final String testData1 = "test data one goes\nhere.";
 
@@ -118,10 +119,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertRepoError(target("/collections").request()
-                                          .accept(MediaType.APPLICATION_JSON_TYPE)
-                                          .post(collectionEntity),
-                    Response.Status.BAD_REQUEST, RepoException.Type.CouldNotParseTimestamp
-                   );
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(collectionEntity),
+        Response.Status.BAD_REQUEST, RepoException.Type.CouldNotParseTimestamp
+    );
   }
 
   @Test
@@ -160,22 +161,13 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   @Test
   public void createWithExistingKey(){
 
-    // create needed data
-    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
-    target("/objects").request()
-            .post(Entity.entity(new FormDataMultiPart()
-                    .field("bucketName", bucketName).field("create", "new")
-                    .field("key", "object1").field("contentType", "text/plain")
-                    .field("timestamp", "2012-09-08 11:00:00")
-                    .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA)
-            );
+    generateBucketsAndObjects();
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("existingKey");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("object1",bucketName, 0)}));
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject(objectName1, bucketName, 0)}));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertEquals(target("/collections").request()
@@ -196,22 +188,13 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   @Test
   public void versionNonExistingCollection(){
 
-    // create needed data
-    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
-    target("/objects").request()
-        .post(Entity.entity(new FormDataMultiPart()
-                    .field("bucketName", bucketName).field("create", "new")
-                    .field("key", "object1").field("contentType", "text/plain")
-                    .field("timestamp", "2012-09-08 11:00:00")
-                    .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA)
-        );
+    generateBucketsAndObjects();
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("existingKey");
     inputCollection.setCreate("version");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("object1",bucketName, 0)}));
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject(objectName1,bucketName, 0)}));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertRepoError(target("/collections").request()
@@ -226,22 +209,13 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   @Test
   public void autoCreateCollection(){
 
-    // create needed data
-    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
-    target("/objects").request()
-        .post(Entity.entity(new FormDataMultiPart()
-                    .field("bucketName", bucketName).field("create", "new")
-                    .field("key", "object1").field("contentType", "text/plain")
-                    .field("timestamp", "2012-09-08 11:00:00")
-                    .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA)
-        );
+    generateBucketsAndObjects();
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("existingKey");
     inputCollection.setCreate("auto");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("object1",bucketName, 0)}));
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject(objectName1,bucketName, 0)}));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertEquals(target("/collections").request()
@@ -255,22 +229,13 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   @Test
   public void autoVersionExistingKeyCollection(){
 
-    // create needed data
-    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
-    target("/objects").request()
-        .post(Entity.entity(new FormDataMultiPart()
-                    .field("bucketName", bucketName).field("create", "new")
-                    .field("key", "object1").field("contentType", "text/plain")
-                    .field("timestamp", "2012-09-08 11:00:00")
-                    .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA)
-        );
+    generateBucketsAndObjects();
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("existingKey");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("object1",bucketName, 0)}));
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject(objectName1,bucketName, 0)}));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertEquals(target("/collections").request()
@@ -289,26 +254,45 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   }
 
   @Test
+  public void createColletionNonexistingObject(){
+
+    generateBucketsAndObjects();
+
+    InputCollection inputCollection = new InputCollection();
+    inputCollection.setBucketName(bucketName);
+    inputCollection.setKey("nonexistingKey");
+    inputCollection.setCreate("new");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("nonexistingKey",bucketName, 0)}));
+    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
+
+    assertRepoError(target("/collections").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(collectionEntity),
+        Response.Status.NOT_FOUND,
+        RepoException.Type.ObjectCollectionNotFound
+    );
+
+  }
+
+  @Test
   public void getAllCollections(){
 
-    // create needed data
-    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
-    target("/objects").request()
-        .post(Entity.entity(new FormDataMultiPart()
-                    .field("bucketName", bucketName).field("create", "new")
-                    .field("key", "object1").field("contentType", "text/plain")
-                    .field("timestamp", "2012-09-08 11:00:00")
-                    .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA)
-        );
+    generateBucketsAndObjects();
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("object1",bucketName, 0)}));
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject(objectName1,bucketName, 0)}));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
+    assertEquals(target("/collections").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(collectionEntity).getStatus(),
+        Response.Status.CREATED.getStatusCode()
+    );
+
+    inputCollection.setKey("collection2");
     assertEquals(target("/collections").request()
             .accept(MediaType.APPLICATION_JSON_TYPE)
             .post(collectionEntity).getStatus(),
@@ -316,42 +300,101 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     );
 
     Response response = target("/collections").queryParam("bucketName", bucketName)
-                        .request(MediaType.APPLICATION_JSON_TYPE)
-                        .accept(MediaType.APPLICATION_JSON_TYPE)
-                        .get();
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
     assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
     assertEquals(response.getHeaderString("Content-Type"), "application/json");
 
     JsonArray responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonArray();
     assertNotNull(responseObj);
-    assertEquals(1, responseObj.size());
+    assertEquals(2, responseObj.size());
     Iterator<JsonElement> iterator = responseObj.iterator();
     JsonObject next = iterator.next().getAsJsonObject();
-
     assertEquals("collection1", next.get("key").getAsString());
-
+    next = iterator.next().getAsJsonObject();
+    assertEquals("collection2", next.get("key").getAsString());
 
   }
 
- /* @Test
-  public void deleteCollection(){
+  @Test
+  public void getCollectionUsingVersion(){
+
+    generateCollectionData();
+
+    Response response = target("/collections/" + bucketName)
+        .queryParam("version", "0")
+        .queryParam("key", "collection1")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+    assertEquals(response.getHeaderString("Content-Type"), "application/json");
+
+    JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
+    assertNotNull(responseObj);
+    assertEquals("collection1", responseObj.get("key").getAsString());
+    assertEquals(0, responseObj.get("versionNumber").getAsInt());
+    assertEquals(1, responseObj.get("objects").getAsJsonArray().size());
+
+  }
+
+  @Test
+  public void getLastCollection(){
+
+    generateCollectionData();
+
+    Response response = target("/collections/" + bucketName)
+        .queryParam("key", "collection1")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+    assertEquals(response.getHeaderString("Content-Type"), "application/json");
+
+    JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
+    assertNotNull(responseObj);
+    assertEquals("collection1", responseObj.get("key").getAsString());
+    assertEquals(1, responseObj.get("versionNumber").getAsInt());
+    assertEquals(2, responseObj.get("objects").getAsJsonArray().size());
+
+  }
+
+  private void generateBucketsAndObjects(){
 
     // create needed data
     target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
     target("/objects").request()
         .post(Entity.entity(new FormDataMultiPart()
                     .field("bucketName", bucketName).field("create", "new")
-                    .field("key", "object1").field("contentType", "text/plain")
+                    .field("key", objectName1).field("contentType", "text/plain")
                     .field("timestamp", "2012-09-08 11:00:00")
                     .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA)
         );
 
+    target("/objects").request()
+        .post(Entity.entity(new FormDataMultiPart()
+                    .field("bucketName", bucketName).field("create", "new")
+                    .field("key", objectName2).field("contentType", "text/plain")
+                    .field("timestamp", "2012-09-08 11:00:00")
+                    .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
+                MediaType.MULTIPART_FORM_DATA)
+        );
+
+  }
+
+  private void generateCollectionData(){
+
+    generateBucketsAndObjects();
+
+    // create collection 1
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
-    inputCollection.setKey("existingKey");
+    inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("object1",bucketName, 0)}));
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject(objectName1,bucketName, 0)}));
+    inputCollection.setTag("AOP");
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertEquals(target("/collections").request()
@@ -360,14 +403,101 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
         Response.Status.CREATED.getStatusCode()
     );
 
-    assertRepoError(target("/collections").request()
+    // version collection 1
+    inputCollection.setCreate("version");
+    inputCollection.setTag("FINAL");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject(objectName1,bucketName, 0),
+        new InputObject(objectName2,bucketName, 0) }));
+
+    assertEquals(target("/collections").request()
             .accept(MediaType.APPLICATION_JSON_TYPE)
-            .post(collectionEntity),
-        Response.Status.BAD_REQUEST,
-        RepoException.Type.CantCreateNewCollectionWithUsedKey
+            .post(collectionEntity).getStatus(),
+        Response.Status.CREATED.getStatusCode()
     );
 
-  }*/
+  }
+
+  @Test
+  public void getCollectionByTag(){
+
+    generateCollectionData();
+
+    Response response = target("/collections/" + bucketName)
+        .queryParam("key", "collection1")
+        .queryParam("tag", "AOP")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+    assertEquals(response.getHeaderString("Content-Type"), "application/json");
+
+    JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
+    assertNotNull(responseObj);
+    assertEquals("collection1", responseObj.get("key").getAsString());
+    assertEquals(0, responseObj.get("versionNumber").getAsInt());
+    assertEquals(1, responseObj.get("objects").getAsJsonArray().size());
+
+  }
+
+  @Test
+  public void getCollectionByTagAndVersion(){
+
+    generateCollectionData();
+
+    Response response = target("/collections/" + bucketName)
+        .queryParam("key", "collection1")
+        .queryParam("tag", "AOP")
+        .queryParam("version", "0")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+    assertEquals(response.getHeaderString("Content-Type"), "application/json");
+
+    JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
+    assertNotNull(responseObj);
+    assertEquals("collection1", responseObj.get("key").getAsString());
+    assertEquals(0, responseObj.get("versionNumber").getAsInt());
+    assertEquals(1, responseObj.get("objects").getAsJsonArray().size());
+
+    assertRepoError(target("/collections/" + bucketName)
+            .queryParam("key", "collection1")
+            .queryParam("tag", "AOP")
+            .queryParam("version", "1")
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .get(),
+        Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound
+    );
+
+  }
+
+  @Test
+  public void deleteCollection(){
+
+    generateCollectionData();
+
+    assertEquals(target("/collections/" + bucketName)
+            .queryParam("key", "collection1")
+            .queryParam("version", "0")
+            .queryParam("bucketName", bucketName)
+            .request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .delete()
+            .getStatus(),
+        Response.Status.OK.getStatusCode()
+    );
+
+    assertRepoError(target("/collections/" + bucketName)
+            .queryParam("key", "collection1")
+            .queryParam("version", "0")
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .get(),
+        Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound
+    );
+
+  }
 
 /*
 
