@@ -182,10 +182,6 @@ public class CollectionRepoService extends BaseRepoService {
 
     Collection existingCollection;
 
-    // set the timestamp if it does not exists
-    if (inputCollection.getTimestamp() == null){
-      inputCollection.setTimestamp(new Timestamp(new Date().getTime()));
-    }
 
     // fetch the collection if it already exists
     try {
@@ -197,23 +193,29 @@ public class CollectionRepoService extends BaseRepoService {
         throw e;
     }
 
+    Timestamp creationDate = inputCollection.getCreationDateTimeString() != null ?
+                Timestamp.valueOf(inputCollection.getCreationDateTimeString()) : new Timestamp(new Date().getTime());
+
+    Timestamp timestamp = inputCollection.getTimestampString() != null ?
+        Timestamp.valueOf(inputCollection.getTimestampString()) : creationDate;
+
     switch (method) {
 
       case NEW:
         if (existingCollection != null)
           throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
-        return createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), inputCollection.getTimestamp(), inputCollection.getObjects(), inputCollection.getTag());
+        return createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
 
       case VERSION:
         if (existingCollection == null)
           throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
-        return updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), inputCollection.getTimestamp(), existingCollection, inputCollection.getObjects(), inputCollection.getTag());
+        return updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, existingCollection, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
 
       case AUTO:
         if (existingCollection == null)
-          return createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), inputCollection.getTimestamp(), inputCollection.getObjects(), inputCollection.getTag());
+          return createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
         else
-          return updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), inputCollection.getTimestamp(), existingCollection, inputCollection.getObjects(), inputCollection.getTag());
+          return updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, existingCollection, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
 
       default:
         throw new RepoException(RepoException.Type.InvalidCreationMethod);
@@ -226,7 +228,8 @@ public class CollectionRepoService extends BaseRepoService {
                                          String bucketName,
                                          Timestamp timestamp,
                                          List<InputObject> objects,
-                                         String tag) throws RepoException {
+                                         String tag,
+                                         Timestamp creationDate) throws RepoException {
 
     Bucket bucket = null;
 
@@ -242,7 +245,7 @@ public class CollectionRepoService extends BaseRepoService {
     if (bucket == null)
       throw new RepoException(RepoException.Type.BucketNotFound);
 
-    return createCollection(key, bucketName, timestamp, bucket.bucketId, objects, tag);
+    return createCollection(key, bucketName, timestamp, bucket.bucketId, objects, tag, creationDate);
   }
 
   private Collection updateCollection(String key,
@@ -250,13 +253,14 @@ public class CollectionRepoService extends BaseRepoService {
                                       Timestamp timestamp,
                                       Collection existingCollection,
                                       List<InputObject> objects,
-                                      String tag) throws RepoException {
+                                      String tag,
+                                      Timestamp creationDate) throws RepoException {
 
     if (areCollectionsSimilar(key, bucketName, objects, tag, existingCollection)){
       return existingCollection;
     }
 
-    return createCollection(key, bucketName, timestamp, existingCollection.getBucketId(), objects, tag);
+    return createCollection(key, bucketName, timestamp, existingCollection.getBucketId(), objects, tag, creationDate);
 
   }
 
@@ -311,7 +315,8 @@ public class CollectionRepoService extends BaseRepoService {
                                       Timestamp timestamp,
                                       Integer bucketId,
                                       List<InputObject> inputObjects,
-                                      String tag) throws RepoException {
+                                      String tag,
+                                      Timestamp creationDate) throws RepoException {
 
     Integer versionNumber;
     Collection collection;
@@ -327,7 +332,7 @@ public class CollectionRepoService extends BaseRepoService {
         throw new RepoException(e);
       }
 
-      collection = new Collection(null, key, timestamp, bucketId, bucketName, versionNumber, Collection.Status.USED, tag);
+      collection = new Collection(null, key, timestamp, bucketId, bucketName, versionNumber, Collection.Status.USED, tag, creationDate);
 
       rollback = true;
 

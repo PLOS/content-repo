@@ -3,8 +3,6 @@ package org.plos.repo.models;
 import org.plos.repo.service.RepoException;
 
 import java.sql.Timestamp;
-import java.util.Date;
-import java.util.List;
 
 /**
  * Input Collection Validator. It validates the required fields.
@@ -19,13 +17,9 @@ public class InputCollectionValidator {
     if (collection.getBucketName() == null)
       throw new RepoException(RepoException.Type.NoBucketEntered);
 
-    if (collection.getTimestampString() != null) {
-      try {
-        collection.setTimestamp(Timestamp.valueOf(collection.getTimestampString()));
-      } catch (IllegalArgumentException e) {
-        throw new RepoException(RepoException.Type.CouldNotParseTimestamp);
-      }
-    }
+    validateTimeStamp(collection.getTimestampString(), RepoException.Type.CouldNotParseTimestamp);
+    validateTimeStamp(collection.getCreationDateTimeString(), RepoException.Type.CouldNotParseCreationDate);
+
 
     if (collection.getObjects() == null || collection.getObjects().size() == 0 ) {
       throw new RepoException(RepoException.Type.CantCreateCollectionWithNoObjects);
@@ -33,5 +27,15 @@ public class InputCollectionValidator {
 
   }
 
+
+  private void validateTimeStamp(String timeStamp, RepoException.Type errorType) throws RepoException {
+    if (timeStamp != null) {
+      try {
+        Timestamp.valueOf(timeStamp);
+      } catch (IllegalArgumentException e) {
+        throw new RepoException(errorType);
+      }
+    }
+  }
 
 }

@@ -67,6 +67,8 @@ public class Collection {
   private Integer versionNumber;
   private Status status;
   private String tag;
+  @XmlJavaTypeAdapter(TimestampAdapter.class)
+  private Timestamp creationDate;
 
   private List<Object> objects;
 
@@ -76,7 +78,7 @@ public class Collection {
   public Collection() {
   }
 
-  public Collection(Integer id, String key, Timestamp timestamp, Integer bucketId, String bucketName, Integer versionNumber, Status status, String tag) {
+  public Collection(Integer id, String key, Timestamp timestamp, Integer bucketId, String bucketName, Integer versionNumber, Status status, String tag, Timestamp creationDate) {
     this.id = id;
     this.key = key;
     this.timestamp = timestamp;
@@ -85,6 +87,7 @@ public class Collection {
     this.versionNumber = versionNumber;
     this.status = status;
     this.tag = tag;
+    this.creationDate = creationDate;
   }
 
   public Integer getId(){
@@ -170,5 +173,13 @@ public class Collection {
 
   public void setTag(String tag) {
     this.tag = tag;
+  }
+
+  public Timestamp getCreationDate() {
+    return creationDate;
+  }
+
+  public void setCreationDate(Timestamp creationDate) {
+    this.creationDate = creationDate;
   }
 }

@@ -284,8 +284,10 @@ public class ObjectController {
       @ApiParam(value = "creation method", allowableValues = "new,version,auto", defaultValue = "new",
           required = true)
       @FormDataParam("create") String create,
-      @ApiParam(value = "creation time", required = false)
+      @ApiParam(value = "last modification time", required = false)
       @FormDataParam("timestamp") String timestampString,
+      @ApiParam(value = "creation time", required = false)
+      @FormDataParam("creationDateTime") String creationDateTimeString,
       @ApiParam(required = false)
       @FormDataParam("file") InputStream uploadedInputStream
   ) {
@@ -303,24 +305,30 @@ public class ObjectController {
         throw new RepoException(RepoException.Type.InvalidCreationMethod);
       }
 
-      Timestamp timestamp = new Timestamp(new Date().getTime());
+      Timestamp defaultTimeStamp = new Timestamp(new Date().getTime());
 
-      if (timestampString != null) {
-        try {
-          timestamp = Timestamp.valueOf(timestampString);
-        } catch (IllegalArgumentException e) {
-          throw new RepoException(RepoException.Type.CouldNotParseTimestamp);
-        }
-      }
+      Timestamp creationDateTime = getValidateTimestamp(creationDateTimeString, RepoException.Type.CouldNotParseCreationDate, defaultTimeStamp);
+      Timestamp lastModifiedDateTime = getValidateTimestamp(timestampString, RepoException.Type.CouldNotParseTimestamp, creationDateTime);
 
       repoInfoService.incrementWriteCount();
 
-      return Response.status(Response.Status.CREATED).entity(repoService.createObject(method, key, bucketName, contentType, downloadName, timestamp, uploadedInputStream)).build();
+      return Response.status(Response.Status.CREATED).entity(repoService.createObject(method, key, bucketName, contentType, downloadName, lastModifiedDateTime, uploadedInputStream, creationDateTime)).build();
 
     } catch (RepoException e) {
       return handleError(e);
     }
 
+  }
+
+  private Timestamp getValidateTimestamp(String timestampString, RepoException.Type errorType, Timestamp defaultTimestamp) throws RepoException{
+    if (timestampString != null) {
+      try {
+        return Timestamp.valueOf(timestampString);
+      } catch (IllegalArgumentException e) {
+        throw new RepoException(errorType);
+      }
+    }
+    return defaultTimestamp;
   }
 
 }

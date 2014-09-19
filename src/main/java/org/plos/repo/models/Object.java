@@ -23,7 +23,6 @@ import com.google.common.collect.Maps;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.EnumSet;
 import java.util.List;
@@ -58,7 +57,7 @@ public class Object {
   public String checksum;  // of the file contents
 
   @XmlJavaTypeAdapter(TimestampAdapter.class)
-  public Timestamp timestamp;   // created time
+  public Timestamp timestamp;   // last modification time
   public String downloadName;
   public String contentType;
   public Long size;
@@ -67,6 +66,7 @@ public class Object {
   public String bucketName;
   public Integer versionNumber;
   public Status status;
+  public Timestamp creationDate;
 
   public List<Object> versions;
 
@@ -74,7 +74,7 @@ public class Object {
   private Object() {
   }
 
-  public Object(Integer id, String key, String checksum, Timestamp timestamp, String downloadName, String contentType, Long size, String tag, Integer bucketId, String bucketName, Integer versionNumber, Status status) {
+  public Object(Integer id, String key, String checksum, Timestamp timestamp, String downloadName, String contentType, Long size, String tag, Integer bucketId, String bucketName, Integer versionNumber, Status status, Timestamp creationDate) {
     this.id = id;
     this.key = key;
     this.checksum = checksum;
@@ -87,6 +87,7 @@ public class Object {
     this.bucketName = bucketName;
     this.versionNumber = versionNumber;
     this.status = status;
+    this.creationDate = creationDate;
   }
 
   public Boolean areSimilar(Object object){

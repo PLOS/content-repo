@@ -221,8 +221,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
           try {
             startGate.await();  // don't start until startGate is 0
             try {
-
-              Object object = repoService.createObject(RepoService.CreateMethod.NEW, cb.getKeyname(j), BUCKET_NAME, null, null, new Timestamp(new Date().getTime()), IOUtils.toInputStream(OBJECT_DATA));
+              Timestamp creationDateTime = new Timestamp(new Date().getTime());
+              Object object = repoService.createObject(RepoService.CreateMethod.NEW, cb.getKeyname(j), BUCKET_NAME, null, null, creationDateTime, IOUtils.toInputStream(OBJECT_DATA), creationDateTime);
 
               if (!object.key.equals(cb.getKeyname(j))) {
                 synchronized (lock) {
@@ -267,8 +267,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
           try {
             startGate.await();  // don't start until startGate is 0
             try {
-
-              Object versionedObject = repoService.createObject(RepoService.CreateMethod.VERSION, cb.getKeyname(j), BUCKET_NAME, null, null, new Timestamp(new Date().getTime()), IOUtils.toInputStream(OBJECT_DATA));
+              Timestamp creationDateTime = new Timestamp(new Date().getTime());
+              Object versionedObject = repoService.createObject(RepoService.CreateMethod.VERSION, cb.getKeyname(j), BUCKET_NAME, null, null, creationDateTime, IOUtils.toInputStream(OBJECT_DATA), creationDateTime);
 
               if (!versionedObject.key.equals(cb.getKeyname(j))) {
                 synchronized (lock) {

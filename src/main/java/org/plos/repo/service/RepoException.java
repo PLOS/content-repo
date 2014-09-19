@@ -26,6 +26,7 @@ public class RepoException extends Exception {
     ObjectDataEmpty(19, "Object data must be non-empty"),
     NoCollectionKeyEntered(20, "No collection key entered"),
     NoCollectionVersionEntered(21, "No collection version entered"),
+    CouldNotParseCreationDate(22, "Could not parse creation date"),
 
     // user errors for system state
     CantDeleteNonEmptyBucket(20, "Can not delete bucket since it contains objects"),

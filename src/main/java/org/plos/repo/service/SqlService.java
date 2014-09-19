@@ -47,13 +47,17 @@ public abstract class SqlService {
   public abstract void postDbInit() throws SQLException;
 
   private static org.plos.repo.models.Object mapObjectRow(ResultSet rs) throws SQLException {
-    return new org.plos.repo.models.Object(rs.getInt("ID"), rs.getString("OBJKEY"), rs.getString("CHECKSUM"), rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"), rs.getLong("SIZE"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"), Object.STATUS_VALUES.get(rs.getInt("STATUS")));
+    return new org.plos.repo.models.Object(rs.getInt("ID"), rs.getString("OBJKEY"), rs.getString("CHECKSUM"),
+                                          rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"),
+                                          rs.getLong("SIZE"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"),
+                                          rs.getInt("VERSIONNUMBER"), Object.STATUS_VALUES.get(rs.getInt("STATUS")), rs.getTimestamp("CREATIONDATE"));
   }
 
   private static org.plos.repo.models.Collection mapCollectionRow(ResultSet rs) throws SQLException {
     return new org.plos.repo.models.Collection(rs.getInt("ID"), rs.getString("COLLKEY"), rs.getTimestamp("TIMESTAMP"),
                                                rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"),
-                                                Collection.STATUS_VALUES.get(rs.getInt("STATUS")), rs.getString("TAG"));
+                                                Collection.STATUS_VALUES.get(rs.getInt("STATUS")), rs.getString("TAG"),
+                                                rs.getTimestamp("CREATIONDATE"));
   }
 
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
@@ -321,7 +325,7 @@ public abstract class SqlService {
 
     try {
 
-      p = connectionLocal.get().prepareStatement("INSERT INTO objects (objKey, checksum, timestamp, bucketId, contentType, downloadName, size, tag, versionNumber, status) VALUES (?,?,?,?,?,?,?,?,?,?)");
+      p = connectionLocal.get().prepareStatement("INSERT INTO objects (objKey, checksum, timestamp, bucketId, contentType, downloadName, size, tag, versionNumber, status, creationDate) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
 
       p.setString(1, object.key);
       p.setString(2, object.checksum);
@@ -333,6 +337,7 @@ public abstract class SqlService {
       p.setString(8, object.tag);
       p.setInt(9, object.versionNumber);
       p.setInt(10, object.status.getValue());
+      p.setTimestamp(11, object.timestamp);
 
       return p.executeUpdate();
 
@@ -784,7 +789,7 @@ public abstract class SqlService {
 
     try {
       p =
-          connectionLocal.get().prepareStatement("INSERT INTO collections (bucketId, collkey, timestamp, status, versionNumber, tag) VALUES (?,?,?,?,?,?)",
+          connectionLocal.get().prepareStatement("INSERT INTO collections (bucketId, collkey, timestamp, status, versionNumber, tag, creationDate) VALUES (?,?,?,?,?,?,?)",
               Statement.RETURN_GENERATED_KEYS);
 
       p.setInt(1, collection.getBucketId());
@@ -793,6 +798,7 @@ public abstract class SqlService {
       p.setInt(4, collection.getStatus().getValue());
       p.setInt(5, collection.getVersionNumber());
       p.setString(6, collection.getTag());
+      p.setTimestamp(7, collection.getCreationDate());
 
       p.executeUpdate();
       keys = p.getGeneratedKeys();

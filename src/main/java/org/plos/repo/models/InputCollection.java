@@ -29,12 +29,12 @@ import java.util.List;
 public class InputCollection {
 
   private String key; // what the user specifies
-  private Timestamp timestamp;   // created time
   private String timestampString;   // created time
   private String bucketName;
   private String create;
   private String tag;
   private List<InputObject> objects;
+  private String creationDateTimeString;   // created time
 
   // empty constructor required for JAXB mapping
   public InputCollection() {
@@ -42,10 +42,6 @@ public class InputCollection {
 
   public String getKey() {
     return key;
-  }
-
-  public Timestamp getTimestamp() {
-    return timestamp;
   }
 
   public String getBucketName() {
@@ -62,10 +58,6 @@ public class InputCollection {
 
   public void setKey(String key) {
     this.key = key;
-  }
-
-  public void setTimestamp(Timestamp timestamp) {
-    this.timestamp = timestamp;
   }
 
   public void setBucketName(String bucketName) {
@@ -94,5 +86,13 @@ public class InputCollection {
 
   public void setTag(String tag) {
     this.tag = tag;
+  }
+
+  public String getCreationDateTimeString() {
+    return creationDateTimeString;
+  }
+
+  public void setCreationDateTimeString(String creationDateTimeString) {
+    this.creationDateTimeString = creationDateTimeString;
   }
 }

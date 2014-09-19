@@ -14,6 +14,7 @@ size INTEGER NOT NULL,
 tag VARCHAR (200),
 status TINYINT DEFAULT 0 NOT NULL,
 versionNumber INTEGER NOT NULL,
+creationDate TIMESTAMP NOT NULL,
 CONSTRAINT keySum UNIQUE (bucketId, objKey, versionNumber)
 );
 CREATE CACHED TABLE IF NOT EXISTS collections (
@@ -24,6 +25,7 @@ timestamp timestamp NOT NULL,
 status TINYINT DEFAULT 0 NOT NULL,
 versionNumber INTEGER NOT NULL,
 tag VARCHAR (200),
+creationDate TIMESTAMP NOT NULL,
 CONSTRAINT keySumColl UNIQUE (bucketId, collkey, versionNumber),
 FOREIGN KEY (bucketId) REFERENCES buckets(bucketId)
 );
