@@ -17,17 +17,9 @@
 
 package org.plos.repo.models;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -35,28 +27,6 @@ import java.util.List;
  */
 @XmlRootElement
 public class Collection {
-
-  public enum Status {
-    USED(0), DELETED(1);
-
-    private final int value;
-
-    private Status(int value) {
-      this.value = value;
-    }
-
-    public int getValue() {
-      return value;
-    }
-  }
-
-  public static final ImmutableMap<Integer, Status> STATUS_VALUES = Maps.uniqueIndex(EnumSet.allOf(Status.class),
-      new Function<Status, Integer>() {
-        @Override
-        public Integer apply(Status status) {
-          return status.getValue();
-        }
-      });
 
   private Integer id; // assigned by the db
   private String key; // what the user specifies

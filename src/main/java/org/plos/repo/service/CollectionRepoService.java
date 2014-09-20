@@ -273,7 +273,7 @@ public class CollectionRepoService extends BaseRepoService {
 
     Boolean similar = existingCollection.getKey().equals(key) &&
         existingCollection.getBucketName().equals(bucketName) &&
-        existingCollection.getStatus().equals(Collection.Status.USED) &&
+        existingCollection.getStatus().equals(Status.USED) &&
         objects.size() == existingCollection.getObjects().size();
 
 
@@ -332,7 +332,7 @@ public class CollectionRepoService extends BaseRepoService {
         throw new RepoException(e);
       }
 
-      collection = new Collection(null, key, timestamp, bucketId, bucketName, versionNumber, Collection.Status.USED, tag, creationDate);
+      collection = new Collection(null, key, timestamp, bucketId, bucketName, versionNumber, Status.USED, tag, creationDate);
 
       rollback = true;
 

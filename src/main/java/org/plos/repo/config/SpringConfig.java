@@ -1,6 +1,7 @@
 package org.plos.repo.config;
 
 import org.plos.repo.models.InputCollectionValidator;
+import org.plos.repo.models.TimestampInputValidator;
 import org.plos.repo.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,10 +36,16 @@ public class SpringConfig {
   }
 
   @Bean
+  public MigrationService migrationService() { return new MigrationService();}
+
+  @Bean
   public CollectionRepoService collectionRepoService() { return new CollectionRepoService();}
 
   @Bean
   public InputCollectionValidator inputCollectionValidator(){ return new InputCollectionValidator(); }
+
+  @Bean
+  public TimestampInputValidator timestampInputValidator(){ return new TimestampInputValidator(); }
 
   @Bean
   public ObjectStore objectStore() throws Exception {

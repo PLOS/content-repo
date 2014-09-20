@@ -19,6 +19,7 @@ package org.plos.repo;
 
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.plos.repo.models.InputCollectionValidator;
+import org.plos.repo.models.TimestampInputValidator;
 import org.plos.repo.service.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ClassPathResource;
@@ -41,10 +42,16 @@ public class TestSpringConfig {
   }
 
   @Bean
+  public MigrationService migrationService() { return new MigrationService();}
+
+  @Bean
   public CollectionRepoService collectionRepoService() { return new CollectionRepoService();}
 
   @Bean
   public InputCollectionValidator inputCollectionValidator(){ return new InputCollectionValidator(); }
+
+  @Bean
+  public TimestampInputValidator timestampInputValidator(){ return new TimestampInputValidator(); }
 
   @Bean
   public ObjectStore objectStore() throws Exception {

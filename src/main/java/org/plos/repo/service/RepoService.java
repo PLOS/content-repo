@@ -20,6 +20,7 @@ package org.plos.repo.service;
 import com.google.common.util.concurrent.Striped;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
+import org.plos.repo.models.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -426,7 +427,7 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(e);
       }
 
-      object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), null, bucket.bucketId, bucketName, versionNumber, Object.Status.USED, cretationDateTime);
+      object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), null, bucket.bucketId, bucketName, versionNumber, Status.USED, cretationDateTime);
 
       rollback = true;
 
@@ -494,7 +495,7 @@ public class RepoService extends BaseRepoService {
       //if any of the input properties are null, we should populate them with the data of the previous version of the object
       // TODO: if the object is equals to the last version, do we need to update the timestamp?
 
-      newObject = new Object(null, object.key, null, timestamp, downloadName, contentType, null, null , object.bucketId, bucketName, null, Object.Status.USED, cretationDateTime);
+      newObject = new Object(null, object.key, null, timestamp, downloadName, contentType, null, null , object.bucketId, bucketName, null, Status.USED, cretationDateTime);
 
       sqlService.getConnection();
       if (sqlService.getBucket(bucketName) == null)

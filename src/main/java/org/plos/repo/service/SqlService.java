@@ -17,10 +17,8 @@
 
 package org.plos.repo.service;
 
-import org.plos.repo.models.Bucket;
-import org.plos.repo.models.Collection;
+import org.plos.repo.models.*;
 import org.plos.repo.models.Object;
-import org.plos.repo.models.InputObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
@@ -50,13 +48,13 @@ public abstract class SqlService {
     return new org.plos.repo.models.Object(rs.getInt("ID"), rs.getString("OBJKEY"), rs.getString("CHECKSUM"),
                                           rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"),
                                           rs.getLong("SIZE"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"),
-                                          rs.getInt("VERSIONNUMBER"), Object.STATUS_VALUES.get(rs.getInt("STATUS")), rs.getTimestamp("CREATIONDATE"));
+                                          rs.getInt("VERSIONNUMBER"), Status.STATUS_VALUES.get(rs.getInt("STATUS")), rs.getTimestamp("CREATIONDATE"));
   }
 
   private static org.plos.repo.models.Collection mapCollectionRow(ResultSet rs) throws SQLException {
     return new org.plos.repo.models.Collection(rs.getInt("ID"), rs.getString("COLLKEY"), rs.getTimestamp("TIMESTAMP"),
                                                rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"),
-                                                Collection.STATUS_VALUES.get(rs.getInt("STATUS")), rs.getString("TAG"),
+                                                Status.STATUS_VALUES.get(rs.getInt("STATUS")), rs.getString("TAG"),
                                                 rs.getTimestamp("CREATIONDATE"));
   }
 
@@ -196,7 +194,7 @@ public abstract class SqlService {
 
       p = connectionLocal.get().prepareStatement("UPDATE objects SET status=? WHERE objKey=? AND bucketId=? AND versionNumber=?");
 
-      p.setInt(1, Object.Status.DELETED.getValue());
+      p.setInt(1, Status.DELETED.getValue());
       p.setString(2, key);
       p.setInt(3, bucket.bucketId);
       p.setInt(4, versionNumber);
@@ -260,14 +258,14 @@ public abstract class SqlService {
 
       p.setString(1, bucketName);
       p.setString(2, key);
-      p.setInt(3, Object.Status.USED.getValue());
+      p.setInt(3, Status.USED.getValue());
 
       result = p.executeQuery();
 
       if (result.next()) {
         Object object = mapObjectRow(result);
 
-        if (object.status == Object.Status.DELETED) {
+        if (object.status == Status.DELETED) {
           log.info("searched for object which has been deleted. id: " + object.id);
           return null;
         }
@@ -301,7 +299,7 @@ public abstract class SqlService {
       if (result.next()) {
         Object object = mapObjectRow(result);
 
-        if (object.status == Object.Status.DELETED) {
+        if (object.status == Status.DELETED) {
           log.info("searched for object which has been deleted. id: " + object.id);
           return null;
         }
@@ -364,7 +362,7 @@ public abstract class SqlService {
 
       int index = 0;
       if (!includeDeleted)
-        p.setInt(++index, Object.Status.USED.getValue());
+        p.setInt(++index, Status.USED.getValue());
       if (bucketName != null)
         p.setString(++index, bucketName);
 
@@ -399,6 +397,13 @@ public abstract class SqlService {
     }
 
     return (result > 0);
+  }
+
+  public List<Bucket> listBuckets(Timestamp timestamp) throws SQLException {
+
+   // TODO : add timestamp to buckets
+    return null;
+
   }
 
   public List<Bucket> listBuckets() throws SQLException {
@@ -452,10 +457,38 @@ public abstract class SqlService {
       int i = 1;
 
       if (!includeDeleted)
-        p.setInt(i++, Object.Status.USED.getValue());
+        p.setInt(i++, Status.USED.getValue());
 
       if (bucketName != null)
         p.setString(i++, bucketName);
+
+      result = p.executeQuery();
+
+      while (result.next()) {
+        objects.add(mapObjectRow(result));
+      }
+
+      return objects;
+
+    } finally {
+      closeDbStuff(result, p);
+    }
+
+  }
+
+  public List<Object> listObjects(Timestamp timestamp) throws SQLException {
+
+    List<Object> objects = new ArrayList<>();
+
+    PreparedStatement p = null;
+    ResultSet result = null;
+
+    try {
+
+      StringBuilder q = new StringBuilder();
+      q.append("SELECT * FROM objects WHERE timestamp > ?");
+
+      p.setTimestamp(1, timestamp);
 
       result = p.executeQuery();
 
@@ -508,7 +541,7 @@ public abstract class SqlService {
 
       int i = 1;
       if (!includeDeleted)
-        p.setInt(i++, Object.Status.USED.getValue());
+        p.setInt(i++, Status.USED.getValue());
 
       if (bucketName != null)
         p.setString(i++, bucketName);
@@ -522,6 +555,34 @@ public abstract class SqlService {
         Collection c = mapCollectionRow(result);
         c.addObjects(listCollectionObjects(c.getId()));
         collections.add(c);
+      }
+
+      return collections;
+
+    } finally {
+      closeDbStuff(result, p);
+    }
+
+  }
+
+  public List<Collection> listCollections(Timestamp timestamp) throws SQLException {
+
+    List<Collection> collections = new ArrayList<>();
+
+    PreparedStatement p = null;
+    ResultSet result = null;
+
+    try {
+
+      StringBuilder q = new StringBuilder();
+      q.append("SELECT * FROM collections WHERE c.timestamp > ?");
+
+      p = connectionLocal.get().prepareStatement(q.toString());
+
+      p.setTimestamp(1, timestamp);
+
+      while (result.next()) {
+        collections.add(mapCollectionRow(result));
       }
 
       return collections;
@@ -598,7 +659,7 @@ public abstract class SqlService {
 
       p.setString(1, bucketName);
       p.setString(2, key);
-      p.setInt(3, Object.Status.USED.getValue());
+      p.setInt(3, Status.USED.getValue());
       if (tag != null){
         p.setString(4,tag);
       }
@@ -608,7 +669,7 @@ public abstract class SqlService {
       if (result.next()) {
         Collection collection = mapCollectionRow(result);
 
-        if (collection.getStatus() == Collection.Status.DELETED) {
+        if (collection.getStatus() == Status.DELETED) {
           log.info("searched for collection which has been deleted. id: " + collection.getId());
           return null;
         }
@@ -665,7 +726,7 @@ public abstract class SqlService {
       if (result.next()) {
         Collection collection = mapCollectionRow(result);
 
-        if (collection.getStatus() == Collection.Status.DELETED) {
+        if (collection.getStatus() == Status.DELETED) {
           log.info("searched for collection which has been deleted. id: " + collection.getId());
           return null;
         }
@@ -702,7 +763,7 @@ public abstract class SqlService {
 
       p.setString(1, collection.getBucketName());
       p.setString(2, collection.getKey());
-      p.setInt(3, Collection.Status.USED.getValue());
+      p.setInt(3, Status.USED.getValue());
 
       result = p.executeQuery();
 
@@ -741,7 +802,7 @@ public abstract class SqlService {
 
       p = connectionLocal.get().prepareStatement("UPDATE collections SET status=? WHERE collKey=? AND bucketId=? AND versionNumber=?");
 
-      p.setInt(1, Collection.Status.DELETED.getValue());
+      p.setInt(1, Status.DELETED.getValue());
       p.setString(2, key);
       p.setInt(3, bucket.bucketId);
       p.setInt(4, versionNumber);
@@ -767,7 +828,7 @@ public abstract class SqlService {
 
       p.setString(1, object.bucketName);
       p.setString(2, object.key);
-      p.setInt(3, Object.Status.USED.getValue()); // TODO: make this in input a parameter?
+      p.setInt(3, Status.USED.getValue()); // TODO: make this in input a parameter?
 
       result = p.executeQuery();
 

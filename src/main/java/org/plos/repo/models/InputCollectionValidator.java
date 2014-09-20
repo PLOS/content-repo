@@ -2,12 +2,16 @@ package org.plos.repo.models;
 
 import org.plos.repo.service.RepoException;
 
+import javax.inject.Inject;
 import java.sql.Timestamp;
 
 /**
  * Input Collection Validator. It validates the required fields.
  */
 public class InputCollectionValidator {
+
+  @Inject
+  private TimestampInputValidator timestampValidator;
 
   public void validate(InputCollection collection) throws RepoException {
 
@@ -17,25 +21,14 @@ public class InputCollectionValidator {
     if (collection.getBucketName() == null)
       throw new RepoException(RepoException.Type.NoBucketEntered);
 
-    validateTimeStamp(collection.getTimestampString(), RepoException.Type.CouldNotParseTimestamp);
-    validateTimeStamp(collection.getCreationDateTimeString(), RepoException.Type.CouldNotParseCreationDate);
+    timestampValidator.validate(collection.getTimestampString(), RepoException.Type.CouldNotParseTimestamp);
+    timestampValidator.validate(collection.getCreationDateTimeString(), RepoException.Type.CouldNotParseCreationDate);
 
 
     if (collection.getObjects() == null || collection.getObjects().size() == 0 ) {
       throw new RepoException(RepoException.Type.CantCreateCollectionWithNoObjects);
     }
 
-  }
-
-
-  private void validateTimeStamp(String timeStamp, RepoException.Type errorType) throws RepoException {
-    if (timeStamp != null) {
-      try {
-        Timestamp.valueOf(timeStamp);
-      } catch (IllegalArgumentException e) {
-        throw new RepoException(errorType);
-      }
-    }
   }
 
 }
