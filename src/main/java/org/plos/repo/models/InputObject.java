@@ -23,40 +23,30 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class InputObject {
 
   private String key; // what the user specifies
-  private String bucketName;
   private Integer versionNumber;
 
   // empty constructor required for JAXB mapping
   public InputObject() {
   }
 
-  public InputObject(String key, String bucketName, Integer versionNumber) {
+  public InputObject(String key, Integer versionNumber) {
     this.key = key;
-    this.bucketName = bucketName;
     this.versionNumber = versionNumber;
   }
 
-    public String getKey() {
-        return key;
-    }
+  public String getKey() {
+    return key;
+  }
 
-    public String getBucketName() {
-        return bucketName;
-    }
+  public Integer getVersionNumber() {
+    return versionNumber;
+  }
 
-    public Integer getVersionNumber() {
-        return versionNumber;
-    }
+  public void setKey(String key) {
+    this.key = key;
+  }
 
-    public void setKey(String key) {
-        this.key = key;
-    }
-
-    public void setBucketName(String bucketName) {
-        this.bucketName = bucketName;
-    }
-
-    public void setVersionNumber(Integer versionNumber) {
-        this.versionNumber = versionNumber;
-    }
+  public void setVersionNumber(Integer versionNumber) {
+    this.versionNumber = versionNumber;
+  }
 }

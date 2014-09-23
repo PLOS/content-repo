@@ -293,7 +293,7 @@ public class CollectionRepoService extends BaseRepoService {
       for( ; y < existingCollection.getObjects().size(); y++ ){
         Object object = existingCollection.getObjects().get(y);
         if (object.key.equals(inputObject.getKey()) &&
-            object.bucketName.equals(inputObject.getBucketName()) &&
+            object.bucketName.equals(bucketName) &&
             object.versionNumber.equals(inputObject.getVersionNumber())){
           break;
 
@@ -344,7 +344,7 @@ public class CollectionRepoService extends BaseRepoService {
 
       for (InputObject inputObject : inputObjects){
 
-        if (sqlService.insertCollectionObjects(collId, inputObject.getKey(), inputObject.getBucketName(), inputObject.getVersionNumber()) == 0){
+        if (sqlService.insertCollectionObjects(collId, inputObject.getKey(), bucketName, inputObject.getVersionNumber()) == 0){
           throw new RepoException(RepoException.Type.ObjectCollectionNotFound);
         }
 
