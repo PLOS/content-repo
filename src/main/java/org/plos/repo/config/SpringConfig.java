@@ -1,8 +1,8 @@
 package org.plos.repo.config;
 
-import org.plos.repo.models.InputCollectionValidator;
+import org.plos.repo.models.validator.InputCollectionValidator;
+import org.plos.repo.models.validator.TimestampInputValidator;
 import org.plos.repo.util.OperationComparator;
-import org.plos.repo.models.TimestampInputValidator;
 import org.plos.repo.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

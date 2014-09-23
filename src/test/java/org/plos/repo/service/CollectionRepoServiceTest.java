@@ -8,7 +8,7 @@ import org.mockito.Mock;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Collection;
 import org.plos.repo.models.InputCollection;
-import org.plos.repo.models.InputCollectionValidator;
+import org.plos.repo.models.validator.InputCollectionValidator;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -69,8 +69,6 @@ public class CollectionRepoServiceTest {
     verify(sqlService).getConnection();
     verify(sqlService).getBucket(VALID_BUCKET);
     verify(sqlService).listCollections(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
-
-
 
   }
 

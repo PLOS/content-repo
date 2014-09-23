@@ -21,7 +21,7 @@ import com.google.common.util.concurrent.Striped;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
 import org.plos.repo.models.Status;
-import org.plos.repo.models.TimestampInputValidator;
+import org.plos.repo.models.validator.TimestampInputValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -19,6 +19,7 @@ package org.plos.repo.service;
 
 import org.plos.repo.models.*;
 import org.plos.repo.models.Object;
+import org.plos.repo.models.validator.InputCollectionValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
