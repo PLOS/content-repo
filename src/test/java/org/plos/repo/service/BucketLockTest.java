@@ -6,6 +6,8 @@ import org.plos.repo.RepoBaseSpringTest;
 import org.plos.repo.models.Bucket;
 
 import java.lang.reflect.Field;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -21,6 +23,8 @@ import static org.mockito.Mockito.verify;
 public class BucketLockTest extends RepoBaseSpringTest {
 
   private static final String BUCKET_NAME = "bucket";
+  private static final Timestamp CREATION_DATE_TIMESTAMP = new Timestamp(new Date().getTime());
+  private static final String CREATION_DATE_TIME_STRING = CREATION_DATE_TIMESTAMP.toString();
 
   private ObjectStore spyObjectStore;
   private SqlService spySqlService;
@@ -64,7 +68,7 @@ public class BucketLockTest extends RepoBaseSpringTest {
     // +1 for getBucket at success return time
     verify(spySqlService, times(INSERT_THREADS + 1)).getBucket(anyString());
     verify(spyObjectStore, times(1)).createBucket(any(Bucket.class));
-    verify(spySqlService, times(1)).insertBucket(any(Bucket.class));
+    verify(spySqlService, times(1)).insertBucket(any(Bucket.class), any(Timestamp.class));
     verify(spyObjectStore, never()).deleteBucket(any(Bucket.class));
 
     assertEquals(1, repoService.listBuckets().size());
@@ -73,7 +77,7 @@ public class BucketLockTest extends RepoBaseSpringTest {
   @Test
   public void testManyDeletesForExistingBucket() throws Exception {
 
-    repoService.createBucket(BUCKET_NAME);
+    repoService.createBucket(BUCKET_NAME, CREATION_DATE_TIME_STRING);
 
     final int INSERT_THREADS = 0;
     final int DELETE_THREADS = 5;
@@ -102,7 +106,7 @@ public class BucketLockTest extends RepoBaseSpringTest {
 
     // do final insert in case the last thread operation was a delete.
     try {
-      repoService.createBucket(BUCKET_NAME);
+      repoService.createBucket(BUCKET_NAME, CREATION_DATE_TIME_STRING);
     } catch (RepoException e) {
       // toss the exception since we are only creating if it does not exist
     }
@@ -124,7 +128,7 @@ public class BucketLockTest extends RepoBaseSpringTest {
           try {
             startGate.await();  /* don't start until startGate is 0 */
             try {
-              repoService.createBucket(BUCKET_NAME);
+              repoService.createBucket(BUCKET_NAME, CREATION_DATE_TIME_STRING);
             } finally {
               endGate.countDown();
             }

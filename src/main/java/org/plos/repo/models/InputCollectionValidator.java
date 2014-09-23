@@ -3,7 +3,6 @@ package org.plos.repo.models;
 import org.plos.repo.service.RepoException;
 
 import javax.inject.Inject;
-import java.sql.Timestamp;
 
 /**
  * Input Collection Validator. It validates the required fields.

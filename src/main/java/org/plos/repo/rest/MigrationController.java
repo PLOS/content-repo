@@ -1,5 +1,6 @@
 package org.plos.repo.rest;
 
+import com.google.common.collect.Multiset;
 import com.wordnik.swagger.annotations.*;
 import org.apache.http.HttpStatus;
 import org.plos.repo.models.*;
@@ -7,6 +8,7 @@ import org.plos.repo.models.Object;
 import org.plos.repo.service.MigrationService;
 import org.plos.repo.service.RepoException;
 import org.plos.repo.service.RepoInfoService;
+import org.plos.repo.util.SortedList;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -14,6 +16,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.SortedSet;
 
 /**
  * Handles migration APIs requests
@@ -42,7 +45,7 @@ public class MigrationController {
 
     try {
       return Response.status(Response.Status.OK).entity(
-          new GenericEntity<List<Operation>>(
+          new GenericEntity<SortedList<Operation>>(
               migrationService.listHistoricOperations(timestamp, offset, limit)
           ) {}).build();
     } catch (RepoException e) {

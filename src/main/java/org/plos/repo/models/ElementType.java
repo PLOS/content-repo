@@ -1,11 +1,11 @@
 package org.plos.repo.models;
 
 
-public enum OperationType {
+public enum ElementType {
 
   BUCKET, OBJECT, COLLECTION;
 
-  private OperationType() {
+  private ElementType() {
   }
 
 }

@@ -23,19 +23,14 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import org.apache.http.HttpStatus;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.service.RepoException;
 import org.plos.repo.service.RepoInfoService;
 import org.plos.repo.service.RepoService;
 
 import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -88,11 +83,12 @@ public class BucketController {
     @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
   })
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-  public Response create(@ApiParam(required = true) @FormParam("name") String name) {
+  public Response create(@ApiParam(required = true) @FormParam("name") String name,
+                         @ApiParam(value = "creation time", required = false) @FormParam("creationDateTime") String creationDateTimeString) {
 
     try {
       return Response.status(Response.Status.CREATED).entity(
-          repoService.createBucket(name)
+          repoService.createBucket(name, creationDateTimeString)
       ).build();
     } catch (RepoException e) {
       return ObjectController.handleError(e);

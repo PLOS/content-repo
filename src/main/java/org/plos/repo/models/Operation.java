@@ -1,28 +1,59 @@
 package org.plos.repo.models;
 
+import java.sql.Timestamp;
+
 /**
  * Represents an operation perform in the content repo, such as inserting or updating the DB
  */
 public class Operation {
 
-  private OperationType operationType;
+  private ElementType elementType;
+  private Status status;
   private String key;
   private String bucketName;
-  private String version;
+  private Integer version;
+  private Timestamp lastModification;
+  private Timestamp creationDateTime;
 
   public Operation(){
 
   }
 
-  public Operation(OperationType operationType, String key, String bucketName, String version) {
-    this.operationType = operationType;
-    this.key = key;
-    this.bucketName = bucketName;
-    this.version = version;
+  public Operation(Bucket bucket){
+    this.elementType = ElementType.BUCKET;
+    this.bucketName = bucket.bucketName;
+    this.lastModification = bucket.timestamp;
   }
 
-  public OperationType getOperationType() {
-    return operationType;
+  public Operation(Object object, Status status){
+    this.elementType = ElementType.OBJECT;
+    this.key = object.key;
+    this.bucketName = object.bucketName;
+    this.version = object.versionNumber;
+    if (Status.DELETED.equals(status)){
+      this.lastModification = object.timestamp;
+    } else {
+      this.lastModification = object.creationDate;
+    }
+    this.creationDateTime = object.creationDate;
+  }
+
+  public Operation(Collection collection, Status status){
+    this.elementType = ElementType.COLLECTION;
+    this.key = collection.getKey();
+    this.bucketName = collection.getBucketName();
+    this.version = collection.getVersionNumber();
+    this.lastModification = collection.getTimestamp();
+    if (Status.DELETED.equals(status)){
+      this.lastModification = collection.getTimestamp();
+    } else {
+      this.lastModification = collection.getCreationDate();
+    }
+    this.creationDateTime = collection.getCreationDate();
+  }
+
+  public ElementType getElementType() {
+    return elementType;
   }
 
   public String getKey() {
@@ -33,12 +64,12 @@ public class Operation {
     return bucketName;
   }
 
-  public String getVersion() {
+  public Integer getVersion() {
     return version;
   }
 
-  public void setOperationType(OperationType operationType) {
-    this.operationType = operationType;
+  public void setElementType(ElementType elementType) {
+    this.elementType = elementType;
   }
 
   public void setKey(String key) {
@@ -49,7 +80,31 @@ public class Operation {
     this.bucketName = bucketName;
   }
 
-  public void setVersion(String version) {
+  public void setVersion(Integer version) {
     this.version = version;
+  }
+
+  public Timestamp getLastModification() {
+    return lastModification;
+  }
+
+  public void setLastModification(Timestamp lastModification) {
+    this.lastModification = lastModification;
+  }
+
+  public Status getStatus() {
+    return status;
+  }
+
+  public Timestamp getCreationDateTime() {
+    return creationDateTime;
+  }
+
+  public void setStatus(Status status) {
+    this.status = status;
+  }
+
+  public void setCreationDateTime(Timestamp creationDateTime) {
+    this.creationDateTime = creationDateTime;
   }
 }

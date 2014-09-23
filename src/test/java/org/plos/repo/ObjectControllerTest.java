@@ -33,6 +33,8 @@ import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.sql.Timestamp;
+import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -44,6 +46,8 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
   private final String testData1 = "test data one goes\nhere.";
 
   private final String testData2 = "test data two goes\nhere.";
+
+  private final String CREATION_DATE_TIME = new Timestamp(new Date().getTime()).toString();
 
   @Before
   public void setup() throws Exception {
@@ -123,7 +127,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
   @Test
   public void createWithExistingKey() {
 
-    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
+    createBucket(bucketName, CREATION_DATE_TIME);
 
     assertEquals(target("/objects").request()
             .post(Entity.entity(new FormDataMultiPart()
@@ -151,7 +155,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
   @Test
   public void createWithEmptyData() {
 
-    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
+    createBucket(bucketName, CREATION_DATE_TIME);
 
     assertRepoError(target("/objects").request()
             .accept(MediaType.APPLICATION_JSON_TYPE)
@@ -168,7 +172,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
   @Test
   public void createVersionWithoutOrig() {
 
-    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
+    createBucket(bucketName, CREATION_DATE_TIME);
 
     assertRepoError(target("/objects").request()
             .accept(MediaType.APPLICATION_JSON_TYPE)
@@ -185,7 +189,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
   @Test
   public void createWithInvalidCreateMethod() {
 
-    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
+    createBucket(bucketName, CREATION_DATE_TIME);
 
     assertRepoError(target("/objects").request()
             .accept(MediaType.APPLICATION_JSON_TYPE)
@@ -201,7 +205,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
   @Test
   public void invalidOffset() {
 
-    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
+    createBucket(bucketName, CREATION_DATE_TIME);
 
     assertRepoError(target("/objects").queryParam("bucketName", bucketName).queryParam("offset", "-1").request().accept(MediaType.APPLICATION_JSON_TYPE).get(), Response.Status.BAD_REQUEST, RepoException.Type.InvalidOffset);
 
@@ -225,7 +229,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
   @Test
   public void offsetAndCount() {
 
-    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(new Form().param("name", bucketName)));
+    createBucket(bucketName, CREATION_DATE_TIME);
 
     int startCount = Integer.valueOf(
         gson.fromJson(target("/buckets/" + bucketName).request(MediaType.APPLICATION_JSON_TYPE).get(String.class),
@@ -487,4 +491,12 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     //   check url redirect resolve order (db vs filestore)
 
   }
+
+  private void createBucket(String bucketName, String creationDateTime){
+    target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
+        .post(Entity.form(new Form()
+            .param("name", bucketName)
+            .param("creationDateTime",creationDateTime)));
+  }
+
 }

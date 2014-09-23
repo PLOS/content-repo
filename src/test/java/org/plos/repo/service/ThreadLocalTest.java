@@ -28,7 +28,6 @@ import org.plos.repo.RepoBaseSpringTest;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.Set;
 

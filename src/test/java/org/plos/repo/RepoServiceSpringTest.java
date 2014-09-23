@@ -35,7 +35,8 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
   private final Bucket bucket1 = new Bucket("bucket1");
 
-  private final Timestamp creationDateTime = new Timestamp(new Date().getTime());
+  private final Timestamp CREATION_DATE_TIME = new Timestamp(new Date().getTime());
+  private final String CREATION_DATE_TIME_STRING = CREATION_DATE_TIME.toString();
 
   @Before
   public void beforeMethods() throws Exception {
@@ -62,7 +63,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
   @Test
   public void listBuckets() throws Exception {
     Assert.assertTrue(repoService.listBuckets().size() == 0);
-    repoService.createBucket(bucket1.bucketName);
+    repoService.createBucket(bucket1.bucketName, CREATION_DATE_TIME_STRING);
     Assert.assertTrue(repoService.listBuckets().size() == 1);
   }
 
@@ -73,7 +74,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     Assert.assertTrue(sqlService.getBucket(bucket1.bucketName) == null);
 
-    sqlService.insertBucket(bucket1);
+    sqlService.insertBucket(bucket1, CREATION_DATE_TIME);
 
     Assert.assertTrue(sqlService.getBucket(bucket1.bucketName) != null);
 
@@ -89,7 +90,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
   public void createBucket() throws Exception {
 
     try {
-      repoService.createBucket(bucket1.bucketName);
+      repoService.createBucket(bucket1.bucketName, CREATION_DATE_TIME_STRING);
     } catch (RepoException e) {
       Assert.fail(e.getMessage());
     }
@@ -112,7 +113,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     objStoreField.set(repoService, spyObjectStore);
 
     try {
-      Bucket bucketResponse = repoService.createBucket(bucket1.bucketName);
+      Bucket bucketResponse = repoService.createBucket(bucket1.bucketName, CREATION_DATE_TIME_STRING);
       Assert.assertEquals(bucket1.bucketName, bucketResponse.bucketName);
     } catch (RepoException e) {
       Assert.fail(e.getMessage());
@@ -132,7 +133,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     objStoreField.set(repoService, spyObjectStore);
 
     try {
-      repoService.createBucket(bucket1.bucketName);
+      repoService.createBucket(bucket1.bucketName, CREATION_DATE_TIME_STRING);
       Assert.fail();
     } catch (RepoException e) {
       Assert.assertTrue(e.getType() == RepoException.Type.ServerError);
@@ -152,14 +153,14 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     SqlService spySqlService = Mockito.spy(sqlService);
 
-    BDDMockito.willReturn(false).given(spySqlService).insertBucket(Mockito.any(Bucket.class));
+    BDDMockito.willReturn(false).given(spySqlService).insertBucket(Mockito.any(Bucket.class), Mockito.any(Timestamp.class));
 
     Field sqlServiceField = BaseRepoService.class.getDeclaredField("sqlService");
     sqlServiceField.setAccessible(true);
     sqlServiceField.set(repoService, spySqlService);
 
     try {
-      repoService.createBucket(bucket1.bucketName);
+      repoService.createBucket(bucket1.bucketName, CREATION_DATE_TIME_STRING);
       Assert.fail();
     } catch (RepoException e) {
       Assert.assertTrue(e.getType() == RepoException.Type.ServerError);
@@ -178,7 +179,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
   @Test
   public void deleteBucket() throws Exception {
 
-    repoService.createBucket(bucket1.bucketName);
+    repoService.createBucket(bucket1.bucketName, CREATION_DATE_TIME_STRING);
 
     try {
       repoService.deleteBucket(bucket1.bucketName);
@@ -218,10 +219,10 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
   @Test
   public void createNewObject() throws Exception {
 
-    repoService.createBucket(bucket1.bucketName);
+    repoService.createBucket(bucket1.bucketName, CREATION_DATE_TIME_STRING);
 
     try {
-      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, "text!", "dlName", creationDateTime, IOUtils.toInputStream("data1"), creationDateTime);
+      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, "text!", "dlName", CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME);
     } catch (RepoException e) {
       Assert.fail(e.getMessage());
     }
@@ -247,7 +248,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
   @Test
   public void createNewObjectUploadError() throws Exception {
 
-    repoService.createBucket(bucket1.bucketName);
+    repoService.createBucket(bucket1.bucketName, CREATION_DATE_TIME_STRING);
 
     ObjectStore spyObjectStore = Mockito.spy(objectStore);
 
@@ -258,7 +259,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     objStoreField.set(repoService, spyObjectStore);
 
     try {
-      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, null, null, creationDateTime, IOUtils.toInputStream("data1"), creationDateTime);
+      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME);
       Assert.fail();
     } catch (RepoException e) {
       Assert.assertTrue(e.getType() == RepoException.Type.ServerError);
@@ -277,7 +278,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
   @Test
   public void createNewObjectRollback() throws Exception {
 
-    repoService.createBucket(bucket1.bucketName);
+    repoService.createBucket(bucket1.bucketName, CREATION_DATE_TIME_STRING);
 
     SqlService spySqlService = Mockito.spy(sqlService);
 
@@ -288,7 +289,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     sqlServiceField.set(repoService, spySqlService);
 
     try {
-      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, null, null, creationDateTime, IOUtils.toInputStream("data1"), creationDateTime);
+      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME);
       Assert.fail();
     } catch (RepoException e) {
       Assert.assertTrue(e.getType() == RepoException.Type.ServerError);
@@ -307,13 +308,13 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
   @Test
   public void createObjectVersion() throws Exception {
 
-    repoService.createBucket(bucket1.bucketName);
+    repoService.createBucket(bucket1.bucketName, CREATION_DATE_TIME_STRING);
 
     try {
 
-      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, "first content type", "first download name", creationDateTime, IOUtils.toInputStream("data1"), creationDateTime);
+      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, "first content type", "first download name", CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME);
 
-      repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.bucketName, "new content type", "new download name", creationDateTime, IOUtils.toInputStream("data2"), creationDateTime);
+      repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.bucketName, "new content type", "new download name", CREATION_DATE_TIME, IOUtils.toInputStream("data2"), CREATION_DATE_TIME);
 
     } catch (RepoException e) {
       Assert.fail(e.getMessage());
@@ -351,10 +352,10 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
   @Test
   public void createObjectVersionNoBucket() throws Exception {
 
-    repoService.createBucket("bucket0");
+    repoService.createBucket("bucket0", CREATION_DATE_TIME_STRING);
 
     try {
-      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, null, null, creationDateTime, IOUtils.toInputStream("data1"), creationDateTime);
+      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME);
       Assert.fail();
     } catch (RepoException e) {
       Assert.assertTrue(e.getType() == RepoException.Type.BucketNotFound);
@@ -377,9 +378,9 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
   @Test
   public void updateObjectRollback() throws Exception {
 
-    repoService.createBucket(bucket1.bucketName);
+    repoService.createBucket(bucket1.bucketName, CREATION_DATE_TIME_STRING);
 
-    repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, "first content type", "first download name", creationDateTime, IOUtils.toInputStream("data1"), creationDateTime);
+    repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, "first content type", "first download name", CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME);
 
     SqlService spySqlService = Mockito.spy(sqlService);
 
@@ -391,7 +392,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     try {
 
-      repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.bucketName, "new content type", "new download name", creationDateTime, IOUtils.toInputStream("data2"), creationDateTime);
+      repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.bucketName, "new content type", "new download name", CREATION_DATE_TIME, IOUtils.toInputStream("data2"), CREATION_DATE_TIME);
 
       Assert.fail();
     } catch (RepoException e) {
@@ -412,12 +413,12 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
   @Test
   public void updateObjectMetadata() throws Exception {
 
-    repoService.createBucket(bucket1.bucketName);
+    repoService.createBucket(bucket1.bucketName, CREATION_DATE_TIME_STRING);
 
     try {
-      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, "first content type", "first download name", creationDateTime, IOUtils.toInputStream("data1"), creationDateTime);
+      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, "first content type", "first download name", CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME);
 
-      repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.bucketName, "new content type", "new download name", creationDateTime, IOUtils.toInputStream(""), creationDateTime);
+      repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.bucketName, "new content type", "new download name", CREATION_DATE_TIME, IOUtils.toInputStream(""), CREATION_DATE_TIME);
 
     } catch (RepoException e) {
       Assert.fail(e.getMessage());
@@ -454,13 +455,13 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
   @Test
   public void deleteObject() throws Exception {
 
-    repoService.createBucket(bucket1.bucketName);
+    repoService.createBucket(bucket1.bucketName, CREATION_DATE_TIME_STRING);
 
     try {
 
-      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, null, null, creationDateTime, IOUtils.toInputStream("data1"), creationDateTime);
+      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME);
 
-      repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.bucketName, null, null, creationDateTime, IOUtils.toInputStream("data2"), creationDateTime);
+      repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.bucketName, null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data2"), CREATION_DATE_TIME);
 
       repoService.deleteObject(bucket1.bucketName, "key1", 1);
 
@@ -490,13 +491,13 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
   @Test
   public void deleteObjectNotFound() throws Exception {
 
-    repoService.createBucket(bucket1.bucketName);
+    repoService.createBucket(bucket1.bucketName, CREATION_DATE_TIME.toString());
 
     try {
 
-      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, null, null, creationDateTime, IOUtils.toInputStream("data1"), creationDateTime);
+      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME);
 
-      repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.bucketName, null, null, creationDateTime, IOUtils.toInputStream("data2"), creationDateTime);
+      repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.bucketName, null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data2"), CREATION_DATE_TIME);
 
       repoService.deleteObject(bucket1.bucketName, "key1", 5);
 
@@ -521,9 +522,9 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
   @Test
   public void getObjectReproxy() throws Exception {
 
-    repoService.createBucket(bucket1.bucketName);
+    repoService.createBucket(bucket1.bucketName, CREATION_DATE_TIME_STRING);
 
-    Object newObj = repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, null, null, creationDateTime, IOUtils.toInputStream("data1"), creationDateTime);
+    Object newObj = repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.bucketName, null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME);
 
     if (repoService.serverSupportsReproxy()) {
 

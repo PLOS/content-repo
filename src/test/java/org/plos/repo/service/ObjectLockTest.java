@@ -28,6 +28,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
   private static final String BUCKET_NAME = "bucket";
   private static final String BASE_KEY_NAME = "key";
+  private final Timestamp CREATION_DATE_TIME = new Timestamp(new Date().getTime());
 
   private static final String OBJECT_DATA = "12345";
 
@@ -50,7 +51,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     clearData(objectStore, sqlService);
 
-    repoService.createBucket(BUCKET_NAME);
+    repoService.createBucket(BUCKET_NAME, CREATION_DATE_TIME.toString());
 
     spyObjectStore = spy(this.objectStore);
     spySqlService = spy(this.sqlService);

@@ -21,6 +21,7 @@ import org.hsqldb.jdbc.JDBCDataSource;
 import org.plos.repo.models.InputCollectionValidator;
 import org.plos.repo.models.TimestampInputValidator;
 import org.plos.repo.service.*;
+import org.plos.repo.util.OperationComparator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -52,6 +53,9 @@ public class TestSpringConfig {
 
   @Bean
   public TimestampInputValidator timestampInputValidator(){ return new TimestampInputValidator(); }
+
+  @Bean
+  public OperationComparator operationComparator(){ return new OperationComparator(); }
 
   @Bean
   public ObjectStore objectStore() throws Exception {

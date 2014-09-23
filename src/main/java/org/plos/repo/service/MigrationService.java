@@ -1,6 +1,9 @@
 package org.plos.repo.service;
 
 import org.plos.repo.models.*;
+import org.plos.repo.models.Object;
+import org.plos.repo.util.OperationComparator;
+import org.plos.repo.util.SortedList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,7 +13,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 /**
- * Handles the communication for migration with sqlservice
+ * Handles the communication for migration services with sqlservice
  */
 public class MigrationService extends BaseRepoService{
 
@@ -19,7 +22,10 @@ public class MigrationService extends BaseRepoService{
   @Inject
   private TimestampInputValidator timestampInputValidator;
 
-  public List<Operation> listHistoricOperations(String timestampString, Integer offset, Integer limit) throws RepoException{
+  @Inject
+  private OperationComparator operationComparator;
+
+  public SortedList<Operation> listHistoricOperations(String timestampString, Integer offset, Integer limit) throws RepoException{
 
     validatePagination(offset, limit);
     timestampInputValidator.validate(timestampString, RepoException.Type.CouldNotParseTimestamp);
@@ -39,13 +45,48 @@ public class MigrationService extends BaseRepoService{
         collections = sqlService.listCollections(null, offset, limit, true, null);
       }
 
-      return null;
+      return createOperationList(buckets, objects, collections);
 
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
       sqlReleaseConnection();
     }
+  }
+
+  private SortedList<Operation> createOperationList(List<Bucket> buckets, List<Object> objects, List<Collection> collections) {
+
+    SortedList<Operation> operations = new SortedList<Operation>(operationComparator);
+
+    for (Bucket bucket : buckets){
+      Operation o = new Operation(bucket);
+      operations.add(o);
+    }
+    for (Object object : objects) {
+      if (Status.USED.equals(object.status)) {
+        Operation o = new Operation(object, Status.USED);
+        operations.add(o);
+      } else {
+        Operation o1 = new Operation(object, Status.USED);
+        Operation o2 = new Operation(object, Status.DELETED);
+        operations.add(o1);
+        operations.add(o2);
+      }
+    }
+    for (Collection collection : collections){
+      if (Status.USED.equals(collection.getStatus())){
+        Operation o = new Operation(collection, Status.USED);
+        operations.add(o);
+      } else {
+        Operation o1 = new Operation(collection, Status.USED);
+        Operation o2 = new Operation(collection, Status.DELETED);
+        operations.add(o1);
+        operations.add(o2);
+      }
+    }
+
+    return operations;
+
   }
 
   @Override

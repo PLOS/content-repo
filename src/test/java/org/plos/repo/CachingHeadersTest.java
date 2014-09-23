@@ -23,7 +23,6 @@ import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.plos.repo.models.Object;
 import org.plos.repo.service.RepoService;
 import org.springframework.beans.factory.config.SingletonBeanRegistry;
 

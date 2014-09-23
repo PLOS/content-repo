@@ -59,7 +59,7 @@ public abstract class SqlService {
   }
 
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
-    return new Bucket(rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"));
+    return new Bucket(rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getTimestamp("TIMESTAMP"), rs.getTimestamp("CREATIONDATE"));
   }
 
   private static void closeDbStuff(ResultSet result, PreparedStatement p) throws SQLException {
@@ -378,7 +378,7 @@ public abstract class SqlService {
     }
   }
 
-  public boolean insertBucket(Bucket bucket) throws SQLException {
+  public boolean insertBucket(Bucket bucket, Timestamp creationDate) throws SQLException {
 
     int result;
 
@@ -386,9 +386,11 @@ public abstract class SqlService {
 
     try {
 
-      p = connectionLocal.get().prepareStatement("INSERT INTO buckets (bucketName) VALUES(?)");
+      p = connectionLocal.get().prepareStatement("INSERT INTO buckets (bucketName, timestamp, creationDate) VALUES(?, ?, ?)");
 
       p.setString(1, bucket.bucketName);
+      p.setTimestamp(2, creationDate);
+      p.setTimestamp(3, creationDate);
 
       result = p.executeUpdate();
 
@@ -486,7 +488,7 @@ public abstract class SqlService {
     try {
 
       StringBuilder q = new StringBuilder();
-      q.append("SELECT * FROM objects WHERE timestamp > ?");
+      q.append("SELECT * FROM objects WHERE timestamp >= ?");
 
       p.setTimestamp(1, timestamp);
 

@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.Striped;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
 import org.plos.repo.models.Status;
+import org.plos.repo.models.TimestampInputValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +34,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -49,6 +51,8 @@ public class RepoService extends BaseRepoService {
   @Inject
   private ObjectStore objectStore;
 
+  @Inject
+  private TimestampInputValidator timestampValidator;
 
   public List<Bucket> listBuckets() throws RepoException {
     try {
@@ -62,7 +66,9 @@ public class RepoService extends BaseRepoService {
     }
   }
 
-  public Bucket createBucket(String name) throws RepoException {
+  public Bucket createBucket(String name, String creationDateTimeString) throws RepoException {
+
+    timestampValidator.validate(creationDateTimeString, RepoException.Type.CouldNotParseCreationDate);
 
     Lock writeLock = this.rwLocks.get(name).writeLock();
     writeLock.lock();
@@ -89,7 +95,10 @@ public class RepoService extends BaseRepoService {
       if (Boolean.FALSE.equals(objectStore.createBucket(bucket)))
         throw new RepoException("Unable to create bucket in object store: " + name);
 
-      if (!sqlService.insertBucket(bucket)) {
+      Timestamp creationDate = creationDateTimeString != null ?
+          Timestamp.valueOf(creationDateTimeString) : new Timestamp(new Date().getTime());
+
+      if (!sqlService.insertBucket(bucket, creationDate)) {
         throw new RepoException("Unable to create bucket in database: " + name);
       }
 

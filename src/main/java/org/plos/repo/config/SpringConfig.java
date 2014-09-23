@@ -1,6 +1,7 @@
 package org.plos.repo.config;
 
 import org.plos.repo.models.InputCollectionValidator;
+import org.plos.repo.util.OperationComparator;
 import org.plos.repo.models.TimestampInputValidator;
 import org.plos.repo.service.*;
 import org.slf4j.Logger;
@@ -46,6 +47,9 @@ public class SpringConfig {
 
   @Bean
   public TimestampInputValidator timestampInputValidator(){ return new TimestampInputValidator(); }
+
+  @Bean
+  public OperationComparator operationComparator(){ return new OperationComparator(); }
 
   @Bean
   public ObjectStore objectStore() throws Exception {
