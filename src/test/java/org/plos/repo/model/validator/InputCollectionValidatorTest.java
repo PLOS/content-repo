@@ -37,7 +37,7 @@ public class InputCollectionValidatorTest {
   @Mock
   private InputCollection inputCollection;
 
-  private List<InputObject> inputObjects = Arrays.asList(new InputObject[]{new InputObject("key", 0)});
+  private List<InputObject> inputObjects = Arrays.asList(new InputObject[]{new InputObject("key", "123456")});
 
   @Before
   public void setUp(){
@@ -99,8 +99,8 @@ public class InputCollectionValidatorTest {
   private void mockInputCollectionCalls(List<InputObject> objects) throws RepoException {
     when(inputCollection.getKey()).thenReturn(VALID_KEY);
     when(inputCollection.getBucketName()).thenReturn(VALID_BUCKET_NAME);
-    when(inputCollection.getTimestampString()).thenReturn(VALID_TIMESTAMP);
-    when(inputCollection.getCreationDateTimeString()).thenReturn(VALID_TIMESTAMP);
+    when(inputCollection.getTimestamp()).thenReturn(VALID_TIMESTAMP);
+    when(inputCollection.getCreationDateTime()).thenReturn(VALID_TIMESTAMP);
     doNothing().when(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseTimestamp);
     doNothing().when(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseCreationDate);
     when(inputCollection.getObjects()).thenReturn(objects);
@@ -110,8 +110,8 @@ public class InputCollectionValidatorTest {
     verify(inputCollection).getKey();
     verify(inputCollection).getKey();
     verify(inputCollection).getBucketName();
-    verify(inputCollection).getTimestampString();
-    verify(inputCollection).getCreationDateTimeString();
+    verify(inputCollection).getTimestamp();
+    verify(inputCollection).getCreationDateTime();
     verify(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseTimestamp);
     verify(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseCreationDate);
     verify(inputCollection, times(getObjectsCalls)).getObjects();

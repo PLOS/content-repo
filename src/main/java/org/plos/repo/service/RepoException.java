@@ -28,6 +28,7 @@ public class RepoException extends Exception {
     NoCollectionVersionEntered(21, "No collection version entered"),
     CouldNotParseCreationDate(22, "Could not parse creation date"),
     CantCompareOperations(23, "Can't compare operations"),
+    NoCollectionFilterEntered(23, "At least one of the filters is required"),
 
     // user errors for system state
     CantDeleteNonEmptyBucket(20, "Can not delete bucket since it contains objects"),

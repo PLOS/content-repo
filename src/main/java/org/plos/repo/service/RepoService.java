@@ -436,8 +436,8 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(e);
       }
 
-      object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), null, bucket.bucketId, bucketName, versionNumber, Status.USED, cretationDateTime);
-
+      object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), null, bucket.bucketId, bucketName, versionNumber, Status.USED, cretationDateTime, null);
+      object.versionChecksum = versionChecksumGenerator.generateVersionChecksum(object);
       rollback = true;
 
       // determine if the object should be added to the store or not
@@ -504,8 +504,8 @@ public class RepoService extends BaseRepoService {
       //if any of the input properties are null, we should populate them with the data of the previous version of the object
       // TODO: if the object is equals to the last version, do we need to update the timestamp?
 
-      newObject = new Object(null, object.key, null, timestamp, downloadName, contentType, null, null , object.bucketId, bucketName, null, Status.USED, cretationDateTime);
-
+      newObject = new Object(null, object.key, null, timestamp, downloadName, contentType, null, null , object.bucketId, bucketName, null, Status.USED, cretationDateTime, null);
+      newObject.versionChecksum = versionChecksumGenerator.generateVersionChecksum(newObject);
       sqlService.getConnection();
       if (sqlService.getBucket(bucketName) == null)
         throw new RepoException(RepoException.Type.BucketNotFound);

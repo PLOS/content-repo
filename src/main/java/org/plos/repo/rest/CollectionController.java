@@ -20,6 +20,7 @@ package org.plos.repo.rest;
 import com.wordnik.swagger.annotations.*;
 import org.apache.http.HttpStatus;
 import org.plos.repo.models.Collection;
+import org.plos.repo.models.CollectionFilter;
 import org.plos.repo.models.InputCollection;
 import org.plos.repo.service.CollectionRepoService;
 import org.plos.repo.service.RepoException;
@@ -33,8 +34,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
 
 
@@ -93,12 +92,11 @@ public class CollectionController {
     public Response listCollections(
             @ApiParam(required = true) @PathParam("bucketName") String bucketName,
             @ApiParam(required = true) @QueryParam("key") String key,
-            @QueryParam("version") Integer version,
-            @QueryParam("tag") String tag) {
+            @ApiParam("collectionFilter") @BeanParam CollectionFilter collectionFilter) {
 
         try {
 
-            Collection collection = collectionRepoService.getCollection(bucketName, key, version, tag);
+            Collection collection = collectionRepoService.getCollection(bucketName, key, collectionFilter);
 
             collection.setVersions(collectionRepoService.getCollectionVersions(collection));
             return Response.status(Response.Status.OK)
@@ -123,10 +121,10 @@ public class CollectionController {
     public Response delete(
             @ApiParam(required = true) @PathParam("bucketName") String bucketName,
             @ApiParam(required = true) @QueryParam("key") String key,
-            @ApiParam(required = true) @QueryParam("version") Integer version) {
+            @ApiParam("collectionFilter") @BeanParam CollectionFilter collectionFilter) {
 
         try {
-            collectionRepoService.deleteCollection(bucketName, key, version);
+            collectionRepoService.deleteCollection(bucketName, key, collectionFilter);
             return Response.status(Response.Status.OK).build();
         } catch (RepoException e) {
             return ObjectController.handleError(e);

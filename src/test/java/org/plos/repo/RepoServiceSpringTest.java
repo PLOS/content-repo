@@ -1,5 +1,4 @@
-/*
- * Copyright (c) 2006-2014 by Public Library of Science
+ /* Copyright (c) 2006-2014 by Public Library of Science
  * http://plos.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 
 package org.plos.repo;
 
@@ -272,7 +272,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1");
     Assert.assertTrue(objFromDb == null);
     sqlService.releaseConnection();
-    Assert.assertFalse(objectStore.objectExists(new Object(null, null, "cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151", null, null, null, 0l, null, null, bucket1.bucketName, null, null, null)));
+    Assert.assertFalse(objectStore.objectExists(new Object(null, null, "cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151", null, null, null, 0l, null, null, bucket1.bucketName, null, null, null, null)));
   }
 
   @Test
@@ -302,7 +302,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1");
     Assert.assertTrue(objFromDb == null);
     sqlService.releaseConnection();
-    Assert.assertTrue(objectStore.objectExists(new Object(null, null, "cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151", null, null, null, 0l, null, null, bucket1.bucketName, null, null, null)));  // since we do not delete object data
+    Assert.assertTrue(objectStore.objectExists(new Object(null, null, "cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151", null, null, null, 0l, null, null, bucket1.bucketName, null, null, null, null)));  // since we do not delete object data
   }
 
   @Test
@@ -370,7 +370,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     Assert.assertTrue(objFromDb == null);
     sqlService.releaseConnection();
-    Assert.assertFalse(objectStore.objectExists(new Object(null, null, "cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151", null, null, null, 0l, null, null, bucket1.bucketName, null, null, null)));
+    Assert.assertFalse(objectStore.objectExists(new Object(null, null, "cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151", null, null, null, 0l, null, null, bucket1.bucketName, null, null, null, null)));
 
   }
 
@@ -406,7 +406,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1");
     Assert.assertTrue(objFromDb != null);
     sqlService.releaseConnection();
-    Assert.assertTrue(objectStore.objectExists(new Object(null, null, "cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151", null, null, null, 0l, null, null, bucket1.bucketName, null, null, null)));  // since we do not delete object data
+    Assert.assertTrue(objectStore.objectExists(new Object(null, null, "cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151", null, null, null, 0l, null, null, bucket1.bucketName, null, null, null, null)));  // since we do not delete object data
   }
 
 

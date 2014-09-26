@@ -32,7 +32,7 @@ public abstract class RepoBaseJerseyTest extends JerseyTest {
 
     JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
 
-    assertEquals(response.getStatus(), httpStatus.getStatusCode());
+    assertEquals(httpStatus.getStatusCode(), response.getStatus());
 
     assertEquals(responseObj.get("repoErrorCode").getAsInt(), repoError.getValue());
     assertTrue(responseObj.get("message").getAsString().equals(repoError.getMessage()));

@@ -17,19 +17,12 @@
 
 package org.plos.repo.service;
 
-import com.google.common.util.concurrent.Striped;
 import org.apache.commons.lang.StringUtils;
-import org.plos.repo.models.*;
-import org.plos.repo.models.Object;
+import org.plos.repo.util.VersionChecksumGenerator;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 
 /**
  * This service handles all communication for collections with sqlservice
@@ -48,6 +41,9 @@ public abstract class BaseRepoService {
 
   @Inject
   protected SqlService sqlService;
+
+  @Inject
+  protected VersionChecksumGenerator versionChecksumGenerator;
 
   protected void sqlReleaseConnection() throws RepoException {
 

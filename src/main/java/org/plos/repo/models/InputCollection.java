@@ -18,8 +18,6 @@
 package org.plos.repo.models;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-import java.sql.Timestamp;
 import java.util.List;
 
 /**
@@ -29,12 +27,12 @@ import java.util.List;
 public class InputCollection {
 
   private String key; // what the user specifies
-  private String timestampString;   // created time
+  private String timestamp;   // created time
   private String bucketName;
   private String create;
   private String tag;
   private List<InputObject> objects;
-  private String creationDateTimeString;   // created time
+  private String creationDateTime;   // created time
 
   // empty constructor required for JAXB mapping
   public InputCollection() {
@@ -72,12 +70,12 @@ public class InputCollection {
     this.objects = objects;
   }
 
-  public String getTimestampString() {
-    return timestampString;
+  public String getTimestamp() {
+    return timestamp;
   }
 
-  public void setTimestampString(String timestampString) {
-    this.timestampString = timestampString;
+  public void setTimestamp(String timestamp) {
+    this.timestamp = timestamp;
   }
 
   public String getTag() {
@@ -88,11 +86,11 @@ public class InputCollection {
     this.tag = tag;
   }
 
-  public String getCreationDateTimeString() {
-    return creationDateTimeString;
+  public String getCreationDateTime() {
+    return creationDateTime;
   }
 
-  public void setCreationDateTimeString(String creationDateTimeString) {
-    this.creationDateTimeString = creationDateTimeString;
+  public void setCreationDateTime(String creationDateTime) {
+    this.creationDateTime = creationDateTime;
   }
 }

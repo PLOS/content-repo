@@ -23,30 +23,30 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class InputObject {
 
   private String key; // what the user specifies
-  private Integer versionNumber;
+  private String checksum;
 
   // empty constructor required for JAXB mapping
   public InputObject() {
   }
 
-  public InputObject(String key, Integer versionNumber) {
+  public InputObject(String key, String checksum) {
     this.key = key;
-    this.versionNumber = versionNumber;
+    this.checksum = checksum;
   }
 
   public String getKey() {
     return key;
   }
 
-  public Integer getVersionNumber() {
-    return versionNumber;
-  }
-
   public void setKey(String key) {
     this.key = key;
   }
 
-  public void setVersionNumber(Integer versionNumber) {
-    this.versionNumber = versionNumber;
+  public String getChecksum() {
+    return checksum;
+  }
+
+  public void setChecksum(String checksum) {
+    this.checksum = checksum;
   }
 }

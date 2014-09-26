@@ -2,8 +2,9 @@ package org.plos.repo.config;
 
 import org.plos.repo.models.validator.InputCollectionValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
-import org.plos.repo.util.OperationComparator;
 import org.plos.repo.service.*;
+import org.plos.repo.util.OperationComparator;
+import org.plos.repo.util.VersionChecksumGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -50,6 +51,9 @@ public class SpringConfig {
 
   @Bean
   public OperationComparator operationComparator(){ return new OperationComparator(); }
+
+  @Bean
+  public VersionChecksumGenerator versionChecksumGenerator(){ return new VersionChecksumGenerator(); }
 
   @Bean
   public ObjectStore objectStore() throws Exception {

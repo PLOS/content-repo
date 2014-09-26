@@ -17,6 +17,9 @@
 
 package org.plos.repo.models;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.sql.Timestamp;
@@ -39,6 +42,7 @@ public class Collection {
   private String tag;
   @XmlJavaTypeAdapter(TimestampAdapter.class)
   private Timestamp creationDate;
+  private String versionChecksum;
 
   private List<Object> objects;
 
@@ -48,7 +52,8 @@ public class Collection {
   public Collection() {
   }
 
-  public Collection(Integer id, String key, Timestamp timestamp, Integer bucketId, String bucketName, Integer versionNumber, Status status, String tag, Timestamp creationDate) {
+  public Collection(Integer id, String key, Timestamp timestamp, Integer bucketId, String bucketName,
+                    Integer versionNumber, Status status, String tag, Timestamp creationDate, String versionChecksum) {
     this.id = id;
     this.key = key;
     this.timestamp = timestamp;
@@ -58,6 +63,7 @@ public class Collection {
     this.status = status;
     this.tag = tag;
     this.creationDate = creationDate;
+    this.versionChecksum = versionChecksum;
   }
 
   public Integer getId(){
@@ -151,5 +157,22 @@ public class Collection {
 
   public void setCreationDate(Timestamp creationDate) {
     this.creationDate = creationDate;
+  }
+
+  public String getVersionChecksum() {
+    return versionChecksum;
+  }
+
+  public void setVersionChecksum(String versionChecksum) {
+    this.versionChecksum = versionChecksum;
+  }
+
+  public boolean equals(Object o) {
+    return EqualsBuilder.reflectionEquals(this, o);
+  }
+
+  @Override
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this);
   }
 }

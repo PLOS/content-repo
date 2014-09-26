@@ -1,7 +1,6 @@
 package org.plos.repo.models.validator;
 
 import org.plos.repo.models.InputCollection;
-import org.plos.repo.models.validator.TimestampInputValidator;
 import org.plos.repo.service.RepoException;
 
 import javax.inject.Inject;
@@ -22,8 +21,8 @@ public class InputCollectionValidator {
     if (collection.getBucketName() == null)
       throw new RepoException(RepoException.Type.NoBucketEntered);
 
-    timestampValidator.validate(collection.getTimestampString(), RepoException.Type.CouldNotParseTimestamp);
-    timestampValidator.validate(collection.getCreationDateTimeString(), RepoException.Type.CouldNotParseCreationDate);
+    timestampValidator.validate(collection.getTimestamp(), RepoException.Type.CouldNotParseTimestamp);
+    timestampValidator.validate(collection.getCreationDateTime(), RepoException.Type.CouldNotParseCreationDate);
 
     if (collection.getObjects() == null || collection.getObjects().size() == 0 ) {
       throw new RepoException(RepoException.Type.CantCreateCollectionWithNoObjects);
