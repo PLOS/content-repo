@@ -6,7 +6,6 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.plos.repo.models.*;
-import org.plos.repo.models.Object;
 import org.plos.repo.models.validator.InputCollectionValidator;
 
 import java.sql.SQLException;
@@ -128,7 +127,7 @@ public class CollectionRepoServiceTest {
     when(sqlService.getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, VALID_VERSION, VALID_TAG, null)).thenReturn(expCollection);
     when(sqlService.listCollectionVersions(expCollection)).thenReturn(collections);
 
-    Collection collectionResp = collectionRepoService.getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, new CollectionFilter(VALID_VERSION, VALID_TAG, null));
+    Collection collectionResp = collectionRepoService.getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, new ElementFilter(VALID_VERSION, VALID_TAG, null));
 
     assertNotNull(collectionResp);
     assertEquals(collectionResp, expCollection);

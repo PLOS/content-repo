@@ -40,7 +40,7 @@ public abstract class RepoBaseSpringTest {
 
     //remove objects from DB
 
-    List<org.plos.repo.models.Object> objectList = sqlService.listObjects(null, null, null, true);
+    List<org.plos.repo.models.Object> objectList = sqlService.listObjects(null, null, null, true, null);
 
     for (org.plos.repo.models.Object object : objectList) {
 

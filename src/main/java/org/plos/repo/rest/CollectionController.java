@@ -20,7 +20,7 @@ package org.plos.repo.rest;
 import com.wordnik.swagger.annotations.*;
 import org.apache.http.HttpStatus;
 import org.plos.repo.models.Collection;
-import org.plos.repo.models.CollectionFilter;
+import org.plos.repo.models.ElementFilter;
 import org.plos.repo.models.InputCollection;
 import org.plos.repo.service.CollectionRepoService;
 import org.plos.repo.service.RepoException;
@@ -92,11 +92,11 @@ public class CollectionController {
     public Response listCollections(
             @ApiParam(required = true) @PathParam("bucketName") String bucketName,
             @ApiParam(required = true) @QueryParam("key") String key,
-            @ApiParam("collectionFilter") @BeanParam CollectionFilter collectionFilter) {
+            @ApiParam("collectionFilter") @BeanParam ElementFilter elementFilter) {
 
         try {
 
-            Collection collection = collectionRepoService.getCollection(bucketName, key, collectionFilter);
+            Collection collection = collectionRepoService.getCollection(bucketName, key, elementFilter);
 
             collection.setVersions(collectionRepoService.getCollectionVersions(collection));
             return Response.status(Response.Status.OK)
@@ -121,10 +121,10 @@ public class CollectionController {
     public Response delete(
             @ApiParam(required = true) @PathParam("bucketName") String bucketName,
             @ApiParam(required = true) @QueryParam("key") String key,
-            @ApiParam("collectionFilter") @BeanParam CollectionFilter collectionFilter) {
+            @ApiParam("collectionFilter") @BeanParam ElementFilter elementFilter) {
 
         try {
-            collectionRepoService.deleteCollection(bucketName, key, collectionFilter);
+            collectionRepoService.deleteCollection(bucketName, key, elementFilter);
             return Response.status(Response.Status.OK).build();
         } catch (RepoException e) {
             return ObjectController.handleError(e);

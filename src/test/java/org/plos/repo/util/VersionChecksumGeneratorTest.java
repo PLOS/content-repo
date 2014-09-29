@@ -23,9 +23,10 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class VersionChecksumGeneratorTest {
 
   private static final Timestamp TIMESTAMP = new Timestamp(new Date().getTime());
-  private static final String OBJ1_CHECKSUM = "1234567";
-  private static final String OBJ2_CHECKSUM = "7654321";
-  private static final String OBJ3_CHECKSUM = "9999999";
+  private static final Integer OBJ1_VERSION_CHECKSUM = 1234567;
+  private static final Integer OBJ2_VERSION_CHECKSUM = 7654321;
+  private static final Integer OBJ3_VERSION_CHECKSUM = 9999999;
+  private static final String OBJ1_CHECKSUM = "1223123";
   private static final String TAG = "draft";
   private static final String CONTENT_TYPE = "text/plain";
   private static final String DOWNLOAD_NAME = "draft_object";
@@ -43,9 +44,9 @@ public class VersionChecksumGeneratorTest {
   @Mock
   private Object object2;
 
-  private List<String> objects1Checksum = Arrays.asList(new String[]{OBJ1_CHECKSUM, OBJ2_CHECKSUM});
-  private List<String> objects2Checksum = Arrays.asList(new String[]{OBJ2_CHECKSUM, OBJ1_CHECKSUM});
-  private List<String> objects3Checksum = Arrays.asList(new String[]{OBJ2_CHECKSUM, OBJ3_CHECKSUM});
+  private List<Integer> objects1Checksum = Arrays.asList(new Integer[]{OBJ1_VERSION_CHECKSUM, OBJ2_VERSION_CHECKSUM});
+  private List<Integer> objects2Checksum = Arrays.asList(new Integer[]{OBJ2_VERSION_CHECKSUM, OBJ1_VERSION_CHECKSUM});
+  private List<Integer> objects3Checksum = Arrays.asList(new Integer[]{OBJ2_VERSION_CHECKSUM, OBJ3_VERSION_CHECKSUM});
 
   @Before
   public void setUp(){
@@ -59,8 +60,8 @@ public class VersionChecksumGeneratorTest {
     mockCollectionCalls(collection1);
     mockCollectionCalls(collection2);
 
-    String checksumColl1 = versionChecksumGenerator.generateVersionChecksum(collection1, objects1Checksum);
-    String checksumColl2 = versionChecksumGenerator.generateVersionChecksum(collection2, objects2Checksum);
+    Integer checksumColl1 = versionChecksumGenerator.generateVersionChecksum(collection1, objects1Checksum);
+    Integer checksumColl2 = versionChecksumGenerator.generateVersionChecksum(collection2, objects2Checksum);
 
     assertNotNull(checksumColl1);
     assertNotNull(checksumColl2);
@@ -78,8 +79,8 @@ public class VersionChecksumGeneratorTest {
     mockCollectionCalls(collection1);
     mockCollectionCalls(collection2);
 
-    String checksumColl1 = versionChecksumGenerator.generateVersionChecksum(collection1, objects1Checksum);
-    String checksumColl2 = versionChecksumGenerator.generateVersionChecksum(collection2, objects3Checksum);
+    Integer checksumColl1 = versionChecksumGenerator.generateVersionChecksum(collection1, objects1Checksum);
+    Integer checksumColl2 = versionChecksumGenerator.generateVersionChecksum(collection2, objects3Checksum);
 
     assertNotNull(checksumColl1);
     assertNotNull(checksumColl2);
@@ -96,8 +97,8 @@ public class VersionChecksumGeneratorTest {
     objectSetup(object1, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
     objectSetup(object2, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
 
-    String checksumObj1 = versionChecksumGenerator.generateVersionChecksum(object1);
-    String checksumObj2 = versionChecksumGenerator.generateVersionChecksum(object2);
+    Integer checksumObj1 = versionChecksumGenerator.generateVersionChecksum(object1);
+    Integer checksumObj2 = versionChecksumGenerator.generateVersionChecksum(object2);
 
     assertNotNull(checksumObj1);
     assertNotNull(checksumObj2);
@@ -111,8 +112,8 @@ public class VersionChecksumGeneratorTest {
     objectSetup(object1, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
     objectSetup(object2, TIMESTAMP, TAG, CONTENT_TYPE1, DOWNLOAD_NAME, OBJ1_CHECKSUM);
 
-    String checksumObj1 = versionChecksumGenerator.generateVersionChecksum(object1);
-    String checksumObj2 = versionChecksumGenerator.generateVersionChecksum(object2);
+    Integer checksumObj1 = versionChecksumGenerator.generateVersionChecksum(object1);
+    Integer checksumObj2 = versionChecksumGenerator.generateVersionChecksum(object2);
 
     assertNotNull(checksumObj1);
     assertNotNull(checksumObj2);

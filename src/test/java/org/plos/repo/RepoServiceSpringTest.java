@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 import org.plos.repo.models.Bucket;
+import org.plos.repo.models.ElementFilter;
 import org.plos.repo.models.Object;
 import org.plos.repo.service.*;
 
@@ -335,14 +336,14 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     // check external state
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb).size() == 2);
-    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, false).size() == 2);
+    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, false, null).size() == 2);
 
     Assert.assertTrue(IOUtils.toString(repoService.getObjectInputStream(
-            repoService.getObject(bucket1.bucketName, "key1", 0))).equals("data1")
+            repoService.getObject(bucket1.bucketName, "key1", new ElementFilter(0, null, null)))).equals("data1")
     );
 
     Assert.assertTrue(IOUtils.toString(repoService.getObjectInputStream(
-      repoService.getObject(bucket1.bucketName, "key1", 1))).equals("data2")
+      repoService.getObject(bucket1.bucketName, "key1", new ElementFilter(1, null, null)))).equals("data2")
     );
 
     Assert.assertTrue(repoService.getObjectContentType(objFromDb).equals("new content type"));
@@ -437,14 +438,14 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     // check external state
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb).size() == 2);
-    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, false).size() == 2);
+    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, false, null).size() == 2);
 
     Assert.assertTrue(IOUtils.toString(repoService.getObjectInputStream(
-        repoService.getObject(bucket1.bucketName, "key1", 0))).equals("data1")
+        repoService.getObject(bucket1.bucketName, "key1", new ElementFilter(0, null, null)))).equals("data1")
     );
 
     Assert.assertTrue(IOUtils.toString(repoService.getObjectInputStream(
-        repoService.getObject(bucket1.bucketName, "key1", 1))).equals("")
+        repoService.getObject(bucket1.bucketName, "key1", new ElementFilter(1, null, null)))).equals("")
     );
 
     Assert.assertTrue(repoService.getObjectContentType(objFromDb).equals("new content type"));
@@ -463,7 +464,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
       repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.bucketName, null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data2"), CREATION_DATE_TIME);
 
-      repoService.deleteObject(bucket1.bucketName, "key1", 1);
+      repoService.deleteObject(bucket1.bucketName, "key1", new ElementFilter(1, null, null));
 
     } catch (RepoException e) {
       Assert.fail(e.getMessage());
@@ -483,9 +484,9 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb).size() == 1);
-    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, false).size() == 1);
+    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, false, null).size() == 1);
 
-    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, true).size() == 2);
+    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, true, null).size() == 2);
   }
 
   @Test
@@ -499,7 +500,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
       repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.bucketName, null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data2"), CREATION_DATE_TIME);
 
-      repoService.deleteObject(bucket1.bucketName, "key1", 5);
+      repoService.deleteObject(bucket1.bucketName, "key1", new ElementFilter(5, null, null));
 
     } catch (RepoException e) {
       Assert.assertTrue(e.getMessage().startsWith("Object not found"));
@@ -516,7 +517,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     Assert.assertTrue(objectStore.objectExists(objFromDb));
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb).size() == 2);
-    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, false).size() == 2);
+    Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, false, null).size() == 2);
   }
 
   @Test

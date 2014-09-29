@@ -40,7 +40,7 @@ public class Object {
   public Integer versionNumber;
   public Status status;
   public Timestamp creationDate;
-  public String versionChecksum;
+  public Integer versionChecksum;
 
   public List<Object> versions;
 
@@ -48,7 +48,7 @@ public class Object {
   private Object() {
   }
 
-  public Object(Integer id, String key, String checksum, Timestamp timestamp, String downloadName, String contentType, Long size, String tag, Integer bucketId, String bucketName, Integer versionNumber, Status status, Timestamp creationDate, String versionChecksum) {
+  public Object(Integer id, String key, String checksum, Timestamp timestamp, String downloadName, String contentType, Long size, String tag, Integer bucketId, String bucketName, Integer versionNumber, Status status, Timestamp creationDate, Integer versionChecksum) {
     this.id = id;
     this.key = key;
     this.checksum = checksum;
@@ -67,39 +67,23 @@ public class Object {
 
   public Boolean areSimilar(Object object){
 
-      // TODO : verify fields
+      return this.key.equals(object.key) &&
+             this.bucketName.equals(object.bucketName) &&
+             this.status.equals(object.status) &&
+             compareNullableElements(this.contentType, object.contentType) &&
+             compareNullableElements(this.downloadName, object.downloadName) &&
+             compareNullableElements(this.checksum, object.checksum);
 
-      Boolean equals = this.key.equals(object.key) &&
-                        this.bucketName.equals(object.bucketName) &&
-                        this.status.equals(object.status);
+  }
 
-
-    if (equals) {
-      if ((this.contentType != null && object.contentType == null) && (this.contentType == null && object.contentType != null)) {
-        equals = equals && this.contentType.equals(object.contentType);
-      } else {
-        equals = false;
-      }
+  private Boolean compareNullableElements(String string1, String string2){
+    if (string1 != null && string2 != null) {
+      return string1.equals(string2);
+    } else if(string1 == null && string2 == null) {
+      return true;
+    } else {
+      return false;
     }
-
-    if (equals) {
-      if ((this.downloadName != null && object.downloadName == null) && (this.downloadName == null && object.downloadName != null)) {
-        equals = equals && this.downloadName.equals(object.downloadName);
-      } else {
-        return false;
-      }
-    }
-
-    if (equals){
-      if ((this.checksum != null && object.checksum == null) && (this.checksum == null && object.checksum != null)) {
-        equals = equals && this.checksum.equals(object.checksum);
-      } else {
-        return false;
-      }
-    }
-
-    return equals;
-
   }
 
 }

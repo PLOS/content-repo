@@ -89,11 +89,11 @@ public class CollectionRepoService extends BaseRepoService {
    * it returns the latest version available
    * @param bucketName a single String representing the bucket name in where to look the collection
    * @param key a single String identifying the collection key
-   * @param collectionFilter a collection filter object used to uniquely identify the collection
+   * @param elementFilter a collection filter object used to uniquely identify the collection
    * @return a collection {@link org.plos.repo.models.Collection} or null is the desired collection does not exists
    * @throws RepoException
    */
-  public Collection getCollection(String bucketName, String key, CollectionFilter collectionFilter) throws RepoException {
+  public Collection getCollection(String bucketName, String key, ElementFilter elementFilter) throws RepoException {
 
     Collection collection;
 
@@ -103,10 +103,10 @@ public class CollectionRepoService extends BaseRepoService {
       if (key == null)
         throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
 
-      if (collectionFilter.isEmpty()) // no filters defined
+      if (elementFilter == null || elementFilter.isEmpty()) // no filters defined
         collection = sqlService.getCollection(bucketName, key);
       else
-        collection = sqlService.getCollection(bucketName, key, collectionFilter.getVersion(), collectionFilter.getTag(), collectionFilter.getVersionChecksum());
+        collection = sqlService.getCollection(bucketName, key, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum());
 
       if (collection == null)
         throw new RepoException(RepoException.Type.CollectionNotFound);
@@ -145,10 +145,10 @@ public class CollectionRepoService extends BaseRepoService {
    * Deletes the collection define by <code>bucketName</code> , <code>key</code> , <code>version</code>
    * @param bucketName a single String identifying the bucket name where the collection is.
    * @param key a single String identifying the collection key
-   * @param collectionFilter a collection filter object used to uniquely identify the collection
+   * @param elementFilter a collection filter object used to uniquely identify the collection
    * @throws org.plos.repo.service.RepoException
    */
-  public void deleteCollection(String bucketName, String key, CollectionFilter collectionFilter) throws RepoException {
+  public void deleteCollection(String bucketName, String key, ElementFilter elementFilter) throws RepoException {
 
     boolean rollback = false;
 
@@ -159,14 +159,19 @@ public class CollectionRepoService extends BaseRepoService {
       if (key == null)
         throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
 
-      if (collectionFilter == null ||
-          (collectionFilter.getVersion() == null && collectionFilter.getTag() == null && collectionFilter.getVersionChecksum() == null)){
+      if (elementFilter == null || (elementFilter.isEmpty())){
         throw new RepoException(RepoException.Type.NoCollectionFilterEntered);
       }
 
       rollback = true;
 
-      if (sqlService.markCollectionDeleted(key, bucketName, collectionFilter.getVersion(), collectionFilter.getTag(), collectionFilter.getVersionChecksum()) == 0)
+      if (elementFilter.getTag() != null & elementFilter.getVersionChecksum() == null & elementFilter.getVersion() == null){
+        if (sqlService.listCollections(bucketName, 0, 10, false, elementFilter.getTag()).size() > 1){
+          throw new RepoException(RepoException.Type.MoreThanOneTaggedCollection);
+        }
+      }
+
+      if (sqlService.markCollectionDeleted(key, bucketName, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum()) == 0)
         throw new RepoException(RepoException.Type.CollectionNotFound);
 
       sqlService.transactionCommit();
@@ -177,7 +182,7 @@ public class CollectionRepoService extends BaseRepoService {
     } finally {
 
       if (rollback) {
-        sqlRollback("object " + bucketName + ", " + key + ", " + collectionFilter.toString());
+        sqlRollback("object " + bucketName + ", " + key + ", " + elementFilter.toString());
       }
 
       sqlReleaseConnection();
@@ -203,7 +208,7 @@ public class CollectionRepoService extends BaseRepoService {
 
     // fetch the collection if it already exists
     try {
-      existingCollection = getCollection(inputCollection.getBucketName(), inputCollection.getKey(), new CollectionFilter()); // don't want to take in count the tag for getting the existing collection
+      existingCollection = getCollection(inputCollection.getBucketName(), inputCollection.getKey(), new ElementFilter()); // don't want to take in count the tag for getting the existing collection
     } catch (RepoException e) {
       if (e.getType() == RepoException.Type.CollectionNotFound)
         existingCollection = null;
@@ -312,7 +317,7 @@ public class CollectionRepoService extends BaseRepoService {
         Object object = existingCollection.getObjects().get(y);
         if (object.key.equals(inputObject.getKey()) &&
             object.bucketName.equals(bucketName) &&
-            object.checksum.equals(inputObject.getChecksum())){
+            object.checksum.equals(inputObject.getVersionChecksum())){
           break;
 
         }
@@ -352,7 +357,7 @@ public class CollectionRepoService extends BaseRepoService {
 
       collection = new Collection(null, key, timestamp, bucketId, bucketName, versionNumber, Status.USED, tag, creationDate, null);
 
-      List<String> objectsChecksum = Lists.newArrayList(Iterables.transform(inputObjects, typeFunction()));
+      List<Integer> objectsChecksum = Lists.newArrayList(Iterables.transform(inputObjects, typeFunction()));
 
       collection.setVersionChecksum(versionChecksumGenerator.generateVersionChecksum(collection, objectsChecksum));
 
@@ -366,7 +371,7 @@ public class CollectionRepoService extends BaseRepoService {
 
       for (InputObject inputObject : inputObjects){
 
-        if (sqlService.insertCollectionObjects(collId, inputObject.getKey(), bucketName, inputObject.getChecksum()) == 0){
+        if (sqlService.insertCollectionObjects(collId, inputObject.getKey(), bucketName, inputObject.getVersionChecksum()) == 0){
           throw new RepoException(RepoException.Type.ObjectCollectionNotFound);
         }
 
@@ -376,7 +381,7 @@ public class CollectionRepoService extends BaseRepoService {
 
       rollback = false;
 
-      return getCollection(bucketName, key, new CollectionFilter(versionNumber, tag, null));
+      return getCollection(bucketName, key, new ElementFilter(versionNumber, tag, null));
 
     } catch (SQLException e) {
       throw new RepoException(e);
@@ -390,12 +395,12 @@ public class CollectionRepoService extends BaseRepoService {
 
   }
 
-  private Function<InputObject, String> typeFunction() {
-    return new Function<InputObject, String>() {
+  private Function<InputObject, Integer> typeFunction() {
+    return new Function<InputObject, Integer>() {
 
       @Override
-      public String apply(InputObject inputObject) {
-        return inputObject.getChecksum();
+      public Integer apply(InputObject inputObject) {
+        return inputObject.getVersionChecksum();
       }
 
     };

@@ -10,13 +10,13 @@ import java.util.List;
  */
 public class VersionChecksumGenerator {
 
-  public String generateVersionChecksum(Collection collection, List<String> objectsChecksum) {
+  public Integer generateVersionChecksum(Collection collection, List<Integer> objectsChecksum) {
 
     Collections.sort(objectsChecksum);
 
     StringBuilder sb = new StringBuilder();
 
-    for (String checksum : objectsChecksum){
+    for (Integer checksum : objectsChecksum){
       sb.append(checksum);
     }
 
@@ -27,12 +27,10 @@ public class VersionChecksumGenerator {
       sb.append(collection.getTag());
     }
 
-    Integer hashCode = sb.toString().hashCode();
-
-    return hashCode.toString();
+    return sb.toString().hashCode();
   }
 
-  public String generateVersionChecksum(org.plos.repo.models.Object object) {
+  public Integer generateVersionChecksum(org.plos.repo.models.Object object) {
 
     StringBuilder sb = new StringBuilder();
 
@@ -43,9 +41,7 @@ public class VersionChecksumGenerator {
     sb.append(object.downloadName);
     sb.append(object.checksum);
 
-    Integer hashCode = sb.toString().hashCode();
-
-    return hashCode.toString();
+    return sb.toString().hashCode();
   }
 
 }

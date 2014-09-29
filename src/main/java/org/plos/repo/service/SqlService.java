@@ -17,8 +17,10 @@
 
 package org.plos.repo.service;
 
-import org.plos.repo.models.*;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.models.Collection;
 import org.plos.repo.models.Object;
+import org.plos.repo.models.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
@@ -49,14 +51,14 @@ public abstract class SqlService {
                                           rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"),
                                           rs.getLong("SIZE"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"),
                                           rs.getInt("VERSIONNUMBER"), Status.STATUS_VALUES.get(rs.getInt("STATUS")), rs.getTimestamp("CREATIONDATE"),
-                                          rs.getString("VERSIONCHECKSUM"));
+                                          rs.getInt("VERSIONCHECKSUM"));
   }
 
   private static org.plos.repo.models.Collection mapCollectionRow(ResultSet rs) throws SQLException {
     return new org.plos.repo.models.Collection(rs.getInt("ID"), rs.getString("COLLKEY"), rs.getTimestamp("TIMESTAMP"),
                                                rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"),
                                                 Status.STATUS_VALUES.get(rs.getInt("STATUS")), rs.getString("TAG"),
-                                                rs.getTimestamp("CREATIONDATE"), rs.getString("VERSIONCHECKSUM"));
+                                                rs.getTimestamp("CREATIONDATE"), rs.getInt("VERSIONCHECKSUM"));
   }
 
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
@@ -182,7 +184,7 @@ public abstract class SqlService {
 
   }
 
-  public int markObjectDeleted(String key, String bucketName, int versionNumber) throws SQLException {
+  public int markObjectDeleted(String key, String bucketName, Integer version, Integer versionChecksum, String tag) throws SQLException {
 
     PreparedStatement p = null;
 
@@ -193,12 +195,35 @@ public abstract class SqlService {
 
     try {
 
-      p = connectionLocal.get().prepareStatement("UPDATE objects SET status=? WHERE objKey=? AND bucketId=? AND versionNumber=?");
+      StringBuilder query = new StringBuilder();
+      query.append("UPDATE objects SET status=? WHERE objKey=? AND bucketId=?");
+
+      if (version != null){
+        query.append(" AND versionNumber=?");
+      }
+      if (versionChecksum != null){
+        query.append(" AND versionChecksum=?");
+      }
+      if (tag != null){
+        query.append(" AND tag=?");
+      }
+
+      p = connectionLocal.get().prepareStatement(query.toString());
 
       p.setInt(1, Status.DELETED.getValue());
       p.setString(2, key);
       p.setInt(3, bucket.bucketId);
-      p.setInt(4, versionNumber);
+
+      int i = 4;
+      if (version != null){
+        p.setInt(i++, version);
+      }
+      if (versionChecksum != null){
+        p.setInt(i++, versionChecksum);
+      }
+      if (tag != null){
+        p.setString(i++, tag);
+      }
 
       return p.executeUpdate();
 
@@ -282,18 +307,41 @@ public abstract class SqlService {
 
   }
 
-  public Object getObject(String bucketName, String key, Integer version) throws SQLException {
+  public Object getObject(String bucketName, String key, Integer version, Integer versionChecksum, String tag) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
 
-      p = connectionLocal.get().prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=? AND versionNumber=?");
+      StringBuilder query = new StringBuilder();
+      query.append("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=?");
+
+      if (version != null){
+        query.append(" AND versionNumber=?");
+      }
+      if (versionChecksum != null){
+        query.append(" AND versionChecksum=?");
+      }
+      if (tag != null){
+        query.append(" AND tag=?");
+      }
+
+      p = connectionLocal.get().prepareStatement(query.toString());
 
       p.setString(1, bucketName);
       p.setString(2, key);
-      p.setInt(3, version);
+
+      int i = 3;
+      if (version != null){
+        p.setInt(i++, version);
+      }
+      if (versionChecksum != null){
+        p.setInt(i++, versionChecksum);
+      }
+      if (tag != null){
+        p.setString(i++, tag);
+      }
 
       result = p.executeQuery();
 
@@ -337,7 +385,7 @@ public abstract class SqlService {
       p.setInt(9, object.versionNumber);
       p.setInt(10, object.status.getValue());
       p.setTimestamp(11, object.timestamp);
-      p.setString(12, object.versionChecksum);
+      p.setInt(12, object.versionChecksum);
 
       return p.executeUpdate();
 
@@ -436,7 +484,7 @@ public abstract class SqlService {
 
   }
 
-  public List<Object> listObjects(String bucketName, Integer offset, Integer limit, boolean includeDeleted) throws SQLException {
+  public List<Object> listObjects(String bucketName, Integer offset, Integer limit, boolean includeDeleted, String tag) throws SQLException {
 
     List<Object> objects = new ArrayList<>();
 
@@ -452,6 +500,8 @@ public abstract class SqlService {
         q.append(" AND status=?");
       if (bucketName != null)
         q.append(" AND bucketName=?");
+      if (tag != null)
+        q.append(" AND TAG=?");
       if (limit != null)
         q.append(" LIMIT " + limit);
       if (offset != null)
@@ -465,6 +515,9 @@ public abstract class SqlService {
 
       if (bucketName != null)
         p.setString(i++, bucketName);
+
+      if (tag != null)
+        p.setString(i++, tag);
 
       result = p.executeQuery();
 
@@ -691,11 +744,11 @@ public abstract class SqlService {
    * @param key a single String identifying the collection key
    * @param version an integer used to filter the collection regarding the version property
    * @param tag a single String used to filter the collections regarding the tag property. if tag = null, no filter is needed.
-   * @param checksum a single string used to filter the collection regarding the checksum property
+   * @param versionChecksum a single string used to filter the collection regarding the checksum property
    * @return {@link org.plos.repo.models.Collection}
    * @throws SQLException
    */
-  public Collection getCollection(String bucketName, String key, Integer version, String tag, String checksum) throws SQLException {
+  public Collection getCollection(String bucketName, String key, Integer version, String tag, Integer versionChecksum) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -708,12 +761,14 @@ public abstract class SqlService {
       if (version != null){
         query.append(" AND versionNumber=?");
       }
-      if (checksum != null){
+      if (versionChecksum != null){
         query.append(" AND versionChecksum=?");
       }
       if (tag != null){
         query.append(" AND tag=?");
       }
+
+      query.append(" ORDER BY versionNumber DESC LIMIT 1");
 
       p = connectionLocal.get().prepareStatement(query.toString());
 
@@ -724,8 +779,8 @@ public abstract class SqlService {
       if (version != null){
         p.setInt(i++, version);
       }
-      if (checksum != null){
-        p.setString(i++, checksum);
+      if (versionChecksum != null){
+        p.setInt(i++, versionChecksum);
       }
       if (tag != null){
         p.setString(i++, tag);
@@ -799,7 +854,7 @@ public abstract class SqlService {
    * @return an int value indicating the number of updated rows
    * @throws SQLException
    */
-  public int markCollectionDeleted(String key, String bucketName, Integer versionNumber, String tag, String versionChecksum) throws SQLException {
+  public int markCollectionDeleted(String key, String bucketName, Integer versionNumber, String tag, Integer versionChecksum) throws SQLException {
 
     PreparedStatement p = null;
 
@@ -834,7 +889,7 @@ public abstract class SqlService {
         p.setInt(i++, versionNumber);
       }
       if (versionChecksum != null){
-        p.setString(i++, versionChecksum);
+        p.setInt(i++, versionChecksum);
       }
       if (tag != null){
         p.setString(i++, tag);
@@ -893,7 +948,7 @@ public abstract class SqlService {
       p.setInt(5, collection.getVersionNumber());
       p.setString(6, collection.getTag());
       p.setTimestamp(7, collection.getCreationDate());
-      p.setString(8, collection.getVersionChecksum());
+      p.setInt(8, collection.getVersionChecksum());
 
       p.executeUpdate();
       keys = p.getGeneratedKeys();
@@ -910,7 +965,39 @@ public abstract class SqlService {
 
   }
 
-  public int insertCollectionObjects(Integer collectionId, String objectKey, String bucketName, String objectChecksum) throws SQLException {
+  public Boolean existsActiveCollectionForObject(String objKey, String bucketName, Integer version, Integer versionChecksum, String tag) throws SQLException {
+
+    Object object = this.getObject(bucketName, objKey, version, versionChecksum, tag);
+
+    if (object == null){
+      return false;
+    }
+
+    PreparedStatement p = null;
+    ResultSet result = null;
+
+    try{
+      p =
+          connectionLocal.get().prepareStatement("SELECT * FROM collectionObject co, collections c WHERE c.id = co.collectionId AND co.objectId =? AND c.status = 0");
+
+      p.setInt(1, object.id);
+
+      result = p.executeQuery();
+
+      if (result.next()) {
+       return true;
+
+      }
+
+      return false;
+
+    } finally {
+      closeDbStuff(result, p);
+    }
+
+  }
+
+  public int insertCollectionObjects(Integer collectionId, String objectKey, String bucketName, Integer objectChecksum) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -921,7 +1008,7 @@ public abstract class SqlService {
 
       p.setString(1, bucketName);
       p.setString(2, objectKey);
-      p.setString(3, objectChecksum);
+      p.setInt(3, objectChecksum);
 
       result = p.executeQuery();
       Integer objId = null;

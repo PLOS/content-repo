@@ -3,7 +3,7 @@ package org.plos.repo.models;
 
 import javax.ws.rs.QueryParam;
 
-public class CollectionFilter {
+public class ElementFilter {
 
   @QueryParam("version")
   private Integer version;
@@ -12,13 +12,13 @@ public class CollectionFilter {
   private String tag;
 
   @QueryParam("versionChecksum")
-  private String versionChecksum;
+  private Integer versionChecksum;
 
-  public CollectionFilter(){
+  public ElementFilter(){
 
   }
 
-  public CollectionFilter(Integer version, String tag, String versionChecksum){
+  public ElementFilter(Integer version, String tag, Integer versionChecksum){
     this.version = version;
     this.tag = tag;
     this.versionChecksum = versionChecksum;
@@ -32,7 +32,7 @@ public class CollectionFilter {
     return tag;
   }
 
-  public String getVersionChecksum() {
+  public Integer getVersionChecksum() {
     return versionChecksum;
   }
 
@@ -44,7 +44,7 @@ public class CollectionFilter {
     this.tag = tag;
   }
 
-  public void setVersionChecksum(String versionChecksum) {
+  public void setVersionChecksum(Integer versionChecksum) {
     this.versionChecksum = versionChecksum;
   }
 

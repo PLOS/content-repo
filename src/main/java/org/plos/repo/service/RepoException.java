@@ -29,6 +29,9 @@ public class RepoException extends Exception {
     CouldNotParseCreationDate(22, "Could not parse creation date"),
     CantCompareOperations(23, "Can't compare operations"),
     NoCollectionFilterEntered(23, "At least one of the filters is required"),
+    MoreThanOneTaggedCollection(24, "There are more than one collections with that tag. Please specify version or versionNumber. "),
+    MoreThanOneTaggedObject(25, "There are more than one object with that tag. Please specify version or versionNumber. "),
+    CantDeleteObjectActiveColl(26, "Can not delete an object that is contain in an active collection. "),
 
     // user errors for system state
     CantDeleteNonEmptyBucket(20, "Can not delete bucket since it contains objects"),

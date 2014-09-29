@@ -25,6 +25,7 @@ import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import org.apache.http.HttpStatus;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.plos.repo.models.ElementFilter;
 import org.plos.repo.models.Object;
 import org.plos.repo.models.RepoError;
 import org.plos.repo.service.RepoException;
@@ -112,13 +113,13 @@ public class ObjectController {
       @ApiParam(required = false) @QueryParam("bucketName") String bucketName,
       @ApiParam(required = false) @QueryParam("offset") Integer offset,
       @ApiParam(required = false) @QueryParam("limit") Integer limit,
-      @ApiParam(required = false) @DefaultValue("false") @QueryParam("includeDeleted") boolean includeDeleted
-  ) {
+      @ApiParam(required = false) @DefaultValue("false") @QueryParam("includeDeleted") boolean includeDeleted,
+      @ApiParam(required = false) @QueryParam("tag") String tag) {
 
     try {
       return Response.status(Response.Status.OK).entity(
           new GenericEntity<List<Object>>(
-              repoService.listObjects(bucketName, offset, limit, includeDeleted)
+              repoService.listObjects(bucketName, offset, limit, includeDeleted, tag)
           ) {}).build();
     } catch (RepoException e) {
       return handleError(e);
@@ -132,12 +133,11 @@ public class ObjectController {
   public Response readMetadata(
       @ApiParam(required = true) @PathParam("bucketName") String bucketName,
       @ApiParam(required = true) @QueryParam("key") String key,
-      @QueryParam("version") Integer version
-  ) {
+      @ApiParam("elementFilter") @BeanParam ElementFilter elementFilter) {
 
     try {
 
-      Object object = repoService.getObject(bucketName, key, version);
+      Object object = repoService.getObject(bucketName, key, elementFilter);
 
       object.versions = repoService.getObjectVersions(object);
       return Response.status(Response.Status.OK)
@@ -154,7 +154,7 @@ public class ObjectController {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response read(@ApiParam(required = true) @PathParam("bucketName") String bucketName,
                        @ApiParam(required = true) @QueryParam("key") String key,
-                       @QueryParam("version") Integer version,
+                       @ApiParam("elementFilter") @BeanParam ElementFilter elementFilter,
                        @QueryParam("fetchMetadata") Boolean fetchMetadata,  // TODO: deprecate this somehow
                        @ApiParam(value = "If set to 'reproxy-file' then it will attempt to return a header representing a redirected object URL")
                        @HeaderParam("X-Proxy-Capabilities") String requestXProxy,
@@ -166,7 +166,7 @@ public class ObjectController {
     boolean notModifiedSince = false;
 
     try {
-      object = repoService.getObject(bucketName, key, version);
+      object = repoService.getObject(bucketName, key, elementFilter);
 
       if (ifModifiedSinceStr != null) {
 
@@ -252,11 +252,11 @@ public class ObjectController {
   public Response delete(
       @ApiParam(required = true) @PathParam("bucketName") String bucketName,
       @ApiParam(required = true) @QueryParam("key") String key,
-      @ApiParam(required = true) @QueryParam("version") Integer version
+      @ApiParam("elementFilter") @BeanParam ElementFilter elementFilter
   ) {
 
     try {
-      repoService.deleteObject(bucketName, key, version);
+      repoService.deleteObject(bucketName, key, elementFilter);
       return Response.status(Response.Status.OK).build();
     } catch (RepoException e) {
       return handleError(e);

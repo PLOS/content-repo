@@ -42,7 +42,7 @@ public class MigrationService extends BaseRepoService{
         collections = sqlService.listCollections(timestamp);
       } else {
         buckets = sqlService.listBuckets();
-        objects = sqlService.listObjects(null, offset, limit, true);
+        objects = sqlService.listObjects(null, offset, limit, true, null);
         collections = sqlService.listCollections(null, offset, limit, true, null);
       }
 
