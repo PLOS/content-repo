@@ -216,7 +216,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
     assertRepoError(target("/objects/" + bucketName).queryParam("version", "0").request().accept(MediaType.APPLICATION_JSON_TYPE).delete(), Response.Status.BAD_REQUEST, RepoException.Type.NoKeyEntered);
 
-    assertRepoError(target("/objects/" + bucketName).queryParam("key", "object1").request().accept(MediaType.APPLICATION_JSON_TYPE).delete(), Response.Status.BAD_REQUEST, RepoException.Type.NoVersionEntered);
+    assertRepoError(target("/objects/" + bucketName).queryParam("key", "object1").request().accept(MediaType.APPLICATION_JSON_TYPE).delete(), Response.Status.BAD_REQUEST, RepoException.Type.NoFilterEntered);
 
     assertRepoError(target("/objects/" + bucketName).queryParam("key", "object5").queryParam("version", "0").request().accept(MediaType.APPLICATION_JSON_TYPE).delete(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
   }

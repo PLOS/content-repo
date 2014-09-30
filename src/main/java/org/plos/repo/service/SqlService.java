@@ -280,7 +280,7 @@ public abstract class SqlService {
 
     try {
 
-      p = connectionLocal.get().prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=? AND status=? ORDER BY versionNumber DESC LIMIT 1");
+      p = connectionLocal.get().prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=? AND status=? ORDER BY a.creationDate DESC LIMIT 1");
 
       p.setString(1, bucketName);
       p.setString(2, key);
@@ -691,7 +691,8 @@ public abstract class SqlService {
   }
 
   /**
-   * Fetch the latest version in used of the collection defined by <code>bucketName</code> & <code>key</code>
+   * Fetch the latest version in used of the collection defined by <code>bucketName</code> & <code>key</code>. The latest
+   * version is defined as the latest created collection with status = USED.
    * @param bucketName a single String representing the bucket name where the collection is stored
    * @param key a single String identifying the collection key
    * @return {@link org.plos.repo.models.Collection}
@@ -706,7 +707,7 @@ public abstract class SqlService {
 
       StringBuilder query = new StringBuilder();
       query.append("SELECT * FROM collections a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? " +
-          "AND collKey=? AND status=? ORDER BY versionNumber DESC LIMIT 1");
+          "AND collKey=? AND status=? ORDER BY a.creationDate DESC LIMIT 1");
 
       p = connectionLocal.get().prepareStatement(query.toString());
 

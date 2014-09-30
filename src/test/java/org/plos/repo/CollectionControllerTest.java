@@ -907,7 +907,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
             .request()
             .accept(MediaType.APPLICATION_JSON_TYPE)
             .delete(),
-        Response.Status.BAD_REQUEST, RepoException.Type.NoCollectionFilterEntered
+        Response.Status.BAD_REQUEST, RepoException.Type.NoFilterEntered
     );
 
   }

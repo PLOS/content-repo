@@ -310,7 +310,7 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(RepoException.Type.NoKeyEntered);
 
       if ((elementFilter == null || elementFilter.isEmpty())) {
-        throw new RepoException(RepoException.Type.NoVersionEntered);
+        throw new RepoException(RepoException.Type.NoFilterEntered);
       }
 
       rollback = true;

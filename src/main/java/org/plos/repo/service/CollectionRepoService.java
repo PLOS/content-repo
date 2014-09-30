@@ -160,7 +160,7 @@ public class CollectionRepoService extends BaseRepoService {
         throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
 
       if (elementFilter == null || (elementFilter.isEmpty())){
-        throw new RepoException(RepoException.Type.NoCollectionFilterEntered);
+        throw new RepoException(RepoException.Type.NoFilterEntered);
       }
 
       rollback = true;
