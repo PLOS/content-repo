@@ -769,7 +769,7 @@ public abstract class SqlService {
         query.append(" AND tag=?");
       }
 
-      query.append(" ORDER BY versionNumber DESC LIMIT 1");
+      query.append(" ORDER BY a.creationDate DESC LIMIT 1");
 
       p = connectionLocal.get().prepareStatement(query.toString());
 

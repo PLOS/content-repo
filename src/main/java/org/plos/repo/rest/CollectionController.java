@@ -89,7 +89,7 @@ public class CollectionController {
             @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
     })
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response listCollections(
+    public Response getCollection(
             @ApiParam(required = true) @PathParam("bucketName") String bucketName,
             @ApiParam(required = true) @QueryParam("key") String key,
             @ApiParam("collectionFilter") @BeanParam ElementFilter elementFilter) {

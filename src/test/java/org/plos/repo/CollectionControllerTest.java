@@ -562,6 +562,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   }
 
+
   @Test
   public void getCollectionNoKey(){
 
@@ -574,13 +575,109 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   }
 
+  @Test
+  /**
+   * Test get collection using tag. It there is more than one collection with the same tag,
+   * it should get the latest one.
+   */
+  public void getCollectionMoreThanOneWithSameTag(){
+
+    generateBuckets(bucketName);
+    Integer versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
+    Integer versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
+
+    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
+    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
+
+    // create collection 1
+    InputCollection inputCollection = new InputCollection();
+    inputCollection.setBucketName(bucketName);
+    inputCollection.setKey("collection1");
+    inputCollection.setCreate("new");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
+    inputCollection.setTag("AOP");
+    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
+
+    // create collection1
+    Response response = target("/collections").request()
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .post(collectionEntity);
+
+    assertEquals(response.getStatus(),
+        Response.Status.CREATED.getStatusCode());
+
+    // version collection1, using a creation_date_time previous for the creation date time of collection 1
+    inputCollection.setCreate("version");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{object2}));
+    inputCollection.setCreationDateTime(CREATION_DATE_TIME_STRING);
+
+    response = target("/collections").request()
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .post(collectionEntity);
+
+    assertEquals(response.getStatus(),
+        Response.Status.CREATED.getStatusCode());
+
+    response = target("/collections/" + bucketName)
+        .queryParam("key", "collection1")
+        .queryParam("tag", "AOP")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+    assertEquals(response.getHeaderString("Content-Type"), "application/json");
+
+    JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
+    assertNotNull(responseObj);
+    assertEquals("collection1", responseObj.get("key").getAsString());
+    assertEquals(0, responseObj.get("versionNumber").getAsInt());
+
+  }
+
 
   @Test
-  public void getLastCollection(){
+  /**
+   * Test get latest collection. The first created collection has later creation date than the second one
+   */
+  public void getLatestCollection(){
 
-    generateCollectionData();
+    generateBuckets(bucketName);
+    Integer versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
+    Integer versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
 
-    Response response = target("/collections/" + bucketName)
+    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
+    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
+
+    // create collection 1
+    InputCollection inputCollection = new InputCollection();
+    inputCollection.setBucketName(bucketName);
+    inputCollection.setKey("collection1");
+    inputCollection.setCreate("new");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
+    inputCollection.setTag("AOP");
+    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
+
+    // create collection1
+    Response response = target("/collections").request()
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .post(collectionEntity);
+
+    assertEquals(response.getStatus(),
+        Response.Status.CREATED.getStatusCode());
+
+    // version collection1, using a creation_date_time previous for the creation date time of collection 1
+    inputCollection.setCreate("version");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{object2}));
+    inputCollection.setCreationDateTime(CREATION_DATE_TIME_STRING);
+
+    response = target("/collections").request()
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .post(collectionEntity);
+
+    assertEquals(response.getStatus(),
+        Response.Status.CREATED.getStatusCode());
+
+    response = target("/collections/" + bucketName)
         .queryParam("key", "collection1")
         .request(MediaType.APPLICATION_JSON_TYPE)
         .accept(MediaType.APPLICATION_JSON_TYPE)
@@ -591,8 +688,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
     assertNotNull(responseObj);
     assertEquals("collection1", responseObj.get("key").getAsString());
-    assertEquals(1, responseObj.get("versionNumber").getAsInt());
-    assertEquals(2, responseObj.get("objects").getAsJsonArray().size());
+    assertEquals(0, responseObj.get("versionNumber").getAsInt());
 
   }
 
@@ -923,6 +1019,49 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
             .delete(),
         Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound
     );
+
+  }
+
+  @Test
+  public void deleteCollectionWithSameTags(){
+
+    generateBuckets(bucketName);
+    Integer versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
+
+    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
+
+    // create collection 1
+    InputCollection inputCollection = new InputCollection();
+    inputCollection.setBucketName(bucketName);
+    inputCollection.setKey("collection1");
+    inputCollection.setCreate("new");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
+    inputCollection.setTag("AOP");
+    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
+
+    target("/collections").request()
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .post(collectionEntity);
+
+    Integer versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
+    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
+    inputCollection.setCreate("version");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{object2}));
+
+    target("/collections").request()
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .post(collectionEntity);
+
+
+    assertRepoError(target("/collections/" + bucketName)
+            .queryParam("key", "collection1")
+            .queryParam("tag", "AOP")
+            .request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .delete(),
+        Response.Status.BAD_REQUEST,
+        RepoException.Type.MoreThanOneTaggedCollection);
+
 
   }
 

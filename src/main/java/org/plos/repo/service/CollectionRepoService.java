@@ -86,7 +86,8 @@ public class CollectionRepoService extends BaseRepoService {
 
   /**
    * Returns a collection identified by <code>bucketName</code> and <code>key</code>. If no filer <code>collectionFilter</code> is specified,
-   * it returns the latest version available
+   * it returns the latest version available. If only tag filter is specified, and there is more than one collection with that tag, it returns
+   * the last one.
    * @param bucketName a single String representing the bucket name in where to look the collection
    * @param key a single String identifying the collection key
    * @param elementFilter a collection filter object used to uniquely identify the collection
@@ -142,7 +143,9 @@ public class CollectionRepoService extends BaseRepoService {
   }
 
   /**
-   * Deletes the collection define by <code>bucketName</code> , <code>key</code> , <code>version</code>
+   * Deletes the collection define by <code>bucketName</code>, <code>key</code> and <code>elementFilter</code>. If
+   * only the tag in element filter is specified, and there is more than one collection matching the filter, it throws an
+   * error.
    * @param bucketName a single String identifying the bucket name where the collection is.
    * @param key a single String identifying the collection key
    * @param elementFilter a collection filter object used to uniquely identify the collection
