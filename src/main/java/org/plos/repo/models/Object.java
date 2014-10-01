@@ -74,6 +74,7 @@ public class Object {
              this.status.equals(object.status) &&
              compareNullableElements(this.contentType, object.contentType) &&
              compareNullableElements(this.downloadName, object.downloadName) &&
+             compareNullableElements(this.tag, object.tag) &&
              compareNullableElements(this.checksum, object.checksum);
 
   }

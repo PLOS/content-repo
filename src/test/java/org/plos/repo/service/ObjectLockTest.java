@@ -1,4 +1,3 @@
-/*
 package org.plos.repo.service;
 
 import org.apache.commons.io.IOUtils;
@@ -40,12 +39,11 @@ public class ObjectLockTest extends RepoBaseSpringTest {
   private CountDownLatch startGate;
   private CountDownLatch endGate;
 
-  */
-/*
-    * JUnit only captures assertion errors raised in the main thread, so we'll 
+    /**
+    * JUnit only captures assertion errors raised in the main thread, so we'll
     * create an explicit error instance to record assertion failures in 
     * in worker threads (only the first). Guard access with lock object.
-    *//*
+    */
 
   private AssertionError assertionFailure;
   private final java.lang.Object lock = new java.lang.Object();
@@ -68,19 +66,19 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     osSqlServiceField.setAccessible(true);
     osSqlServiceField.set(repoService, spySqlService);
 
-    this.startGate = new CountDownLatch(1);
+    this.startGate = new CountDownLatch(1);  // make all thread starts at the same time. Since all threads are going to be waiting on startGate, once all thread are created, we perform a startGate.countDown()
   }
 
   // implement callback using interface and anonymous inner class
   public interface Callback {
     String getKeyname(int i);
 
-    Integer getVersion(int i);
+    String getTag(int i);
   }
 
 
   @Test
-  public void testReaderAndWritersSameKey() throws Exception {
+  public void testReaderAndWritersSameKeyAndSameData() throws Exception {
 
     final int INSERT_THREADS = 25;
     final int UPDATE_THREADS = 100;
@@ -92,8 +90,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
         return BASE_KEY_NAME;
       }
 
-      public Integer getVersion(int i) {
-        return i;
+      public String getTag(int i) {
+        return null;
       }
     };
 
@@ -104,30 +102,74 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     this.endGate = new CountDownLatch(UPDATE_THREADS + DELETE_THREADS + READER_THREADS);
     execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
+    List<org.plos.repo.models.Object> objects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    // since when version an object we don't create a new version if nothing change from last version, only one object with BASE_KEY_NAME is going to be created
+    assertEquals(1, objects.size());
 
-    List<org.plos.repo.models.Object> objects = repoService.listObjects(BUCKET_NAME, null, null, false);
+    org.plos.repo.models.Object obj = objects.get(0);
+
+    assertEquals(BASE_KEY_NAME, obj.key);
+    assertEquals(Integer.valueOf(0), obj.versionNumber);
+    assertTrue(this.objectStore.objectExists(obj));
+
+    List<Object> versions = repoService.getObjectVersions(obj);
+
+    assertEquals(1, versions.size());
+
+    // create new objects + list objects + update objects + list objects ----> all operations calls getObject underneath
+    verify(spySqlService, times(READER_THREADS*3 + INSERT_THREADS)).getObject(anyString(), anyString());
+
+  }
+
+  @Test
+  public void testReaderAndWritersSameKeyDifferentData() throws Exception {
+
+    final int INSERT_THREADS = 25;
+    final int UPDATE_THREADS = 100;
+    final int DELETE_THREADS = 0;
+    final int READER_THREADS = 100;
+
+    Callback callback = new Callback() {
+      public String getKeyname(int i) {
+        return BASE_KEY_NAME;
+      }
+
+      public String getTag(int i) {
+        return "TAG" + i;
+      }
+
+    };
+
+    this.endGate = new CountDownLatch(INSERT_THREADS + DELETE_THREADS + READER_THREADS);
+    execute(INSERT_THREADS, 0, DELETE_THREADS, READER_THREADS, callback);
+    List<org.plos.repo.models.Object> objects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    // since when version an object we don't create a new version if nothing change from last version, only one object with BASE_KEY_NAME is going to be created
+    assertEquals(1, objects.size());
+
+    this.startGate = new CountDownLatch(1);
+    this.endGate = new CountDownLatch(UPDATE_THREADS + DELETE_THREADS + READER_THREADS);
+    execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
+
+    objects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    // since when version an object we don't create a new version if nothing change from last version, only one object with BASE_KEY_NAME is going to be created
     assertEquals(1 + UPDATE_THREADS, objects.size());
-
-    Collections.sort(objects, new ObjectComparator());
 
     for (int j = 0; j < objects.size(); j++) {
       org.plos.repo.models.Object obj = objects.get(j);
 
       assertEquals(BASE_KEY_NAME, obj.key);
-      assertEquals(Integer.valueOf(j), obj.versionNumber);
       assertTrue(this.objectStore.objectExists(obj));
 
       List<Object> versions = repoService.getObjectVersions(obj);
 
-      assertEquals(UPDATE_THREADS + 1, versions.size());
+      assertEquals(1 + UPDATE_THREADS, versions.size());
     }
 
-    verify(spySqlService, times(READER_THREADS*2)).getObject(anyString(), anyString(), anyInt(), anyInt(), anyString());
+    verify(spySqlService, times(READER_THREADS*2)).getObject(anyString(), anyString(), anyInt(), anyString(), anyString());
   }
 
 
-  */
-/*@Test*//*
+  @Test
 
   // TODO : rewrite test to include the new changes
   public void testReaderAndWritersSameKeyWithDeletions() throws Exception {
@@ -138,27 +180,37 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     final int READER_THREADS = 125;
 
     Callback callback = new Callback() {
-      public String getKeyname(int i) {
-        return BASE_KEY_NAME;
-      }
+      public String getKeyname(int i) { return BASE_KEY_NAME; }
 
-      public Integer getVersion(int i) {
-        return i;
-      }
+      public String getTag(int i) { return null; }
+
     };
 
     this.endGate = new CountDownLatch(INSERT_THREADS + READER_THREADS);
     execute(INSERT_THREADS, 0, 0, READER_THREADS, callback);
 
+    List<org.plos.repo.models.Object> objects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    assertEquals(1, objects.size());
+
+    Callback callbackUp = new Callback() {
+      public String getKeyname(int i) { return BASE_KEY_NAME; }
+
+      public String getTag(int i) { return "TAG" + i; }
+
+    };
+
     this.startGate = new CountDownLatch(1);
     this.endGate = new CountDownLatch(UPDATE_THREADS  + READER_THREADS);
-    execute(0, UPDATE_THREADS, 0, READER_THREADS, callback);
+    execute(0, UPDATE_THREADS, 0, READER_THREADS, callbackUp);
+
+    objects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    assertEquals(1 + UPDATE_THREADS, objects.size());
 
     this.startGate = new CountDownLatch(1);
     this.endGate = new CountDownLatch(DELETE_THREADS + READER_THREADS);
-    execute(0, 0, DELETE_THREADS, READER_THREADS, callback);
+    execute(0, 0, DELETE_THREADS, READER_THREADS, callbackUp);
 
-    List<org.plos.repo.models.Object> objects = repoService.listObjects(BUCKET_NAME, null, null, false);
+    objects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
     assertEquals(1 + UPDATE_THREADS - DELETE_THREADS, objects.size());
 
     Collections.sort(objects, new ObjectComparator());
@@ -171,11 +223,12 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     }
 
-    verify(spySqlService, times(READER_THREADS*3)).getObject(anyString(), anyString(), anyInt(), anyInt(), anyString());
+    verify(spySqlService, times(INSERT_THREADS + UPDATE_THREADS + READER_THREADS)).getObject(anyString(), anyString()); // insert object + list objects + update objets
+
+    verify(spySqlService, times(DELETE_THREADS + READER_THREADS*2)).getObject(anyString(), anyString(), anyInt(), anyString(), anyString()); // reading objects (3 times) + deleting objects
   }
 
-  */
-/*@Test*//*
+@Test
 
   // TODO : rewrite test to include the new changes
   public void testReaderAndWritersDifferentKeys() throws Exception {
@@ -192,14 +245,13 @@ public class ObjectLockTest extends RepoBaseSpringTest {
         return BASE_KEY_NAME + String.format("%03d", i);
       }
 
-      public Integer getVersion(int i) {
-        return 0;
-      }
+      public String getTag(int i) { return "TAG" + i; }
+
     };
 
     execute(INSERT_THREADS, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
-    List<org.plos.repo.models.Object> objects = repoService.listObjects(BUCKET_NAME, null, null, false);
+    List<org.plos.repo.models.Object> objects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
 
     assertTrue(objects.size() >= INSERT_THREADS - DELETE_THREADS);
 
@@ -211,7 +263,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       assertTrue(this.objectStore.objectExists(obj));
     }
 
-    verify(spySqlService, times(READER_THREADS)).getObject(anyString(), anyString(), anyInt(), anyInt(), anyString());
+    // when deleting an object, we first verify that the object is not contain in an active collection. For that end, we look for the existing object using sqlService getObject
+    verify(spySqlService, times(READER_THREADS + DELETE_THREADS)).getObject(anyString(), anyString(), anyInt(), anyString(), anyString());
   }
 
   private void execute(final int insertThreads, final int updateThreads,
@@ -219,14 +272,11 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                        final int readerThreads, final Callback cb)
       throws InterruptedException {
 
-    */
-/* ------------------------------------------------------------------ *//*
+/* ------------------------------------------------------------------
 
-    */
-/*  INSERT                                                            *//*
+   INSERT
 
-    */
-/* ------------------------------------------------------------------ *//*
+ ------------------------------------------------------------------ */
 
 
     for (int i = 0; i < insertThreads; i++) {
@@ -237,7 +287,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
             startGate.await();  // don't start until startGate is 0
             try {
               Timestamp creationDateTime = new Timestamp(new Date().getTime());
-              Object object = repoService.createObject(RepoService.CreateMethod.NEW, cb.getKeyname(j), BUCKET_NAME, null, null, creationDateTime, IOUtils.toInputStream(OBJECT_DATA), creationDateTime);
+              Object object = repoService.createObject(RepoService.CreateMethod.NEW, cb.getKeyname(j), BUCKET_NAME, null, null, creationDateTime, IOUtils.toInputStream(OBJECT_DATA), creationDateTime, cb.getTag(j));
 
               if (!object.key.equals(cb.getKeyname(j))) {
                 synchronized (lock) {
@@ -271,14 +321,11 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       t.start();
     }
 
-    */
-/* ------------------------------------------------------------------ *//*
+ /* ------------------------------------------------------------------
 
-    */
-/*  UPDATE                                                            *//*
+   UPDATE
 
-    */
-/* ------------------------------------------------------------------ *//*
+ ------------------------------------------------------------------ */
 
 
     for (int i = 0; i < updateThreads; i++) {
@@ -289,7 +336,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
             startGate.await();  // don't start until startGate is 0
             try {
               Timestamp creationDateTime = new Timestamp(new Date().getTime());
-              Object versionedObject = repoService.createObject(RepoService.CreateMethod.VERSION, cb.getKeyname(j), BUCKET_NAME, null, null, creationDateTime, IOUtils.toInputStream(OBJECT_DATA), creationDateTime);
+              Object versionedObject = repoService.createObject(RepoService.CreateMethod.VERSION, cb.getKeyname(j), BUCKET_NAME, null, null, creationDateTime, IOUtils.toInputStream(OBJECT_DATA), creationDateTime, cb.getTag(j));
 
               if (!versionedObject.key.equals(cb.getKeyname(j))) {
                 synchronized (lock) {
@@ -324,14 +371,11 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       t.start();
     }
 
-    */
-/* ------------------------------------------------------------------ *//*
+/*  ------------------------------------------------------------------
 
-    */
-/*  DELETE                                                            *//*
+  DELETE
 
-    */
-/* ------------------------------------------------------------------ *//*
+ ------------------------------------------------------------------ */
 
 
     for (int i = 0; i < deleteThreads; i++) {
@@ -341,7 +385,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
           try {
             startGate.await();  // don't start until startGate is 0 
             try {
-              repoService.deleteObject(BUCKET_NAME, cb.getKeyname(j), new ElementFilter(cb.getVersion(j), null, null));
+              repoService.deleteObject(BUCKET_NAME, cb.getKeyname(j), new ElementFilter(null, cb.getTag(j), null));
             } finally {
               endGate.countDown();
             }
@@ -365,14 +409,11 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       t.start();
     }
 
-    */
-/* ------------------------------------------------------------------ *//*
+ /* ------------------------------------------------------------------
 
-    */
-/*  READER                                                            *//*
+  READER
 
-    */
-/* ------------------------------------------------------------------ *//*
+ ------------------------------------------------------------------ */
 
 
     for (int i = 0; i < readerThreads; i++) {
@@ -383,7 +424,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
             startGate.await();  // don't start until startGate is 0 
             try {
 
-              Object object = repoService.getObject(BUCKET_NAME, cb.getKeyname(j), new ElementFilter(cb.getVersion(j), null, null));
+              Object object = repoService.getObject(BUCKET_NAME, cb.getKeyname(j), new ElementFilter(null, cb.getTag(j), null));
 
               String outputData = IOUtils.toString(repoService.getObjectInputStream(object));
 
@@ -430,11 +471,11 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       t.start();
     }
 
-    startGate.countDown(); */
-/* start all client threads                    *//*
+    startGate.countDown();
+ //start all client threads
 
-    endGate.await();       */
-/* wait until all threads have finished (L=0)  *//*
+    endGate.await();
+ //wait until all threads have finished (L=0)
 
 
     if (this.assertionFailure != null) {
@@ -471,4 +512,3 @@ class ObjectComparator implements Comparator<org.plos.repo.models.Object> {
     return 0;
   }
 }
-*/
