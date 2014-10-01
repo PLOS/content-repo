@@ -208,7 +208,6 @@ public class CollectionRepoService extends BaseRepoService {
 
     Collection existingCollection;
 
-
     // fetch the collection if it already exists
     try {
       existingCollection = getCollection(inputCollection.getBucketName(), inputCollection.getKey(), new ElementFilter()); // don't want to take in count the tag for getting the existing collection
@@ -384,8 +383,6 @@ public class CollectionRepoService extends BaseRepoService {
 
       rollback = false;
 
-      return getCollection(bucketName, key, new ElementFilter(versionNumber, tag, null));
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
@@ -395,6 +392,8 @@ public class CollectionRepoService extends BaseRepoService {
       }
       sqlReleaseConnection();
     }
+
+    return getCollection(bucketName, key, new ElementFilter(versionNumber, tag, null));
 
   }
 
