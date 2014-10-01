@@ -112,15 +112,15 @@ public class CollectionRepoService extends BaseRepoService {
       if (collection == null)
         throw new RepoException(RepoException.Type.CollectionNotFound);
 
-      collection.setVersions(this.getCollectionVersions(collection));
-
-      return collection;
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
       sqlReleaseConnection();
     }
+
+    collection.setVersions(this.getCollectionVersions(collection));
+
+    return collection;
 
   }
 
@@ -383,6 +383,8 @@ public class CollectionRepoService extends BaseRepoService {
 
       rollback = false;
 
+      return collection;
+
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
@@ -393,7 +395,7 @@ public class CollectionRepoService extends BaseRepoService {
       sqlReleaseConnection();
     }
 
-    return getCollection(bucketName, key, new ElementFilter(versionNumber, tag, null));
+    /*return getCollection(bucketName, key, new ElementFilter(versionNumber, tag, null));*/
 
   }
 
