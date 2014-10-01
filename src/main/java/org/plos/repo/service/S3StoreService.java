@@ -119,7 +119,7 @@ public class S3StoreService extends ObjectStore {
       FileOutputStream fos = new FileOutputStream(tempFileLocation);
 
       ReadableByteChannel in = Channels.newChannel(uploadedInputStream);
-      MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
+      MessageDigest digest = checksumGenerator.getDigestMessage();
       WritableByteChannel out = Channels.newChannel(new DigestOutputStream(fos, digest));
       ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
 
@@ -131,7 +131,7 @@ public class S3StoreService extends ObjectStore {
         buffer.clear();
       }
 
-      final String checksum = checksumToString(digest.digest());
+      final String checksum = checksumGenerator.checksumToString(digest.digest());
       final long finalSize = size;
 
       out.close();

@@ -351,7 +351,8 @@ public class RepoService extends BaseRepoService {
                              String downloadName,
                              Timestamp timestamp,
                              InputStream uploadedInputStream,
-                             Timestamp creationDateTime) throws RepoException {
+                             Timestamp creationDateTime,
+                             String tag) throws RepoException {
 
 
     Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
@@ -381,18 +382,18 @@ public class RepoService extends BaseRepoService {
         case NEW:
           if (existingObject != null)
             throw new RepoException(RepoException.Type.CantCreateNewObjectWithUsedKey);
-          return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream, creationDateTime);
+          return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream, creationDateTime, tag);
 
         case VERSION:
           if (existingObject == null)
             throw new RepoException(RepoException.Type.CantCreateVersionWithNoOrig);
-          return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject, creationDateTime);
+          return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject, creationDateTime, tag);
 
         case AUTO:
           if (existingObject == null)
-            return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream, creationDateTime);
+            return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream, creationDateTime, tag);
           else
-            return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject, creationDateTime);
+            return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject, creationDateTime, tag);
 
         default:
           throw new RepoException(RepoException.Type.InvalidCreationMethod);
@@ -409,7 +410,8 @@ public class RepoService extends BaseRepoService {
                                  String downloadName,
                                  Timestamp timestamp,
                                  InputStream uploadedInputStream,
-                                 Timestamp cretationDateTime) throws RepoException {
+                                 Timestamp cretationDateTime,
+                                 String tag) throws RepoException {
 
     ObjectStore.UploadInfo uploadInfo = null;
     Integer versionNumber;
@@ -449,8 +451,8 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(e);
       }
 
-      object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), null, bucket.bucketId, bucketName, versionNumber, Status.USED, cretationDateTime, null);
-      object.versionChecksum = versionChecksumGenerator.generateVersionChecksum(object);
+      object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), tag, bucket.bucketId, bucketName, versionNumber, Status.USED, cretationDateTime, null);
+      object.versionChecksum = checksumGenerator.generateVersionChecksum(object);
       rollback = true;
 
       // determine if the object should be added to the store or not
@@ -504,7 +506,8 @@ public class RepoService extends BaseRepoService {
                               Timestamp timestamp,
                               InputStream uploadedInputStream,
                               Object object,
-                              Timestamp cretationDateTime) throws RepoException {
+                              Timestamp cretationDateTime,
+                              String tag) throws RepoException {
 
     ObjectStore.UploadInfo uploadInfo = null;
     boolean rollback = false;
@@ -517,8 +520,8 @@ public class RepoService extends BaseRepoService {
       //if any of the input properties are null, we should populate them with the data of the previous version of the object
       // TODO: if the object is equals to the last version, do we need to update the timestamp?
 
-      newObject = new Object(null, object.key, null, timestamp, downloadName, contentType, null, null , object.bucketId, bucketName, null, Status.USED, cretationDateTime, null);
-      newObject.versionChecksum = versionChecksumGenerator.generateVersionChecksum(newObject);
+      newObject = new Object(null, object.key, null, timestamp, downloadName, contentType, null, tag, object.bucketId, bucketName, null, Status.USED, cretationDateTime, null);
+      newObject.versionChecksum = checksumGenerator.generateVersionChecksum(newObject);
       sqlService.getConnection();
       if (sqlService.getBucket(bucketName) == null)
         throw new RepoException(RepoException.Type.BucketNotFound);

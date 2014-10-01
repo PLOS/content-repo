@@ -81,7 +81,7 @@ public class InMemoryFileStoreService extends ObjectStore {
   public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException {
 
     try {
-      MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
+      MessageDigest digest = checksumGenerator.getDigestMessage();
 
       final String tempFileLocation = UUID.randomUUID().toString() + ".tmp";
 
@@ -89,7 +89,7 @@ public class InMemoryFileStoreService extends ObjectStore {
 
       tempdata.put(tempFileLocation, bytes);
 
-      final String checksum = checksumToString(digest.digest(bytes));
+      final String checksum = checksumGenerator.checksumToString(digest.digest(bytes));
       final long finalSize = bytes.length;
 
       return new UploadInfo() {

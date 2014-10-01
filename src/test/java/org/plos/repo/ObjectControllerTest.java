@@ -20,10 +20,13 @@ package org.plos.repo;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.junit.Before;
 import org.junit.Test;
+import org.plos.repo.models.InputCollection;
+import org.plos.repo.models.InputObject;
 import org.plos.repo.service.RepoException;
 
 import javax.ws.rs.client.Entity;
@@ -34,6 +37,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
@@ -208,6 +212,86 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     createBucket(bucketName, CREATION_DATE_TIME);
 
     assertRepoError(target("/objects").queryParam("bucketName", bucketName).queryParam("offset", "-1").request().accept(MediaType.APPLICATION_JSON_TYPE).get(), Response.Status.BAD_REQUEST, RepoException.Type.InvalidOffset);
+
+  }
+
+  @Test
+  public void deleteObjectUsingNotUniqueTag() {
+
+    createBucket(bucketName, CREATION_DATE_TIME);
+
+    assertEquals(target("/objects").request()
+            .post(Entity.entity(new FormDataMultiPart()
+                    .field("bucketName", bucketName).field("create", "new")
+                    .field("key", "object1").field("contentType", "text/plain")
+                    .field("timestamp", "2012-09-08 11:00:00")
+                    .field("tag", "DRAFT")
+                    .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
+                MediaType.MULTIPART_FORM_DATA
+            )).getStatus(),
+        Response.Status.CREATED.getStatusCode()
+    );
+
+    assertEquals(target("/objects").request()
+            .post(Entity.entity(new FormDataMultiPart()
+                    .field("bucketName", bucketName).field("create", "version")
+                    .field("key", "object1").field("contentType", "image/jpg")
+                    .field("timestamp", "2012-09-08 11:00:00")
+                    .field("tag", "DRAFT")
+                    .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
+                MediaType.MULTIPART_FORM_DATA
+            )).getStatus(),
+        Response.Status.CREATED.getStatusCode()
+    );
+
+    assertRepoError(target("/objects/" + bucketName)
+        .queryParam("key", "object5")
+        .queryParam("tag", "DRAFT")
+        .request().accept(MediaType.APPLICATION_JSON_TYPE).delete(),
+        Response.Status.BAD_REQUEST, RepoException.Type.MoreThanOneTaggedObject);
+
+  }
+
+  @Test
+  public void deleteObjectInActiveCollection() {
+
+    createBucket(bucketName, CREATION_DATE_TIME);
+
+    Response response = target("/objects").request(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(new FormDataMultiPart()
+                .field("bucketName", bucketName).field("create", "new")
+                .field("key", "object1").field("contentType", "text/plain")
+                .field("timestamp", "2012-09-08 11:00:00")
+                .field("tag", "DRAFT")
+                .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
+                 MediaType.MULTIPART_FORM_DATA
+                ));
+
+    assertEquals(response.getStatus(),
+        Response.Status.CREATED.getStatusCode()
+    );
+
+    JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
+    TestCase.assertNotNull(responseObj);
+    String versionCheksum =  responseObj.get("versionChecksum").getAsString();
+
+    // create collection 1
+    InputCollection inputCollection = new InputCollection();
+    inputCollection.setBucketName(bucketName);
+    inputCollection.setKey("collection1");
+    inputCollection.setCreate("new");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("object1", versionCheksum)}));
+    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
+
+    target("/collections").request()
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .post(collectionEntity);
+
+    assertRepoError(target("/objects/" + bucketName)
+            .queryParam("key", "object1")
+            .queryParam("tag", "DRAFT")
+            .request().accept(MediaType.APPLICATION_JSON_TYPE).delete(),
+        Response.Status.BAD_REQUEST, RepoException.Type.CantDeleteObjectActiveColl);
 
   }
 

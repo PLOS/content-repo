@@ -40,7 +40,7 @@ public class Object {
   public Integer versionNumber;
   public Status status;
   public Timestamp creationDate;
-  public Integer versionChecksum;
+  public String versionChecksum;
 
   public List<Object> versions;
 
@@ -48,7 +48,9 @@ public class Object {
   private Object() {
   }
 
-  public Object(Integer id, String key, String checksum, Timestamp timestamp, String downloadName, String contentType, Long size, String tag, Integer bucketId, String bucketName, Integer versionNumber, Status status, Timestamp creationDate, Integer versionChecksum) {
+  public Object(Integer id, String key, String checksum, Timestamp timestamp, String downloadName,
+                String contentType, Long size, String tag, Integer bucketId, String bucketName,
+                Integer versionNumber, Status status, Timestamp creationDate, String versionChecksum) {
     this.id = id;
     this.key = key;
     this.checksum = checksum;

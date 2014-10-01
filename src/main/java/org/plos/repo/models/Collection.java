@@ -42,7 +42,7 @@ public class Collection {
   private String tag;
   @XmlJavaTypeAdapter(TimestampAdapter.class)
   private Timestamp creationDate;
-  private Integer versionChecksum;
+  private String versionChecksum;
 
   private List<Object> objects;
 
@@ -53,7 +53,7 @@ public class Collection {
   }
 
   public Collection(Integer id, String key, Timestamp timestamp, Integer bucketId, String bucketName,
-                    Integer versionNumber, Status status, String tag, Timestamp creationDate, Integer versionChecksum) {
+                    Integer versionNumber, Status status, String tag, Timestamp creationDate, String versionChecksum) {
     this.id = id;
     this.key = key;
     this.timestamp = timestamp;
@@ -159,11 +159,11 @@ public class Collection {
     this.creationDate = creationDate;
   }
 
-  public Integer getVersionChecksum() {
+  public String getVersionChecksum() {
     return versionChecksum;
   }
 
-  public void setVersionChecksum(Integer versionChecksum) {
+  public void setVersionChecksum(String versionChecksum) {
     this.versionChecksum = versionChecksum;
   }
 

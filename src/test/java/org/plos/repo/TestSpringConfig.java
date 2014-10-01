@@ -21,7 +21,7 @@ import org.hsqldb.jdbc.JDBCDataSource;
 import org.plos.repo.models.validator.InputCollectionValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
 import org.plos.repo.service.*;
-import org.plos.repo.util.VersionChecksumGenerator;
+import org.plos.repo.util.ChecksumGenerator;
 import org.plos.repo.util.OperationComparator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ClassPathResource;
@@ -59,7 +59,7 @@ public class TestSpringConfig {
   public OperationComparator operationComparator(){ return new OperationComparator(); }
 
   @Bean
-  public VersionChecksumGenerator versionChecksumGenerator(){ return new VersionChecksumGenerator(); }
+  public ChecksumGenerator versionChecksumGenerator(){ return new ChecksumGenerator(); }
 
   @Bean
   public ObjectStore objectStore() throws Exception {

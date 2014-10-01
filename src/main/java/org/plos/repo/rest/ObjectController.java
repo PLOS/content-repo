@@ -288,6 +288,8 @@ public class ObjectController {
       @FormDataParam("timestamp") String timestampString,
       @ApiParam(value = "creation time", required = false)
       @FormDataParam("creationDateTime") String creationDateTimeString,
+      @ApiParam(value = "creation time", required = false)
+      @FormDataParam("tag") String tag,
       @ApiParam(required = false)
       @FormDataParam("file") InputStream uploadedInputStream
   ) {
@@ -312,7 +314,8 @@ public class ObjectController {
 
       repoInfoService.incrementWriteCount();
 
-      return Response.status(Response.Status.CREATED).entity(repoService.createObject(method, key, bucketName, contentType, downloadName, lastModifiedDateTime, uploadedInputStream, creationDateTime)).build();
+      return Response.status(Response.Status.CREATED).entity(
+          repoService.createObject(method, key, bucketName, contentType, downloadName, lastModifiedDateTime, uploadedInputStream, creationDateTime, tag)).build();
 
     } catch (RepoException e) {
       return handleError(e);

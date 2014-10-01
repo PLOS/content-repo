@@ -241,6 +241,6 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
         Integer.valueOf(0),                         // version#
         org.plos.repo.models.Status.USED,
         new Timestamp(datetime.toDate().getTime()),
-        123456); // creation date time
+        "123456"); // creation date time
   }
 }

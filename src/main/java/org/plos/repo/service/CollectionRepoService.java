@@ -23,7 +23,7 @@ import com.google.common.collect.Lists;
 import org.plos.repo.models.*;
 import org.plos.repo.models.Object;
 import org.plos.repo.models.validator.InputCollectionValidator;
-import org.plos.repo.util.VersionChecksumGenerator;
+import org.plos.repo.util.ChecksumGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +44,7 @@ public class CollectionRepoService extends BaseRepoService {
   private InputCollectionValidator inputCollectionValidator;
 
   @Inject
-  private VersionChecksumGenerator versionChecksumGenerator;
+  private ChecksumGenerator checksumGenerator;
 
 
   /**
@@ -360,9 +360,9 @@ public class CollectionRepoService extends BaseRepoService {
 
       collection = new Collection(null, key, timestamp, bucketId, bucketName, versionNumber, Status.USED, tag, creationDate, null);
 
-      List<Integer> objectsChecksum = Lists.newArrayList(Iterables.transform(inputObjects, typeFunction()));
+      List<String> objectsChecksum = Lists.newArrayList(Iterables.transform(inputObjects, typeFunction()));
 
-      collection.setVersionChecksum(versionChecksumGenerator.generateVersionChecksum(collection, objectsChecksum));
+      collection.setVersionChecksum(checksumGenerator.generateVersionChecksum(collection, objectsChecksum));
 
       rollback = true;
 
@@ -398,11 +398,11 @@ public class CollectionRepoService extends BaseRepoService {
 
   }
 
-  private Function<InputObject, Integer> typeFunction() {
-    return new Function<InputObject, Integer>() {
+  private Function<InputObject, String> typeFunction() {
+    return new Function<InputObject, String>() {
 
       @Override
-      public Integer apply(InputObject inputObject) {
+      public String apply(InputObject inputObject) {
         return inputObject.getVersionChecksum();
       }
 

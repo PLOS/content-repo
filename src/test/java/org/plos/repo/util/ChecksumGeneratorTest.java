@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.plos.repo.models.*;
 import org.plos.repo.models.Object;
+import org.plos.repo.service.RepoException;
 
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -20,19 +21,19 @@ import static org.mockito.MockitoAnnotations.initMocks;
 /**
  * Checksum generator test
  */
-public class VersionChecksumGeneratorTest {
+public class ChecksumGeneratorTest {
 
   private static final Timestamp TIMESTAMP = new Timestamp(new Date().getTime());
-  private static final Integer OBJ1_VERSION_CHECKSUM = 1234567;
-  private static final Integer OBJ2_VERSION_CHECKSUM = 7654321;
-  private static final Integer OBJ3_VERSION_CHECKSUM = 9999999;
+  private static final String OBJ1_VERSION_CHECKSUM = "dnaskjndas15456dsadass";
+  private static final String OBJ2_VERSION_CHECKSUM = "kandkasd3465dsabjdsbad";
+  private static final String OBJ3_VERSION_CHECKSUM = "nkdlsadas15316diojda13";
   private static final String OBJ1_CHECKSUM = "1223123";
   private static final String TAG = "draft";
   private static final String CONTENT_TYPE = "text/plain";
   private static final String DOWNLOAD_NAME = "draft_object";
   private static final String CONTENT_TYPE1 = "image/jpg";
 
-  private VersionChecksumGenerator versionChecksumGenerator;
+  private ChecksumGenerator checksumGenerator;
 
   @Mock
   private Collection collection1;
@@ -44,24 +45,24 @@ public class VersionChecksumGeneratorTest {
   @Mock
   private Object object2;
 
-  private List<Integer> objects1Checksum = Arrays.asList(new Integer[]{OBJ1_VERSION_CHECKSUM, OBJ2_VERSION_CHECKSUM});
-  private List<Integer> objects2Checksum = Arrays.asList(new Integer[]{OBJ2_VERSION_CHECKSUM, OBJ1_VERSION_CHECKSUM});
-  private List<Integer> objects3Checksum = Arrays.asList(new Integer[]{OBJ2_VERSION_CHECKSUM, OBJ3_VERSION_CHECKSUM});
+  private List<String> objects1Checksum = Arrays.asList(new String[]{OBJ1_VERSION_CHECKSUM, OBJ2_VERSION_CHECKSUM});
+  private List<String> objects2Checksum = Arrays.asList(new String[]{OBJ2_VERSION_CHECKSUM, OBJ1_VERSION_CHECKSUM});
+  private List<String> objects3Checksum = Arrays.asList(new String[]{OBJ2_VERSION_CHECKSUM, OBJ3_VERSION_CHECKSUM});
 
   @Before
   public void setUp(){
-    versionChecksumGenerator = new VersionChecksumGenerator();
+    checksumGenerator = new ChecksumGenerator();
     initMocks(this);
   }
 
   @Test
-  public void generateChecksumForSameCollection(){
+  public void generateChecksumForSameCollection() throws RepoException {
 
     mockCollectionCalls(collection1);
     mockCollectionCalls(collection2);
 
-    Integer checksumColl1 = versionChecksumGenerator.generateVersionChecksum(collection1, objects1Checksum);
-    Integer checksumColl2 = versionChecksumGenerator.generateVersionChecksum(collection2, objects2Checksum);
+    String checksumColl1 = checksumGenerator.generateVersionChecksum(collection1, objects1Checksum);
+    String checksumColl2 = checksumGenerator.generateVersionChecksum(collection2, objects2Checksum);
 
     assertNotNull(checksumColl1);
     assertNotNull(checksumColl2);
@@ -74,13 +75,13 @@ public class VersionChecksumGeneratorTest {
 
 
   @Test
-  public void generateChecksumForDifObjsCollection(){
+  public void generateChecksumForDifObjsCollection() throws RepoException {
 
     mockCollectionCalls(collection1);
     mockCollectionCalls(collection2);
 
-    Integer checksumColl1 = versionChecksumGenerator.generateVersionChecksum(collection1, objects1Checksum);
-    Integer checksumColl2 = versionChecksumGenerator.generateVersionChecksum(collection2, objects3Checksum);
+    String checksumColl1 = checksumGenerator.generateVersionChecksum(collection1, objects1Checksum);
+    String checksumColl2 = checksumGenerator.generateVersionChecksum(collection2, objects3Checksum);
 
     assertNotNull(checksumColl1);
     assertNotNull(checksumColl2);
@@ -92,13 +93,13 @@ public class VersionChecksumGeneratorTest {
   }
 
   @Test
-  public void generateChecksumForSameObject(){
+  public void generateChecksumForSameObject() throws RepoException {
 
     objectSetup(object1, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
     objectSetup(object2, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
 
-    Integer checksumObj1 = versionChecksumGenerator.generateVersionChecksum(object1);
-    Integer checksumObj2 = versionChecksumGenerator.generateVersionChecksum(object2);
+    String checksumObj1 = checksumGenerator.generateVersionChecksum(object1);
+    String checksumObj2 = checksumGenerator.generateVersionChecksum(object2);
 
     assertNotNull(checksumObj1);
     assertNotNull(checksumObj2);
@@ -107,13 +108,13 @@ public class VersionChecksumGeneratorTest {
   }
 
   @Test
-  public void generateChecksumForDifObject(){
+  public void generateChecksumForDifObject() throws RepoException {
 
     objectSetup(object1, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
     objectSetup(object2, TIMESTAMP, TAG, CONTENT_TYPE1, DOWNLOAD_NAME, OBJ1_CHECKSUM);
 
-    Integer checksumObj1 = versionChecksumGenerator.generateVersionChecksum(object1);
-    Integer checksumObj2 = versionChecksumGenerator.generateVersionChecksum(object2);
+    String checksumObj1 = checksumGenerator.generateVersionChecksum(object1);
+    String checksumObj2 = checksumGenerator.generateVersionChecksum(object2);
 
     assertNotNull(checksumObj1);
     assertNotNull(checksumObj2);

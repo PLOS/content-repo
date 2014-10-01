@@ -18,7 +18,7 @@
 package org.plos.repo.service;
 
 import org.apache.commons.lang.StringUtils;
-import org.plos.repo.util.VersionChecksumGenerator;
+import org.plos.repo.util.ChecksumGenerator;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -43,7 +43,7 @@ public abstract class BaseRepoService {
   protected SqlService sqlService;
 
   @Inject
-  protected VersionChecksumGenerator versionChecksumGenerator;
+  protected ChecksumGenerator checksumGenerator;
 
   protected void sqlReleaseConnection() throws RepoException {
 

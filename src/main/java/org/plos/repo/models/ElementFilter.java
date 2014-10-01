@@ -12,13 +12,13 @@ public class ElementFilter {
   private String tag;
 
   @QueryParam("versionChecksum")
-  private Integer versionChecksum;
+  private String versionChecksum;
 
   public ElementFilter(){
 
   }
 
-  public ElementFilter(Integer version, String tag, Integer versionChecksum){
+  public ElementFilter(Integer version, String tag, String versionChecksum){
     this.version = version;
     this.tag = tag;
     this.versionChecksum = versionChecksum;
@@ -32,7 +32,7 @@ public class ElementFilter {
     return tag;
   }
 
-  public Integer getVersionChecksum() {
+  public String getVersionChecksum() {
     return versionChecksum;
   }
 
@@ -44,7 +44,7 @@ public class ElementFilter {
     this.tag = tag;
   }
 
-  public void setVersionChecksum(Integer versionChecksum) {
+  public void setVersionChecksum(String versionChecksum) {
     this.versionChecksum = versionChecksum;
   }
 

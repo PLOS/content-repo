@@ -51,14 +51,14 @@ public abstract class SqlService {
                                           rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"),
                                           rs.getLong("SIZE"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"),
                                           rs.getInt("VERSIONNUMBER"), Status.STATUS_VALUES.get(rs.getInt("STATUS")), rs.getTimestamp("CREATIONDATE"),
-                                          rs.getInt("VERSIONCHECKSUM"));
+                                          rs.getString("VERSIONCHECKSUM"));
   }
 
   private static org.plos.repo.models.Collection mapCollectionRow(ResultSet rs) throws SQLException {
     return new org.plos.repo.models.Collection(rs.getInt("ID"), rs.getString("COLLKEY"), rs.getTimestamp("TIMESTAMP"),
                                                rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"),
                                                 Status.STATUS_VALUES.get(rs.getInt("STATUS")), rs.getString("TAG"),
-                                                rs.getTimestamp("CREATIONDATE"), rs.getInt("VERSIONCHECKSUM"));
+                                                rs.getTimestamp("CREATIONDATE"), rs.getString("VERSIONCHECKSUM"));
   }
 
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
@@ -184,7 +184,7 @@ public abstract class SqlService {
 
   }
 
-  public int markObjectDeleted(String key, String bucketName, Integer version, Integer versionChecksum, String tag) throws SQLException {
+  public int markObjectDeleted(String key, String bucketName, Integer version, String versionChecksum, String tag) throws SQLException {
 
     PreparedStatement p = null;
 
@@ -219,7 +219,7 @@ public abstract class SqlService {
         p.setInt(i++, version);
       }
       if (versionChecksum != null){
-        p.setInt(i++, versionChecksum);
+        p.setString(i++, versionChecksum);
       }
       if (tag != null){
         p.setString(i++, tag);
@@ -307,7 +307,7 @@ public abstract class SqlService {
 
   }
 
-  public Object getObject(String bucketName, String key, Integer version, Integer versionChecksum, String tag) throws SQLException {
+  public Object getObject(String bucketName, String key, Integer version, String versionChecksum, String tag) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -337,7 +337,7 @@ public abstract class SqlService {
         p.setInt(i++, version);
       }
       if (versionChecksum != null){
-        p.setInt(i++, versionChecksum);
+        p.setString(i++, versionChecksum);
       }
       if (tag != null){
         p.setString(i++, tag);
@@ -385,7 +385,7 @@ public abstract class SqlService {
       p.setInt(9, object.versionNumber);
       p.setInt(10, object.status.getValue());
       p.setTimestamp(11, object.timestamp);
-      p.setInt(12, object.versionChecksum);
+      p.setString(12, object.versionChecksum);
 
       return p.executeUpdate();
 
@@ -749,7 +749,7 @@ public abstract class SqlService {
    * @return {@link org.plos.repo.models.Collection}
    * @throws SQLException
    */
-  public Collection getCollection(String bucketName, String key, Integer version, String tag, Integer versionChecksum) throws SQLException {
+  public Collection getCollection(String bucketName, String key, Integer version, String tag, String versionChecksum) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -781,7 +781,7 @@ public abstract class SqlService {
         p.setInt(i++, version);
       }
       if (versionChecksum != null){
-        p.setInt(i++, versionChecksum);
+        p.setString(i++, versionChecksum);
       }
       if (tag != null){
         p.setString(i++, tag);
@@ -851,11 +851,11 @@ public abstract class SqlService {
    * Marks the collection defined by <code>key</code> , <code>bucketName</code> & <code>versionNumber</code> as deleted.
    * @param key a single String identifying the collection key
    * @param bucketName a single String identifying the bucket name where the collection is.
-   * @param versionNumber an int value representing the version number of the collection.
+   * @param versionNumber an string value representing the version number of the collection.
    * @return an int value indicating the number of updated rows
    * @throws SQLException
    */
-  public int markCollectionDeleted(String key, String bucketName, Integer versionNumber, String tag, Integer versionChecksum) throws SQLException {
+  public int markCollectionDeleted(String key, String bucketName, Integer versionNumber, String tag, String versionChecksum) throws SQLException {
 
     PreparedStatement p = null;
 
@@ -890,7 +890,7 @@ public abstract class SqlService {
         p.setInt(i++, versionNumber);
       }
       if (versionChecksum != null){
-        p.setInt(i++, versionChecksum);
+        p.setString(i++, versionChecksum);
       }
       if (tag != null){
         p.setString(i++, tag);
@@ -949,7 +949,7 @@ public abstract class SqlService {
       p.setInt(5, collection.getVersionNumber());
       p.setString(6, collection.getTag());
       p.setTimestamp(7, collection.getCreationDate());
-      p.setInt(8, collection.getVersionChecksum());
+      p.setString(8, collection.getVersionChecksum());
 
       p.executeUpdate();
       keys = p.getGeneratedKeys();
@@ -966,7 +966,7 @@ public abstract class SqlService {
 
   }
 
-  public Boolean existsActiveCollectionForObject(String objKey, String bucketName, Integer version, Integer versionChecksum, String tag) throws SQLException {
+  public Boolean existsActiveCollectionForObject(String objKey, String bucketName, Integer version, String versionChecksum, String tag) throws SQLException {
 
     Object object = this.getObject(bucketName, objKey, version, versionChecksum, tag);
 
@@ -998,7 +998,7 @@ public abstract class SqlService {
 
   }
 
-  public int insertCollectionObjects(Integer collectionId, String objectKey, String bucketName, Integer objectChecksum) throws SQLException {
+  public int insertCollectionObjects(Integer collectionId, String objectKey, String bucketName, String objectChecksum) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -1009,7 +1009,7 @@ public abstract class SqlService {
 
       p.setString(1, bucketName);
       p.setString(2, objectKey);
-      p.setInt(3, objectChecksum);
+      p.setString(3, objectChecksum);
 
       result = p.executeQuery();
       Integer objId = null;

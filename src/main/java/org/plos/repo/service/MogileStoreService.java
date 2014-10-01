@@ -109,14 +109,14 @@ public class MogileStoreService extends ObjectStore {
     try {
       byte[] objectData = readStreamInput(uploadedInputStream);
 
-      MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
+      MessageDigest digest = checksumGenerator.getDigestMessage();
 
       OutputStream fos = mfs.newFile(tempFileLocation, mogileFileClass, objectData.length);
 
       IOUtils.write(objectData, fos);
       fos.close();
 
-      final String checksum = checksumToString(digest.digest(objectData));
+      final String checksum = checksumGenerator.checksumToString(digest.digest(objectData));
       final long finalSize = objectData.length;
 
       return new UploadInfo() {
