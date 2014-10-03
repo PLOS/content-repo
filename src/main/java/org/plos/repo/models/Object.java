@@ -45,7 +45,7 @@ public class Object {
   public List<Object> versions;
 
   // empty constructor required for JAXB mapping
-  private Object() {
+  public Object() {
   }
 
   public Object(Integer id, String key, String checksum, Timestamp timestamp, String downloadName,

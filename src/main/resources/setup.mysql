@@ -20,7 +20,7 @@ status TINYINT DEFAULT 0 NOT NULL,
 versionNumber INTEGER NOT NULL,
 creationDate TIMESTAMP DEFAULT 0,
 versionChecksum VARCHAR (255) NOT NULL,
-UNIQUE KEY keySum (bucketId, objkey, versionNumber, versionChecksum),
+UNIQUE KEY keySum (bucketId, objkey, versionChecksum),
 PRIMARY KEY (id)
 );
 CREATE TABLE IF NOT EXISTS collections (
@@ -33,7 +33,7 @@ versionNumber VARCHAR (255) NOT NULL,
 status TINYINT DEFAULT 0 NOT NULL,
 tag VARCHAR (200),
 creationDate TIMESTAMP DEFAULT 0,
-UNIQUE KEY keySum (bucketId, collkey, versionNumber, versionChecksum),
+UNIQUE KEY keySum (bucketId, collkey, versionChecksum),
 PRIMARY KEY (id),
 FOREIGN KEY (bucketId) REFERENCES buckets(bucketId)
 );

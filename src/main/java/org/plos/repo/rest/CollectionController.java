@@ -160,7 +160,7 @@ public class CollectionController {
 
         repoInfoService.incrementWriteCount();
 
-        return Response.status(Response.Status.CREATED).entity(collectionRepoService.createCollection(method, inputCollection)).build();
+        return Response.status(Response.Status.CREATED).entity(collectionRepoService.createCollection2(method, inputCollection)).build();
 
         } catch (RepoException e) {
             return ObjectController.handleError(e);

@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -42,9 +43,6 @@ public class CollectionRepoService extends BaseRepoService {
 
   @Inject
   private InputCollectionValidator inputCollectionValidator;
-
-  @Inject
-  private ChecksumGenerator checksumGenerator;
 
 
   /**
@@ -219,7 +217,7 @@ public class CollectionRepoService extends BaseRepoService {
     }
 
     Timestamp creationDate = inputCollection.getCreationDateTime() != null ?
-                Timestamp.valueOf(inputCollection.getCreationDateTime()) : new Timestamp(new Date().getTime());
+        Timestamp.valueOf(inputCollection.getCreationDateTime()) : new Timestamp(new Date().getTime());
 
     Timestamp timestamp = inputCollection.getTimestamp() != null ?
         Timestamp.valueOf(inputCollection.getTimestamp()) : creationDate;
@@ -248,6 +246,68 @@ public class CollectionRepoService extends BaseRepoService {
 
   }
 
+  public Collection createCollection2(CreateMethod method, InputCollection inputCollection) throws RepoException {
+
+    inputCollectionValidator.validate(inputCollection);
+
+    Collection existingCollection = null;
+    boolean rollback = false;
+    Collection newCollection = null;
+
+    try {
+
+      // get connection
+      sqlService.getConnection();
+
+      existingCollection = sqlService.getCollection(inputCollection.getBucketName(), inputCollection.getKey());
+
+      // creates timestamps
+      Timestamp creationDate = inputCollection.getCreationDateTime() != null ?
+          Timestamp.valueOf(inputCollection.getCreationDateTime()) : new Timestamp(new Date().getTime());
+
+      Timestamp timestamp = inputCollection.getTimestamp() != null ?
+          Timestamp.valueOf(inputCollection.getTimestamp()) : creationDate;
+
+      if (CreateMethod.NEW.equals(method)){
+
+        if (existingCollection != null)
+          throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
+        newCollection = createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
+
+      } else if (CreateMethod.VERSION.equals(method)){
+
+        if (existingCollection == null)
+          throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
+        newCollection = updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, existingCollection, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
+
+      } else if (CreateMethod.AUTO.equals(method)){
+
+        if (existingCollection == null)
+          newCollection = createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
+        else
+          newCollection = updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, existingCollection, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
+
+      } else if (CreateMethod.AUTO.equals(method)){
+        throw new RepoException(RepoException.Type.InvalidCreationMethod);
+      }
+
+      sqlService.transactionCommit();
+      rollback = false;
+
+      return newCollection;
+
+    } catch (SQLException e) {
+      throw new RepoException(e);
+    } finally {
+
+      if (rollback) {
+        sqlRollback("collection " + inputCollection.getBucketName() + ", " + inputCollection.getKey());
+      }
+      sqlReleaseConnection();
+    }
+
+  }
+
 
   private Collection createNewCollection(String key,
                                          String bucketName,
@@ -255,22 +315,23 @@ public class CollectionRepoService extends BaseRepoService {
                                          List<InputObject> objects,
                                          String tag,
                                          Timestamp creationDate) throws RepoException {
-
     Bucket bucket = null;
 
     try {
-      sqlService.getConnection();
       bucket = sqlService.getBucket(bucketName);
+
+      if (bucket == null)
+        throw new RepoException(RepoException.Type.BucketNotFound);
+
+
+      return createCollection(key, bucketName, timestamp, bucket.bucketId, objects, tag, creationDate);
+    } catch(SQLIntegrityConstraintViolationException e){
+      throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
     } catch (SQLException e) {
       throw new RepoException(e);
-    } finally {
-      sqlReleaseConnection();
     }
 
-    if (bucket == null)
-      throw new RepoException(RepoException.Type.BucketNotFound);
 
-    return createCollection(key, bucketName, timestamp, bucket.bucketId, objects, tag, creationDate);
   }
 
   private Collection updateCollection(String key,
@@ -285,7 +346,13 @@ public class CollectionRepoService extends BaseRepoService {
       return existingCollection;
     }
 
-    return createCollection(key, bucketName, timestamp, existingCollection.getBucketId(), objects, tag, creationDate);
+    try{
+      return createCollection(key, bucketName, timestamp, existingCollection.getBucketId(), objects, tag, creationDate);
+    } catch(SQLIntegrityConstraintViolationException e){
+      throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
+    } catch(SQLException e){
+      throw new RepoException(e);
+    }
 
   }
 
@@ -294,7 +361,7 @@ public class CollectionRepoService extends BaseRepoService {
                                         List<InputObject> objects,
                                         String tag,
                                         Collection existingCollection
-                                        ){
+  ){
 
     Boolean similar = existingCollection.getKey().equals(key) &&
         existingCollection.getBucketName().equals(bucketName) &&
@@ -318,8 +385,7 @@ public class CollectionRepoService extends BaseRepoService {
       for( ; y < existingCollection.getObjects().size(); y++ ){
         Object object = existingCollection.getObjects().get(y);
         if (object.key.equals(inputObject.getKey()) &&
-            object.bucketName.equals(bucketName) &&
-            object.checksum.equals(inputObject.getVersionChecksum())){
+            object.versionChecksum.equals(inputObject.getVersionChecksum())){
           break;
 
         }
@@ -341,61 +407,36 @@ public class CollectionRepoService extends BaseRepoService {
                                       Integer bucketId,
                                       List<InputObject> inputObjects,
                                       String tag,
-                                      Timestamp creationDate) throws RepoException {
+                                      Timestamp creationDate) throws SQLException, RepoException {
 
     Integer versionNumber;
     Collection collection;
-    boolean rollback = false;
 
-    try {
 
-      sqlService.getConnection();
+    versionNumber = sqlService.getCollectionNextAvailableVersion(bucketName, key);   // change to support collections
 
-      try {
-        versionNumber = sqlService.getCollectionNextAvailableVersion(bucketName, key);   // change to support collections
-      } catch (SQLException e) {
-        throw new RepoException(e);
-      }
+    collection = new Collection(null, key, timestamp, bucketId, bucketName, versionNumber, Status.USED, tag, creationDate, null);
 
-      collection = new Collection(null, key, timestamp, bucketId, bucketName, versionNumber, Status.USED, tag, creationDate, null);
+    List<String> objectsChecksum = Lists.newArrayList(Iterables.transform(inputObjects, typeFunction()));
 
-      List<String> objectsChecksum = Lists.newArrayList(Iterables.transform(inputObjects, typeFunction()));
+    collection.setVersionChecksum(checksumGenerator.generateVersionChecksum(collection, objectsChecksum));
 
-      collection.setVersionChecksum(checksumGenerator.generateVersionChecksum(collection, objectsChecksum));
-
-      rollback = true;
-
-      // add a record to the DB
-      Integer collId = sqlService.insertCollection(collection);
-      if (collId == -1) {
-        throw new RepoException("Error saving content to database");
-      }
-
-      for (InputObject inputObject : inputObjects){
-
-        if (sqlService.insertCollectionObjects(collId, inputObject.getKey(), bucketName, inputObject.getVersionChecksum()) == 0){
-          throw new RepoException(RepoException.Type.ObjectCollectionNotFound);
-        }
-
-      }
-
-      sqlService.transactionCommit();
-
-      rollback = false;
-
-      return collection;
-
-    } catch (SQLException e) {
-      throw new RepoException(e);
-    } finally {
-
-      if (rollback) {
-        sqlRollback("collection " + bucketName + ", " + key);
-      }
-      sqlReleaseConnection();
+    // add a record to the DB
+    Integer collId = sqlService.insertCollection(collection);
+    if (collId == -1) {
+      throw new RepoException("Error saving content to database");
     }
 
-    /*return getCollection(bucketName, key, new ElementFilter(versionNumber, tag, null));*/
+    for (InputObject inputObject : inputObjects){
+
+      if (sqlService.insertCollectionObjects(collId, inputObject.getKey(), bucketName, inputObject.getVersionChecksum()) == 0){
+        throw new RepoException(RepoException.Type.ObjectCollectionNotFound);
+      }
+
+    }
+
+    return collection;
+
 
   }
 

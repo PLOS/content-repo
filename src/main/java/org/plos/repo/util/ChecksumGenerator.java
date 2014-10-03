@@ -25,6 +25,7 @@ public class ChecksumGenerator {
       sb.append(checksum);
     }
 
+    sb.append(collection.getKey());
     sb.append(collection.getTimestamp());
     sb.append(collection.getCreationDate());
     sb.append(collection.getStatus().getValue());
@@ -39,6 +40,7 @@ public class ChecksumGenerator {
 
     StringBuilder sb = new StringBuilder();
 
+    sb.append(object.key);
     sb.append(object.timestamp.toString());
     sb.append(object.creationDate.toString());
     sb.append(object.tag);

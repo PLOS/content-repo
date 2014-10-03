@@ -24,6 +24,8 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class ChecksumGeneratorTest {
 
   private static final Timestamp TIMESTAMP = new Timestamp(new Date().getTime());
+  private static final String OBJECT_KEY1 = "object1";
+  private static final String OBJECT_KEY2 = "object2";
   private static final String OBJ1_VERSION_CHECKSUM = "dnaskjndas15456dsadass";
   private static final String OBJ2_VERSION_CHECKSUM = "kandkasd3465dsabjdsbad";
   private static final String OBJ3_VERSION_CHECKSUM = "nkdlsadas15316diojda13";
@@ -32,6 +34,7 @@ public class ChecksumGeneratorTest {
   private static final String CONTENT_TYPE = "text/plain";
   private static final String DOWNLOAD_NAME = "draft_object";
   private static final String CONTENT_TYPE1 = "image/jpg";
+  private static final String COLLECTION_KEY = "collection";
 
   private ChecksumGenerator checksumGenerator;
 
@@ -40,9 +43,7 @@ public class ChecksumGeneratorTest {
   @Mock
   private Collection collection2;
 
-  @Mock
   private Object object1;
-  @Mock
   private Object object2;
 
   private List<String> objects1Checksum = Arrays.asList(new String[]{OBJ1_VERSION_CHECKSUM, OBJ2_VERSION_CHECKSUM});
@@ -52,6 +53,8 @@ public class ChecksumGeneratorTest {
   @Before
   public void setUp(){
     checksumGenerator = new ChecksumGenerator();
+    object1 = new Object();
+    object2 = new Object();
     initMocks(this);
   }
 
@@ -95,8 +98,8 @@ public class ChecksumGeneratorTest {
   @Test
   public void generateChecksumForSameObject() throws RepoException {
 
-    objectSetup(object1, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
-    objectSetup(object2, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
+    objectSetup(object1, OBJECT_KEY1, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
+    objectSetup(object2, OBJECT_KEY1, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
 
     String checksumObj1 = checksumGenerator.generateVersionChecksum(object1);
     String checksumObj2 = checksumGenerator.generateVersionChecksum(object2);
@@ -110,8 +113,8 @@ public class ChecksumGeneratorTest {
   @Test
   public void generateChecksumForDifObject() throws RepoException {
 
-    objectSetup(object1, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
-    objectSetup(object2, TIMESTAMP, TAG, CONTENT_TYPE1, DOWNLOAD_NAME, OBJ1_CHECKSUM);
+    objectSetup(object1, OBJECT_KEY1, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
+    objectSetup(object2, OBJECT_KEY2, TIMESTAMP, TAG, CONTENT_TYPE1, DOWNLOAD_NAME, OBJ1_CHECKSUM);
 
     String checksumObj1 = checksumGenerator.generateVersionChecksum(object1);
     String checksumObj2 = checksumGenerator.generateVersionChecksum(object2);
@@ -122,7 +125,8 @@ public class ChecksumGeneratorTest {
 
   }
   
-  private void objectSetup(Object object, Timestamp timestamp, String tag, String contentType, String downloadName, String checksum) {
+  private void objectSetup(Object object, String key, Timestamp timestamp, String tag, String contentType, String downloadName, String checksum) {
+    object.key = key;
     object.timestamp = timestamp ;
     object.creationDate = timestamp;
     object.tag = tag;
@@ -132,6 +136,7 @@ public class ChecksumGeneratorTest {
   }
 
   private void mockCollectionCalls(Collection collection) {
+    when(collection.getKey()).thenReturn(COLLECTION_KEY);
     when(collection.getTimestamp()).thenReturn(TIMESTAMP);
     when(collection.getCreationDate()).thenReturn(TIMESTAMP);
     when(collection.getStatus()).thenReturn(Status.USED);
