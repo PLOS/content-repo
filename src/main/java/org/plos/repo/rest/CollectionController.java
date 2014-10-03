@@ -17,11 +17,14 @@
 
 package org.plos.repo.rest;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.wordnik.swagger.annotations.*;
 import org.apache.http.HttpStatus;
-import org.plos.repo.models.Collection;
-import org.plos.repo.models.ElementFilter;
-import org.plos.repo.models.InputCollection;
+import org.plos.repo.models.input.ElementFilter;
+import org.plos.repo.models.input.InputCollection;
+import org.plos.repo.models.output.Collection;
 import org.plos.repo.service.CollectionRepoService;
 import org.plos.repo.service.RepoException;
 import org.plos.repo.service.RepoInfoService;
@@ -41,131 +44,140 @@ import java.util.List;
 @Api(value="/collections")
 public class CollectionController {
 
-    private static final Logger log = LoggerFactory.getLogger(CollectionController.class);
+  private static final Logger log = LoggerFactory.getLogger(CollectionController.class);
 
-    @Inject
-    private CollectionRepoService collectionRepoService;
+  @Inject
+  private CollectionRepoService collectionRepoService;
 
-    @Inject
-    private RepoInfoService repoInfoService;
+  @Inject
+  private RepoInfoService repoInfoService;
 
 
-    @GET
-    @ApiOperation(value = "List collections", response = Collection.class, responseContainer = "List")
-    @ApiResponses(value = {
-    @ApiResponse(code = HttpStatus.SC_OK, message = "Success"),
-    @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "Bucket not found"),
-    @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "Bad request (see message)"),
-    @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
-    })
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response listCollections(
-            @ApiParam(required = false) @QueryParam("bucketName") String bucketName,
-            @ApiParam(required = false) @QueryParam("offset") Integer offset,
-            @ApiParam(required = false) @QueryParam("limit") Integer limit,
-            @ApiParam(required = false) @DefaultValue("false") @QueryParam("includeDeleted") boolean includeDeleted,
-            @ApiParam(required = false) @QueryParam("tag") String tag) {
+  @GET
+  @ApiOperation(value = "List collections", response = Collection.class, responseContainer = "List")
+  @ApiResponses(value = {
+      @ApiResponse(code = HttpStatus.SC_OK, message = "Success"),
+      @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "Bucket not found"),
+      @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "Bad request (see message)"),
+      @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
+  })
+  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+  public Response listCollections(
+      @ApiParam(required = false) @QueryParam("bucketName") String bucketName,
+      @ApiParam(required = false) @QueryParam("offset") Integer offset,
+      @ApiParam(required = false) @QueryParam("limit") Integer limit,
+      @ApiParam(required = false) @DefaultValue("false") @QueryParam("includeDeleted") boolean includeDeleted,
+      @ApiParam(required = false) @QueryParam("tag") String tag) {
 
-        try {
-            return Response.status(Response.Status.OK).entity(
-            new GenericEntity<List<Collection>>(
-                collectionRepoService.listCollections(bucketName, offset, limit, includeDeleted, tag)) {})
-                    .build();
+    try {
 
-        } catch (RepoException e) {
+      List<org.plos.repo.models.Collection> collections = collectionRepoService.listCollections(bucketName, offset, limit, includeDeleted, tag);
+      List<Collection> outputCollections = Lists.newArrayList(Iterables.transform(collections, Collection.typeFunction()));
 
-            return ObjectController.handleError(e);
-        }
+      return Response.status(Response.Status.OK)
+          .entity(new GenericEntity<List<Collection>>(outputCollections){})
+          .build();
 
+    } catch (RepoException e) {
+
+      return ObjectController.handleError(e);
     }
-
-    @GET
-    @Path("/{bucketName}")
-    @ApiOperation(value = "Fetch a collection", response = Collection.class)
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.SC_OK, message = "Success"),
-            @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "Bucket not found"),
-            @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "Bad request (see message)"),
-            @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
-    })
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getCollection(
-            @ApiParam(required = true) @PathParam("bucketName") String bucketName,
-            @ApiParam(required = true) @QueryParam("key") String key,
-            @ApiParam("collectionFilter") @BeanParam ElementFilter elementFilter) {
-
-        try {
-
-            Collection collection = collectionRepoService.getCollection(bucketName, key, elementFilter);
-
-            collection.setVersions(collectionRepoService.getCollectionVersions(collection));
-            return Response.status(Response.Status.OK)
-                    .lastModified(collection.getTimestamp())
-                    .entity(collection).build();
-        } catch (RepoException e) {
-            return ObjectController.handleError(e);
-        }
-
-    }
-
-
-    @DELETE
-    @Path("/{bucketName}")
-    @ApiOperation(value = "Delete a collection")
-    @ApiResponses(value = {
-    @ApiResponse(code = HttpStatus.SC_OK, message = "Collection successfully deleted"),
-    @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "The collection was not found"),
-    @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The collection was unable to be deleted (see response text for more details)"),
-    @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
-    })
-    public Response delete(
-            @ApiParam(required = true) @PathParam("bucketName") String bucketName,
-            @ApiParam(required = true) @QueryParam("key") String key,
-            @ApiParam("collectionFilter") @BeanParam ElementFilter elementFilter) {
-
-        try {
-            collectionRepoService.deleteCollection(bucketName, key, elementFilter);
-            return Response.status(Response.Status.OK).build();
-        } catch (RepoException e) {
-            return ObjectController.handleError(e);
-        }
-
-    }
-
-
-    @POST
-    @ApiOperation(value = "Create a new collection or a new version of an existing collection",
-            notes = "Set the create field to 'new' collection if the collection you are inserting is not already in the repo. If you want to create a new version of an existing collection set create to 'version'. ")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.SC_CREATED, message = "Collection successfully created"),
-            @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "The object not found"),
-            @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The collection was unable to be created (see response text for more details)"),
-            @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
-    })
-    public Response createOrUpdateCollection(@ApiParam("collection") InputCollection inputCollection){
-
-        try {
-
-            RepoService.CreateMethod method;
-
-            if (inputCollection.getCreate() == null)
-                throw new RepoException(RepoException.Type.NoCreationMethodEntered);
-
-            try {
-                method = RepoService.CreateMethod.valueOf(inputCollection.getCreate().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new RepoException(RepoException.Type.InvalidCreationMethod);
-            }
-
-        repoInfoService.incrementWriteCount();
-
-        return Response.status(Response.Status.CREATED).entity(collectionRepoService.createCollection2(method, inputCollection)).build();
-
-        } catch (RepoException e) {
-            return ObjectController.handleError(e);
-        }
 
   }
+
+  @GET
+  @Path("/{bucketName}")
+  @ApiOperation(value = "Fetch a collection", response = Collection.class)
+  @ApiResponses(value = {
+      @ApiResponse(code = HttpStatus.SC_OK, message = "Success"),
+      @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "Bucket not found"),
+      @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "Bad request (see message)"),
+      @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
+  })
+  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+  public Response getCollection(
+      @ApiParam(required = true) @PathParam("bucketName") String bucketName,
+      @ApiParam(required = true) @QueryParam("key") String key,
+      @ApiParam("collectionFilter") @BeanParam ElementFilter elementFilter) {
+
+    try {
+
+      org.plos.repo.models.Collection collection = collectionRepoService.getCollection(bucketName, key, elementFilter);
+
+      Collection outputCollection = new Collection(collection);
+
+      return Response.status(Response.Status.OK)
+          .lastModified(collection.getTimestamp())
+          .entity(outputCollection).build();
+    } catch (RepoException e) {
+      return ObjectController.handleError(e);
+    }
+
+  }
+
+
+  @DELETE
+  @Path("/{bucketName}")
+  @ApiOperation(value = "Delete a collection")
+  @ApiResponses(value = {
+      @ApiResponse(code = HttpStatus.SC_OK, message = "Collection successfully deleted"),
+      @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "The collection was not found"),
+      @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The collection was unable to be deleted (see response text for more details)"),
+      @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
+  })
+  public Response delete(
+      @ApiParam(required = true) @PathParam("bucketName") String bucketName,
+      @ApiParam(required = true) @QueryParam("key") String key,
+      @ApiParam("collectionFilter") @BeanParam ElementFilter elementFilter) {
+
+    try {
+      collectionRepoService.deleteCollection(bucketName, key, elementFilter);
+      return Response.status(Response.Status.OK).build();
+    } catch (RepoException e) {
+      return ObjectController.handleError(e);
+    }
+
+  }
+
+
+  @POST
+  @ApiOperation(value = "Create a new collection or a new version of an existing collection",
+      notes = "Set the create field to 'new' collection if the collection you are inserting is not already in the repo. If you want to create a new version of an existing collection set create to 'version'. ")
+  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+  @ApiResponses(value = {
+      @ApiResponse(code = HttpStatus.SC_CREATED, message = "Collection successfully created"),
+      @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "The object not found"),
+      @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The collection was unable to be created (see response text for more details)"),
+      @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
+  })
+  public Response createOrUpdateCollection(@ApiParam("collection") InputCollection inputCollection){
+
+    try {
+
+      RepoService.CreateMethod method;
+
+      if (inputCollection.getCreate() == null)
+        throw new RepoException(RepoException.Type.NoCreationMethodEntered);
+
+      try {
+        method = RepoService.CreateMethod.valueOf(inputCollection.getCreate().toUpperCase());
+      } catch (IllegalArgumentException e) {
+        throw new RepoException(RepoException.Type.InvalidCreationMethod);
+      }
+
+      repoInfoService.incrementWriteCount();
+
+      org.plos.repo.models.Collection collection = collectionRepoService.createCollection(method, inputCollection);
+
+      Collection outputCollection = new Collection(collection);
+
+      return Response.status(Response.Status.CREATED).entity(outputCollection).build();
+
+    } catch (RepoException e) {
+      return ObjectController.handleError(e);
+    }
+
+  }
+
 
 }

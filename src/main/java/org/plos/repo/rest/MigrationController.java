@@ -1,3 +1,4 @@
+/*
 package org.plos.repo.rest;
 
 import com.google.common.collect.Multiset;
@@ -18,9 +19,11 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.SortedSet;
 
+*/
 /**
  * Handles migration APIs requests
- */
+ *//*
+
 @Path("/operations")
 @Api(value="/operations")
 public class MigrationController {
@@ -55,3 +58,4 @@ public class MigrationController {
   }
 
 }
+*/

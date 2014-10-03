@@ -62,12 +62,12 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
   public Boolean objectExists(Object object) {
-    return new File(getObjectLocationString(object.bucketName, object.checksum)).exists();
+    return new File(getObjectLocationString(object.getBucketName(), object.getChecksum())).exists();
   }
 
   public InputStream getInputStream(Object object) throws RepoException {
     try {
-      return new FileInputStream(getObjectLocationString(object.bucketName, object.checksum));
+      return new FileInputStream(getObjectLocationString(object.getBucketName(), object.getChecksum()));
     } catch (FileNotFoundException e) {
       throw new RepoException(e);
     }
@@ -100,7 +100,7 @@ public class FileSystemStoreService extends ObjectStore {
     try {
 
       URL[] urls = new URL[1];
-      urls[0] = new URL(reproxyBaseUrl + "/" + object.bucketName + "/" + object.checksum.substring(0, 2) + "/" + object.checksum);
+      urls[0] = new URL(reproxyBaseUrl + "/" + object.getBucketName() + "/" + object.getChecksum().substring(0, 2) + "/" + object.getChecksum());
       return urls;
 
     } catch (MalformedURLException e) {
@@ -134,7 +134,7 @@ public class FileSystemStoreService extends ObjectStore {
 
   public Boolean deleteObject(Object object) {
 
-    File file = new File(getObjectLocationString(object.bucketName, object.checksum));
+    File file = new File(getObjectLocationString(object.getBucketName(), object.getChecksum()));
     File parentDir = new File(file.getParent());
 
     boolean result = file.delete();

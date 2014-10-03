@@ -126,13 +126,13 @@ public class ChecksumGeneratorTest {
   }
   
   private void objectSetup(Object object, String key, Timestamp timestamp, String tag, String contentType, String downloadName, String checksum) {
-    object.key = key;
-    object.timestamp = timestamp ;
-    object.creationDate = timestamp;
-    object.tag = tag;
-    object.contentType = contentType;
-    object.downloadName = downloadName;
-    object.checksum = checksum;
+    object.setKey(key);
+    object.setTimestamp(timestamp);
+    object.setCreationDate(timestamp);
+    object.setTag(tag);
+    object.setContentType(contentType);
+    object.setDownloadName(downloadName);
+    object.setChecksum(checksum);
   }
 
   private void mockCollectionCalls(Collection collection) {

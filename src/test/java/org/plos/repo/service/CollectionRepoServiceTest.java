@@ -6,6 +6,8 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.plos.repo.models.*;
+import org.plos.repo.models.input.ElementFilter;
+import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.validator.InputCollectionValidator;
 
 import java.sql.SQLException;

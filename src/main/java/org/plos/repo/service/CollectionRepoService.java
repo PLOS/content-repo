@@ -22,8 +22,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.plos.repo.models.*;
 import org.plos.repo.models.Object;
+import org.plos.repo.models.input.ElementFilter;
+import org.plos.repo.models.input.InputCollection;
+import org.plos.repo.models.input.InputObject;
 import org.plos.repo.models.validator.InputCollectionValidator;
-import org.plos.repo.util.ChecksumGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -195,58 +197,12 @@ public class CollectionRepoService extends BaseRepoService {
    * Creates a new collection. It decides if it creates a collection from scratch or a new version of an existing one, based
    * on <code>method</code> input value.
    * @param method a {@link org.plos.repo.service.BaseRepoService.CreateMethod}
-   * @param inputCollection a {@link org.plos.repo.models.InputCollection} that holds the information of the new collection
+   * @param inputCollection a {@link org.plos.repo.models.input.InputCollection} that holds the information of the new collection
    *                        to be created
    * @return {@link org.plos.repo.models.Collection} created
    * @throws RepoException
    */
   public Collection createCollection(CreateMethod method, InputCollection inputCollection) throws RepoException {
-
-    inputCollectionValidator.validate(inputCollection);
-
-    Collection existingCollection;
-
-    // fetch the collection if it already exists
-    try {
-      existingCollection = getCollection(inputCollection.getBucketName(), inputCollection.getKey(), new ElementFilter()); // don't want to take in count the tag for getting the existing collection
-    } catch (RepoException e) {
-      if (e.getType() == RepoException.Type.CollectionNotFound)
-        existingCollection = null;
-      else
-        throw e;
-    }
-
-    Timestamp creationDate = inputCollection.getCreationDateTime() != null ?
-        Timestamp.valueOf(inputCollection.getCreationDateTime()) : new Timestamp(new Date().getTime());
-
-    Timestamp timestamp = inputCollection.getTimestamp() != null ?
-        Timestamp.valueOf(inputCollection.getTimestamp()) : creationDate;
-
-    switch (method) {
-
-      case NEW:
-        if (existingCollection != null)
-          throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
-        return createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
-
-      case VERSION:
-        if (existingCollection == null)
-          throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
-        return updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, existingCollection, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
-
-      case AUTO:
-        if (existingCollection == null)
-          return createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
-        else
-          return updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, existingCollection, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
-
-      default:
-        throw new RepoException(RepoException.Type.InvalidCreationMethod);
-    }
-
-  }
-
-  public Collection createCollection2(CreateMethod method, InputCollection inputCollection) throws RepoException {
 
     inputCollectionValidator.validate(inputCollection);
 
@@ -384,8 +340,8 @@ public class CollectionRepoService extends BaseRepoService {
       int y = 0;
       for( ; y < existingCollection.getObjects().size(); y++ ){
         Object object = existingCollection.getObjects().get(y);
-        if (object.key.equals(inputObject.getKey()) &&
-            object.versionChecksum.equals(inputObject.getVersionChecksum())){
+        if (object.getKey().equals(inputObject.getKey()) &&
+            object.getVersionChecksum().equals(inputObject.getVersionChecksum())){
           break;
 
         }

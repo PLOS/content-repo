@@ -4,7 +4,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.plos.repo.RepoBaseSpringTest;
-import org.plos.repo.models.ElementFilter;
+import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.Object;
 
 import java.lang.reflect.Field;
@@ -108,8 +108,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     org.plos.repo.models.Object obj = objects.get(0);
 
-    assertEquals(BASE_KEY_NAME, obj.key);
-    assertEquals(Integer.valueOf(0), obj.versionNumber);
+    assertEquals(BASE_KEY_NAME, obj.getKey());
+    assertEquals(Integer.valueOf(0), obj.getVersionNumber());
     assertTrue(this.objectStore.objectExists(obj));
 
     List<Object> versions = repoService.getObjectVersions(obj);
@@ -157,7 +157,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     for (int j = 0; j < objects.size(); j++) {
       org.plos.repo.models.Object obj = objects.get(j);
 
-      assertEquals(BASE_KEY_NAME, obj.key);
+      assertEquals(BASE_KEY_NAME, obj.getKey());
       assertTrue(this.objectStore.objectExists(obj));
 
       List<Object> versions = repoService.getObjectVersions(obj);
@@ -218,7 +218,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     for (int j = 0; j < objects.size(); j++) {
       org.plos.repo.models.Object obj = objects.get(j);
 
-      assertEquals(BASE_KEY_NAME, obj.key);
+      assertEquals(BASE_KEY_NAME, obj.getKey());
       assertTrue(this.objectStore.objectExists(obj));
 
     }
@@ -259,7 +259,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     for (int j = 0; j < objects.size(); j++) {
       org.plos.repo.models.Object obj = objects.get(j);
-      assertEquals(Integer.valueOf(0), obj.versionNumber);
+      assertEquals(Integer.valueOf(0), obj.getVersionNumber());
       assertTrue(this.objectStore.objectExists(obj));
     }
 
@@ -289,11 +289,11 @@ public class ObjectLockTest extends RepoBaseSpringTest {
               Timestamp creationDateTime = new Timestamp(new Date().getTime());
               Object object = repoService.createObject(RepoService.CreateMethod.NEW, cb.getKeyname(j), BUCKET_NAME, null, null, creationDateTime, IOUtils.toInputStream(OBJECT_DATA), creationDateTime, cb.getTag(j));
 
-              if (!object.key.equals(cb.getKeyname(j))) {
+              if (!object.getKey().equals(cb.getKeyname(j))) {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
-                        "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), object.key,
+                        "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), object.getKey(),
                         "insert failed"));
                   }
                 }
@@ -338,11 +338,11 @@ public class ObjectLockTest extends RepoBaseSpringTest {
               Timestamp creationDateTime = new Timestamp(new Date().getTime());
               Object versionedObject = repoService.createObject(RepoService.CreateMethod.VERSION, cb.getKeyname(j), BUCKET_NAME, null, null, creationDateTime, IOUtils.toInputStream(OBJECT_DATA), creationDateTime, cb.getTag(j));
 
-              if (!versionedObject.key.equals(cb.getKeyname(j))) {
+              if (!versionedObject.getKey().equals(cb.getKeyname(j))) {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
-                        "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), versionedObject.key,
+                        "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), versionedObject.getKey(),
                         "insert failed"));
                   }
                 }
@@ -428,11 +428,11 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
               String outputData = IOUtils.toString(repoService.getObjectInputStream(object));
 
-              if (!object.key.equals(cb.getKeyname(j))) {
+              if (!object.getKey().equals(cb.getKeyname(j))) {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
-                        "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), object.key,
+                        "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), object.getKey(),
                         "read metadata failed"));
                   }
                 }
@@ -488,23 +488,23 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 class ObjectComparator implements Comparator<org.plos.repo.models.Object> {
   public int compare(org.plos.repo.models.Object o1, org.plos.repo.models.Object o2) {
 
-    if (o1.bucketName.compareTo(o2.bucketName) < 0) {
+    if (o1.getBucketName().compareTo(o2.getBucketName()) < 0) {
       return -1;
-    } else if (o1.bucketName.compareTo(o2.bucketName) > 0) {
+    } else if (o1.getBucketName().compareTo(o2.getBucketName()) > 0) {
       return 1;
     }
     // o1.bucketName.equals(o2.bucketName)
 
-    if (o1.key.compareTo(o2.key) < 0) {
+    if (o1.getKey().compareTo(o2.getKey()) < 0) {
       return -1;
-    } else if (o1.key.compareTo(o2.key) > 0) {
+    } else if (o1.getKey().compareTo(o2.getKey()) > 0) {
       return 1;
     }
     // o1.key.equals(o2.key)
 
-    if (o1.versionNumber.compareTo(o2.versionNumber) < 0) {
+    if (o1.getVersionNumber().compareTo(o2.getVersionNumber()) < 0) {
       return -1;
-    } else if (o1.versionNumber.compareTo(o2.versionNumber) > 0) {
+    } else if (o1.getVersionNumber().compareTo(o2.getVersionNumber()) > 0) {
       return 1;
     }
     // o1.versionNumber.equals(o2.versionNumber)

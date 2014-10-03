@@ -45,7 +45,7 @@ public class S3StoreService extends ObjectStore {
 
   public Boolean objectExists(Object object) {
     try {
-      S3Object obj = s3Client.getObject(object.bucketName, object.checksum);
+      S3Object obj = s3Client.getObject(object.getBucketName(), object.getChecksum());
 
       if (obj == null)
         return false;
@@ -64,14 +64,14 @@ public class S3StoreService extends ObjectStore {
 
   public URL[] getRedirectURLs(Object object) throws RepoException {
     try {
-      return new URL[]{new URL(s3Client.getResourceUrl(object.bucketName, object.checksum))};
+      return new URL[]{new URL(s3Client.getResourceUrl(object.getBucketName(), object.getChecksum()))};
     } catch (MalformedURLException e) {
       throw new RepoException(e);
     }
   }
 
   public InputStream getInputStream(Object object) {
-    return s3Client.getObject(object.bucketName, object.checksum).getObjectContent();
+    return s3Client.getObject(object.getBucketName(), object.getChecksum()).getObjectContent();
   }
 
   public Boolean bucketExists(Bucket bucket) {
@@ -220,7 +220,7 @@ public class S3StoreService extends ObjectStore {
 
   public Boolean deleteObject(Object object) {
     try {
-      s3Client.deleteObject(object.bucketName, object.checksum);
+      s3Client.deleteObject(object.getBucketName(), object.getChecksum());
       return true;
     } catch (Exception e) {
       log.error("Error deleting object", e);

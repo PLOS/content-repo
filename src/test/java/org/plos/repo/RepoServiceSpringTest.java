@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 import org.plos.repo.models.Bucket;
-import org.plos.repo.models.ElementFilter;
+import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.Object;
 import org.plos.repo.service.*;
 
@@ -235,7 +235,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1");
 
-    Assert.assertTrue(objFromDb.key.equals("key1"));
+    Assert.assertTrue(objFromDb.getKey().equals("key1"));
     sqlService.releaseConnection();
     Assert.assertTrue(objectStore.objectExists(objFromDb));
 
@@ -328,7 +328,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1");
 
-    Assert.assertTrue(objFromDb.key.equals("key1"));
+    Assert.assertTrue(objFromDb.getKey().equals("key1"));
     sqlService.releaseConnection();
     Assert.assertTrue(objectStore.objectExists(objFromDb));
 
@@ -432,7 +432,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1");
 
-    Assert.assertTrue(objFromDb.key.equals("key1"));
+    Assert.assertTrue(objFromDb.getKey().equals("key1"));
     sqlService.releaseConnection();
     Assert.assertTrue(objectStore.objectExists(objFromDb));
 
@@ -478,7 +478,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1");
 
-    Assert.assertTrue(objFromDb.key.equals("key1"));
+    Assert.assertTrue(objFromDb.getKey().equals("key1"));
     sqlService.releaseConnection();
     Assert.assertTrue(objectStore.objectExists(objFromDb));
 
@@ -514,7 +514,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     Object objFromDb = sqlService.getObject(bucket1.bucketName, "key1");
 
-    Assert.assertTrue(objFromDb.key.equals("key1"));
+    Assert.assertTrue(objFromDb.getKey().equals("key1"));
     sqlService.releaseConnection();
     Assert.assertTrue(objectStore.objectExists(objFromDb));
 
@@ -563,8 +563,8 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     Object object = repoService.getObject(bucket1.bucketName, key, null);
 
     // object must match the one with the oldest creation time
-    Assert.assertEquals(new Integer(0), object.versionNumber);
-    Assert.assertEquals(creationDateTime1, object.creationDate);
+    Assert.assertEquals(new Integer(0), object.getVersionNumber());
+    Assert.assertEquals(creationDateTime1, object.getCreationDate());
 
   }
 
@@ -591,8 +591,8 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     Object object = repoService.getObject(bucket1.bucketName, key, new ElementFilter(null, "DRAFT", null));
 
     // object must match the one with the oldest creation time
-    Assert.assertEquals(new Integer(0), object.versionNumber);
-    Assert.assertEquals(creationDateTime1, object.creationDate);
+    Assert.assertEquals(new Integer(0), object.getVersionNumber());
+    Assert.assertEquals(creationDateTime1, object.getCreationDate());
 
   }
 
@@ -619,8 +619,8 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     Object object = repoService.getObject(bucket1.bucketName, key, new ElementFilter(null, "FINAL", null));
 
     // object must match the one with the oldest creation time
-    Assert.assertEquals(new Integer(0), object.versionNumber);
-    Assert.assertEquals(creationDateTime1, object.creationDate);
+    Assert.assertEquals(new Integer(0), object.getVersionNumber());
+    Assert.assertEquals(creationDateTime1, object.getCreationDate());
 
   }
 
@@ -644,12 +644,12 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     Object object = repoService.createObject(RepoService.CreateMethod.VERSION, key, bucket1.bucketName, null, null, creationDateTime2, IOUtils.toInputStream("data2"), creationDateTime2, "FINAL");
 
     // get the latest object
-    Object resultObject = repoService.getObject(bucket1.bucketName, key, new ElementFilter(null, "FINAL", object.versionChecksum));
+    Object resultObject = repoService.getObject(bucket1.bucketName, key, new ElementFilter(null, "FINAL", object.getVersionChecksum()));
 
     // object must match the one with the oldest creation time
-    Assert.assertEquals(new Integer(1), resultObject.versionNumber);
-    Assert.assertEquals(creationDateTime2, resultObject.creationDate);
-    Assert.assertEquals(object.versionChecksum, resultObject.versionChecksum);
+    Assert.assertEquals(new Integer(1), resultObject.getVersionNumber());
+    Assert.assertEquals(creationDateTime2, resultObject.getCreationDate());
+    Assert.assertEquals(object.getVersionChecksum(), resultObject.getVersionChecksum());
 
   }
 

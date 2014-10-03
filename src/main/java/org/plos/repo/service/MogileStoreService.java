@@ -43,7 +43,7 @@ public class MogileStoreService extends ObjectStore {
 
   public Boolean objectExists(Object object) {
     try {
-      InputStream in = mfs.getFileStream(getObjectLocationString(object.bucketName, object.checksum));
+      InputStream in = mfs.getFileStream(getObjectLocationString(object.getBucketName(), object.getChecksum()));
 
       if (in == null)
         return false;
@@ -63,7 +63,7 @@ public class MogileStoreService extends ObjectStore {
   public URL[] getRedirectURLs(Object object) throws RepoException {
 
     try {
-      String[] paths = mfs.getPaths(getObjectLocationString(object.bucketName, object.checksum), true);
+      String[] paths = mfs.getPaths(getObjectLocationString(object.getBucketName(), object.getChecksum()), true);
       int pathCount = paths.length;
       URL[] urls = new URL[pathCount];
 
@@ -80,7 +80,7 @@ public class MogileStoreService extends ObjectStore {
 
   public InputStream getInputStream(org.plos.repo.models.Object object) throws RepoException {
     try {
-      return mfs.getFileStream(getObjectLocationString(object.bucketName, object.checksum));
+      return mfs.getFileStream(getObjectLocationString(object.getBucketName(), object.getChecksum()));
     } catch (Exception e) {
       throw new RepoException(e);
     }
@@ -161,7 +161,7 @@ public class MogileStoreService extends ObjectStore {
 
   public Boolean deleteObject(Object object) {
     try {
-      mfs.delete(getObjectLocationString(object.bucketName, object.checksum));
+      mfs.delete(getObjectLocationString(object.getBucketName(), object.getChecksum()));
       return true;
     } catch (Exception e) {
       return false;

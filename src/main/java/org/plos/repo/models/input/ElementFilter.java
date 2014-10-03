@@ -1,4 +1,4 @@
-package org.plos.repo.models;
+package org.plos.repo.models.input;
 
 
 import javax.ws.rs.QueryParam;

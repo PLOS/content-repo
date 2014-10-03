@@ -64,7 +64,7 @@ public class MigrationService extends BaseRepoService{
       operations.add(o);
     }
     for (Object object : objects) {
-      if (Status.USED.equals(object.status)) {
+      if (Status.USED.equals(object.getStatus())) {
         Operation o = new Operation(object, Status.USED);
         operations.add(o);
       } else {

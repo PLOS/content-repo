@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.plos.repo.models;
+package org.plos.repo.models.input;
 
 import javax.xml.bind.annotation.XmlRootElement;
 

@@ -24,11 +24,11 @@ public class InMemoryFileStoreService extends ObjectStore {
   }
 
   public Boolean objectExists(Object object) {
-    return (data.get(object.bucketName) != null && data.get(object.bucketName).get(object.checksum) != null);
+    return (data.get(object.getBucketName()) != null && data.get(object.getBucketName()).get(object.getChecksum()) != null);
   }
 
   public InputStream getInputStream(Object object) {
-    return new ByteArrayInputStream(data.get(object.bucketName).get(object.checksum));
+    return new ByteArrayInputStream(data.get(object.getBucketName()).get(object.getChecksum()));
   }
 
   public Boolean bucketExists(Bucket bucket) {
@@ -67,7 +67,7 @@ public class InMemoryFileStoreService extends ObjectStore {
     if (!objectExists(object))
       return false;
 
-    return data.get(object.bucketName).remove(object.checksum) != null;
+    return data.get(object.getBucketName()).remove(object.getChecksum()) != null;
 
   }
 

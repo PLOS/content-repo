@@ -1,6 +1,6 @@
 package org.plos.repo.models.validator;
 
-import org.plos.repo.models.InputCollection;
+import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.service.RepoException;
 
 import javax.inject.Inject;

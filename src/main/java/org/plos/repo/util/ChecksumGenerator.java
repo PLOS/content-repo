@@ -40,13 +40,13 @@ public class ChecksumGenerator {
 
     StringBuilder sb = new StringBuilder();
 
-    sb.append(object.key);
-    sb.append(object.timestamp.toString());
-    sb.append(object.creationDate.toString());
-    sb.append(object.tag);
-    sb.append(object.contentType);
-    sb.append(object.downloadName);
-    sb.append(object.checksum);
+    sb.append(object.getKey());
+    sb.append(object.getTimestamp().toString());
+    sb.append(object.getCreationDate().toString());
+    sb.append(object.getTag());
+    sb.append(object.getContentType());
+    sb.append(object.getDownloadName());
+    sb.append(object.getChecksum());
 
     return checksumToString(this.digest(sb.toString()));
   }

@@ -25,8 +25,8 @@ import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.junit.Before;
 import org.junit.Test;
-import org.plos.repo.models.InputCollection;
-import org.plos.repo.models.InputObject;
+import org.plos.repo.models.input.InputCollection;
+import org.plos.repo.models.input.InputObject;
 import org.plos.repo.service.RepoException;
 
 import javax.ws.rs.client.Entity;

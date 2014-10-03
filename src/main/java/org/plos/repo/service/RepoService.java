@@ -19,7 +19,7 @@ package org.plos.repo.service;
 
 import com.google.common.util.concurrent.Striped;
 import org.plos.repo.models.Bucket;
-import org.plos.repo.models.ElementFilter;
+import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.Object;
 import org.plos.repo.models.Status;
 import org.plos.repo.models.validator.TimestampInputValidator;
@@ -238,7 +238,7 @@ public class RepoService extends BaseRepoService {
 
   public List<Object> getObjectVersions(Object object) throws RepoException {
 
-    Lock readLock = this.rwLocks.get(object.bucketName + object.key).readLock();
+    Lock readLock = this.rwLocks.get(object.getBucketName() + object.getKey()).readLock();
     readLock.lock();
 
     try {
@@ -264,9 +264,9 @@ public class RepoService extends BaseRepoService {
   }
 
   public String getObjectContentType(Object object) {
-    String contentType = object.contentType;
+    String contentType = object.getContentType();
 
-    if (object.contentType == null || object.contentType.isEmpty())
+    if (object.getContentType() == null || object.getContentType().isEmpty())
       contentType = MediaType.APPLICATION_OCTET_STREAM;
 
     return contentType;
@@ -274,10 +274,10 @@ public class RepoService extends BaseRepoService {
 
   public String getObjectExportFileName(Object object) throws RepoException {
 
-    String exportFileName = object.key;
+    String exportFileName = object.getKey();
 
-    if (object.downloadName != null)
-      exportFileName = object.downloadName;
+    if (object.getDownloadName() != null)
+      exportFileName = object.getDownloadName();
 
     try {
       return URLEncoder.encode(exportFileName, "UTF-8");
@@ -452,7 +452,7 @@ public class RepoService extends BaseRepoService {
       }
 
       object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), tag, bucket.bucketId, bucketName, versionNumber, Status.USED, cretationDateTime, null);
-      object.versionChecksum = checksumGenerator.generateVersionChecksum(object);
+      object.setVersionChecksum(checksumGenerator.generateVersionChecksum(object));
       rollback = true;
 
       // determine if the object should be added to the store or not
@@ -520,27 +520,27 @@ public class RepoService extends BaseRepoService {
       //if any of the input properties are null, we should populate them with the data of the previous version of the object
       // TODO: if the object is equals to the last version, do we need to update the timestamp?
 
-      newObject = new Object(null, object.key, null, timestamp, downloadName, contentType, null, tag, object.bucketId, bucketName, null, Status.USED, cretationDateTime, null);
-      newObject.versionChecksum = checksumGenerator.generateVersionChecksum(newObject);
+      newObject = new Object(null, object.getKey(), null, timestamp, downloadName, contentType, null, tag, object.getBucketId(), bucketName, null, Status.USED, cretationDateTime, null);
+      newObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(newObject));
       sqlService.getConnection();
       if (sqlService.getBucket(bucketName) == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
       // copy over values from previous object, if they are not specified in the request
       if (contentType == null)
-        newObject.contentType = object.contentType;
+        newObject.setContentType(object.getContentType());
       if (downloadName == null)
-        newObject.downloadName = object.downloadName;
+        newObject.setDownloadName(object.getDownloadName());
 
       rollback = true;
       if (uploadedInputStream == null) {
       // handle metadata-only update, the content would be the same as the last version of the object
-        newObject.checksum = object.checksum;
+        newObject.setChecksum(object.getChecksum());
       } else {
         // determine if the new object should be added to the store or not
         uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
         uploadedInputStream.close();
-        newObject.checksum = uploadInfo.getChecksum();
-        newObject.size = uploadInfo.getSize();
+        newObject.setChecksum(uploadInfo.getChecksum());
+        newObject.setSize(uploadInfo.getSize());
         if (Boolean.FALSE.equals(objectStore.objectExists(newObject))) {
           if (Boolean.FALSE.equals(objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, newObject))) {
             throw new RepoException("Error saving content to object store");
@@ -554,7 +554,7 @@ public class RepoService extends BaseRepoService {
         return object;
       }
 
-      newObject.versionNumber = sqlService.getObjectNextAvailableVersion(bucketName, newObject.key);
+      newObject.setVersionNumber(sqlService.getObjectNextAvailableVersion(bucketName, newObject.getKey()));
       // add a record to the DB for the new object
       if (sqlService.insertObject(newObject) == 0) {
         throw new RepoException("Error saving content to database");
@@ -570,7 +570,7 @@ public class RepoService extends BaseRepoService {
         objectStore.deleteTempUpload(uploadInfo);
 
       if (rollback) {
-        sqlRollback("object " + bucketName + ", " + object.key);
+        sqlRollback("object " + bucketName + ", " + object.getKey());
         // TODO: handle objectStore rollback, or not?
       }
 

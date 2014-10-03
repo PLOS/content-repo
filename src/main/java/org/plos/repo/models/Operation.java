@@ -27,15 +27,15 @@ public class Operation {
 
   public Operation(Object object, Status status){
     this.elementType = ElementType.OBJECT;
-    this.key = object.key;
-    this.bucketName = object.bucketName;
-    this.version = object.versionNumber;
+    this.key = object.getKey();
+    this.bucketName = object.getBucketName();
+    this.version = object.getVersionNumber();
     if (Status.DELETED.equals(status)){
-      this.lastModification = object.timestamp;
+      this.lastModification = object.getTimestamp();
     } else {
-      this.lastModification = object.creationDate;
+      this.lastModification = object.getCreationDate();
     }
-    this.creationDateTime = object.creationDate;
+    this.creationDateTime = object.getCreationDate();
   }
 
   public Operation(Collection collection, Status status){

@@ -6,6 +6,9 @@ import org.junit.Test;
 import org.plos.repo.RepoBaseSpringTest;
 import org.plos.repo.models.*;
 import org.plos.repo.models.Object;
+import org.plos.repo.models.input.ElementFilter;
+import org.plos.repo.models.input.InputCollection;
+import org.plos.repo.models.input.InputObject;
 
 import javax.inject.Inject;
 import java.lang.reflect.Field;
@@ -76,7 +79,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
     for (int i=0; i < 1000 ; i++ ){
       String key = OBJECT_KEY+i;
       Object object = repoService.createObject(RepoService.CreateMethod.NEW, key, BUCKET_NAME, null, null, CREATION_DATE_TIME, IOUtils.toInputStream(OBJECT_DATA), CREATION_DATE_TIME, "TAG"+i);
-      InputObject inputObject = new InputObject(key, object.versionChecksum);
+      InputObject inputObject = new InputObject(key, object.getVersionChecksum());
       inputObjects.add(inputObject);
     }
 
@@ -347,7 +350,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
             startGate.await();  // don't start until startGate is 0
             try {
               InputCollection inputColl = new InputCollection(cb.getKeyname(j), cb.getTimestamp().toString(), BUCKET_NAME, RepoService.CreateMethod.NEW.toString(), cb.getTag(j),  objects, cb.getTimestamp().toString());
-              Collection collection = collectionRepoService.createCollection2(RepoService.CreateMethod.NEW, inputColl);
+              Collection collection = collectionRepoService.createCollection(RepoService.CreateMethod.NEW, inputColl);
 
               if (!collection.getKey().equals(cb.getKeyname(j))) {
                 synchronized (lock) {
@@ -397,7 +400,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
             startGate.await();  // don't start until startGate is 0
             try {
               InputCollection inputColl = new InputCollection(cb.getKeyname(j), cb.getTimestamp().toString(), BUCKET_NAME, RepoService.CreateMethod.VERSION.toString(), cb.getTag(j),  objects, cb.getTimestamp().toString());
-              Collection collection = collectionRepoService.createCollection2(RepoService.CreateMethod.VERSION, inputColl);
+              Collection collection = collectionRepoService.createCollection(RepoService.CreateMethod.VERSION, inputColl);
 
               if (!collection.getKey().equals(cb.getKeyname(j))) {
                 synchronized (lock) {

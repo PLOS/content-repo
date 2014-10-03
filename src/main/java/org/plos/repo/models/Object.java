@@ -17,32 +17,28 @@
 
 package org.plos.repo.models;
 
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.sql.Timestamp;
 import java.util.List;
 
-@XmlRootElement
+
 public class Object {
 
-  public Integer id; // assigned by the db
-  public String key; // what the user specifies
-  public String checksum;  // of the file contents
+  private Integer id; // assigned by the db
+  private String key; // what the user specifies
+  private String checksum;  // of the file contents
+  private Timestamp timestamp;   // last modification time
+  private String downloadName;
+  private String contentType;
+  private Long size;
+  private String tag;
+  private Integer bucketId;
+  private String bucketName;
+  private Integer versionNumber;
+  private Status status;
+  private Timestamp creationDate;
+  private String versionChecksum;
 
-  @XmlJavaTypeAdapter(TimestampAdapter.class)
-  public Timestamp timestamp;   // last modification time
-  public String downloadName;
-  public String contentType;
-  public Long size;
-  public String tag;
-  public Integer bucketId;
-  public String bucketName;
-  public Integer versionNumber;
-  public Status status;
-  public Timestamp creationDate;
-  public String versionChecksum;
-
-  public List<Object> versions;
+  private List<Object> versions;
 
   // empty constructor required for JAXB mapping
   public Object() {
@@ -89,4 +85,123 @@ public class Object {
     }
   }
 
+  public Integer getId() {
+    return id;
+  }
+
+  public String getKey() {
+    return key;
+  }
+
+  public String getChecksum() {
+    return checksum;
+  }
+
+  public Timestamp getTimestamp() {
+    return timestamp;
+  }
+
+  public String getDownloadName() {
+    return downloadName;
+  }
+
+  public String getContentType() {
+    return contentType;
+  }
+
+  public Long getSize() {
+    return size;
+  }
+
+  public String getTag() {
+    return tag;
+  }
+
+  public Integer getBucketId() {
+    return bucketId;
+  }
+
+  public String getBucketName() {
+    return bucketName;
+  }
+
+  public Integer getVersionNumber() {
+    return versionNumber;
+  }
+
+  public Status getStatus() {
+    return status;
+  }
+
+  public Timestamp getCreationDate() {
+    return creationDate;
+  }
+
+  public String getVersionChecksum() {
+    return versionChecksum;
+  }
+
+  public List<Object> getVersions() {
+    return versions;
+  }
+
+  public void setId(Integer id) {
+    this.id = id;
+  }
+
+  public void setKey(String key) {
+    this.key = key;
+  }
+
+  public void setChecksum(String checksum) {
+    this.checksum = checksum;
+  }
+
+  public void setTimestamp(Timestamp timestamp) {
+    this.timestamp = timestamp;
+  }
+
+  public void setDownloadName(String downloadName) {
+    this.downloadName = downloadName;
+  }
+
+  public void setContentType(String contentType) {
+    this.contentType = contentType;
+  }
+
+  public void setSize(Long size) {
+    this.size = size;
+  }
+
+  public void setTag(String tag) {
+    this.tag = tag;
+  }
+
+  public void setBucketId(Integer bucketId) {
+    this.bucketId = bucketId;
+  }
+
+  public void setBucketName(String bucketName) {
+    this.bucketName = bucketName;
+  }
+
+  public void setVersionNumber(Integer versionNumber) {
+    this.versionNumber = versionNumber;
+  }
+
+  public void setStatus(Status status) {
+    this.status = status;
+  }
+
+  public void setCreationDate(Timestamp creationDate) {
+    this.creationDate = creationDate;
+  }
+
+  public void setVersionChecksum(String versionChecksum) {
+    this.versionChecksum = versionChecksum;
+  }
+
+  public void setVersions(List<Object> versions) {
+    this.versions = versions;
+  }
 }

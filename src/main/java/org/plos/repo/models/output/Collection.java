@@ -1,24 +1,12 @@
-/*
- * Copyright (c) 2006-2014 by Public Library of Science
- * http://plos.org
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package org.plos.repo.models.output;
 
-package org.plos.repo.models;
-
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.plos.repo.models.Status;
+import org.plos.repo.models.TimestampAdapter;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
@@ -26,46 +14,45 @@ import java.sql.Timestamp;
 import java.util.List;
 
 /**
- * Collection of objects.
+ * Collection to be return to the client
  */
+@XmlRootElement
 public class Collection {
 
-  private Integer id; // assigned by the db
+
   private String key; // what the user specifies
+  @XmlJavaTypeAdapter(TimestampAdapter.class)
   private Timestamp timestamp;   // created time
-  private Integer bucketId;
-  private String bucketName;
   private Integer versionNumber;
-  private Status status;
   private String tag;
+  @XmlJavaTypeAdapter(TimestampAdapter.class)
   private Timestamp creationDate;
   private String versionChecksum;
+  private Status status;
 
   private List<Object> objects;
 
   private List<Collection> versions;
 
-  // empty constructor required for JAXB mapping
+
   public Collection() {
   }
 
-  public Collection(Integer id, String key, Timestamp timestamp, Integer bucketId, String bucketName,
-                    Integer versionNumber, Status status, String tag, Timestamp creationDate, String versionChecksum) {
-    this.id = id;
-    this.key = key;
-    this.timestamp = timestamp;
-    this.bucketId = bucketId;
-    this.bucketName = bucketName;
-    this.versionNumber = versionNumber;
-    this.status = status;
-    this.tag = tag;
-    this.creationDate = creationDate;
-    this.versionChecksum = versionChecksum;
+  public Collection(org.plos.repo.models.Collection collection) {
+    this.key = collection.getKey();
+    this.timestamp = collection.getTimestamp();
+    this.versionNumber = collection.getVersionNumber();
+    this.tag = collection.getTag();
+    this.creationDate = collection.getCreationDate();
+    this.versionChecksum = collection.getVersionChecksum();
+    this.status = collection.getStatus();
+
+    if(collection.getObjects()!=null && collection.getObjects().size() >0){
+      this.objects = Lists.newArrayList(Iterables.transform(collection.getObjects(), Object.typeFunction()));
+    }
+
   }
 
-  public Integer getId(){
-    return id;
-  }
 
   public void addObjects(List<Object> objects){
 
@@ -80,20 +67,8 @@ public class Collection {
     return timestamp;
   }
 
-  public Integer getBucketId() {
-    return bucketId;
-  }
-
-  public String getBucketName() {
-    return bucketName;
-  }
-
   public Integer getVersionNumber() {
     return versionNumber;
-  }
-
-  public Status getStatus() {
-    return status;
   }
 
   public List<Object> getObjects() {
@@ -104,10 +79,6 @@ public class Collection {
     return versions;
   }
 
-  public void setId(Integer id) {
-    this.id = id;
-  }
-
   public void setKey(String key) {
     this.key = key;
   }
@@ -116,20 +87,8 @@ public class Collection {
     this.timestamp = timestamp;
   }
 
-  public void setBucketId(Integer bucketId) {
-    this.bucketId = bucketId;
-  }
-
-  public void setBucketName(String bucketName) {
-    this.bucketName = bucketName;
-  }
-
   public void setVersionNumber(Integer versionNumber) {
     this.versionNumber = versionNumber;
-  }
-
-  public void setStatus(Status status) {
-    this.status = status;
   }
 
   public void setObjects(List<Object> objects) {
@@ -172,4 +131,16 @@ public class Collection {
   public int hashCode() {
     return HashCodeBuilder.reflectionHashCode(this);
   }
+
+  public static Function<org.plos.repo.models.Collection, Collection> typeFunction() {
+    return new Function<org.plos.repo.models.Collection, Collection>() {
+
+      @Override
+      public Collection apply(org.plos.repo.models.Collection collection) {
+        return new Collection(collection);
+      }
+
+    };
+  }
+
 }

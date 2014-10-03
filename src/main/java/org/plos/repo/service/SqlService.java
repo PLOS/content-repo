@@ -150,9 +150,9 @@ public abstract class SqlService {
 
       p = connectionLocal.get().prepareStatement("DELETE FROM objects WHERE objKey=? AND bucketId=? AND versionNumber=?");
 
-      p.setString(1, object.key);
-      p.setInt(2, object.bucketId);
-      p.setInt(3, object.versionNumber);
+      p.setString(1, object.getKey());
+      p.setInt(2, object.getBucketId());
+      p.setInt(3, object.getVersionNumber());
 
       return p.executeUpdate();
 
@@ -291,8 +291,8 @@ public abstract class SqlService {
       if (result.next()) {
         Object object = mapObjectRow(result);
 
-        if (object.status == Status.DELETED) {
-          log.info("searched for object which has been deleted. id: " + object.id);
+        if (object.getStatus() == Status.DELETED) {
+          log.info("searched for object which has been deleted. id: " + object.getId());
           return null;
         }
 
@@ -348,8 +348,8 @@ public abstract class SqlService {
       if (result.next()) {
         Object object = mapObjectRow(result);
 
-        if (object.status == Status.DELETED) {
-          log.info("searched for object which has been deleted. id: " + object.id);
+        if (object.getStatus() == Status.DELETED) {
+          log.info("searched for object which has been deleted. id: " + object.getId());
           return null;
         }
 
@@ -374,18 +374,18 @@ public abstract class SqlService {
 
       p = connectionLocal.get().prepareStatement("INSERT INTO objects (objKey, checksum, timestamp, bucketId, contentType, downloadName, size, tag, versionNumber, status, creationDate, versionChecksum) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
 
-      p.setString(1, object.key);
-      p.setString(2, object.checksum);
-      p.setTimestamp(3, object.timestamp);
-      p.setInt(4, object.bucketId);
-      p.setString(5, object.contentType);
-      p.setString(6, object.downloadName);
-      p.setLong(7, object.size);
-      p.setString(8, object.tag);
-      p.setInt(9, object.versionNumber);
-      p.setInt(10, object.status.getValue());
-      p.setTimestamp(11, object.timestamp);
-      p.setString(12, object.versionChecksum);
+      p.setString(1, object.getKey());
+      p.setString(2, object.getChecksum());
+      p.setTimestamp(3, object.getTimestamp());
+      p.setInt(4, object.getBucketId());
+      p.setString(5, object.getContentType());
+      p.setString(6, object.getDownloadName());
+      p.setLong(7, object.getSize());
+      p.setString(8, object.getTag());
+      p.setInt(9, object.getVersionNumber());
+      p.setInt(10, object.getStatus().getValue());
+      p.setTimestamp(11, object.getTimestamp());
+      p.setString(12, object.getVersionChecksum());
 
       return p.executeUpdate();
 
@@ -915,8 +915,8 @@ public abstract class SqlService {
 
       p = connectionLocal.get().prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND objKey=? AND status=? ORDER BY versionNumber ASC");
 
-      p.setString(1, object.bucketName);
-      p.setString(2, object.key);
+      p.setString(1, object.getBucketName());
+      p.setString(2, object.getKey());
       p.setInt(3, Status.USED.getValue()); // TODO: make this in input a parameter?
 
       result = p.executeQuery();
@@ -981,7 +981,7 @@ public abstract class SqlService {
       p =
           connectionLocal.get().prepareStatement("SELECT * FROM collectionObject co, collections c WHERE c.id = co.collectionId AND co.objectId =? AND c.status = 0");
 
-      p.setInt(1, object.id);
+      p.setInt(1, object.getId());
 
       result = p.executeQuery();
 
