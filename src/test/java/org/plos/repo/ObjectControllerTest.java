@@ -134,6 +134,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     createBucket(bucketName, CREATION_DATE_TIME);
 
     assertEquals(target("/objects").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
             .post(Entity.entity(new FormDataMultiPart()
                     .field("bucketName", bucketName).field("create", "new")
                     .field("key", "object1").field("contentType", "text/plain")
@@ -220,7 +221,9 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
     createBucket(bucketName, CREATION_DATE_TIME);
 
-    assertEquals(target("/objects").request()
+    assertEquals(Response.Status.CREATED.getStatusCode(),
+        target("/objects").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
             .post(Entity.entity(new FormDataMultiPart()
                     .field("bucketName", bucketName).field("create", "new")
                     .field("key", "object1").field("contentType", "text/plain")
@@ -228,11 +231,11 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
                     .field("tag", "DRAFT")
                     .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA
-            )).getStatus(),
-        Response.Status.CREATED.getStatusCode()
+            )).getStatus()
     );
 
     assertEquals(target("/objects").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
             .post(Entity.entity(new FormDataMultiPart()
                     .field("bucketName", bucketName).field("create", "version")
                     .field("key", "object1").field("contentType", "image/jpg")
@@ -322,6 +325,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     int count = 100;
     for (int i=0; i<count; ++i) {
       assertEquals(target("/objects").request()
+              .accept(MediaType.APPLICATION_JSON_TYPE)
               .post(Entity.entity(new FormDataMultiPart()
                       .field("bucketName", bucketName).field("create", "new")
                       .field("key", "count" + (i < 10 ? "0" : "") + i).field("contentType", "text/plain")
