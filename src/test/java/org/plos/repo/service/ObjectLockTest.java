@@ -112,7 +112,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     assertEquals(Integer.valueOf(0), obj.getVersionNumber());
     assertTrue(this.objectStore.objectExists(obj));
 
-    List<Object> versions = repoService.getObjectVersions(obj);
+    List<Object> versions = repoService.getObjectVersions(obj.getBucketName(), obj.getKey());
 
     assertEquals(1, versions.size());
 
@@ -160,7 +160,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       assertEquals(BASE_KEY_NAME, obj.getKey());
       assertTrue(this.objectStore.objectExists(obj));
 
-      List<Object> versions = repoService.getObjectVersions(obj);
+      List<Object> versions = repoService.getObjectVersions(obj.getBucketName(), obj.getKey());
 
       assertEquals(1 + UPDATE_THREADS, versions.size());
     }

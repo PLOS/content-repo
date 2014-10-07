@@ -1,6 +1,7 @@
 package org.plos.repo.models;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.sql.Timestamp;
 
 @XmlRootElement
@@ -8,7 +9,9 @@ public class Bucket {
 
   public Integer bucketId;
   public String bucketName;
+  @XmlJavaTypeAdapter(TimestampAdapter.class)
   public Timestamp timestamp;
+  @XmlJavaTypeAdapter(TimestampAdapter.class)
   public Timestamp creationDate;
 
   public Integer activeObjects;   // used only by RepoInfoService

@@ -38,8 +38,6 @@ public class Object {
   private Timestamp creationDate;
   private String versionChecksum;
 
-  private List<Object> versions;
-
   // empty constructor required for JAXB mapping
   public Object() {
   }
@@ -141,10 +139,6 @@ public class Object {
     return versionChecksum;
   }
 
-  public List<Object> getVersions() {
-    return versions;
-  }
-
   public void setId(Integer id) {
     this.id = id;
   }
@@ -201,7 +195,4 @@ public class Object {
     this.versionChecksum = versionChecksum;
   }
 
-  public void setVersions(List<Object> versions) {
-    this.versions = versions;
-  }
 }

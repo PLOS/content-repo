@@ -28,7 +28,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 import org.apache.http.HttpStatus;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.plos.repo.models.input.ElementFilter;
-import org.plos.repo.models.Object;
+import org.plos.repo.models.output.Object;
 import org.plos.repo.models.RepoError;
 import org.plos.repo.service.RepoException;
 import org.plos.repo.service.RepoInfoService;
@@ -103,14 +103,14 @@ public class ObjectController {
 
 
   @GET
-  @ApiOperation(value = "List objects", response = org.plos.repo.models.output.Object.class, responseContainer = "List")
+  @ApiOperation(value = "List objects", response = Object.class, responseContainer = "List")
   @ApiResponses(value = {
       @ApiResponse(code = HttpStatus.SC_OK, message = "Success"),
       @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "Bucket not found"),
       @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "Bad request (see message)"),
       @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
   })
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+  @Produces({MediaType.APPLICATION_JSON})
   public Response listObjects(
       @ApiParam(required = false) @QueryParam("bucketName") String bucketName,
       @ApiParam(required = false) @QueryParam("offset") Integer offset,
@@ -121,10 +121,10 @@ public class ObjectController {
     try {
 
       List<org.plos.repo.models.Object> objects = repoService.listObjects(bucketName, offset, limit, includeDeleted, tag);
-      List<org.plos.repo.models.output.Object> outputObjects = Lists.newArrayList(Iterables.transform(objects, org.plos.repo.models.output.Object.typeFunction()));
+      List<Object> outputObjects = Lists.newArrayList(Iterables.transform(objects, Object.typeFunction()));
 
       return Response.status(Response.Status.OK).entity(
-          new GenericEntity<List<org.plos.repo.models.output.Object>>(
+          new GenericEntity<List<Object>>(
               outputObjects
           ) {}).build();
     } catch (RepoException e) {
@@ -134,8 +134,8 @@ public class ObjectController {
   }
 
   @GET @Path("/meta/{bucketName}")
-  @ApiOperation(value = "Fetch info about an object and its versions", response = org.plos.repo.models.output.Object.class)
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+  @ApiOperation(value = "Fetch info about an object and its versions", response = Object.class)
+  @Produces({MediaType.APPLICATION_JSON})
   public Response readMetadata(
       @ApiParam(required = true) @PathParam("bucketName") String bucketName,
       @ApiParam(required = true) @QueryParam("key") String key,
@@ -144,9 +144,8 @@ public class ObjectController {
     try {
 
       org.plos.repo.models.Object object = repoService.getObject(bucketName, key, elementFilter);
-      object.setVersions(repoService.getObjectVersions(object));
 
-      org.plos.repo.models.output.Object outputObject = new org.plos.repo.models.output.Object(object);
+      Object outputObject = new Object(object);
 
       return Response.status(Response.Status.OK)
           .lastModified(outputObject.getTimestamp())
@@ -158,8 +157,8 @@ public class ObjectController {
   }
 
   @GET @Path("/{bucketName}")
-  @ApiOperation(value = "Fetch an object or its metadata", response = org.plos.repo.models.output.Object.class)
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+  @ApiOperation(value = "Fetch an object or its metadata", response = Object.class)
+  @Produces({MediaType.APPLICATION_JSON})
   public Response read(@ApiParam(required = true) @PathParam("bucketName") String bucketName,
                        @ApiParam(required = true) @QueryParam("key") String key,
                        @ApiParam("elementFilter") @BeanParam ElementFilter elementFilter,
@@ -193,15 +192,10 @@ public class ObjectController {
     // if they want the metadata
 
     if (fetchMetadata != null && fetchMetadata) {
-      try {
-        object.setVersions(repoService.getObjectVersions(object));
-        org.plos.repo.models.output.Object outputObject = new org.plos.repo.models.output.Object(object);
+        Object outputObject = new Object(object);
         return Response.status(Response.Status.OK)
             .lastModified(object.getTimestamp())
             .entity(outputObject).build();
-      } catch (RepoException e) {
-        return handleError(e);
-      }
     }
 
 
@@ -249,6 +243,28 @@ public class ObjectController {
 
   }
 
+  @GET @Path("/{bucketName}/versions")
+  @ApiOperation(value = "Fetch all the object versions", response = Object.class, responseContainer = "List")
+  @Produces({MediaType.APPLICATION_JSON})
+  public Response getVersions(@ApiParam(required = true) @PathParam("bucketName") String bucketName,
+                       @ApiParam(required = true) @QueryParam("key") String key) {
+
+    try {
+
+      List<org.plos.repo.models.Object> objects = repoService.getObjectVersions(bucketName, key);
+
+      List<Object> outputObjects = Lists.newArrayList(Iterables.transform(objects, Object.typeFunction()));
+
+      return Response.status(Response.Status.OK).entity(
+          new GenericEntity<List<Object>>(
+              outputObjects
+          ) {}).build();
+    } catch (RepoException e) {
+      return handleError(e);
+    }
+
+  }
+
   @DELETE
   @Path("/{bucketName}")
   @ApiOperation(value = "Delete an object")
@@ -281,9 +297,9 @@ public class ObjectController {
           "should be new or versioned. However 'auto' should only be used by the ambra-file-store. In addition you may optionally specify " +
           "a timestamp for object creation time. This feature is for migrating from an existing content store. Note that the timestamp must " +
           "conform to this format: yyyy-[m]m-[d]d hh:mm:ss[.f...]")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+  @Produces({MediaType.APPLICATION_JSON})
   @ApiResponses(value = {
-      @ApiResponse(code = HttpStatus.SC_CREATED, message = "Object successfully created", response = org.plos.repo.models.output.Object.class),
+      @ApiResponse(code = HttpStatus.SC_CREATED, message = "Object successfully created", response = Object.class),
       @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "The object not found"),
       @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The object was unable to be created (see response text for more details)"),
       @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
@@ -322,7 +338,7 @@ public class ObjectController {
       repoInfoService.incrementWriteCount();
 
       org.plos.repo.models.Object object = repoService.createObject(method, key, bucketName, contentType, downloadName, lastModifiedDateTime, uploadedInputStream, creationDateTimestamp, tag);
-      org.plos.repo.models.output.Object outputObject = new org.plos.repo.models.output.Object(object);
+      Object outputObject = new Object(object);
 
       return Response.status(Response.Status.CREATED).entity(
           outputObject).build();

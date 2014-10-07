@@ -1,3 +1,4 @@
+/*
 package org.plos.repo.util;
 
 import org.junit.Before;
@@ -18,9 +19,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+*/
 /**
  * Checksum generator test
- */
+ *//*
+
 public class ChecksumGeneratorTest {
 
   private static final Timestamp TIMESTAMP = new Timestamp(new Date().getTime());
@@ -149,3 +152,4 @@ public class ChecksumGeneratorTest {
   }
 
 }
+*/

@@ -904,7 +904,7 @@ public abstract class SqlService {
 
   }
 
-  public List<Object> listObjectVersions(Object object) throws SQLException {
+  public List<Object> listObjectVersions(String bucketName, String objectKey) throws SQLException {
 
     List<Object> objects = new ArrayList<>();
 
@@ -915,9 +915,9 @@ public abstract class SqlService {
 
       p = connectionLocal.get().prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND bucketName=? AND objKey=? AND status=? ORDER BY versionNumber ASC");
 
-      p.setString(1, object.getBucketName());
-      p.setString(2, object.getKey());
-      p.setInt(3, Status.USED.getValue()); // TODO: make this in input a parameter?
+      p.setString(1, bucketName);
+      p.setString(2, objectKey);
+      p.setInt(3, Status.USED.getValue());
 
       result = p.executeQuery();
 

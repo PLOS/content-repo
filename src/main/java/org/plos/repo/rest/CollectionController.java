@@ -17,7 +17,6 @@
 
 package org.plos.repo.rest;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.wordnik.swagger.annotations.*;
@@ -61,7 +60,7 @@ public class CollectionController {
       @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "Bad request (see message)"),
       @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
   })
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+  @Produces({MediaType.APPLICATION_JSON})
   public Response listCollections(
       @ApiParam(required = false) @QueryParam("bucketName") String bucketName,
       @ApiParam(required = false) @QueryParam("offset") Integer offset,
@@ -94,7 +93,7 @@ public class CollectionController {
       @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "Bad request (see message)"),
       @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
   })
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+  @Produces({MediaType.APPLICATION_JSON})
   public Response getCollection(
       @ApiParam(required = true) @PathParam("bucketName") String bucketName,
       @ApiParam(required = true) @QueryParam("key") String key,
@@ -143,7 +142,7 @@ public class CollectionController {
   @POST
   @ApiOperation(value = "Create a new collection or a new version of an existing collection",
       notes = "Set the create field to 'new' collection if the collection you are inserting is not already in the repo. If you want to create a new version of an existing collection set create to 'version'. ")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+  @Produces({MediaType.APPLICATION_JSON})
   @ApiResponses(value = {
       @ApiResponse(code = HttpStatus.SC_CREATED, message = "Collection successfully created"),
       @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "The object not found"),

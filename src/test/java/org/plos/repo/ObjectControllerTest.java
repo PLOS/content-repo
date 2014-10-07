@@ -580,6 +580,62 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
   }
 
+  @Test
+  public void getVersionsNoKey() {
+
+    Response response = target("/objects/bucket1/versions")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+
+    assertRepoError(response, Response.Status.BAD_REQUEST, RepoException.Type.NoKeyEntered);
+  }
+
+  @Test
+  public void getObjectVersions() {
+
+    createBucket(bucketName, CREATION_DATE_TIME);
+
+    Response response = target("/objects").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(new FormDataMultiPart()
+                    .field("bucketName", bucketName).field("create", "new")
+                    .field("key", "object3").field("contentType", "text/something")
+                    .field("downloadName", "object3.text")
+                    .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
+                MediaType.MULTIPART_FORM_DATA
+                ));
+
+    assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
+
+    response = target("/objects").request()
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .post(Entity.entity(new FormDataMultiPart()
+            .field("bucketName", bucketName).field("create", "version")
+            .field("key", "object3").field("contentType", "text/something")
+            .field("downloadName", "object3.textV2")
+            .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
+            MediaType.MULTIPART_FORM_DATA
+        ));
+
+    assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
+
+
+
+    response = target("/objects/"+ bucketName +"/versions").queryParam("key", "object3")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+    assertEquals(response.getHeaderString("Content-Type"), "application/json");
+
+    JsonArray responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonArray();
+
+    assertNotNull(responseObj);
+    assertEquals(2, responseObj.size());
+
+  }
+
   private void createBucket(String bucketName, String creationDateTime){
     target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
         .post(Entity.form(new Form()

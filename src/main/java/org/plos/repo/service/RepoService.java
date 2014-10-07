@@ -236,14 +236,17 @@ public class RepoService extends BaseRepoService {
 
   }
 
-  public List<Object> getObjectVersions(Object object) throws RepoException {
+  public List<Object> getObjectVersions(String bucketName, String objectKey) throws RepoException {
 
-    Lock readLock = this.rwLocks.get(object.getBucketName() + object.getKey()).readLock();
+    if (objectKey == null)
+      throw new RepoException(RepoException.Type.NoKeyEntered);
+
+    Lock readLock = this.rwLocks.get(bucketName + objectKey).readLock();
     readLock.lock();
 
     try {
       sqlService.getConnection();
-      return sqlService.listObjectVersions(object);
+      return sqlService.listObjectVersions(bucketName, objectKey);
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {

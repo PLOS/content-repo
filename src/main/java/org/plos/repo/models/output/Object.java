@@ -31,8 +31,6 @@ public class Object {
   private Timestamp creationDate;
   private String versionChecksum;
 
-  private List<Object> versions;
-
   public Object() {
   }
 
@@ -49,9 +47,6 @@ public class Object {
     this.status = object.getStatus();
     this.creationDate = object.getCreationDate();
     this.versionChecksum = object.getVersionChecksum();
-    if (object.getVersions() != null && object.getVersions().size() > 0){
-      this.versions = Lists.newArrayList(Iterables.transform(object.getVersions(), Object.typeFunction()));
-    }
 
   }
 
@@ -99,10 +94,6 @@ public class Object {
     return versionChecksum;
   }
 
-  public List<Object> getVersions() {
-    return versions;
-  }
-
   public void setKey(String key) {
     this.key = key;
   }
@@ -145,10 +136,6 @@ public class Object {
 
   public void setVersionChecksum(String versionChecksum) {
     this.versionChecksum = versionChecksum;
-  }
-
-  public void setVersions(List<Object> versions) {
-    this.versions = versions;
   }
 
   public static Function<org.plos.repo.models.Object, Object> typeFunction() {

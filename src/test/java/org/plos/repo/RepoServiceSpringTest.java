@@ -242,7 +242,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     Assert.assertTrue(IOUtils.toString(objectStore.getInputStream(objFromDb)).equals("data1"));
 
 
-    Assert.assertTrue(repoService.getObjectVersions(objFromDb).size() == 1);
+    Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 1);
     Assert.assertTrue(repoService.getObjectContentType(objFromDb).equals("text!"));
     Assert.assertTrue(repoService.getObjectExportFileName(objFromDb).equals("dlName"));
   }
@@ -336,7 +336,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     // check external state
 
-    Assert.assertTrue(repoService.getObjectVersions(objFromDb).size() == 2);
+    Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 2);
     Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, false, null).size() == 2);
 
     Assert.assertTrue(IOUtils.toString(repoService.getObjectInputStream(
@@ -438,7 +438,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     // check external state
 
-    Assert.assertTrue(repoService.getObjectVersions(objFromDb).size() == 2);
+    Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 2);
     Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, false, null).size() == 2);
 
     Assert.assertTrue(IOUtils.toString(repoService.getObjectInputStream(
@@ -485,7 +485,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     Assert.assertTrue(IOUtils.toString(objectStore.getInputStream(objFromDb)).equals("data1"));
 
 
-    Assert.assertTrue(repoService.getObjectVersions(objFromDb).size() == 1);
+    Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 1);
     Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, false, null).size() == 1);
 
     Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, true, null).size() == 2);
@@ -518,7 +518,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     sqlService.releaseConnection();
     Assert.assertTrue(objectStore.objectExists(objFromDb));
 
-    Assert.assertTrue(repoService.getObjectVersions(objFromDb).size() == 2);
+    Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 2);
     Assert.assertTrue(repoService.listObjects(bucket1.bucketName, null, null, false, null).size() == 2);
   }
 
