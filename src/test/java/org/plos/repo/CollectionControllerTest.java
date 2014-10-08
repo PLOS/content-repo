@@ -1065,4 +1065,74 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   }
 
+  @Test
+  public void getCollectionsVersions(){
+
+    generateBuckets(bucketName);
+    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
+    String versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
+
+    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
+    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
+
+    // create collection1
+    InputCollection inputCollection = new InputCollection();
+    inputCollection.setBucketName(bucketName);
+    inputCollection.setKey("collection1");
+    inputCollection.setCreate("new");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1, object2}));
+    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
+
+    assertEquals(target("/collections").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(collectionEntity).getStatus(),
+        Response.Status.CREATED.getStatusCode()
+    );
+
+    // version collection1
+    inputCollection.setKey("collection1");
+    inputCollection.setCreate("version");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{object2}));
+    assertEquals(target("/collections")
+            .request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(collectionEntity).getStatus(),
+        Response.Status.CREATED.getStatusCode()
+    );
+
+    Response response = target("/collections/" + bucketName + "/versions")
+        .queryParam("key", "collection1")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+    assertEquals(response.getHeaderString("Content-Type"), "application/json");
+
+    JsonArray responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonArray();
+    assertNotNull(responseObj);
+    assertEquals(2, responseObj.size());
+
+  }
+
+  @Test
+  public void getCollectionsVersionsNoKey() {
+
+    assertRepoError(target("/collections/" + bucketName + "/versions")
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .get(),
+        Response.Status.BAD_REQUEST, RepoException.Type.NoCollectionKeyEntered);
+  }
+
+  @Test
+  public void getCollectionsVersionsNoCollection() {
+
+    assertRepoError(target("/collections/" + bucketName + "/versions")
+            .queryParam("key", "collection1")
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .get(),
+        Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound);
+  }
+
 }

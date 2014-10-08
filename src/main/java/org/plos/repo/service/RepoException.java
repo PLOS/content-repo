@@ -5,6 +5,8 @@ package org.plos.repo.service;
  */
 public class RepoException extends Exception {
 
+  private static final long serialVersionUID = 4654104578364892572L;
+
   public enum Type {
 
     ServerError(0, "Server error"), // this message is not used

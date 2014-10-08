@@ -29,11 +29,7 @@ public class Collection {
   private Timestamp creationDate;
   private String versionChecksum;
   private Status status;
-
   private List<Object> objects;
-
-  private List<Collection> versions;
-
 
   public Collection() {
   }
@@ -52,7 +48,6 @@ public class Collection {
     }
 
   }
-
 
   public void addObjects(List<Object> objects){
 
@@ -75,10 +70,6 @@ public class Collection {
     return objects;
   }
 
-  public List<Collection> getVersions() {
-    return versions;
-  }
-
   public void setKey(String key) {
     this.key = key;
   }
@@ -93,10 +84,6 @@ public class Collection {
 
   public void setObjects(List<Object> objects) {
     this.objects = objects;
-  }
-
-  public void setVersions(List<Collection> versions) {
-    this.versions = versions;
   }
 
   public String getTag() {
@@ -123,13 +110,14 @@ public class Collection {
     this.versionChecksum = versionChecksum;
   }
 
-  public boolean equals(Object o) {
-    return EqualsBuilder.reflectionEquals(this, o);
-  }
-
   @Override
   public int hashCode() {
     return HashCodeBuilder.reflectionHashCode(this);
+  }
+
+  @Override
+  public boolean equals(java.lang.Object obj) {
+    return EqualsBuilder.reflectionEquals(this, obj);
   }
 
   public static Function<org.plos.repo.models.Collection, Collection> typeFunction() {

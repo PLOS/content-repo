@@ -11,6 +11,7 @@ import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.validator.InputCollectionValidator;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -127,17 +128,70 @@ public class CollectionRepoServiceTest {
 
     Collection expCollection = new Collection();
     when(sqlService.getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, VALID_VERSION, VALID_TAG, null)).thenReturn(expCollection);
-    when(sqlService.listCollectionVersions(expCollection)).thenReturn(collections);
 
     Collection collectionResp = collectionRepoService.getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, new ElementFilter(VALID_VERSION, VALID_TAG, null));
 
     assertNotNull(collectionResp);
     assertEquals(collectionResp, expCollection);
-    assertEquals(collectionResp.getVersions(), collections);
 
-    verify(sqlService, times((2))).getConnection();
+    verify(sqlService, times(1)).getConnection();
     verify(sqlService).getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, VALID_VERSION, VALID_TAG, null);
-    verify(sqlService).listCollectionVersions(expCollection);
+
+  }
+
+  @Test
+  public void testGetCollectionVersionHappyPath() throws RepoException, SQLException {
+
+    doNothing().when(sqlService).getConnection();
+
+    List<Collection> expCollections = new ArrayList<Collection>();
+    Collection coll1 = mock(Collection.class);
+    Collection coll2 = mock(Collection.class);
+    expCollections.add(coll1);
+    expCollections.add(coll2);
+    when(sqlService.listCollectionVersions(VALID_BUCKET, VALID_COLLECTION_KEY)).thenReturn(expCollections);
+
+    List<Collection> collectionsResp = collectionRepoService.getCollectionVersions(VALID_BUCKET, VALID_COLLECTION_KEY);
+
+    assertNotNull(collectionsResp);
+    assertEquals(2, collectionsResp.size());
+
+    verify(sqlService).getConnection();
+    verify(sqlService).listCollectionVersions(VALID_BUCKET, VALID_COLLECTION_KEY);
+
+  }
+
+  @Test
+  public void testGetCollectionVersionNoKey() throws RepoException, SQLException {
+
+    doNothing().when(sqlService).getConnection();
+
+    List<Collection> collectionsResp = null;
+    try{
+      collectionsResp = collectionRepoService.getCollectionVersions(VALID_BUCKET, "");
+      fail("A repo exception was expected");
+    }catch(RepoException e){
+      assertEquals(RepoException.Type.NoCollectionKeyEntered, e.getType());
+      assertNull(collectionsResp);
+      verify(sqlService).getConnection();
+    }
+
+  }
+
+  @Test
+  public void testGetCollectionVersionNoBucket() throws RepoException, SQLException {
+
+    doNothing().when(sqlService).getConnection();
+
+    List<Collection> collectionsResp = null;
+    try{
+      collectionsResp = collectionRepoService.getCollectionVersions("", "");
+      fail("A repo exception was expected");
+    }catch(RepoException e){
+      assertEquals(RepoException.Type.NoBucketEntered, e.getType());
+      assertNull(collectionsResp);
+      verify(sqlService).getConnection();
+    }
 
   }
 

@@ -7,6 +7,7 @@ import java.util.LinkedList;
 
 public class SortedList<T> extends LinkedList<T> {
 
+  private static final long serialVersionUID = 7191090248598500255L;
   /**
    * Comparator used to sort the list.
    */

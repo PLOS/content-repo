@@ -40,10 +40,8 @@ public class Collection {
   private String tag;
   private Timestamp creationDate;
   private String versionChecksum;
-
   private List<Object> objects;
 
-  private List<Collection> versions;
 
   // empty constructor required for JAXB mapping
   public Collection() {
@@ -100,10 +98,6 @@ public class Collection {
     return objects;
   }
 
-  public List<Collection> getVersions() {
-    return versions;
-  }
-
   public void setId(Integer id) {
     this.id = id;
   }
@@ -134,10 +128,6 @@ public class Collection {
 
   public void setObjects(List<Object> objects) {
     this.objects = objects;
-  }
-
-  public void setVersions(List<Collection> versions) {
-    this.versions = versions;
   }
 
   public String getTag() {

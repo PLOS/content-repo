@@ -816,7 +816,15 @@ public abstract class SqlService {
    * @return a list of {@link org.plos.repo.models.Collection}
    * @throws SQLException
    */
-  public List<Collection> listCollectionVersions(Collection collection) throws SQLException {
+
+  /**
+   * List all versions for the given <code>collection</code>
+   * @param bucketName a single String identifying the bucket name where the collection is.
+   * @param key a single String identifying the collection key
+   * @return a list of {@link org.plos.repo.models.Collection}
+   * @throws SQLException
+   */
+  public List<Collection> listCollectionVersions(String bucketName, String key) throws SQLException {
 
     List<Collection> collections = new ArrayList<Collection>();
 
@@ -827,15 +835,15 @@ public abstract class SqlService {
 
       p = connectionLocal.get().prepareStatement("SELECT * FROM collections c, buckets b WHERE c.bucketId = b.bucketId AND b.bucketName=? AND c.collKey=? AND c.status=? ORDER BY versionNumber ASC");
 
-      p.setString(1, collection.getBucketName());
-      p.setString(2, collection.getKey());
+      p.setString(1, bucketName);
+      p.setString(2, key);
       p.setInt(3, Status.USED.getValue());
 
       result = p.executeQuery();
 
       while (result.next()) {
         Collection c = mapCollectionRow(result);
-        c.addObjects(listCollectionObjects(collection.getId()));
+        c.addObjects(listCollectionObjects(c.getId()));
         collections.add(c);
       }
 

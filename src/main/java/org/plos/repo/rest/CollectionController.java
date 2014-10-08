@@ -62,7 +62,7 @@ public class CollectionController {
   })
   @Produces({MediaType.APPLICATION_JSON})
   public Response listCollections(
-      @ApiParam(required = false) @QueryParam("bucketName") String bucketName,
+      @ApiParam(required = true) @QueryParam("bucketName") String bucketName,
       @ApiParam(required = false) @QueryParam("offset") Integer offset,
       @ApiParam(required = false) @QueryParam("limit") Integer limit,
       @ApiParam(required = false) @DefaultValue("false") @QueryParam("includeDeleted") boolean includeDeleted,
@@ -114,6 +114,34 @@ public class CollectionController {
 
   }
 
+  @GET
+  @Path("/{bucketName}/versions")
+  @ApiOperation(value = "Fetch all the collection versions", response = Collection.class, responseContainer = "List")
+  @ApiResponses(value = {
+      @ApiResponse(code = HttpStatus.SC_OK, message = "Success"),
+      @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "Bucket not found"),
+      @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "Bad request (see message)"),
+      @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
+  })
+  @Produces({MediaType.APPLICATION_JSON})
+  public Response getCollectionVersions(
+      @ApiParam(required = true) @PathParam("bucketName") String bucketName,
+      @ApiParam(required = true) @QueryParam("key") String key) {
+
+    try {
+
+      List<org.plos.repo.models.Collection> collections = collectionRepoService.getCollectionVersions(bucketName, key);
+
+      List<Collection> outputCollections =  Lists.newArrayList(Iterables.transform(collections, Collection.typeFunction()));
+
+      return Response.status(Response.Status.OK)
+          .entity(new GenericEntity<List<Collection>>(outputCollections){})
+          .build();
+    } catch (RepoException e) {
+      return ObjectController.handleError(e);
+    }
+
+  }
 
   @DELETE
   @Path("/{bucketName}")

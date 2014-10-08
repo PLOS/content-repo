@@ -20,6 +20,7 @@ package org.plos.repo.service;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import org.hsqldb.lib.StringUtil;
 import org.plos.repo.models.*;
 import org.plos.repo.models.Object;
 import org.plos.repo.models.input.ElementFilter;
@@ -71,6 +72,10 @@ public class CollectionRepoService extends BaseRepoService {
 
       sqlService.getConnection();
 
+      if (StringUtil.isEmpty(bucketName)){
+        throw new RepoException(RepoException.Type.NoBucketEntered);
+      }
+
       if (bucketName != null && sqlService.getBucket(bucketName) == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
 
@@ -101,7 +106,7 @@ public class CollectionRepoService extends BaseRepoService {
     try {
       sqlService.getConnection();
 
-      if (key == null)
+      if (StringUtil.isEmpty(key))
         throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
 
       if (elementFilter == null || elementFilter.isEmpty()) // no filters defined
@@ -118,8 +123,6 @@ public class CollectionRepoService extends BaseRepoService {
       sqlReleaseConnection();
     }
 
-    collection.setVersions(this.getCollectionVersions(collection));
-
     return collection;
 
   }
@@ -130,11 +133,35 @@ public class CollectionRepoService extends BaseRepoService {
    * @return a list of {@link org.plos.repo.models.Collection}
    * @throws org.plos.repo.service.RepoException
    */
-  public List<Collection> getCollectionVersions(Collection collection) throws RepoException {
+
+  /**
+   * Returns a list of all versions for the given <code>bucketName</code> and <code>key</code>
+   * @param bucketName a single a single String identifying the bucket name where the collection is.
+   * @param key a single String identifying the collection key
+   * @return a list of {@link org.plos.repo.models.Collection}
+   * @throws org.plos.repo.service.RepoException
+   */
+  public List<Collection> getCollectionVersions(String bucketName, String key) throws RepoException {
 
     try {
       sqlService.getConnection();
-      return sqlService.listCollectionVersions(collection);
+
+      if (StringUtil.isEmpty(bucketName)){
+        throw new RepoException(RepoException.Type.NoBucketEntered);
+      }
+
+      if (StringUtil.isEmpty(key)){
+        throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
+      }
+
+      List<Collection> collections = sqlService.listCollectionVersions(bucketName, key);
+
+      if (collections == null || collections.size() == 0){
+        throw new RepoException(RepoException.Type.CollectionNotFound);
+      }
+
+      return collections;
+
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
@@ -159,7 +186,7 @@ public class CollectionRepoService extends BaseRepoService {
 
       sqlService.getConnection();
 
-      if (key == null)
+      if (StringUtil.isEmpty(key))
         throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
 
       if (elementFilter == null || (elementFilter.isEmpty())){
