@@ -49,7 +49,7 @@ public class CollectionRepoService extends BaseRepoService {
 
 
   /**
-   * Returns a list of collections for the given bucket name <code>bucketName</code>. In case pagination
+   * Returns a list of collections meta data for the given bucket name <code>bucketName</code>. In case pagination
    * parameters <code>offset</code> and <code>limit</code> are not present, it loads the default pagination data.
    * @param bucketName a single String representing the bucket name in where to look the collection
    * @param offset an Integer used to determine the offset of the response
@@ -79,7 +79,7 @@ public class CollectionRepoService extends BaseRepoService {
       if (bucketName != null && sqlService.getBucket(bucketName) == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
 
-      return sqlService.listCollections(bucketName, offset, limit, includeDeleted, tag);
+      return sqlService.listCollectionsMetaData(bucketName, offset, limit, includeDeleted, tag);
 
     } catch (SQLException e) {
       throw new RepoException(e);

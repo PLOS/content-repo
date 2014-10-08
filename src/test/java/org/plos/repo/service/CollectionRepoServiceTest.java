@@ -66,7 +66,7 @@ public class CollectionRepoServiceTest {
     doNothing().when(sqlService).getConnection();
     when(sqlService.getBucket(VALID_BUCKET)).thenReturn(bucket);
 
-    when(sqlService.listCollections(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG)).thenReturn(collections);
+    when(sqlService.listCollectionsMetaData(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG)).thenReturn(collections);
 
     List<Collection> response = collectionRepoService.listCollections(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
 
@@ -75,7 +75,7 @@ public class CollectionRepoServiceTest {
 
     verify(sqlService).getConnection();
     verify(sqlService).getBucket(VALID_BUCKET);
-    verify(sqlService).listCollections(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
+    verify(sqlService).listCollectionsMetaData(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
 
   }
 
@@ -104,7 +104,7 @@ public class CollectionRepoServiceTest {
     doNothing().when(sqlService).getConnection();
     when(sqlService.getBucket(VALID_BUCKET)).thenReturn(bucket);
 
-    when(sqlService.listCollections(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG)).thenThrow(SQL_EXCEP);
+    when(sqlService.listCollectionsMetaData(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG)).thenThrow(SQL_EXCEP);
 
     List<Collection> response = null;
 
@@ -116,7 +116,7 @@ public class CollectionRepoServiceTest {
       assertEquals(re.getCause(), SQL_EXCEP);
       verify(sqlService).getConnection();
       verify(sqlService).getBucket(VALID_BUCKET);
-      verify(sqlService).listCollections(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
+      verify(sqlService).listCollectionsMetaData(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
     }
 
   }

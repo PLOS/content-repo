@@ -562,7 +562,8 @@ public abstract class SqlService {
   }
 
   /**
-   * Returns a list of collections for the given bucket name <code>bucketName</code>
+   * Returns a list of collections for the given bucket name <code>bucketName</code>. For each collection, it will return the
+   * meta data and the list of object contain in the collection.
    * @param bucketName a single String representing the bucket name where the collection is stored
    * @param offset an Integer used to determine the offset of the response
    * @param limit an Integer used to determine the limit of the response
@@ -580,21 +581,7 @@ public abstract class SqlService {
 
     try {
 
-      StringBuilder q = new StringBuilder();
-      q.append("SELECT * FROM collections c, buckets b WHERE c.bucketId = b.bucketId");
-
-      if (!includeDeleted)
-        q.append(" AND status=?");
-      if (bucketName != null)
-        q.append(" AND bucketName=?");
-      if (tag != null)
-        q.append(" AND TAG=?");
-      if (limit != null)
-        q.append(" LIMIT " + limit);
-      if (offset != null)
-        q.append(" OFFSET " + offset);
-
-      p = connectionLocal.get().prepareStatement(q.toString());
+      p = connectionLocal.get().prepareStatement(getCollectionMetadataQuery(bucketName, offset, limit, includeDeleted, tag));
 
       int i = 1;
       if (!includeDeleted)
@@ -620,6 +607,70 @@ public abstract class SqlService {
       closeDbStuff(result, p);
     }
 
+  }
+
+  /**
+   * Returns a list of collections meta data for the given bucket name <code>bucketName</code>
+   * @param bucketName a single String representing the bucket name where the collection is stored
+   * @param offset an Integer used to determine the offset of the response
+   * @param limit an Integer used to determine the limit of the response
+   * @param includeDeleted a Boolean used to define is the response will include delete collections or not
+   * @param tag a single String used to filter the collections regarding the tag property
+   * @return a list of {@link Collection}
+   * @throws SQLException
+   */
+  public List<Collection> listCollectionsMetaData(String bucketName, Integer offset, Integer limit, Boolean includeDeleted, String tag) throws SQLException {
+
+    List<Collection> collections = new ArrayList<>();
+
+    PreparedStatement p = null;
+    ResultSet result = null;
+
+    try {
+
+      p = connectionLocal.get().prepareStatement(getCollectionMetadataQuery(bucketName, offset, limit, includeDeleted, tag));
+
+      int i = 1;
+      if (!includeDeleted)
+        p.setInt(i++, Status.USED.getValue());
+
+      if (bucketName != null)
+        p.setString(i++, bucketName);
+
+      if (tag != null)
+        p.setString(i++, tag);
+
+      result = p.executeQuery();
+
+      while (result.next()) {
+        Collection c = mapCollectionRow(result);
+        collections.add(c);
+      }
+
+      return collections;
+
+    } finally {
+      closeDbStuff(result, p);
+    }
+
+  }
+
+  private String getCollectionMetadataQuery(String bucketName, Integer offset, Integer limit, Boolean includeDeleted, String tag){
+    StringBuilder q = new StringBuilder();
+    q.append("SELECT * FROM collections c, buckets b WHERE c.bucketId = b.bucketId");
+
+    if (!includeDeleted)
+      q.append(" AND status=?");
+    if (bucketName != null)
+      q.append(" AND bucketName=?");
+    if (tag != null)
+      q.append(" AND TAG=?");
+    if (limit != null)
+      q.append(" LIMIT " + limit);
+    if (offset != null)
+      q.append(" OFFSET " + offset);
+
+    return q.toString();
   }
 
   public List<Collection> listCollections(Timestamp timestamp) throws SQLException {
