@@ -16,11 +16,6 @@
  */
 package org.plos.repo.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.plos.repo.RepoBaseSpringTest;
@@ -28,8 +23,10 @@ import org.plos.repo.RepoBaseSpringTest;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.util.HashSet;
-import java.util.concurrent.CountDownLatch;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+
+import static org.junit.Assert.*;
 
 public class ThreadLocalTest extends RepoBaseSpringTest {
 

@@ -4,8 +4,8 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.plos.repo.RepoBaseSpringTest;
-import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.Object;
+import org.plos.repo.models.input.ElementFilter;
 
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
@@ -19,9 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 //TODO - HACK. Remove this when integrate with Service layer code
 

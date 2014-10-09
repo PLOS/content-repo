@@ -1,6 +1,6 @@
 package org.plos.repo.util;
 
-import org.plos.repo.models.*;
+import org.plos.repo.models.Collection;
 import org.plos.repo.service.RepoException;
 
 import java.security.MessageDigest;

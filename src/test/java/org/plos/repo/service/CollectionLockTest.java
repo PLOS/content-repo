@@ -4,7 +4,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.plos.repo.RepoBaseSpringTest;
-import org.plos.repo.models.*;
+import org.plos.repo.models.Collection;
 import org.plos.repo.models.Object;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputCollection;

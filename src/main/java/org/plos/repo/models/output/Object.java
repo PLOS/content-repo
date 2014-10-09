@@ -1,15 +1,12 @@
 package org.plos.repo.models.output;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import org.plos.repo.models.Status;
 import org.plos.repo.models.TimestampAdapter;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.sql.Timestamp;
-import java.util.List;
 
 /**
  * Collection to be return to the client

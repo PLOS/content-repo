@@ -18,7 +18,6 @@
 package org.plos.repo.models;
 
 import java.sql.Timestamp;
-import java.util.List;
 
 
 public class Object {
