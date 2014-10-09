@@ -17,21 +17,21 @@
 
 package org.plos.repo;
 
-import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.BDDMockito;
-import org.mockito.Mockito;
-import org.plos.repo.models.Bucket;
-import org.plos.repo.models.input.ElementFilter;
-import org.plos.repo.models.Object;
-import org.plos.repo.service.*;
+ import org.apache.commons.io.IOUtils;
+ import org.junit.Assert;
+ import org.junit.Before;
+ import org.junit.Test;
+ import org.mockito.BDDMockito;
+ import org.mockito.Mockito;
+ import org.plos.repo.models.Bucket;
+ import org.plos.repo.models.Object;
+ import org.plos.repo.models.input.ElementFilter;
+ import org.plos.repo.service.*;
 
-import java.lang.reflect.Field;
-import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.Date;
+ import java.lang.reflect.Field;
+ import java.sql.Timestamp;
+ import java.util.Calendar;
+ import java.util.Date;
 
 public class RepoServiceSpringTest extends RepoBaseSpringTest {
 

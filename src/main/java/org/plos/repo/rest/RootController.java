@@ -20,7 +20,7 @@ package org.plos.repo.rest;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import org.plos.repo.models.ServiceConfigInfo;
-import org.plos.repo.models.ServiceStatus;
+import org.plos.repo.models.output.ServiceStatus;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.RepoException;
 import org.plos.repo.service.RepoInfoService;

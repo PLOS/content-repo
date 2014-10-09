@@ -19,9 +19,9 @@ package org.plos.repo.service;
 
 import com.google.common.util.concurrent.Striped;
 import org.plos.repo.models.Bucket;
-import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.Object;
 import org.plos.repo.models.Status;
+import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.validator.TimestampInputValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +59,23 @@ public class RepoService extends BaseRepoService {
     try {
       sqlService.getConnection();
       return sqlService.listBuckets();
+
+    } catch (SQLException e) {
+      throw new RepoException(e);
+    } finally {
+      sqlReleaseConnection();
+    }
+  }
+
+  public Long getBucketsSize(Integer bucketId) throws RepoException {
+    try {
+
+      if (bucketId == null){
+        throw new RepoException(RepoException.Type.NoBucketEntered);
+      }
+
+      sqlService.getConnection();
+      return sqlService.getBucketSize(bucketId);
 
     } catch (SQLException e) {
       throw new RepoException(e);
