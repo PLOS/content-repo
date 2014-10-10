@@ -201,6 +201,8 @@ public class RepoService extends BaseRepoService {
 
     // TODO: should this function return a list of objects and their nested versions instead of one flat last?
 
+    List<Object> objects = null;
+
     if (offset == null)
       offset = 0;
     if (limit == null)
@@ -215,12 +217,39 @@ public class RepoService extends BaseRepoService {
       if (bucketName != null && sqlService.getBucket(bucketName) == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
 
-      return sqlService.listObjects(bucketName, offset, limit, includeDeleted, tag);
+      objects = sqlService.listObjects(bucketName, offset, limit, includeDeleted, tag);
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
       sqlReleaseConnection();
     }
+
+    return this.addProxyData(objects);
+
+  }
+
+  private List<Object> addProxyData(List<Object> objects) throws RepoException {
+
+    if (objects != null && objects.size() > 0 && this.serverSupportsReproxy()){
+
+      for (Object object : objects){
+        object.setReproxyURL(this.getObjectReproxy(object));
+      }
+
+    }
+
+    return objects;
+
+  }
+
+  private Object addProxyData(Object object) throws RepoException {
+
+    if (object != null && this.serverSupportsReproxy()){
+      object.setReproxyURL(this.getObjectReproxy(object));
+    }
+
+    return object;
+
   }
 
   public Object getObject(String bucketName, String key, ElementFilter elementFilter) throws RepoException {
@@ -228,7 +257,7 @@ public class RepoService extends BaseRepoService {
     Lock readLock = this.rwLocks.get(bucketName + key).readLock();
     readLock.lock();
 
-    Object object;
+    Object object = null;
 
     try {
       sqlService.getConnection();
@@ -242,14 +271,14 @@ public class RepoService extends BaseRepoService {
       if (object == null)
         throw new RepoException(RepoException.Type.ObjectNotFound);
 
-      return object;
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
       sqlReleaseConnection();
       readLock.unlock();
     }
+
+    return this.addProxyData(object);
 
   }
 
@@ -261,15 +290,19 @@ public class RepoService extends BaseRepoService {
     Lock readLock = this.rwLocks.get(bucketName + objectKey).readLock();
     readLock.lock();
 
+    List<Object> objects = null ;
     try {
       sqlService.getConnection();
-      return sqlService.listObjectVersions(bucketName, objectKey);
+      objects =  sqlService.listObjectVersions(bucketName, objectKey);
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
       sqlReleaseConnection();
       readLock.unlock();
     }
+
+    return this.addProxyData(objects);
+
   }
 
   public URL[] getObjectReproxy(Object object) throws RepoException {

@@ -144,7 +144,7 @@ public class ObjectController {
       Object outputObject = new Object(object);
 
       return Response.status(Response.Status.OK)
-          .lastModified(outputObject.getTimestamp())
+          .lastModified(object.getTimestamp())
           .entity(outputObject).build();
     } catch (RepoException e) {
       return handleError(e);

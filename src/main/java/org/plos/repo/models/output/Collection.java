@@ -7,6 +7,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.plos.repo.models.Status;
 import org.plos.repo.models.TimestampAdapter;
+import org.plos.repo.models.TimestampFormatter;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
@@ -19,27 +20,28 @@ import java.util.List;
 @XmlRootElement
 public class Collection {
 
-
   private String key; // what the user specifies
-  @XmlJavaTypeAdapter(TimestampAdapter.class)
-  private Timestamp timestamp;   // created time
+  private String timestamp;   // created time
   private Integer versionNumber;
   private String tag;
-  @XmlJavaTypeAdapter(TimestampAdapter.class)
-  private Timestamp creationDate;
+  private String creationDate;
   private String versionChecksum;
   private Status status;
   private List<Object> objects;
 
+  private TimestampFormatter timestampFormatter;
+
   public Collection() {
+    this.timestampFormatter = new TimestampFormatter();
   }
 
   public Collection(org.plos.repo.models.Collection collection) {
+    this.timestampFormatter = new TimestampFormatter();
     this.key = collection.getKey();
-    this.timestamp = collection.getTimestamp();
+    this.timestamp = timestampFormatter.getFormattedTimestamp(collection.getTimestamp());
     this.versionNumber = collection.getVersionNumber();
     this.tag = collection.getTag();
-    this.creationDate = collection.getCreationDate();
+    this.creationDate = timestampFormatter.getFormattedTimestamp(collection.getCreationDate());
     this.versionChecksum = collection.getVersionChecksum();
     this.status = collection.getStatus();
 
@@ -58,7 +60,7 @@ public class Collection {
     return key;
   }
 
-  public Timestamp getTimestamp() {
+  public String getTimestamp() {
     return timestamp;
   }
 
@@ -75,7 +77,7 @@ public class Collection {
   }
 
   public void setTimestamp(Timestamp timestamp) {
-    this.timestamp = timestamp;
+    this.timestamp = timestampFormatter.getFormattedTimestamp(timestamp);
   }
 
   public void setVersionNumber(Integer versionNumber) {
@@ -94,11 +96,19 @@ public class Collection {
     this.tag = tag;
   }
 
-  public Timestamp getCreationDate() {
+  public String getCreationDate() {
     return creationDate;
   }
 
   public void setCreationDate(Timestamp creationDate) {
+    this.creationDate = timestampFormatter.getFormattedTimestamp(creationDate);
+  }
+
+  public void setTimestamp(String timestamp) {
+    this.timestamp = timestamp;
+  }
+
+  public void setCreationDate(String creationDate) {
     this.creationDate = creationDate;
   }
 

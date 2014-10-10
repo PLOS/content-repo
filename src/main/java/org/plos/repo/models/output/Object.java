@@ -3,7 +3,10 @@ package org.plos.repo.models.output;
 import com.google.common.base.Function;
 import org.plos.repo.models.Status;
 import org.plos.repo.models.TimestampAdapter;
+import org.plos.repo.models.TimestampFormatter;
+import org.springframework.context.ApplicationContext;
 
+import javax.inject.Inject;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.sql.Timestamp;
@@ -17,33 +20,41 @@ public class Object {
   private String key; // what the user specifies
   private String checksum;  // of the file contents
 
-  @XmlJavaTypeAdapter(TimestampAdapter.class)
-  private Timestamp timestamp;   // last modification time
+  private String timestamp;   // last modification time
   private String downloadName;
   private String contentType;
   private Long size;
   private String tag;
   private Integer versionNumber;
   private Status status;
-  private Timestamp creationDate;
+  private String creationDate;
   private String versionChecksum;
+  private String reproxyURL;
+
+  private TimestampFormatter timestampFormatter;
 
   public Object() {
+    this.timestampFormatter = new TimestampFormatter();
   }
 
   public Object(org.plos.repo.models.Object object) {
 
+    this.timestampFormatter = new TimestampFormatter();
     this.key = object.getKey();
     this.checksum = object.getChecksum();
-    this.timestamp = object.getTimestamp();
+    this.timestamp = timestampFormatter.getFormattedTimestamp(object.getTimestamp());
     this.downloadName = object.getDownloadName();
     this.contentType = object.getContentType();
     this.size = object.getSize();
     this.tag = object.getTag();
     this.versionNumber = object.getVersionNumber();
     this.status = object.getStatus();
-    this.creationDate = object.getCreationDate();
+    this.creationDate = timestampFormatter.getFormattedTimestamp(object.getCreationDate());
     this.versionChecksum = object.getVersionChecksum();
+
+    if (object.getReproxyURL() != null ) {
+      this.reproxyURL = object.getReproxyURL().toString();
+    }
 
   }
 
@@ -55,7 +66,7 @@ public class Object {
     return checksum;
   }
 
-  public Timestamp getTimestamp() {
+  public String getTimestamp() {
     return timestamp;
   }
 
@@ -83,12 +94,16 @@ public class Object {
     return status;
   }
 
-  public Timestamp getCreationDate() {
+  public String getCreationDate() {
     return creationDate;
   }
 
   public String getVersionChecksum() {
     return versionChecksum;
+  }
+
+  public String getReproxyURL() {
+    return reproxyURL;
   }
 
   public void setKey(String key) {
@@ -99,8 +114,12 @@ public class Object {
     this.checksum = checksum;
   }
 
-  public void setTimestamp(Timestamp timestamp) {
+  public void setTimestamp(String timestamp) {
     this.timestamp = timestamp;
+  }
+
+  public void setTimestamp(Timestamp timestamp) {
+    this.timestamp = timestampFormatter.getFormattedTimestamp(timestamp);
   }
 
   public void setDownloadName(String downloadName) {
@@ -127,12 +146,20 @@ public class Object {
     this.status = status;
   }
 
-  public void setCreationDate(Timestamp creationDate) {
+  public void setCreationDate(String creationDate) {
     this.creationDate = creationDate;
+  }
+
+  public void setCreationDate(Timestamp creationDate) {
+    this.creationDate = timestampFormatter.getFormattedTimestamp(creationDate);
   }
 
   public void setVersionChecksum(String versionChecksum) {
     this.versionChecksum = versionChecksum;
+  }
+
+  public void setReproxyURL(String reproxyURL) {
+    this.reproxyURL = reproxyURL;
   }
 
   public static Function<org.plos.repo.models.Object, Object> typeFunction() {

@@ -1,11 +1,17 @@
 package org.plos.repo.util;
 
 import org.plos.repo.models.Collection;
+import org.plos.repo.models.TimestampFormatter;
 import org.plos.repo.service.RepoException;
 
+import javax.inject.Inject;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -14,6 +20,12 @@ import java.util.List;
 public class ChecksumGenerator {
 
   private static final String DIGEST_ALGORITHM = "SHA-1";
+
+  private TimestampFormatter timestampFormatter;
+
+  public ChecksumGenerator(){
+    timestampFormatter = new TimestampFormatter();
+  }
 
   public String generateVersionChecksum(Collection collection, List<String> objectsChecksum) throws RepoException {
 
@@ -26,9 +38,7 @@ public class ChecksumGenerator {
     }
 
     sb.append(collection.getKey());
-    sb.append(collection.getTimestamp());
-    sb.append(collection.getCreationDate());
-    sb.append(collection.getStatus().getValue());
+    sb.append(timestampFormatter.getFormattedTimestamp(collection.getCreationDate()));
     if (collection.getTag() != null){
       sb.append(collection.getTag());
     }
@@ -41,11 +51,17 @@ public class ChecksumGenerator {
     StringBuilder sb = new StringBuilder();
 
     sb.append(object.getKey());
-    sb.append(object.getTimestamp().toString());
-    sb.append(object.getCreationDate().toString());
-    sb.append(object.getTag());
-    sb.append(object.getContentType());
-    sb.append(object.getDownloadName());
+    sb.append(timestampFormatter.getFormattedTimestamp(object.getCreationDate()));
+    if (object.getTag() != null){
+      sb.append(object.getTag());
+    }
+    if (object.getContentType() != null){
+      sb.append(object.getContentType());
+    }
+    if (object.getDownloadName() != null ){
+      sb.append(object.getDownloadName());
+    }
+
     sb.append(object.getChecksum());
 
     return checksumToString(this.digest(sb.toString()));

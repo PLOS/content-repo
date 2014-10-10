@@ -17,6 +17,7 @@
 
 package org.plos.repo.models;
 
+import java.net.URL;
 import java.sql.Timestamp;
 
 
@@ -36,6 +37,7 @@ public class Object {
   private Status status;
   private Timestamp creationDate;
   private String versionChecksum;
+  private URL[] reproxyURL;
 
   // empty constructor required for JAXB mapping
   public Object() {
@@ -138,6 +140,10 @@ public class Object {
     return versionChecksum;
   }
 
+  public URL[] getReproxyURL() {
+    return reproxyURL;
+  }
+
   public void setId(Integer id) {
     this.id = id;
   }
@@ -194,4 +200,7 @@ public class Object {
     this.versionChecksum = versionChecksum;
   }
 
+  public void setReproxyURL(URL[] reproxyURL) {
+    this.reproxyURL = reproxyURL;
+  }
 }
