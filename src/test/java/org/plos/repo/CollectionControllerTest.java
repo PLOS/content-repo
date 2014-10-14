@@ -297,6 +297,14 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
         RepoException.Type.ObjectCollectionNotFound
     );
 
+    Response response = target("/collections/" + bucketName)
+        .queryParam("version", "0")
+        .queryParam("key", "nonexistingKey")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+    assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+
   }
 
   @Test
