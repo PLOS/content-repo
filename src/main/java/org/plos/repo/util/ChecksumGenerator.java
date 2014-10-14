@@ -32,10 +32,7 @@ public class ChecksumGenerator {
 
   private static final String DIGEST_ALGORITHM = "SHA-1";
 
-  private TimestampFormatter timestampFormatter;
-
   public ChecksumGenerator(){
-    timestampFormatter = new TimestampFormatter();
   }
 
   public String generateVersionChecksum(Collection collection, List<String> objectsChecksum) throws RepoException {
@@ -49,7 +46,7 @@ public class ChecksumGenerator {
     }
 
     sb.append(collection.getKey());
-    sb.append(timestampFormatter.getFormattedTimestamp(collection.getCreationDate()));
+    sb.append(TimestampFormatter.getFormattedTimestamp(collection.getCreationDate()));
     if (collection.getTag() != null){
       sb.append(collection.getTag());
     }
@@ -62,7 +59,7 @@ public class ChecksumGenerator {
     StringBuilder sb = new StringBuilder();
 
     sb.append(object.getKey());
-    sb.append(timestampFormatter.getFormattedTimestamp(object.getCreationDate()));
+    sb.append(TimestampFormatter.getFormattedTimestamp(object.getCreationDate()));
     if (object.getTag() != null){
       sb.append(object.getTag());
     }
