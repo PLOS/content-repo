@@ -484,38 +484,6 @@ public abstract class SqlService {
 
   }
 
-  public Long getBucketSize(Integer bucketId) throws SQLException {
-
-    PreparedStatement p = null;
-    ResultSet result = null;
-
-    try {
-
-      p = connectionLocal.get().prepareStatement("select ifnull(SUM(T.s),0) SIZE\n" +
-          "from (select distinct o.checksum, o.size s, o.bucketId bID\n" +
-          "     from objects o, buckets b\n" +
-          "        where o.bucketId =? \n" +
-          "     ) as T, buckets b\n" +
-          "where T.bID = b.bucketId");
-
-      int i = 1;
-      p.setInt(i, bucketId);
-
-      result = p.executeQuery();
-
-      if (result.next()) {
-        return result.getLong("SIZE");
-      }
-
-      return 0l;
-
-    } finally {
-      closeDbStuff(result, p);
-    }
-
-  }
-
-
   public List<Bucket> getObjectsSize(String bucketName) throws SQLException {
 
     List<Bucket> buckets = new ArrayList<>();

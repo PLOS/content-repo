@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -65,26 +66,18 @@ public class RepoInfoServiceTest {
   public void getStatusHappyPathTest() throws RepoException {
 
     List<org.plos.repo.models.Bucket> buckets = new ArrayList<>();
-    buckets.add(new org.plos.repo.models.Bucket(1, NAME_BUCKET1, null, null));
-    buckets.add(new org.plos.repo.models.Bucket(2, NAME_BUCKET2, null, null));
+    buckets.add(mock(org.plos.repo.models.Bucket.class));
+    buckets.add(mock(org.plos.repo.models.Bucket.class));
     when(repoService.listBuckets()).thenReturn(buckets);
-
-    when(repoService.getBucketsSize(1)).thenReturn(SIZE_BUCKET1);
-    when(repoService.getBucketsSize(2)).thenReturn(SIZE_BUCKET2);
 
     ServiceStatus status = repoInfoService.getStatus();
 
     assertEquals(2, status.bucketCount);
-    assertNotNull(status.bucketsSize);
-    assertEquals(2, status.bucketsSize.size());
-    assertEquals(SIZE_BUCKET1, status.bucketsSize.get(0).getBytes());
-    assertEquals(NAME_BUCKET1, status.bucketsSize.get(0).getBucketName());
-    assertEquals(SIZE_BUCKET2, status.bucketsSize.get(1).getBytes());
-    assertEquals(NAME_BUCKET2, status.bucketsSize.get(1).getBucketName());
+    assertNotNull(status.serviceStarted);
+    assertNotNull(status.readsSinceStart);
+    assertNotNull(status.writesSinceStart);
 
     verify(repoService).listBuckets();
-    verify(repoService).getBucketsSize(1);
-    verify(repoService).getBucketsSize(2);
 
   }
 

@@ -67,23 +67,6 @@ public class RepoService extends BaseRepoService {
     }
   }
 
-  public Long getBucketsSize(Integer bucketId) throws RepoException {
-    try {
-
-      if (bucketId == null){
-        throw new RepoException(RepoException.Type.NoBucketEntered);
-      }
-
-      sqlService.getConnection();
-      return sqlService.getBucketSize(bucketId);
-
-    } catch (SQLException e) {
-      throw new RepoException(e);
-    } finally {
-      sqlReleaseConnection();
-    }
-  }
-
   public Bucket createBucket(String name, String creationDateTimeString) throws RepoException {
 
     timestampValidator.validate(creationDateTimeString, RepoException.Type.CouldNotParseCreationDate);
