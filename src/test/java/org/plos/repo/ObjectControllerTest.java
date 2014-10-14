@@ -583,7 +583,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
   @Test
   public void getVersionsNoKey() {
 
-    Response response = target("/objects/bucket1/versions")
+    Response response = target("/objects/versions/bucket1")
         .request(MediaType.APPLICATION_JSON_TYPE)
         .accept(MediaType.APPLICATION_JSON_TYPE)
         .get();
@@ -622,7 +622,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
 
 
-    response = target("/objects/"+ bucketName +"/versions").queryParam("key", "object3")
+    response = target("/objects/versions/"+ bucketName).queryParam("key", "object3")
         .request(MediaType.APPLICATION_JSON_TYPE)
         .accept(MediaType.APPLICATION_JSON_TYPE)
         .get();

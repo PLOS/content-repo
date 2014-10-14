@@ -115,7 +115,7 @@ public class CollectionController {
   }
 
   @GET
-  @Path("/{bucketName}/versions")
+  @Path("/versions/{bucketName}")
   @ApiOperation(value = "Fetch all the collection versions", response = Collection.class, responseContainer = "List")
   @ApiResponses(value = {
       @ApiResponse(code = HttpStatus.SC_OK, message = "Success"),

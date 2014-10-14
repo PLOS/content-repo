@@ -1108,7 +1108,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
         Response.Status.CREATED.getStatusCode()
     );
 
-    Response response = target("/collections/" + bucketName + "/versions")
+    Response response = target("/collections/versions/" + bucketName)
         .queryParam("key", "collection1")
         .request(MediaType.APPLICATION_JSON_TYPE)
         .accept(MediaType.APPLICATION_JSON_TYPE)
@@ -1125,7 +1125,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   @Test
   public void getCollectionsVersionsNoKey() {
 
-    assertRepoError(target("/collections/" + bucketName + "/versions")
+    assertRepoError(target("/collections/versions" + bucketName)
             .request(MediaType.APPLICATION_JSON_TYPE)
             .accept(MediaType.APPLICATION_JSON_TYPE)
             .get(),
@@ -1135,7 +1135,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   @Test
   public void getCollectionsVersionsNoCollection() {
 
-    assertRepoError(target("/collections/" + bucketName + "/versions")
+    assertRepoError(target("/collections/versions/" + bucketName)
             .queryParam("key", "collection1")
             .request(MediaType.APPLICATION_JSON_TYPE)
             .accept(MediaType.APPLICATION_JSON_TYPE)

@@ -239,7 +239,7 @@ public class ObjectController {
 
   }
 
-  @GET @Path("/{bucketName}/versions")
+  @GET @Path("/versions/{bucketName}")
   @ApiOperation(value = "Fetch all the object versions", response = Object.class, responseContainer = "List")
   @Produces({MediaType.APPLICATION_JSON})
   public Response getVersions(@ApiParam(required = true) @PathParam("bucketName") String bucketName,
