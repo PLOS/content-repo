@@ -212,7 +212,7 @@ public abstract class SqlService {
 
       p.setInt(1, Status.DELETED.getValue());
       p.setString(2, key);
-      p.setInt(3, bucket.bucketId);
+      p.setInt(3, bucket.getBucketId());
 
       int i = 4;
       if (version != null){
@@ -438,7 +438,7 @@ public abstract class SqlService {
 
       p = connectionLocal.get().prepareStatement("INSERT INTO buckets (bucketName, timestamp, creationDate) VALUES(?, ?, ?)");
 
-      p.setString(1, bucket.bucketName);
+      p.setString(1, bucket.getBucketName());
       p.setTimestamp(2, creationDate);
       p.setTimestamp(3, creationDate);
 
@@ -921,13 +921,6 @@ public abstract class SqlService {
 
   /**
    * List all versions for the given <code>collection</code>
-   * @param collection a single {@link org.plos.repo.models.Collection}
-   * @return a list of {@link org.plos.repo.models.Collection}
-   * @throws SQLException
-   */
-
-  /**
-   * List all versions for the given <code>collection</code>
    * @param bucketName a single String identifying the bucket name where the collection is.
    * @param key a single String identifying the collection key
    * @return a list of {@link org.plos.repo.models.Collection}
@@ -1000,7 +993,7 @@ public abstract class SqlService {
 
       p.setInt(1, Status.DELETED.getValue());
       p.setString(2, key);
-      p.setInt(3, bucket.bucketId);
+      p.setInt(3, bucket.getBucketId());
 
       int i = 4;
       if (versionNumber != null){

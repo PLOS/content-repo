@@ -1,14 +1,27 @@
+/*
+ * Copyright (c) 2006-2014 by Public Library of Science
+ * http://plos.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.plos.repo.models.output;
 
 import com.google.common.base.Function;
 import org.plos.repo.models.Status;
-import org.plos.repo.models.TimestampAdapter;
-import org.plos.repo.models.TimestampFormatter;
-import org.springframework.context.ApplicationContext;
+import org.plos.repo.util.TimestampFormatter;
 
-import javax.inject.Inject;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.sql.Timestamp;
 
 /**
@@ -31,25 +44,22 @@ public class Object {
   private String versionChecksum;
   private String reproxyURL;
 
-  private TimestampFormatter timestampFormatter;
+  private Object() {
 
-  public Object() {
-    this.timestampFormatter = new TimestampFormatter();
   }
 
   public Object(org.plos.repo.models.Object object) {
 
-    this.timestampFormatter = new TimestampFormatter();
     this.key = object.getKey();
     this.checksum = object.getChecksum();
-    this.timestamp = timestampFormatter.getFormattedTimestamp(object.getTimestamp());
+    this.timestamp = TimestampFormatter.getFormattedTimestamp(object.getTimestamp());
     this.downloadName = object.getDownloadName();
     this.contentType = object.getContentType();
     this.size = object.getSize();
     this.tag = object.getTag();
     this.versionNumber = object.getVersionNumber();
     this.status = object.getStatus();
-    this.creationDate = timestampFormatter.getFormattedTimestamp(object.getCreationDate());
+    this.creationDate = TimestampFormatter.getFormattedTimestamp(object.getCreationDate());
     this.versionChecksum = object.getVersionChecksum();
 
     if (object.getReproxyURL() != null ) {
@@ -118,10 +128,6 @@ public class Object {
     this.timestamp = timestamp;
   }
 
-  public void setTimestamp(Timestamp timestamp) {
-    this.timestamp = timestampFormatter.getFormattedTimestamp(timestamp);
-  }
-
   public void setDownloadName(String downloadName) {
     this.downloadName = downloadName;
   }
@@ -148,10 +154,6 @@ public class Object {
 
   public void setCreationDate(String creationDate) {
     this.creationDate = creationDate;
-  }
-
-  public void setCreationDate(Timestamp creationDate) {
-    this.creationDate = timestampFormatter.getFormattedTimestamp(creationDate);
   }
 
   public void setVersionChecksum(String versionChecksum) {

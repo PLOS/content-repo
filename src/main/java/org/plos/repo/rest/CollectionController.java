@@ -56,7 +56,7 @@ public class CollectionController {
   @ApiOperation(value = "List collections", response = Collection.class, responseContainer = "List")
   @ApiResponses(value = {
       @ApiResponse(code = HttpStatus.SC_OK, message = "Success"),
-      @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "Bucket not found"),
+      @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "Bucket not found / Collection not found"),
       @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "Bad request (see message)"),
       @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
   })

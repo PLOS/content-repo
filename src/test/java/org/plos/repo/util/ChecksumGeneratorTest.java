@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2006-2014 by Public Library of Science
+ * http://plos.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.plos.repo.util;
 
 import org.junit.Before;
@@ -23,10 +40,8 @@ public class ChecksumGeneratorTest {
 
   private static final Timestamp TIMESTAMP = new Timestamp(new Date().getTime());
   private static final String OBJECT_KEY1 = "object1";
-  private static final String OBJECT_KEY2 = "object2";
   private static final String OBJ1_VERSION_CHECKSUM = "dnaskjndas15456dsadass";
   private static final String OBJ2_VERSION_CHECKSUM = "kandkasd3465dsabjdsbad";
-  private static final String OBJ3_VERSION_CHECKSUM = "nkdlsadas15316diojda13";
   private static final String OBJ1_CHECKSUM = "1223123";
   private static final String TAG = "draft";
   private static final String CONTENT_TYPE = "text/plain";
@@ -52,8 +67,8 @@ public class ChecksumGeneratorTest {
   @Before
   public void setUp(){
     checksumGenerator = new ChecksumGenerator();
-    object1 = new Object();
-    object2 = new Object();
+    object1 = new Object(0,"keyObj1",null,null,null,null,null,null,null,null,null,null,null,null);
+    object2 = new Object(0,"keyObj2",null,null,null,null,null,null,null,null,null,null,null,null);
     initMocks(this);
   }
 

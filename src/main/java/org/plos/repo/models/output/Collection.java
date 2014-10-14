@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2006-2014 by Public Library of Science
+ * http://plos.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.plos.repo.models.output;
 
 import com.google.common.base.Function;
@@ -6,11 +23,9 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.plos.repo.models.Status;
-import org.plos.repo.models.TimestampAdapter;
-import org.plos.repo.models.TimestampFormatter;
+import org.plos.repo.util.TimestampFormatter;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -29,19 +44,16 @@ public class Collection {
   private Status status;
   private List<Object> objects;
 
-  private TimestampFormatter timestampFormatter;
+  private Collection() {
 
-  public Collection() {
-    this.timestampFormatter = new TimestampFormatter();
   }
 
   public Collection(org.plos.repo.models.Collection collection) {
-    this.timestampFormatter = new TimestampFormatter();
     this.key = collection.getKey();
-    this.timestamp = timestampFormatter.getFormattedTimestamp(collection.getTimestamp());
+    this.timestamp = TimestampFormatter.getFormattedTimestamp(collection.getTimestamp());
     this.versionNumber = collection.getVersionNumber();
     this.tag = collection.getTag();
-    this.creationDate = timestampFormatter.getFormattedTimestamp(collection.getCreationDate());
+    this.creationDate = TimestampFormatter.getFormattedTimestamp(collection.getCreationDate());
     this.versionChecksum = collection.getVersionChecksum();
     this.status = collection.getStatus();
 
@@ -76,10 +88,6 @@ public class Collection {
     this.key = key;
   }
 
-  public void setTimestamp(Timestamp timestamp) {
-    this.timestamp = timestampFormatter.getFormattedTimestamp(timestamp);
-  }
-
   public void setVersionNumber(Integer versionNumber) {
     this.versionNumber = versionNumber;
   }
@@ -98,10 +106,6 @@ public class Collection {
 
   public String getCreationDate() {
     return creationDate;
-  }
-
-  public void setCreationDate(Timestamp creationDate) {
-    this.creationDate = timestampFormatter.getFormattedTimestamp(creationDate);
   }
 
   public void setTimestamp(String timestamp) {

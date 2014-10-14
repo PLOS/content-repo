@@ -39,8 +39,7 @@ public class Object {
   private String versionChecksum;
   private URL[] reproxyURL;
 
-  // empty constructor required for JAXB mapping
-  public Object() {
+  private Object() {
   }
 
   public Object(Integer id, String key, String checksum, Timestamp timestamp, String downloadName,

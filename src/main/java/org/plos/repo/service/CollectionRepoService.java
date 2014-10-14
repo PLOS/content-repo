@@ -253,6 +253,8 @@ public class CollectionRepoService extends BaseRepoService {
       Timestamp timestamp = inputCollection.getTimestamp() != null ?
           Timestamp.valueOf(inputCollection.getTimestamp()) : creationDate;
 
+      rollback = true;
+
       if (CreateMethod.NEW.equals(method)){
 
         if (existingCollection != null)
@@ -272,7 +274,7 @@ public class CollectionRepoService extends BaseRepoService {
         else
           newCollection = updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, existingCollection, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
 
-      } else if (CreateMethod.AUTO.equals(method)){
+      } else {
         throw new RepoException(RepoException.Type.InvalidCreationMethod);
       }
 
@@ -309,7 +311,7 @@ public class CollectionRepoService extends BaseRepoService {
         throw new RepoException(RepoException.Type.BucketNotFound);
 
 
-      return createCollection(key, bucketName, timestamp, bucket.bucketId, objects, tag, creationDate);
+      return createCollection(key, bucketName, timestamp, bucket.getBucketId(), objects, tag, creationDate);
     } catch(SQLIntegrityConstraintViolationException e){
       throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
     } catch (SQLException e) {

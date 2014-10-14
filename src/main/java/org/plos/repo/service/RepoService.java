@@ -504,7 +504,7 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(e);
       }
 
-      object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), tag, bucket.bucketId, bucketName, versionNumber, Status.USED, cretationDateTime, null);
+      object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), tag, bucket.getBucketId(), bucketName, versionNumber, Status.USED, cretationDateTime, null);
       object.setVersionChecksum(checksumGenerator.generateVersionChecksum(object));
       rollback = true;
 

@@ -26,7 +26,7 @@ public class InputObject {
   private String versionChecksum;
 
   // empty constructor required for JAXB mapping
-  public InputObject() {
+  private InputObject() {
   }
 
   public InputObject(String key, String versionChecksum) {

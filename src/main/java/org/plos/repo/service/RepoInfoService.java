@@ -106,7 +106,7 @@ public class RepoInfoService {
 
     List<org.plos.repo.models.output.Bucket> outBucketList = new ArrayList<org.plos.repo.models.output.Bucket>();
     for (Bucket b : bucketList){
-      outBucketList.add(new org.plos.repo.models.output.Bucket(b.bucketName, repoService.getBucketsSize(b.bucketId)));
+      outBucketList.add(new org.plos.repo.models.output.Bucket(b.getBucketName(), repoService.getBucketsSize(b.getBucketId())));
     }
 
     status.bucketsSize = outBucketList;
@@ -128,8 +128,8 @@ public class RepoInfoService {
       if (bucket == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
 
-      bucket.totalObjects = sqlService.objectCount(true, bucketName);
-      bucket.activeObjects = sqlService.objectCount(false, bucketName);
+      bucket.setTotalObjects(sqlService.objectCount(true, bucketName));
+      bucket.setActiveObjects(sqlService.objectCount(false, bucketName));
 
       return bucket;
 

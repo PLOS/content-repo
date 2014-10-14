@@ -155,7 +155,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName("invalidBucket");
     inputCollection.setKey("invalidBucket");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject()}));
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("obj1","213i3b21312")}));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertRepoError(target("/collections").request()

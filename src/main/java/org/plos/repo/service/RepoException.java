@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2006-2014 by Public Library of Science
+ * http://plos.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.plos.repo.service;
 
 /**
@@ -35,13 +52,13 @@ public class RepoException extends Exception {
 
 
     // user errors for system state
-    CantDeleteNonEmptyBucket(20, "Can not delete bucket since it contains objects"),
-    CantCreateNewObjectWithUsedKey(21, "Can not create an object with a key that already exists"),
-    CantCreateVersionWithNoOrig(22, "Can not version an object that does not exist"),
-    BucketAlreadyExists(23, "Bucket already exists"),
-    CantCreateNewCollectionWithUsedKey(24, "Can not create a collection with a key that already exists"),
-    CantCreateCollectionVersionWithNoOrig(25, "Can not version a collection that does not exist"),
-    CantCreateCollectionWithNoObjects(26, "Can not create a collection that does not have objects");
+    CantDeleteNonEmptyBucket(30, "Can not delete bucket since it contains objects"),
+    CantCreateNewObjectWithUsedKey(31, "Can not create an object with a key that already exists"),
+    CantCreateVersionWithNoOrig(32, "Can not version an object that does not exist"),
+    BucketAlreadyExists(33, "Bucket already exists"),
+    CantCreateNewCollectionWithUsedKey(34, "Can not create a collection with a key that already exists"),
+    CantCreateCollectionVersionWithNoOrig(35, "Can not version a collection that does not exist"),
+    CantCreateCollectionWithNoObjects(36, "Can not create a collection that does not have objects");
 
     private final int value;
     private final String message;

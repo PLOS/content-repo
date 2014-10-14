@@ -4,7 +4,6 @@ import org.plos.repo.models.validator.InputCollectionValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
 import org.plos.repo.service.*;
 import org.plos.repo.util.ChecksumGenerator;
-import org.plos.repo.util.OperationComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -38,9 +37,6 @@ public class SpringConfig {
   }
 
   @Bean
-  public MigrationService migrationService() { return new MigrationService();}
-
-  @Bean
   public CollectionRepoService collectionRepoService() { return new CollectionRepoService();}
 
   @Bean
@@ -48,9 +44,6 @@ public class SpringConfig {
 
   @Bean
   public TimestampInputValidator timestampInputValidator(){ return new TimestampInputValidator(); }
-
-  @Bean
-  public OperationComparator operationComparator(){ return new OperationComparator(); }
 
   @Bean
   public ChecksumGenerator versionChecksumGenerator(){ return new ChecksumGenerator(); }

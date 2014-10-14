@@ -70,16 +70,16 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
   public Boolean bucketExists(Bucket bucket) {
-    return (new File(getBucketLocationString(bucket.bucketName)).isDirectory());
+    return (new File(getBucketLocationString(bucket.getBucketName())).isDirectory());
   }
 
   public Boolean createBucket(Bucket bucket) {
 
-    File dir = new File(getBucketLocationString(bucket.bucketName));
+    File dir = new File(getBucketLocationString(bucket.getBucketName()));
     boolean result = dir.mkdir();
 
     if (!result)
-      log.error("Error while creating bucket. Directory was not able to be created : " + getBucketLocationString(bucket.bucketName));
+      log.error("Error while creating bucket. Directory was not able to be created : " + getBucketLocationString(bucket.getBucketName()));
 
     return result;
   }
@@ -106,14 +106,14 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
   public Boolean deleteBucket(Bucket bucket) {
-    File dir = new File(getBucketLocationString(bucket.bucketName));
+    File dir = new File(getBucketLocationString(bucket.getBucketName()));
     return dir.delete();
   }
 
   public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
     File tempFile = new File(uploadInfo.getTempLocation());
 
-    File newFile = new File(getObjectLocationString(bucket.bucketName, uploadInfo.getChecksum()));
+    File newFile = new File(getObjectLocationString(bucket.getBucketName(), uploadInfo.getChecksum()));
 
     // create the subdirectory if it does not exist
     File subDir = new File(newFile.getParent());

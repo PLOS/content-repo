@@ -15,20 +15,22 @@
  * limitations under the License.
  */
 
-package org.plos.repo.config;
+package org.plos.repo.util;
 
 
-import javax.naming.Context;
-import javax.naming.Name;
-import javax.naming.spi.ObjectFactory;
-import java.util.Hashtable;
+import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
-public class InMemoryStoreFactory implements ObjectFactory {
+public class TimestampFormatter {
 
-  public Object getObjectInstance(Object o, Name name, Context context, Hashtable<?, ?> hashtable) throws Exception {
+  private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
-    return new org.plos.repo.service.InMemoryFileStoreService();
+  public static String getFormattedTimestamp(Timestamp timestamp){
+
+    DateFormat df = new SimpleDateFormatThreadSafe(TIMESTAMP_FORMAT);
+    return df.format(timestamp);
+
   }
 
 }
-

@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2006-2014 by Public Library of Science
+ * http://plos.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.plos.repo.service;
 
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -70,13 +87,13 @@ public class S3StoreService extends ObjectStore {
   }
 
   public Boolean bucketExists(Bucket bucket) {
-    return s3Client.doesBucketExist(bucket.bucketName);
+    return s3Client.doesBucketExist(bucket.getBucketName());
   }
 
   public Boolean createBucket(Bucket bucket) {
 
     try {
-      CreateBucketRequest bucketRequest = new CreateBucketRequest(bucket.bucketName, Region.US_West);
+      CreateBucketRequest bucketRequest = new CreateBucketRequest(bucket.getBucketName(), Region.US_West);
       bucketRequest.withCannedAcl(CannedAccessControlList.PublicRead);
       s3Client.createBucket(bucketRequest);
 
@@ -91,7 +108,7 @@ public class S3StoreService extends ObjectStore {
   public Boolean deleteBucket(Bucket bucket) {
 
     try {
-      s3Client.deleteBucket(bucket.bucketName);
+      s3Client.deleteBucket(bucket.getBucketName());
       return true;
     } catch (Exception e) {
       log.error("Error deleting bucket", e);
@@ -182,7 +199,7 @@ public class S3StoreService extends ObjectStore {
 
     File tempFile = new File(uploadInfo.getTempLocation());
 
-    PutObjectRequest putObjectRequest = new PutObjectRequest(bucket.bucketName, uploadInfo.getChecksum(), tempFile);
+    PutObjectRequest putObjectRequest = new PutObjectRequest(bucket.getBucketName(), uploadInfo.getChecksum(), tempFile);
     putObjectRequest.withCannedAcl(CannedAccessControlList.PublicRead);
     putObjectRequest.setMetadata(objectMetadata);
 
