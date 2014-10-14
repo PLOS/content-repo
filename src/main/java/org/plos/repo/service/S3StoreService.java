@@ -1,13 +1,25 @@
+/*
+ * Copyright (c) 2006-2014 by Public Library of Science
+ * http://plos.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.plos.repo.service;
 
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.CreateBucketRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.Region;
-import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
@@ -45,7 +57,7 @@ public class S3StoreService extends ObjectStore {
 
   public Boolean objectExists(Object object) {
     try {
-      S3Object obj = s3Client.getObject(object.bucketName, object.checksum);
+      S3Object obj = s3Client.getObject(object.getBucketName(), object.getChecksum());
 
       if (obj == null)
         return false;
@@ -64,24 +76,24 @@ public class S3StoreService extends ObjectStore {
 
   public URL[] getRedirectURLs(Object object) throws RepoException {
     try {
-      return new URL[]{new URL(s3Client.getResourceUrl(object.bucketName, object.checksum))};
+      return new URL[]{new URL(s3Client.getResourceUrl(object.getBucketName(), object.getChecksum()))};
     } catch (MalformedURLException e) {
       throw new RepoException(e);
     }
   }
 
   public InputStream getInputStream(Object object) {
-    return s3Client.getObject(object.bucketName, object.checksum).getObjectContent();
+    return s3Client.getObject(object.getBucketName(), object.getChecksum()).getObjectContent();
   }
 
   public Boolean bucketExists(Bucket bucket) {
-    return s3Client.doesBucketExist(bucket.bucketName);
+    return s3Client.doesBucketExist(bucket.getBucketName());
   }
 
   public Boolean createBucket(Bucket bucket) {
 
     try {
-      CreateBucketRequest bucketRequest = new CreateBucketRequest(bucket.bucketName, Region.US_West);
+      CreateBucketRequest bucketRequest = new CreateBucketRequest(bucket.getBucketName(), Region.US_West);
       bucketRequest.withCannedAcl(CannedAccessControlList.PublicRead);
       s3Client.createBucket(bucketRequest);
 
@@ -96,7 +108,7 @@ public class S3StoreService extends ObjectStore {
   public Boolean deleteBucket(Bucket bucket) {
 
     try {
-      s3Client.deleteBucket(bucket.bucketName);
+      s3Client.deleteBucket(bucket.getBucketName());
       return true;
     } catch (Exception e) {
       log.error("Error deleting bucket", e);
@@ -119,7 +131,7 @@ public class S3StoreService extends ObjectStore {
       FileOutputStream fos = new FileOutputStream(tempFileLocation);
 
       ReadableByteChannel in = Channels.newChannel(uploadedInputStream);
-      MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
+      MessageDigest digest = checksumGenerator.getDigestMessage();
       WritableByteChannel out = Channels.newChannel(new DigestOutputStream(fos, digest));
       ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
 
@@ -131,7 +143,7 @@ public class S3StoreService extends ObjectStore {
         buffer.clear();
       }
 
-      final String checksum = checksumToString(digest.digest());
+      final String checksum = checksumGenerator.checksumToString(digest.digest());
       final long finalSize = size;
 
       out.close();
@@ -187,7 +199,7 @@ public class S3StoreService extends ObjectStore {
 
     File tempFile = new File(uploadInfo.getTempLocation());
 
-    PutObjectRequest putObjectRequest = new PutObjectRequest(bucket.bucketName, uploadInfo.getChecksum(), tempFile);
+    PutObjectRequest putObjectRequest = new PutObjectRequest(bucket.getBucketName(), uploadInfo.getChecksum(), tempFile);
     putObjectRequest.withCannedAcl(CannedAccessControlList.PublicRead);
     putObjectRequest.setMetadata(objectMetadata);
 
@@ -220,7 +232,7 @@ public class S3StoreService extends ObjectStore {
 
   public Boolean deleteObject(Object object) {
     try {
-      s3Client.deleteObject(object.bucketName, object.checksum);
+      s3Client.deleteObject(object.getBucketName(), object.getChecksum());
       return true;
     } catch (Exception e) {
       log.error("Error deleting object", e);

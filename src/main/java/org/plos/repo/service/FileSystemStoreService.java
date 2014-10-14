@@ -22,11 +22,7 @@ import org.plos.repo.models.Object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -62,28 +58,28 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
   public Boolean objectExists(Object object) {
-    return new File(getObjectLocationString(object.bucketName, object.checksum)).exists();
+    return new File(getObjectLocationString(object.getBucketName(), object.getChecksum())).exists();
   }
 
   public InputStream getInputStream(Object object) throws RepoException {
     try {
-      return new FileInputStream(getObjectLocationString(object.bucketName, object.checksum));
+      return new FileInputStream(getObjectLocationString(object.getBucketName(), object.getChecksum()));
     } catch (FileNotFoundException e) {
       throw new RepoException(e);
     }
   }
 
   public Boolean bucketExists(Bucket bucket) {
-    return (new File(getBucketLocationString(bucket.bucketName)).isDirectory());
+    return (new File(getBucketLocationString(bucket.getBucketName())).isDirectory());
   }
 
   public Boolean createBucket(Bucket bucket) {
 
-    File dir = new File(getBucketLocationString(bucket.bucketName));
+    File dir = new File(getBucketLocationString(bucket.getBucketName()));
     boolean result = dir.mkdir();
 
     if (!result)
-      log.error("Error while creating bucket. Directory was not able to be created : " + getBucketLocationString(bucket.bucketName));
+      log.error("Error while creating bucket. Directory was not able to be created : " + getBucketLocationString(bucket.getBucketName()));
 
     return result;
   }
@@ -100,7 +96,7 @@ public class FileSystemStoreService extends ObjectStore {
     try {
 
       URL[] urls = new URL[1];
-      urls[0] = new URL(reproxyBaseUrl + "/" + object.bucketName + "/" + object.checksum.substring(0, 2) + "/" + object.checksum);
+      urls[0] = new URL(reproxyBaseUrl + "/" + object.getBucketName() + "/" + object.getChecksum().substring(0, 2) + "/" + object.getChecksum());
       return urls;
 
     } catch (MalformedURLException e) {
@@ -110,14 +106,14 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
   public Boolean deleteBucket(Bucket bucket) {
-    File dir = new File(getBucketLocationString(bucket.bucketName));
+    File dir = new File(getBucketLocationString(bucket.getBucketName()));
     return dir.delete();
   }
 
   public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
     File tempFile = new File(uploadInfo.getTempLocation());
 
-    File newFile = new File(getObjectLocationString(bucket.bucketName, uploadInfo.getChecksum()));
+    File newFile = new File(getObjectLocationString(bucket.getBucketName(), uploadInfo.getChecksum()));
 
     // create the subdirectory if it does not exist
     File subDir = new File(newFile.getParent());
@@ -134,7 +130,7 @@ public class FileSystemStoreService extends ObjectStore {
 
   public Boolean deleteObject(Object object) {
 
-    File file = new File(getObjectLocationString(object.bucketName, object.checksum));
+    File file = new File(getObjectLocationString(object.getBucketName(), object.getChecksum()));
     File parentDir = new File(file.getParent());
 
     boolean result = file.delete();
@@ -159,7 +155,7 @@ public class FileSystemStoreService extends ObjectStore {
       FileOutputStream fos = new FileOutputStream(tempFileLocation);
 
       ReadableByteChannel in = Channels.newChannel(uploadedInputStream);
-      MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
+      MessageDigest digest = checksumGenerator.getDigestMessage();
       WritableByteChannel out = Channels.newChannel(new DigestOutputStream(fos, digest));
       ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
 
@@ -173,7 +169,7 @@ public class FileSystemStoreService extends ObjectStore {
 
       fos.flush();
 
-      final String checksum = checksumToString(digest.digest());
+      final String checksum = checksumGenerator.checksumToString(digest.digest());
       final long finalSize = size;
 
       in.close();

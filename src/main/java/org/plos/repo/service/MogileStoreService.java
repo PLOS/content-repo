@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2006-2014 by Public Library of Science
+ * http://plos.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.plos.repo.service;
 
 import com.google.common.base.Preconditions;
@@ -43,7 +60,7 @@ public class MogileStoreService extends ObjectStore {
 
   public Boolean objectExists(Object object) {
     try {
-      InputStream in = mfs.getFileStream(getObjectLocationString(object.bucketName, object.checksum));
+      InputStream in = mfs.getFileStream(getObjectLocationString(object.getBucketName(), object.getChecksum()));
 
       if (in == null)
         return false;
@@ -63,7 +80,7 @@ public class MogileStoreService extends ObjectStore {
   public URL[] getRedirectURLs(Object object) throws RepoException {
 
     try {
-      String[] paths = mfs.getPaths(getObjectLocationString(object.bucketName, object.checksum), true);
+      String[] paths = mfs.getPaths(getObjectLocationString(object.getBucketName(), object.getChecksum()), true);
       int pathCount = paths.length;
       URL[] urls = new URL[pathCount];
 
@@ -80,7 +97,7 @@ public class MogileStoreService extends ObjectStore {
 
   public InputStream getInputStream(org.plos.repo.models.Object object) throws RepoException {
     try {
-      return mfs.getFileStream(getObjectLocationString(object.bucketName, object.checksum));
+      return mfs.getFileStream(getObjectLocationString(object.getBucketName(), object.getChecksum()));
     } catch (Exception e) {
       throw new RepoException(e);
     }
@@ -109,14 +126,14 @@ public class MogileStoreService extends ObjectStore {
     try {
       byte[] objectData = readStreamInput(uploadedInputStream);
 
-      MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
+      MessageDigest digest = checksumGenerator.getDigestMessage();
 
       OutputStream fos = mfs.newFile(tempFileLocation, mogileFileClass, objectData.length);
 
       IOUtils.write(objectData, fos);
       fos.close();
 
-      final String checksum = checksumToString(digest.digest(objectData));
+      final String checksum = checksumGenerator.checksumToString(digest.digest(objectData));
       final long finalSize = objectData.length;
 
       return new UploadInfo() {
@@ -143,7 +160,7 @@ public class MogileStoreService extends ObjectStore {
 
   public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
     try {
-      mfs.rename(uploadInfo.getTempLocation(), getObjectLocationString(bucket.bucketName, uploadInfo.getChecksum()));
+      mfs.rename(uploadInfo.getTempLocation(), getObjectLocationString(bucket.getBucketName(), uploadInfo.getChecksum()));
       return true;
     } catch (Exception e) {
       return false;
@@ -161,7 +178,7 @@ public class MogileStoreService extends ObjectStore {
 
   public Boolean deleteObject(Object object) {
     try {
-      mfs.delete(getObjectLocationString(object.bucketName, object.checksum));
+      mfs.delete(getObjectLocationString(object.getBucketName(), object.getChecksum()));
       return true;
     } catch (Exception e) {
       return false;

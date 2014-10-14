@@ -19,7 +19,7 @@ package org.plos.repo.service;
 
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.ServiceConfigInfo;
-import org.plos.repo.models.ServiceStatus;
+import org.plos.repo.models.output.ServiceStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +27,7 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -102,8 +103,14 @@ public class RepoInfoService {
     ServiceStatus status = new ServiceStatus();
 
     List<Bucket> bucketList = repoService.listBuckets();
-    status.bucketCount = bucketList.size();
 
+    List<org.plos.repo.models.output.Bucket> outBucketList = new ArrayList<org.plos.repo.models.output.Bucket>();
+    for (Bucket b : bucketList){
+      outBucketList.add(new org.plos.repo.models.output.Bucket(b.getBucketName(), repoService.getBucketsSize(b.getBucketId())));
+    }
+
+    status.bucketsSize = outBucketList;
+    status.bucketCount = bucketList.size();
     status.serviceStarted = startTime.toString();
     status.readsSinceStart = readCount;
     status.writesSinceStart = writeCount;
@@ -121,8 +128,8 @@ public class RepoInfoService {
       if (bucket == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
 
-      bucket.totalObjects = sqlService.objectCount(true, bucketName);
-      bucket.activeObjects = sqlService.objectCount(false, bucketName);
+      bucket.setTotalObjects(sqlService.objectCount(true, bucketName));
+      bucket.setActiveObjects(sqlService.objectCount(false, bucketName));
 
       return bucket;
 

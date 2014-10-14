@@ -1,22 +1,41 @@
+/*
+ * Copyright (c) 2006-2014 by Public Library of Science
+ * http://plos.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.plos.repo.service;
 
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Object;
+import org.plos.repo.util.ChecksumGenerator;
 
+import javax.inject.Inject;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.regex.Pattern;
 
 public abstract class ObjectStore {
 
+  @Inject
+  protected ChecksumGenerator checksumGenerator;
+
   public static interface UploadInfo {
     Long getSize();
     String getTempLocation();
     String getChecksum();
   }
-
-  public static final String digestAlgorithm = "SHA-1";
-
 
   public static boolean isValidFileName(String name) {
     return !Pattern.compile("[^-_.A-Za-z0-9]").matcher(name).find();
@@ -25,16 +44,6 @@ public abstract class ObjectStore {
 //  public static boolean isValidBucketName(String bucketName) {
 //    return BucketNameUtils.isValidV2BucketName(bucketName);
 //  }
-
-  public static String checksumToString(byte[] checksum) {
-
-    StringBuilder sb = new StringBuilder();
-
-    for (byte b : checksum)
-      sb.append(Integer.toHexString((b & 0xFF) | 0x100).substring(1,3));
-
-    return sb.toString();
-  }
 
   abstract public Boolean hasXReproxy();
 

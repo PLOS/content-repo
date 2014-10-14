@@ -23,7 +23,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.plos.repo.models.Object;
+import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.service.RepoService;
 import org.springframework.beans.factory.config.SingletonBeanRegistry;
 
@@ -32,12 +32,8 @@ import javax.ws.rs.core.Response.Status;
 import java.net.URL;
 import java.sql.Timestamp;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.isA;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.when;
 
 public class CachingHeadersTest extends RepoBaseJerseyTest  {
@@ -64,7 +60,7 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
 
   @Test
   public void testReadObjectNotFound() throws Exception {
-    when(mockRepoService.getObject(anyString(), anyString(), anyInt())).thenReturn(null);
+    when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class))).thenReturn(null);
     registerObjectInSpring(mockRepoService);
 
     Response response = target("/objects/" + BUCKET_NAME)
@@ -77,7 +73,7 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
   @Test
   public void testReadWithObjectModifiedBeforeIfModifiedSinceHeaderNoRepoxyHeaders() throws Exception {
 
-    when(mockRepoService.getObject(anyString(), anyString(), anyInt()))
+    when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
       .thenReturn(getObject(modifiedSinceDateTime.minusSeconds(1)));
 
     registerObjectInSpring(mockRepoService);
@@ -94,7 +90,7 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
   @Test
   public void testReadWithObjectModifiedEqualToIfModifiedSinceHeaderNoRepoxyHeaders() throws Exception {
 
-    when(mockRepoService.getObject(anyString(), anyString(), anyInt()))
+    when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
       .thenReturn(getObject(modifiedSinceDateTime));
 
     registerObjectInSpring(mockRepoService);
@@ -111,7 +107,7 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
   @Test
   public void testReadNoIfModifiedSinceHeaderNoRepoxyHeaders() throws Exception {
 
-    when(mockRepoService.getObject(anyString(), anyString(), anyInt()))
+    when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
       .thenReturn(getObject(modifiedSinceDateTime));
 
     registerObjectInSpring(mockRepoService);
@@ -127,7 +123,7 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
   @Test
   public void testReadWithObjectModifiedAfterIfModifiedSinceHeaderNoRepoxyHeaders() throws Exception {
 
-    when(mockRepoService.getObject(anyString(), anyString(), anyInt()))
+    when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
       .thenReturn(getObject(modifiedSinceDateTime.plusSeconds(1)));
 
     registerObjectInSpring(mockRepoService);
@@ -144,7 +140,7 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
   @Test
   public void testReadWithObjectModifiedBeforeIfModifiedSinceHeaderWithRepoxyHeaders() throws Exception {
 
-    when(mockRepoService.getObject(anyString(), anyString(), anyInt()))
+    when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
       .thenReturn(getObject(modifiedSinceDateTime.minusSeconds(1)));
 
     when(mockRepoService.serverSupportsReproxy())
@@ -184,7 +180,7 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
   @Test
   public void testReadWithObjectModifiedAfterIfModifiedSinceHeaderWithRepoxyHeaders() throws Exception {
 
-    when(mockRepoService.getObject(anyString(), anyString(), anyInt()))
+    when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
       .thenReturn(getObject(modifiedSinceDateTime.plusSeconds(1)));
 
     when(mockRepoService.serverSupportsReproxy())
@@ -241,6 +237,8 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
         Integer.valueOf(1),                         // bucket id
         BUCKET_NAME,                                // bucket name
         Integer.valueOf(0),                         // version#
-        Object.Status.USED);                        // status
+        org.plos.repo.models.Status.USED,
+        new Timestamp(datetime.toDate().getTime()),
+        "123456"); // creation date time
   }
 }

@@ -17,29 +17,12 @@
 
 package org.plos.repo.models;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import java.util.concurrent.atomic.AtomicLong;
 
-@XmlRootElement
-public class ServiceStatus {
-  public int bucketCount;
-  public String serviceStarted;
+public enum ElementType {
 
-  @XmlTransient
-  public AtomicLong readsSinceStart;
+  BUCKET, OBJECT, COLLECTION;
 
-  @XmlTransient
-  public AtomicLong writesSinceStart;
-
-  @XmlElement(name = "readsSinceStart")
-  public Long getReadsSinceStart() {
-    return readsSinceStart.get();
+  private ElementType() {
   }
 
-  @XmlElement(name = "writesSinceStart")
-  public Long getWritesSinceStart() {
-    return writesSinceStart.get();
-  }
 }

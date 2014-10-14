@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2006-2014 by Public Library of Science
+ * http://plos.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.plos.repo.service;
 
 import org.apache.commons.io.IOUtils;
@@ -24,19 +41,19 @@ public class InMemoryFileStoreService extends ObjectStore {
   }
 
   public Boolean objectExists(Object object) {
-    return (data.get(object.bucketName) != null && data.get(object.bucketName).get(object.checksum) != null);
+    return (data.get(object.getBucketName()) != null && data.get(object.getBucketName()).get(object.getChecksum()) != null);
   }
 
   public InputStream getInputStream(Object object) {
-    return new ByteArrayInputStream(data.get(object.bucketName).get(object.checksum));
+    return new ByteArrayInputStream(data.get(object.getBucketName()).get(object.getChecksum()));
   }
 
   public Boolean bucketExists(Bucket bucket) {
-    return (data.containsKey(bucket.bucketName));
+    return (data.containsKey(bucket.getBucketName()));
   }
 
   public Boolean createBucket(Bucket bucket) {
-    return (data.put(bucket.bucketName, new HashMap<String, byte[]>()) == null);
+    return (data.put(bucket.getBucketName(), new HashMap<String, byte[]>()) == null);
   }
 
   public Boolean hasXReproxy() {
@@ -51,13 +68,13 @@ public class InMemoryFileStoreService extends ObjectStore {
 
     // TODO: what if it contains stuff?
 
-    return (data.remove(bucket.bucketName) != null);
+    return (data.remove(bucket.getBucketName()) != null);
   }
 
   public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
 
     byte[] tempContent = tempdata.get(uploadInfo.getTempLocation());
-    data.get(bucket.bucketName).put(uploadInfo.getChecksum(), tempContent);
+    data.get(bucket.getBucketName()).put(uploadInfo.getChecksum(), tempContent);
     return (tempdata.remove(uploadInfo.getTempLocation()) != null);
 
   }
@@ -67,7 +84,7 @@ public class InMemoryFileStoreService extends ObjectStore {
     if (!objectExists(object))
       return false;
 
-    return data.get(object.bucketName).remove(object.checksum) != null;
+    return data.get(object.getBucketName()).remove(object.getChecksum()) != null;
 
   }
 
@@ -81,7 +98,7 @@ public class InMemoryFileStoreService extends ObjectStore {
   public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException {
 
     try {
-      MessageDigest digest = MessageDigest.getInstance(digestAlgorithm);
+      MessageDigest digest = checksumGenerator.getDigestMessage();
 
       final String tempFileLocation = UUID.randomUUID().toString() + ".tmp";
 
@@ -89,7 +106,7 @@ public class InMemoryFileStoreService extends ObjectStore {
 
       tempdata.put(tempFileLocation, bytes);
 
-      final String checksum = checksumToString(digest.digest(bytes));
+      final String checksum = checksumGenerator.checksumToString(digest.digest(bytes));
       final long finalSize = bytes.length;
 
       return new UploadInfo() {

@@ -1,12 +1,9 @@
 package org.plos.repo.config;
 
-import org.plos.repo.service.HsqlService;
-import org.plos.repo.service.MysqlService;
-import org.plos.repo.service.ObjectStore;
-import org.plos.repo.service.RepoInfoService;
-import org.plos.repo.service.RepoService;
-import org.plos.repo.service.ScriptRunner;
-import org.plos.repo.service.SqlService;
+import org.plos.repo.models.validator.InputCollectionValidator;
+import org.plos.repo.models.validator.TimestampInputValidator;
+import org.plos.repo.service.*;
+import org.plos.repo.util.ChecksumGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -38,6 +35,18 @@ public class SpringConfig {
   public RepoService repoService() {
     return new RepoService();
   }
+
+  @Bean
+  public CollectionRepoService collectionRepoService() { return new CollectionRepoService();}
+
+  @Bean
+  public InputCollectionValidator inputCollectionValidator(){ return new InputCollectionValidator(); }
+
+  @Bean
+  public TimestampInputValidator timestampInputValidator(){ return new TimestampInputValidator(); }
+
+  @Bean
+  public ChecksumGenerator versionChecksumGenerator(){ return new ChecksumGenerator(); }
 
   @Bean
   public ObjectStore objectStore() throws Exception {
