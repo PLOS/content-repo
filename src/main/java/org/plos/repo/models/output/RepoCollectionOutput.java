@@ -42,7 +42,7 @@ public class RepoCollectionOutput {
   private String creationDate;
   private String versionChecksum;
   private Status status;
-  private List<Object> objects;
+  private List<RepoObjectOutput> objects;
 
   private RepoCollectionOutput() {
 
@@ -57,15 +57,15 @@ public class RepoCollectionOutput {
     this.versionChecksum = repoCollection.getVersionChecksum();
     this.status = repoCollection.getStatus();
 
-    if(repoCollection.getObjects()!=null && repoCollection.getObjects().size() >0){
-      this.objects = Lists.newArrayList(Iterables.transform(repoCollection.getObjects(), Object.typeFunction()));
+    if(repoCollection.getRepoObjects()!=null && repoCollection.getRepoObjects().size() >0){
+      this.objects = Lists.newArrayList(Iterables.transform(repoCollection.getRepoObjects(), RepoObjectOutput.typeFunction()));
     }
 
   }
 
-  public void addObjects(List<Object> objects){
+  public void addObjects(List<RepoObjectOutput> repoObjectOutputs){
 
-    this.objects = objects;
+    this.objects = repoObjectOutputs;
   }
 
   public String getKey() {
@@ -80,7 +80,7 @@ public class RepoCollectionOutput {
     return versionNumber;
   }
 
-  public List<Object> getObjects() {
+  public List<RepoObjectOutput> getObjects() {
     return objects;
   }
 
@@ -92,7 +92,7 @@ public class RepoCollectionOutput {
     this.versionNumber = versionNumber;
   }
 
-  public void setObjects(List<Object> objects) {
+  public void setObjects(List<RepoObjectOutput> objects) {
     this.objects = objects;
   }
 

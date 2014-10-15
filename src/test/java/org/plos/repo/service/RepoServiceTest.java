@@ -25,7 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.plos.repo.TestSpringConfig;
 import org.plos.repo.models.Bucket;
-import org.plos.repo.models.Object;
+import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.validator.TimestampInputValidator;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -83,11 +83,11 @@ public class RepoServiceTest {
     doNothing().when(sqlService).getConnection();
     when(sqlService.getBucket(VALID_BUCKET)).thenReturn(bucket);
 
-    List<org.plos.repo.models.Object> objects = new ArrayList<org.plos.repo.models.Object>();
-    Object ob = new Object(0,"key",null,null,null,null,null,null,null,null,null,null,null,null);
-    objects.add(ob);
+    List<RepoObject> repoObjects = new ArrayList<RepoObject>();
+    RepoObject ob = new RepoObject(0,"key",null,null,null,null,null,null,null,null,null,null,null,null);
+    repoObjects.add(ob);
 
-    when(sqlService.listObjects(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG)).thenReturn(objects);
+    when(sqlService.listObjects(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG)).thenReturn(repoObjects);
 
     when(objectStore.hasXReproxy()).thenReturn(true);
 
@@ -98,7 +98,7 @@ public class RepoServiceTest {
 
     doNothing().when(sqlService).releaseConnection();
 
-    List<Object> response = repoService.listObjects(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
+    List<RepoObject> response = repoService.listObjects(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
 
     assertNotNull(response);
     assertNotNull(response.get(0));

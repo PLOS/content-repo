@@ -23,7 +23,7 @@ import com.google.common.collect.Lists;
 import org.hsqldb.lib.StringUtil;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoCollection;
-import org.plos.repo.models.Object;
+import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.Status;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputCollection;
@@ -353,7 +353,7 @@ public class CollectionRepoService extends BaseRepoService {
     Boolean similar = existingRepoCollection.getKey().equals(key) &&
         existingRepoCollection.getBucketName().equals(bucketName) &&
         existingRepoCollection.getStatus().equals(Status.USED) &&
-        objects.size() == existingRepoCollection.getObjects().size();
+        objects.size() == existingRepoCollection.getRepoObjects().size();
 
 
     if ( similar &&  ( existingRepoCollection.getTag() != null && tag != null) ) {
@@ -369,16 +369,16 @@ public class CollectionRepoService extends BaseRepoService {
       InputObject inputObject = objects.get(i);
 
       int y = 0;
-      for( ; y < existingRepoCollection.getObjects().size(); y++ ){
-        Object object = existingRepoCollection.getObjects().get(y);
-        if (object.getKey().equals(inputObject.getKey()) &&
-            object.getVersionChecksum().equals(inputObject.getVersionChecksum())){
+      for( ; y < existingRepoCollection.getRepoObjects().size(); y++ ){
+        RepoObject repoObject = existingRepoCollection.getRepoObjects().get(y);
+        if (repoObject.getKey().equals(inputObject.getKey()) &&
+            repoObject.getVersionChecksum().equals(inputObject.getVersionChecksum())){
           break;
 
         }
       }
 
-      if ( y == existingRepoCollection.getObjects().size()){
+      if ( y == existingRepoCollection.getRepoObjects().size()){
         similar = false;
       }
     }

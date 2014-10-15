@@ -19,7 +19,7 @@ package org.plos.repo.service;
 
 import com.google.common.util.concurrent.Striped;
 import org.plos.repo.models.Bucket;
-import org.plos.repo.models.Object;
+import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.Status;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.validator.TimestampInputValidator;
@@ -180,11 +180,11 @@ public class RepoService extends BaseRepoService {
     return objectStore.hasXReproxy();
   }
 
-  public List<Object> listObjects(String bucketName, Integer offset, Integer limit, boolean includeDeleted, String tag) throws RepoException {
+  public List<RepoObject> listObjects(String bucketName, Integer offset, Integer limit, boolean includeDeleted, String tag) throws RepoException {
 
     // TODO: should this function return a list of objects and their nested versions instead of one flat last?
 
-    List<Object> objects = null;
+    List<RepoObject> repoObjects = null;
 
     if (offset == null)
       offset = 0;
@@ -200,58 +200,58 @@ public class RepoService extends BaseRepoService {
       if (bucketName != null && sqlService.getBucket(bucketName) == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
 
-      objects = sqlService.listObjects(bucketName, offset, limit, includeDeleted, tag);
+      repoObjects = sqlService.listObjects(bucketName, offset, limit, includeDeleted, tag);
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
       sqlReleaseConnection();
     }
 
-    return this.addProxyData(objects);
+    return this.addProxyData(repoObjects);
 
   }
 
-  private List<Object> addProxyData(List<Object> objects) throws RepoException {
+  private List<RepoObject> addProxyData(List<RepoObject> repoObjects) throws RepoException {
 
-    if (objects != null && objects.size() > 0 && this.serverSupportsReproxy()){
+    if (repoObjects != null && repoObjects.size() > 0 && this.serverSupportsReproxy()){
 
-      for (Object object : objects){
-        object.setReproxyURL(this.getObjectReproxy(object));
+      for (RepoObject repoObject : repoObjects){
+        repoObject.setReproxyURL(this.getObjectReproxy(repoObject));
       }
 
     }
 
-    return objects;
+    return repoObjects;
 
   }
 
-  private Object addProxyData(Object object) throws RepoException {
+  private RepoObject addProxyData(RepoObject repoObject) throws RepoException {
 
-    if (object != null && this.serverSupportsReproxy()){
-      object.setReproxyURL(this.getObjectReproxy(object));
+    if (repoObject != null && this.serverSupportsReproxy()){
+      repoObject.setReproxyURL(this.getObjectReproxy(repoObject));
     }
 
-    return object;
+    return repoObject;
 
   }
 
-  public Object getObject(String bucketName, String key, ElementFilter elementFilter) throws RepoException {
+  public RepoObject getObject(String bucketName, String key, ElementFilter elementFilter) throws RepoException {
 
     Lock readLock = this.rwLocks.get(bucketName + key).readLock();
     readLock.lock();
 
-    Object object = null;
+    RepoObject repoObject = null;
 
     try {
       sqlService.getConnection();
 
       if ((elementFilter == null) || (elementFilter.isEmpty())){
-        object = sqlService.getObject(bucketName, key);
+        repoObject = sqlService.getObject(bucketName, key);
       }
       else
-        object = sqlService.getObject(bucketName, key, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag());
+        repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag());
 
-      if (object == null)
+      if (repoObject == null)
         throw new RepoException(RepoException.Type.ObjectNotFound);
 
     } catch (SQLException e) {
@@ -261,11 +261,11 @@ public class RepoService extends BaseRepoService {
       readLock.unlock();
     }
 
-    return this.addProxyData(object);
+    return this.addProxyData(repoObject);
 
   }
 
-  public List<Object> getObjectVersions(String bucketName, String objectKey) throws RepoException {
+  public List<RepoObject> getObjectVersions(String bucketName, String objectKey) throws RepoException {
 
     if (objectKey == null)
       throw new RepoException(RepoException.Type.NoKeyEntered);
@@ -273,10 +273,10 @@ public class RepoService extends BaseRepoService {
     Lock readLock = this.rwLocks.get(bucketName + objectKey).readLock();
     readLock.lock();
 
-    List<Object> objects = null ;
+    List<RepoObject> repoObjects = null ;
     try {
       sqlService.getConnection();
-      objects =  sqlService.listObjectVersions(bucketName, objectKey);
+      repoObjects =  sqlService.listObjectVersions(bucketName, objectKey);
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
@@ -284,14 +284,14 @@ public class RepoService extends BaseRepoService {
       readLock.unlock();
     }
 
-    return this.addProxyData(objects);
+    return this.addProxyData(repoObjects);
 
   }
 
-  public URL[] getObjectReproxy(Object object) throws RepoException {
+  public URL[] getObjectReproxy(RepoObject repoObject) throws RepoException {
     try {
       sqlService.getConnection();
-      return objectStore.getRedirectURLs(object);
+      return objectStore.getRedirectURLs(repoObject);
     } catch (Exception e) {
       throw new RepoException(e);
     } finally {
@@ -299,21 +299,21 @@ public class RepoService extends BaseRepoService {
     }
   }
 
-  public String getObjectContentType(Object object) {
-    String contentType = object.getContentType();
+  public String getObjectContentType(RepoObject repoObject) {
+    String contentType = repoObject.getContentType();
 
-    if (object.getContentType() == null || object.getContentType().isEmpty())
+    if (repoObject.getContentType() == null || repoObject.getContentType().isEmpty())
       contentType = MediaType.APPLICATION_OCTET_STREAM;
 
     return contentType;
   }
 
-  public String getObjectExportFileName(Object object) throws RepoException {
+  public String getObjectExportFileName(RepoObject repoObject) throws RepoException {
 
-    String exportFileName = object.getKey();
+    String exportFileName = repoObject.getKey();
 
-    if (object.getDownloadName() != null)
-      exportFileName = object.getDownloadName();
+    if (repoObject.getDownloadName() != null)
+      exportFileName = repoObject.getDownloadName();
 
     try {
       return URLEncoder.encode(exportFileName, "UTF-8");
@@ -323,9 +323,9 @@ public class RepoService extends BaseRepoService {
 
   }
 
-  public InputStream getObjectInputStream(Object object) throws RepoException {
+  public InputStream getObjectInputStream(RepoObject repoObject) throws RepoException {
     try {
-      return objectStore.getInputStream(object);
+      return objectStore.getInputStream(repoObject);
     } catch (Exception e) {
       throw new RepoException(e);
     }
@@ -380,7 +380,7 @@ public class RepoService extends BaseRepoService {
     }
   }
 
-  public Object createObject(CreateMethod method,
+  public RepoObject createObject(CreateMethod method,
                              String key,
                              String bucketName,
                              String contentType,
@@ -394,7 +394,7 @@ public class RepoService extends BaseRepoService {
     Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
     writeLock.lock();
 
-    Object existingObject;
+    RepoObject existingRepoObject;
 
     try {
 
@@ -405,10 +405,10 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(RepoException.Type.NoBucketEntered);
 
       try {
-        existingObject = getObject(bucketName, key, null);
+        existingRepoObject = getObject(bucketName, key, null);
       } catch (RepoException e) {
         if (e.getType() == RepoException.Type.ObjectNotFound)
-          existingObject = null;
+          existingRepoObject = null;
         else
           throw e;
       }
@@ -416,20 +416,20 @@ public class RepoService extends BaseRepoService {
       switch (method) {
 
         case NEW:
-          if (existingObject != null)
+          if (existingRepoObject != null)
             throw new RepoException(RepoException.Type.CantCreateNewObjectWithUsedKey);
           return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream, creationDateTime, tag);
 
         case VERSION:
-          if (existingObject == null)
+          if (existingRepoObject == null)
             throw new RepoException(RepoException.Type.CantCreateVersionWithNoOrig);
-          return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject, creationDateTime, tag);
+          return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingRepoObject, creationDateTime, tag);
 
         case AUTO:
-          if (existingObject == null)
+          if (existingRepoObject == null)
             return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream, creationDateTime, tag);
           else
-            return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingObject, creationDateTime, tag);
+            return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingRepoObject, creationDateTime, tag);
 
         default:
           throw new RepoException(RepoException.Type.InvalidCreationMethod);
@@ -440,7 +440,7 @@ public class RepoService extends BaseRepoService {
 
   }
 
-  private Object createNewObject(String key,
+  private RepoObject createNewObject(String key,
                                  String bucketName,
                                  String contentType,
                                  String downloadName,
@@ -453,7 +453,7 @@ public class RepoService extends BaseRepoService {
     Integer versionNumber;
     Bucket bucket;
 
-    Object object;
+    RepoObject repoObject;
 
     boolean rollback = false;
 
@@ -487,12 +487,12 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(e);
       }
 
-      object = new Object(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), tag, bucket.getBucketId(), bucketName, versionNumber, Status.USED, cretationDateTime, null);
-      object.setVersionChecksum(checksumGenerator.generateVersionChecksum(object));
+      repoObject = new RepoObject(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), tag, bucket.getBucketId(), bucketName, versionNumber, Status.USED, cretationDateTime, null);
+      repoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(repoObject));
       rollback = true;
 
       // determine if the object should be added to the store or not
-      if (objectStore.objectExists(object)) {
+      if (objectStore.objectExists(repoObject)) {
 
 //      if (FileUtils.contentEquals(tempFile, new File(objectStore.getObjectLocationString(bucketName, checksum)))) {
 //        log.info("not adding object to store since content exists");
@@ -504,14 +504,14 @@ public class RepoService extends BaseRepoService {
         // dont bother storing the file since the data already exists in the system
 
       } else {
-        if (Boolean.FALSE.equals(objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, object))) {
+        if (Boolean.FALSE.equals(objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, repoObject))) {
           throw new RepoException("Error saving content to object store");
         }
       }
 
       // add a record to the DB
 
-      if (sqlService.insertObject(object) == 0) {
+      if (sqlService.insertObject(repoObject) == 0) {
         throw new RepoException("Error saving content to database");
       }
 
@@ -533,22 +533,22 @@ public class RepoService extends BaseRepoService {
       sqlReleaseConnection();
     }
 
-    return object;
+    return repoObject;
   }
 
-  private Object updateObject(String bucketName,
+  private RepoObject updateObject(String bucketName,
                               String contentType,
                               String downloadName,
                               Timestamp timestamp,
                               InputStream uploadedInputStream,
-                              Object object,
+                              RepoObject repoObject,
                               Timestamp cretationDateTime,
                               String tag) throws RepoException {
 
     ObjectStore.UploadInfo uploadInfo = null;
     boolean rollback = false;
 
-    Object newObject = null;
+    RepoObject newRepoObject = null;
 
     try {
 
@@ -556,43 +556,43 @@ public class RepoService extends BaseRepoService {
       //if any of the input properties are null, we should populate them with the data of the previous version of the object
       // TODO: if the object is equals to the last version, do we need to update the timestamp?
 
-      newObject = new Object(null, object.getKey(), null, timestamp, downloadName, contentType, null, tag, object.getBucketId(), bucketName, null, Status.USED, cretationDateTime, null);
-      newObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(newObject));
+      newRepoObject = new RepoObject(null, repoObject.getKey(), null, timestamp, downloadName, contentType, null, tag, repoObject.getBucketId(), bucketName, null, Status.USED, cretationDateTime, null);
+      newRepoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(newRepoObject));
       sqlService.getConnection();
       if (sqlService.getBucket(bucketName) == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
       // copy over values from previous object, if they are not specified in the request
       if (contentType == null)
-        newObject.setContentType(object.getContentType());
+        newRepoObject.setContentType(repoObject.getContentType());
       if (downloadName == null)
-        newObject.setDownloadName(object.getDownloadName());
+        newRepoObject.setDownloadName(repoObject.getDownloadName());
 
       rollback = true;
       if (uploadedInputStream == null) {
       // handle metadata-only update, the content would be the same as the last version of the object
-        newObject.setChecksum(object.getChecksum());
+        newRepoObject.setChecksum(repoObject.getChecksum());
       } else {
         // determine if the new object should be added to the store or not
         uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
         uploadedInputStream.close();
-        newObject.setChecksum(uploadInfo.getChecksum());
-        newObject.setSize(uploadInfo.getSize());
-        if (Boolean.FALSE.equals(objectStore.objectExists(newObject))) {
-          if (Boolean.FALSE.equals(objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, newObject))) {
+        newRepoObject.setChecksum(uploadInfo.getChecksum());
+        newRepoObject.setSize(uploadInfo.getSize());
+        if (Boolean.FALSE.equals(objectStore.objectExists(newRepoObject))) {
+          if (Boolean.FALSE.equals(objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, newRepoObject))) {
             throw new RepoException("Error saving content to object store");
           }
         }
       }
 
       // if the new object and the last version of the object are similar, we just return the last version of the object
-      if (object.areSimilar(newObject)){
+      if (repoObject.areSimilar(newRepoObject)){
         rollback = false; // if we are not modifying the DB and reached this point, then the operations were successfully performed
-        return object;
+        return repoObject;
       }
 
-      newObject.setVersionNumber(sqlService.getObjectNextAvailableVersion(bucketName, newObject.getKey()));
+      newRepoObject.setVersionNumber(sqlService.getObjectNextAvailableVersion(bucketName, newRepoObject.getKey()));
       // add a record to the DB for the new object
-      if (sqlService.insertObject(newObject) == 0) {
+      if (sqlService.insertObject(newRepoObject) == 0) {
         throw new RepoException("Error saving content to database");
       }
       sqlService.transactionCommit();
@@ -606,7 +606,7 @@ public class RepoService extends BaseRepoService {
         objectStore.deleteTempUpload(uploadInfo);
 
       if (rollback) {
-        sqlRollback("object " + bucketName + ", " + object.getKey());
+        sqlRollback("object " + bucketName + ", " + repoObject.getKey());
         // TODO: handle objectStore rollback, or not?
       }
 
@@ -614,7 +614,7 @@ public class RepoService extends BaseRepoService {
 
     }
 
-    return newObject;
+    return newRepoObject;
   }
 
    @Override

@@ -23,6 +23,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.service.RepoService;
 import org.springframework.beans.factory.config.SingletonBeanRegistry;
@@ -152,7 +153,7 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
       new URL("http", "192.168.1.3", "/dev5/789012.fid")
     };
 
-    when(mockRepoService.getObjectReproxy(isA(org.plos.repo.models.Object.class)))
+    when(mockRepoService.getObjectReproxy(isA(RepoObject.class)))
       .thenReturn(urls);
 
     registerObjectInSpring(mockRepoService);
@@ -192,7 +193,7 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
       new URL("http", "192.168.1.3", "/dev5/789012.fid")
     };
 
-    when(mockRepoService.getObjectReproxy(isA(org.plos.repo.models.Object.class)))
+    when(mockRepoService.getObjectReproxy(isA(RepoObject.class)))
       .thenReturn(urls);
 
     registerObjectInSpring(mockRepoService);
@@ -224,8 +225,8 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
     beanRegistry.registerSingleton(REPO_SVC_BEAN_NAME, mock);
   }
 
-  private org.plos.repo.models.Object getObject(DateTime datetime) {
-    return new org.plos.repo.models.Object(
+  private RepoObject getObject(DateTime datetime) {
+    return new RepoObject(
         Integer.valueOf(1),                         // id
         KEY_NAME,                                   // key name
         "checksum",                                 // checksum

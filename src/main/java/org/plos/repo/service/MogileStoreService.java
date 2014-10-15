@@ -22,7 +22,7 @@ import com.guba.mogilefs.MogileFS;
 import com.guba.mogilefs.PooledMogileFSImpl;
 import org.apache.commons.io.IOUtils;
 import org.plos.repo.models.Bucket;
-import org.plos.repo.models.Object;
+import org.plos.repo.models.RepoObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,9 +58,9 @@ public class MogileStoreService extends ObjectStore {
     return checksum + "-" + bucketName;
   }
 
-  public Boolean objectExists(Object object) {
+  public Boolean objectExists(RepoObject repoObject) {
     try {
-      InputStream in = mfs.getFileStream(getObjectLocationString(object.getBucketName(), object.getChecksum()));
+      InputStream in = mfs.getFileStream(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
 
       if (in == null)
         return false;
@@ -77,10 +77,10 @@ public class MogileStoreService extends ObjectStore {
     return true;
   }
 
-  public URL[] getRedirectURLs(Object object) throws RepoException {
+  public URL[] getRedirectURLs(RepoObject repoObject) throws RepoException {
 
     try {
-      String[] paths = mfs.getPaths(getObjectLocationString(object.getBucketName(), object.getChecksum()), true);
+      String[] paths = mfs.getPaths(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()), true);
       int pathCount = paths.length;
       URL[] urls = new URL[pathCount];
 
@@ -95,9 +95,9 @@ public class MogileStoreService extends ObjectStore {
 
   }
 
-  public InputStream getInputStream(org.plos.repo.models.Object object) throws RepoException {
+  public InputStream getInputStream(RepoObject repoObject) throws RepoException {
     try {
-      return mfs.getFileStream(getObjectLocationString(object.getBucketName(), object.getChecksum()));
+      return mfs.getFileStream(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
     } catch (Exception e) {
       throw new RepoException(e);
     }
@@ -158,7 +158,7 @@ public class MogileStoreService extends ObjectStore {
     }
   }
 
-  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
+  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
     try {
       mfs.rename(uploadInfo.getTempLocation(), getObjectLocationString(bucket.getBucketName(), uploadInfo.getChecksum()));
       return true;
@@ -176,9 +176,9 @@ public class MogileStoreService extends ObjectStore {
     }
   }
 
-  public Boolean deleteObject(Object object) {
+  public Boolean deleteObject(RepoObject repoObject) {
     try {
-      mfs.delete(getObjectLocationString(object.getBucketName(), object.getChecksum()));
+      mfs.delete(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
       return true;
     } catch (Exception e) {
       return false;

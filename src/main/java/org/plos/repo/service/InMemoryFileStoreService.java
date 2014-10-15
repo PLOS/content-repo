@@ -19,7 +19,7 @@ package org.plos.repo.service;
 
 import org.apache.commons.io.IOUtils;
 import org.plos.repo.models.Bucket;
-import org.plos.repo.models.Object;
+import org.plos.repo.models.RepoObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -40,12 +40,12 @@ public class InMemoryFileStoreService extends ObjectStore {
   public InMemoryFileStoreService() {
   }
 
-  public Boolean objectExists(Object object) {
-    return (data.get(object.getBucketName()) != null && data.get(object.getBucketName()).get(object.getChecksum()) != null);
+  public Boolean objectExists(RepoObject repoObject) {
+    return (data.get(repoObject.getBucketName()) != null && data.get(repoObject.getBucketName()).get(repoObject.getChecksum()) != null);
   }
 
-  public InputStream getInputStream(Object object) {
-    return new ByteArrayInputStream(data.get(object.getBucketName()).get(object.getChecksum()));
+  public InputStream getInputStream(RepoObject repoObject) {
+    return new ByteArrayInputStream(data.get(repoObject.getBucketName()).get(repoObject.getChecksum()));
   }
 
   public Boolean bucketExists(Bucket bucket) {
@@ -60,7 +60,7 @@ public class InMemoryFileStoreService extends ObjectStore {
     return false;
   }
 
-  public URL[] getRedirectURLs(Object object) {
+  public URL[] getRedirectURLs(RepoObject repoObject) {
     return new URL[]{}; // since the filesystem is not reproxyable
   }
 
@@ -71,7 +71,7 @@ public class InMemoryFileStoreService extends ObjectStore {
     return (data.remove(bucket.getBucketName()) != null);
   }
 
-  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
+  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
 
     byte[] tempContent = tempdata.get(uploadInfo.getTempLocation());
     data.get(bucket.getBucketName()).put(uploadInfo.getChecksum(), tempContent);
@@ -79,12 +79,12 @@ public class InMemoryFileStoreService extends ObjectStore {
 
   }
 
-  public Boolean deleteObject(Object object) {
+  public Boolean deleteObject(RepoObject repoObject) {
 
-    if (!objectExists(object))
+    if (!objectExists(repoObject))
       return false;
 
-    return data.get(object.getBucketName()).remove(object.getChecksum()) != null;
+    return data.get(repoObject.getBucketName()).remove(repoObject.getChecksum()) != null;
 
   }
 

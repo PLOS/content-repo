@@ -19,7 +19,7 @@ package org.plos.repo.service;
 
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoCollection;
-import org.plos.repo.models.Object;
+import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,8 +46,8 @@ public abstract class SqlService {
 
   public abstract void postDbInit() throws SQLException;
 
-  private static org.plos.repo.models.Object mapObjectRow(ResultSet rs) throws SQLException {
-    return new org.plos.repo.models.Object(rs.getInt("ID"), rs.getString("OBJKEY"), rs.getString("CHECKSUM"),
+  private static RepoObject mapObjectRow(ResultSet rs) throws SQLException {
+    return new RepoObject(rs.getInt("ID"), rs.getString("OBJKEY"), rs.getString("CHECKSUM"),
                                           rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"),
                                           rs.getLong("SIZE"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"),
                                           rs.getInt("VERSIONNUMBER"), Status.STATUS_VALUES.get(rs.getInt("STATUS")), rs.getTimestamp("CREATIONDATE"),
@@ -142,7 +142,7 @@ public abstract class SqlService {
   }
 
   // FOR TESTING ONLY
-  public int deleteObject(Object object) throws SQLException {
+  public int deleteObject(RepoObject repoObject) throws SQLException {
 
     PreparedStatement p = null;
 
@@ -150,9 +150,9 @@ public abstract class SqlService {
 
       p = connectionLocal.get().prepareStatement("DELETE FROM objects WHERE objKey=? AND bucketId=? AND versionNumber=?");
 
-      p.setString(1, object.getKey());
-      p.setInt(2, object.getBucketId());
-      p.setInt(3, object.getVersionNumber());
+      p.setString(1, repoObject.getKey());
+      p.setInt(2, repoObject.getBucketId());
+      p.setInt(3, repoObject.getVersionNumber());
 
       return p.executeUpdate();
 
@@ -273,7 +273,7 @@ public abstract class SqlService {
     return getNextAvailableVersionNumber(bucketName, key, "objects", "objKey");
   }
 
-  public Object getObject(String bucketName, String key) throws SQLException {
+  public RepoObject getObject(String bucketName, String key) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -289,14 +289,14 @@ public abstract class SqlService {
       result = p.executeQuery();
 
       if (result.next()) {
-        Object object = mapObjectRow(result);
+        RepoObject repoObject = mapObjectRow(result);
 
-        if (object.getStatus() == Status.DELETED) {
-          log.info("searched for object which has been deleted. id: " + object.getId());
+        if (repoObject.getStatus() == Status.DELETED) {
+          log.info("searched for object which has been deleted. id: " + repoObject.getId());
           return null;
         }
 
-        return object;
+        return repoObject;
       }
       else
         return null;
@@ -307,7 +307,7 @@ public abstract class SqlService {
 
   }
 
-  public Object getObject(String bucketName, String key, Integer version, String versionChecksum, String tag) throws SQLException {
+  public RepoObject getObject(String bucketName, String key, Integer version, String versionChecksum, String tag) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -346,14 +346,14 @@ public abstract class SqlService {
       result = p.executeQuery();
 
       if (result.next()) {
-        Object object = mapObjectRow(result);
+        RepoObject repoObject = mapObjectRow(result);
 
-        if (object.getStatus() == Status.DELETED) {
-          log.info("searched for object which has been deleted. id: " + object.getId());
+        if (repoObject.getStatus() == Status.DELETED) {
+          log.info("searched for object which has been deleted. id: " + repoObject.getId());
           return null;
         }
 
-        return object;
+        return repoObject;
       }
       else
         return null;
@@ -364,7 +364,7 @@ public abstract class SqlService {
 
   }
 
-  public int insertObject(Object object) throws SQLException {
+  public int insertObject(RepoObject repoObject) throws SQLException {
 
     // TODO: return object or objectid from this function?
 
@@ -374,18 +374,18 @@ public abstract class SqlService {
 
       p = connectionLocal.get().prepareStatement("INSERT INTO objects (objKey, checksum, timestamp, bucketId, contentType, downloadName, size, tag, versionNumber, status, creationDate, versionChecksum) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
 
-      p.setString(1, object.getKey());
-      p.setString(2, object.getChecksum());
-      p.setTimestamp(3, object.getTimestamp());
-      p.setInt(4, object.getBucketId());
-      p.setString(5, object.getContentType());
-      p.setString(6, object.getDownloadName());
-      p.setLong(7, object.getSize());
-      p.setString(8, object.getTag());
-      p.setInt(9, object.getVersionNumber());
-      p.setInt(10, object.getStatus().getValue());
-      p.setTimestamp(11, object.getTimestamp());
-      p.setString(12, object.getVersionChecksum());
+      p.setString(1, repoObject.getKey());
+      p.setString(2, repoObject.getChecksum());
+      p.setTimestamp(3, repoObject.getTimestamp());
+      p.setInt(4, repoObject.getBucketId());
+      p.setString(5, repoObject.getContentType());
+      p.setString(6, repoObject.getDownloadName());
+      p.setLong(7, repoObject.getSize());
+      p.setString(8, repoObject.getTag());
+      p.setInt(9, repoObject.getVersionNumber());
+      p.setInt(10, repoObject.getStatus().getValue());
+      p.setTimestamp(11, repoObject.getTimestamp());
+      p.setString(12, repoObject.getVersionChecksum());
 
       return p.executeUpdate();
 
@@ -510,9 +510,9 @@ public abstract class SqlService {
 
   }
 
-  public List<Object> listObjects(String bucketName, Integer offset, Integer limit, boolean includeDeleted, String tag) throws SQLException {
+  public List<RepoObject> listObjects(String bucketName, Integer offset, Integer limit, boolean includeDeleted, String tag) throws SQLException {
 
-    List<Object> objects = new ArrayList<>();
+    List<RepoObject> repoObjects = new ArrayList<>();
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -548,10 +548,10 @@ public abstract class SqlService {
       result = p.executeQuery();
 
       while (result.next()) {
-        objects.add(mapObjectRow(result));
+        repoObjects.add(mapObjectRow(result));
       }
 
-      return objects;
+      return repoObjects;
 
     } finally {
       closeDbStuff(result, p);
@@ -559,9 +559,9 @@ public abstract class SqlService {
 
   }
 
-  public List<Object> listObjects(Timestamp timestamp) throws SQLException {
+  public List<RepoObject> listObjects(Timestamp timestamp) throws SQLException {
 
-    List<Object> objects = new ArrayList<>();
+    List<RepoObject> repoObjects = new ArrayList<>();
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -576,10 +576,10 @@ public abstract class SqlService {
       result = p.executeQuery();
 
       while (result.next()) {
-        objects.add(mapObjectRow(result));
+        repoObjects.add(mapObjectRow(result));
       }
 
-      return objects;
+      return repoObjects;
 
     } finally {
       closeDbStuff(result, p);
@@ -730,12 +730,12 @@ public abstract class SqlService {
   /**
    * Returns the list of objects contains in the given collection <code>id</code>
    * @param id an integer representing the collection id
-   * @return a list of {@link Object }
+   * @return a list of {@link org.plos.repo.models.RepoObject }
    * @throws SQLException
    */
-  protected List<Object> listCollectionObjects(Integer id) throws SQLException {
+  protected List<RepoObject> listCollectionObjects(Integer id) throws SQLException {
 
-    List<Object> objects = new ArrayList<>();
+    List<RepoObject> repoObjects = new ArrayList<>();
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -756,10 +756,10 @@ public abstract class SqlService {
       result = p.executeQuery();
 
       while (result.next()) {
-        objects.add(mapObjectRow(result));
+        repoObjects.add(mapObjectRow(result));
       }
 
-      return objects;
+      return repoObjects;
 
     } finally {
       closeDbStuff(result, p);
@@ -982,9 +982,9 @@ public abstract class SqlService {
 
   }
 
-  public List<Object> listObjectVersions(String bucketName, String objectKey) throws SQLException {
+  public List<RepoObject> listObjectVersions(String bucketName, String objectKey) throws SQLException {
 
-    List<Object> objects = new ArrayList<>();
+    List<RepoObject> repoObjects = new ArrayList<>();
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -1000,10 +1000,10 @@ public abstract class SqlService {
       result = p.executeQuery();
 
       while (result.next()) {
-        objects.add(mapObjectRow(result));
+        repoObjects.add(mapObjectRow(result));
       }
 
-      return objects;
+      return repoObjects;
 
     } finally {
       closeDbStuff(result, p);
@@ -1046,9 +1046,9 @@ public abstract class SqlService {
 
   public Boolean existsActiveCollectionForObject(String objKey, String bucketName, Integer version, String versionChecksum, String tag) throws SQLException {
 
-    Object object = this.getObject(bucketName, objKey, version, versionChecksum, tag);
+    RepoObject repoObject = this.getObject(bucketName, objKey, version, versionChecksum, tag);
 
-    if (object == null){
+    if (repoObject == null){
       return false;
     }
 
@@ -1059,7 +1059,7 @@ public abstract class SqlService {
       p =
           connectionLocal.get().prepareStatement("SELECT * FROM collectionObject co, collections c WHERE c.id = co.collectionId AND co.objectId =? AND c.status = 0");
 
-      p.setInt(1, object.getId());
+      p.setInt(1, repoObject.getId());
 
       result = p.executeQuery();
 

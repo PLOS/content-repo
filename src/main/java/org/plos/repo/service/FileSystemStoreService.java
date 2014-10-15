@@ -18,7 +18,7 @@
 package org.plos.repo.service;
 
 import org.plos.repo.models.Bucket;
-import org.plos.repo.models.Object;
+import org.plos.repo.models.RepoObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,13 +57,13 @@ public class FileSystemStoreService extends ObjectStore {
     return getBucketLocationString(bucketName) + checksum.substring(0, 2) + "/" + checksum;
   }
 
-  public Boolean objectExists(Object object) {
-    return new File(getObjectLocationString(object.getBucketName(), object.getChecksum())).exists();
+  public Boolean objectExists(RepoObject repoObject) {
+    return new File(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum())).exists();
   }
 
-  public InputStream getInputStream(Object object) throws RepoException {
+  public InputStream getInputStream(RepoObject repoObject) throws RepoException {
     try {
-      return new FileInputStream(getObjectLocationString(object.getBucketName(), object.getChecksum()));
+      return new FileInputStream(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
     } catch (FileNotFoundException e) {
       throw new RepoException(e);
     }
@@ -88,7 +88,7 @@ public class FileSystemStoreService extends ObjectStore {
     return reproxyBaseUrl != null;
   }
 
-  public URL[] getRedirectURLs(Object object) throws RepoException {
+  public URL[] getRedirectURLs(RepoObject repoObject) throws RepoException {
 
     if (!hasXReproxy())
       return new URL[]{}; // since the filesystem is not reproxyable
@@ -96,7 +96,7 @@ public class FileSystemStoreService extends ObjectStore {
     try {
 
       URL[] urls = new URL[1];
-      urls[0] = new URL(reproxyBaseUrl + "/" + object.getBucketName() + "/" + object.getChecksum().substring(0, 2) + "/" + object.getChecksum());
+      urls[0] = new URL(reproxyBaseUrl + "/" + repoObject.getBucketName() + "/" + repoObject.getChecksum().substring(0, 2) + "/" + repoObject.getChecksum());
       return urls;
 
     } catch (MalformedURLException e) {
@@ -110,7 +110,7 @@ public class FileSystemStoreService extends ObjectStore {
     return dir.delete();
   }
 
-  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
+  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
     File tempFile = new File(uploadInfo.getTempLocation());
 
     File newFile = new File(getObjectLocationString(bucket.getBucketName(), uploadInfo.getChecksum()));
@@ -128,9 +128,9 @@ public class FileSystemStoreService extends ObjectStore {
     return tempFile.renameTo(newFile);
   }
 
-  public Boolean deleteObject(Object object) {
+  public Boolean deleteObject(RepoObject repoObject) {
 
-    File file = new File(getObjectLocationString(object.getBucketName(), object.getChecksum()));
+    File file = new File(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
     File parentDir = new File(file.getParent());
 
     boolean result = file.delete();

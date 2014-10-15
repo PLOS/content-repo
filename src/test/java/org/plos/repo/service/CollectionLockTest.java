@@ -22,7 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.plos.repo.RepoBaseSpringTest;
 import org.plos.repo.models.RepoCollection;
-import org.plos.repo.models.Object;
+import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.input.InputObject;
@@ -95,8 +95,8 @@ public class CollectionLockTest extends RepoBaseSpringTest {
     inputObjects = new ArrayList<InputObject>();
     for (int i=0; i < 1000 ; i++ ){
       String key = OBJECT_KEY+i;
-      Object object = repoService.createObject(RepoService.CreateMethod.NEW, key, BUCKET_NAME, null, null, CREATION_DATE_TIME, IOUtils.toInputStream(OBJECT_DATA), CREATION_DATE_TIME, "TAG"+i);
-      InputObject inputObject = new InputObject(key, object.getVersionChecksum());
+      RepoObject repoObject = repoService.createObject(RepoService.CreateMethod.NEW, key, BUCKET_NAME, null, null, CREATION_DATE_TIME, IOUtils.toInputStream(OBJECT_DATA), CREATION_DATE_TIME, "TAG"+i);
+      InputObject inputObject = new InputObject(key, repoObject.getVersionChecksum());
       inputObjects.add(inputObject);
     }
 

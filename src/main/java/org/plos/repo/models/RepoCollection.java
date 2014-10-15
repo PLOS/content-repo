@@ -38,7 +38,7 @@ public class RepoCollection {
   private String tag;
   private Timestamp creationDate;
   private String versionChecksum;
-  private List<Object> objects;
+  private List<RepoObject> repoObjects;
 
 
   // empty constructor required for JAXB mapping
@@ -63,9 +63,9 @@ public class RepoCollection {
     return id;
   }
 
-  public void addObjects(List<Object> objects){
+  public void addObjects(List<RepoObject> repoObjects){
 
-    this.objects = objects;
+    this.repoObjects = repoObjects;
   }
 
   public String getKey() {
@@ -92,8 +92,8 @@ public class RepoCollection {
     return status;
   }
 
-  public List<Object> getObjects() {
-    return objects;
+  public List<RepoObject> getRepoObjects() {
+    return repoObjects;
   }
 
   public void setId(Integer id) {
@@ -124,8 +124,8 @@ public class RepoCollection {
     this.status = status;
   }
 
-  public void setObjects(List<Object> objects) {
-    this.objects = objects;
+  public void setRepoObjects(List<RepoObject> repoObjects) {
+    this.repoObjects = repoObjects;
   }
 
   public String getTag() {
@@ -152,7 +152,7 @@ public class RepoCollection {
     this.versionChecksum = versionChecksum;
   }
 
-  public boolean equals(Object o) {
+  public boolean equals(RepoObject o) {
     return EqualsBuilder.reflectionEquals(this, o);
   }
 

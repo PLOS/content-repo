@@ -21,7 +21,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.plos.repo.RepoBaseSpringTest;
-import org.plos.repo.models.Object;
+import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.input.ElementFilter;
 
 import java.lang.reflect.Field;
@@ -117,17 +117,17 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     this.endGate = new CountDownLatch(UPDATE_THREADS + DELETE_THREADS + READER_THREADS);
     execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
-    List<org.plos.repo.models.Object> objects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
     // since when version an object we don't create a new version if nothing change from last version, only one object with BASE_KEY_NAME is going to be created
-    assertEquals(1, objects.size());
+    assertEquals(1, repoObjects.size());
 
-    org.plos.repo.models.Object obj = objects.get(0);
+    RepoObject obj = repoObjects.get(0);
 
     assertEquals(BASE_KEY_NAME, obj.getKey());
     assertEquals(Integer.valueOf(0), obj.getVersionNumber());
     assertTrue(this.objectStore.objectExists(obj));
 
-    List<Object> versions = repoService.getObjectVersions(obj.getBucketName(), obj.getKey());
+    List<RepoObject> versions = repoService.getObjectVersions(obj.getBucketName(), obj.getKey());
 
     assertEquals(1, versions.size());
 
@@ -157,25 +157,25 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     this.endGate = new CountDownLatch(INSERT_THREADS + DELETE_THREADS + READER_THREADS);
     execute(INSERT_THREADS, 0, DELETE_THREADS, READER_THREADS, callback);
-    List<org.plos.repo.models.Object> objects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
     // since when version an object we don't create a new version if nothing change from last version, only one object with BASE_KEY_NAME is going to be created
-    assertEquals(1, objects.size());
+    assertEquals(1, repoObjects.size());
 
     this.startGate = new CountDownLatch(1);
     this.endGate = new CountDownLatch(UPDATE_THREADS + DELETE_THREADS + READER_THREADS);
     execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
-    objects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
     // since when version an object we don't create a new version if nothing change from last version, only one object with BASE_KEY_NAME is going to be created
-    assertEquals(1 + UPDATE_THREADS, objects.size());
+    assertEquals(1 + UPDATE_THREADS, repoObjects.size());
 
-    for (int j = 0; j < objects.size(); j++) {
-      org.plos.repo.models.Object obj = objects.get(j);
+    for (int j = 0; j < repoObjects.size(); j++) {
+      RepoObject obj = repoObjects.get(j);
 
       assertEquals(BASE_KEY_NAME, obj.getKey());
       assertTrue(this.objectStore.objectExists(obj));
 
-      List<Object> versions = repoService.getObjectVersions(obj.getBucketName(), obj.getKey());
+      List<RepoObject> versions = repoService.getObjectVersions(obj.getBucketName(), obj.getKey());
 
       assertEquals(1 + UPDATE_THREADS, versions.size());
     }
@@ -204,8 +204,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     this.endGate = new CountDownLatch(INSERT_THREADS + READER_THREADS);
     execute(INSERT_THREADS, 0, 0, READER_THREADS, callback);
 
-    List<org.plos.repo.models.Object> objects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
-    assertEquals(1, objects.size());
+    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    assertEquals(1, repoObjects.size());
 
     Callback callbackUp = new Callback() {
       public String getKeyname(int i) { return BASE_KEY_NAME; }
@@ -218,20 +218,20 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     this.endGate = new CountDownLatch(UPDATE_THREADS  + READER_THREADS);
     execute(0, UPDATE_THREADS, 0, READER_THREADS, callbackUp);
 
-    objects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
-    assertEquals(1 + UPDATE_THREADS, objects.size());
+    repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    assertEquals(1 + UPDATE_THREADS, repoObjects.size());
 
     this.startGate = new CountDownLatch(1);
     this.endGate = new CountDownLatch(DELETE_THREADS + READER_THREADS);
     execute(0, 0, DELETE_THREADS, READER_THREADS, callbackUp);
 
-    objects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
-    assertEquals(1 + UPDATE_THREADS - DELETE_THREADS, objects.size());
+    repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    assertEquals(1 + UPDATE_THREADS - DELETE_THREADS, repoObjects.size());
 
-    Collections.sort(objects, new ObjectComparator());
+    Collections.sort(repoObjects, new ObjectComparator());
 
-    for (int j = 0; j < objects.size(); j++) {
-      org.plos.repo.models.Object obj = objects.get(j);
+    for (int j = 0; j < repoObjects.size(); j++) {
+      RepoObject obj = repoObjects.get(j);
 
       assertEquals(BASE_KEY_NAME, obj.getKey());
       assertTrue(this.objectStore.objectExists(obj));
@@ -266,14 +266,14 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     execute(INSERT_THREADS, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
-    List<org.plos.repo.models.Object> objects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
 
-    assertTrue(objects.size() >= INSERT_THREADS - DELETE_THREADS);
+    assertTrue(repoObjects.size() >= INSERT_THREADS - DELETE_THREADS);
 
-    Collections.sort(objects, new ObjectComparator());
+    Collections.sort(repoObjects, new ObjectComparator());
 
-    for (int j = 0; j < objects.size(); j++) {
-      org.plos.repo.models.Object obj = objects.get(j);
+    for (int j = 0; j < repoObjects.size(); j++) {
+      RepoObject obj = repoObjects.get(j);
       assertEquals(Integer.valueOf(0), obj.getVersionNumber());
       assertTrue(this.objectStore.objectExists(obj));
     }
@@ -302,13 +302,13 @@ public class ObjectLockTest extends RepoBaseSpringTest {
             startGate.await();  // don't start until startGate is 0
             try {
               Timestamp creationDateTime = new Timestamp(new Date().getTime());
-              Object object = repoService.createObject(RepoService.CreateMethod.NEW, cb.getKeyname(j), BUCKET_NAME, null, null, creationDateTime, IOUtils.toInputStream(OBJECT_DATA), creationDateTime, cb.getTag(j));
+              RepoObject repoObject = repoService.createObject(RepoService.CreateMethod.NEW, cb.getKeyname(j), BUCKET_NAME, null, null, creationDateTime, IOUtils.toInputStream(OBJECT_DATA), creationDateTime, cb.getTag(j));
 
-              if (!object.getKey().equals(cb.getKeyname(j))) {
+              if (!repoObject.getKey().equals(cb.getKeyname(j))) {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
-                        "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), object.getKey(),
+                        "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), repoObject.getKey(),
                         "insert failed"));
                   }
                 }
@@ -351,13 +351,13 @@ public class ObjectLockTest extends RepoBaseSpringTest {
             startGate.await();  // don't start until startGate is 0
             try {
               Timestamp creationDateTime = new Timestamp(new Date().getTime());
-              Object versionedObject = repoService.createObject(RepoService.CreateMethod.VERSION, cb.getKeyname(j), BUCKET_NAME, null, null, creationDateTime, IOUtils.toInputStream(OBJECT_DATA), creationDateTime, cb.getTag(j));
+              RepoObject versionedRepoObject = repoService.createObject(RepoService.CreateMethod.VERSION, cb.getKeyname(j), BUCKET_NAME, null, null, creationDateTime, IOUtils.toInputStream(OBJECT_DATA), creationDateTime, cb.getTag(j));
 
-              if (!versionedObject.getKey().equals(cb.getKeyname(j))) {
+              if (!versionedRepoObject.getKey().equals(cb.getKeyname(j))) {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
-                        "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), versionedObject.getKey(),
+                        "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), versionedRepoObject.getKey(),
                         "insert failed"));
                   }
                 }
@@ -439,15 +439,15 @@ public class ObjectLockTest extends RepoBaseSpringTest {
             startGate.await();  // don't start until startGate is 0 
             try {
 
-              Object object = repoService.getObject(BUCKET_NAME, cb.getKeyname(j), new ElementFilter(null, cb.getTag(j), null));
+              RepoObject repoObject = repoService.getObject(BUCKET_NAME, cb.getKeyname(j), new ElementFilter(null, cb.getTag(j), null));
 
-              String outputData = IOUtils.toString(repoService.getObjectInputStream(object));
+              String outputData = IOUtils.toString(repoService.getObjectInputStream(repoObject));
 
-              if (!object.getKey().equals(cb.getKeyname(j))) {
+              if (!repoObject.getKey().equals(cb.getKeyname(j))) {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
-                        "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), object.getKey(),
+                        "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), repoObject.getKey(),
                         "read metadata failed"));
                   }
                 }
@@ -500,8 +500,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
 }
 
-class ObjectComparator implements Comparator<org.plos.repo.models.Object> {
-  public int compare(org.plos.repo.models.Object o1, org.plos.repo.models.Object o2) {
+class ObjectComparator implements Comparator<RepoObject> {
+  public int compare(RepoObject o1, RepoObject o2) {
 
     if (o1.getBucketName().compareTo(o2.getBucketName()) < 0) {
       return -1;
