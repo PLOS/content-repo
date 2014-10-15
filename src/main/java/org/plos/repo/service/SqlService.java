@@ -967,7 +967,7 @@ public abstract class SqlService {
       }
       if (tag != null){
         query.append(" AND tag=?");
-      }minor
+      }
 
       p = connectionLocal.get().prepareStatement(query.toString());
 
