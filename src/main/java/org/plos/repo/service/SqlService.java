@@ -956,7 +956,7 @@ public abstract class SqlService {
 
     try {
 
-      StringBuffer query = new StringBuffer();
+      StringBuilder query = new StringBuilder();
       query.append("UPDATE collections SET status=? WHERE collKey=? AND bucketId=?");
 
       if (versionNumber != null){
