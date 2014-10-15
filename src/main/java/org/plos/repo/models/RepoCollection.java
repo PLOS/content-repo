@@ -45,18 +45,11 @@ public class RepoCollection {
   public RepoCollection() {
   }
 
-  public RepoCollection(Integer id, String key, Timestamp timestamp, Integer bucketId, String bucketName,
-                        Integer versionNumber, Status status, String tag, Timestamp creationDate, String versionChecksum) {
-    this.id = id;
+  public RepoCollection(String key, Integer bucketId, String bucketName, Status status) {
     this.key = key;
-    this.timestamp = timestamp;
     this.bucketId = bucketId;
     this.bucketName = bucketName;
-    this.versionNumber = versionNumber;
     this.status = status;
-    this.tag = tag;
-    this.creationDate = creationDate;
-    this.versionChecksum = versionChecksum;
   }
 
   public Integer getId(){

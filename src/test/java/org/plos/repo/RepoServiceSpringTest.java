@@ -274,7 +274,11 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), "key1");
     Assert.assertTrue(objFromDb == null);
     sqlService.releaseConnection();
-    Assert.assertFalse(objectStore.objectExists(new RepoObject(null, null, "cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151", null, null, null, 0l, null, null, bucket1.getBucketName(), null, null, null, null)));
+    RepoObject repoObject = new RepoObject();
+    repoObject.setChecksum("cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151");
+    repoObject.setSize(0l);
+    repoObject.setBucketName(bucket1.getBucketName());
+    Assert.assertFalse(objectStore.objectExists(repoObject));
   }
 
   @Test
@@ -304,7 +308,11 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), "key1");
     Assert.assertTrue(objFromDb == null);
     sqlService.releaseConnection();
-    Assert.assertTrue(objectStore.objectExists(new RepoObject(null, null, "cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151", null, null, null, 0l, null, null, bucket1.getBucketName(), null, null, null, null)));  // since we do not delete object data
+    RepoObject repoObject = new RepoObject();
+    repoObject.setChecksum("cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151");
+    repoObject.setSize(0l);
+    repoObject.setBucketName(bucket1.getBucketName());
+    Assert.assertTrue(objectStore.objectExists(repoObject));  // since we do not delete object data
   }
 
   @Test
@@ -372,7 +380,11 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     Assert.assertTrue(objFromDb == null);
     sqlService.releaseConnection();
-    Assert.assertFalse(objectStore.objectExists(new RepoObject(null, null, "cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151", null, null, null, 0l, null, null, bucket1.getBucketName(), null, null, null, null)));
+    RepoObject repoObject = new RepoObject();
+    repoObject.setChecksum("cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151");
+    repoObject.setSize(0l);
+    repoObject.setBucketName(bucket1.getBucketName());
+    Assert.assertFalse(objectStore.objectExists(repoObject));
 
   }
 
@@ -408,7 +420,11 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), "key1");
     Assert.assertTrue(objFromDb != null);
     sqlService.releaseConnection();
-    Assert.assertTrue(objectStore.objectExists(new RepoObject(null, null, "cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151", null, null, null, 0l, null, null, bucket1.getBucketName(), null, null, null, null)));  // since we do not delete object data
+    RepoObject repoObject = new RepoObject();
+    repoObject.setChecksum("cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151");
+    repoObject.setSize(0l);
+    repoObject.setBucketName(bucket1.getBucketName());
+    Assert.assertTrue(objectStore.objectExists(repoObject));  // since we do not delete object data
   }
 
 

@@ -39,26 +39,14 @@ public class RepoObject {
   private String versionChecksum;
   private URL[] reproxyURL;
 
-  private RepoObject() {
+  public RepoObject() {
   }
 
-  public RepoObject(Integer id, String key, String checksum, Timestamp timestamp, String downloadName,
-                    String contentType, Long size, String tag, Integer bucketId, String bucketName,
-                    Integer versionNumber, Status status, Timestamp creationDate, String versionChecksum) {
-    this.id = id;
+  public RepoObject(String key, Integer bucketId, String bucketName, Status status) {
     this.key = key;
-    this.checksum = checksum;
-    this.timestamp = timestamp;
-    this.downloadName = downloadName;
-    this.contentType = contentType;
-    this.size = size;
-    this.tag = tag;
     this.bucketId = bucketId;
     this.bucketName = bucketName;
-    this.versionNumber = versionNumber;
     this.status = status;
-    this.creationDate = creationDate;
-    this.versionChecksum = versionChecksum;
   }
 
   public Boolean areSimilar(RepoObject repoObject){

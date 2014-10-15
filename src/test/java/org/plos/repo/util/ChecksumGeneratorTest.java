@@ -67,8 +67,12 @@ public class ChecksumGeneratorTest {
   @Before
   public void setUp(){
     checksumGenerator = new ChecksumGenerator();
-    repoObject1 = new RepoObject(0,"keyObj1",null,null,null,null,null,null,null,null,null,null,null,null);
-    repoObject2 = new RepoObject(0,"keyObj2",null,null,null,null,null,null,null,null,null,null,null,null);
+    repoObject1 = new RepoObject();
+    repoObject1.setId(0);
+    repoObject1.setKey("keyObj1");
+    repoObject2 = new RepoObject();
+    repoObject2.setId(1);
+    repoObject2.setKey("keyObj2");
     initMocks(this);
   }
 

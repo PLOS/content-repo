@@ -47,18 +47,30 @@ public abstract class SqlService {
   public abstract void postDbInit() throws SQLException;
 
   private static RepoObject mapObjectRow(ResultSet rs) throws SQLException {
-    return new RepoObject(rs.getInt("ID"), rs.getString("OBJKEY"), rs.getString("CHECKSUM"),
-                                          rs.getTimestamp("TIMESTAMP"), rs.getString("DOWNLOADNAME"), rs.getString("CONTENTTYPE"),
-                                          rs.getLong("SIZE"), rs.getString("TAG"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"),
-                                          rs.getInt("VERSIONNUMBER"), Status.STATUS_VALUES.get(rs.getInt("STATUS")), rs.getTimestamp("CREATIONDATE"),
-                                          rs.getString("VERSIONCHECKSUM"));
+    RepoObject repoObject = new RepoObject(rs.getString("OBJKEY"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), Status.STATUS_VALUES.get(rs.getInt("STATUS")));
+    repoObject.setId(rs.getInt("ID"));
+    repoObject.setChecksum(rs.getString("CHECKSUM"));
+    repoObject.setTimestamp(rs.getTimestamp("TIMESTAMP"));
+    repoObject.setDownloadName(rs.getString("DOWNLOADNAME"));
+    repoObject.setContentType(rs.getString("CONTENTTYPE"));
+    repoObject.setSize(rs.getLong("SIZE"));
+    repoObject.setTag(rs.getString("TAG"));
+    repoObject.setVersionNumber(rs.getInt("VERSIONNUMBER"));
+    repoObject.setCreationDate(rs.getTimestamp("CREATIONDATE"));
+    repoObject.setVersionChecksum(rs.getString("VERSIONCHECKSUM"));
+    return  repoObject;
   }
 
   private static RepoCollection mapCollectionRow(ResultSet rs) throws SQLException {
-    return new RepoCollection(rs.getInt("ID"), rs.getString("COLLKEY"), rs.getTimestamp("TIMESTAMP"),
-                                               rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"),
-                                                Status.STATUS_VALUES.get(rs.getInt("STATUS")), rs.getString("TAG"),
-                                                rs.getTimestamp("CREATIONDATE"), rs.getString("VERSIONCHECKSUM"));
+
+    RepoCollection collection = new RepoCollection(rs.getString("COLLKEY"), rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), Status.STATUS_VALUES.get(rs.getInt("STATUS")));
+    collection.setId(rs.getInt("ID"));
+    collection.setTimestamp(rs.getTimestamp("TIMESTAMP"));
+    collection.setVersionNumber(rs.getInt("VERSIONNUMBER"));
+    collection.setTag(rs.getString("TAG"));
+    collection.setCreationDate(rs.getTimestamp("CREATIONDATE"));
+    collection.setVersionChecksum(rs.getString("VERSIONCHECKSUM"));
+    return collection;
   }
 
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {

@@ -402,7 +402,11 @@ public class CollectionRepoService extends BaseRepoService {
 
     versionNumber = sqlService.getCollectionNextAvailableVersion(bucketName, key);   // change to support collections
 
-    repoCollection = new RepoCollection(null, key, timestamp, bucketId, bucketName, versionNumber, Status.USED, tag, creationDate, null);
+    repoCollection = new RepoCollection(key, bucketId, bucketName, Status.USED);
+    repoCollection.setTimestamp(timestamp);
+    repoCollection.setVersionNumber(versionNumber);
+    repoCollection.setTag(tag);
+    repoCollection.setCreationDate(creationDate);
 
     List<String> objectsChecksum = Lists.newArrayList(Iterables.transform(inputObjects, typeFunction()));
 

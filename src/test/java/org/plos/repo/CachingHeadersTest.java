@@ -226,20 +226,16 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
   }
 
   private RepoObject getObject(DateTime datetime) {
-    return new RepoObject(
-        Integer.valueOf(1),                         // id
-        KEY_NAME,                                   // key name
-        "checksum",                                 // checksum
-        new Timestamp(datetime.toDate().getTime()), // timestamp
-        "download-name",                            // download name
-        "text/plain",                               // content type
-        Long.valueOf(1),                            // size
-        null,                                       // tag
-        Integer.valueOf(1),                         // bucket id
-        BUCKET_NAME,                                // bucket name
-        Integer.valueOf(0),                         // version#
-        org.plos.repo.models.Status.USED,
-        new Timestamp(datetime.toDate().getTime()),
-        "123456"); // creation date time
+    RepoObject repoObject = new RepoObject(KEY_NAME, Integer.valueOf(1), BUCKET_NAME, org.plos.repo.models.Status.USED);
+    repoObject.setId(Integer.valueOf(1));
+    repoObject.setChecksum("checksum");
+    repoObject.setTimestamp(new Timestamp(datetime.toDate().getTime()));
+    repoObject.setDownloadName("download-name");
+    repoObject.setContentType("text/plain");
+    repoObject.setSize(Long.valueOf(1));
+    repoObject.setVersionNumber(Integer.valueOf(0));
+    repoObject.setCreationDate(new Timestamp(datetime.toDate().getTime()));
+    repoObject.setVersionChecksum("123456");
+    return repoObject;
   }
 }

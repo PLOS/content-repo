@@ -45,14 +45,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class RepoServiceTest {
 
   private static final String VALID_BUCKET = "bucket-1";
-  private static final String INVALID_BUCKET = "invalid-bucket";
   private static final Integer VALID_OFFSET = 1;
   private static final Integer VALID_LIMIT = 100;
   private static final String VALID_TAG = "tag";
-  private static final String FAIL_MSG = "A repo exception was expected.";
-  private static final Exception SQL_EXCEP = new SQLException();
-  private static final String VALID_COLLECTION_KEY = "collection-1";
-  private static final Integer VALID_VERSION = 0;
 
   @InjectMocks
   private RepoService repoService;
@@ -84,7 +79,9 @@ public class RepoServiceTest {
     when(sqlService.getBucket(VALID_BUCKET)).thenReturn(bucket);
 
     List<RepoObject> repoObjects = new ArrayList<RepoObject>();
-    RepoObject ob = new RepoObject(0,"key",null,null,null,null,null,null,null,null,null,null,null,null);
+    RepoObject ob = new RepoObject();
+    ob.setId(0);
+    ob.setKey("key");
     repoObjects.add(ob);
 
     when(sqlService.listObjects(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG)).thenReturn(repoObjects);

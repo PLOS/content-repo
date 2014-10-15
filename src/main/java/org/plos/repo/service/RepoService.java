@@ -487,7 +487,16 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(e);
       }
 
-      repoObject = new RepoObject(null, key, uploadInfo.getChecksum(), timestamp, downloadName, contentType, uploadInfo.getSize(), tag, bucket.getBucketId(), bucketName, versionNumber, Status.USED, cretationDateTime, null);
+      repoObject = new RepoObject(key, bucket.getBucketId(), bucketName, Status.USED);
+      repoObject.setChecksum(uploadInfo.getChecksum());
+      repoObject.setTimestamp(timestamp);
+      repoObject.setDownloadName(downloadName);
+      repoObject.setContentType(contentType);
+      repoObject.setSize(uploadInfo.getSize());
+      repoObject.setTag(tag);
+      repoObject.setVersionNumber(versionNumber);
+      repoObject.setCreationDate(cretationDateTime);
+
       repoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(repoObject));
       rollback = true;
 
@@ -556,7 +565,12 @@ public class RepoService extends BaseRepoService {
       //if any of the input properties are null, we should populate them with the data of the previous version of the object
       // TODO: if the object is equals to the last version, do we need to update the timestamp?
 
-      newRepoObject = new RepoObject(null, repoObject.getKey(), null, timestamp, downloadName, contentType, null, tag, repoObject.getBucketId(), bucketName, null, Status.USED, cretationDateTime, null);
+      newRepoObject = new RepoObject(repoObject.getKey(), repoObject.getBucketId(), bucketName, Status.USED);
+      newRepoObject.setTimestamp(timestamp);
+      newRepoObject.setDownloadName(downloadName);
+      newRepoObject.setContentType(contentType);
+      newRepoObject.setTag(tag);
+      newRepoObject.setCreationDate(cretationDateTime);
       newRepoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(newRepoObject));
       sqlService.getConnection();
       if (sqlService.getBucket(bucketName) == null)
