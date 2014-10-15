@@ -18,7 +18,7 @@
 package org.plos.repo.service;
 
 import org.plos.repo.models.Bucket;
-import org.plos.repo.models.Collection;
+import org.plos.repo.models.RepoCollection;
 import org.plos.repo.models.Object;
 import org.plos.repo.models.Status;
 import org.slf4j.Logger;
@@ -54,8 +54,8 @@ public abstract class SqlService {
                                           rs.getString("VERSIONCHECKSUM"));
   }
 
-  private static org.plos.repo.models.Collection mapCollectionRow(ResultSet rs) throws SQLException {
-    return new org.plos.repo.models.Collection(rs.getInt("ID"), rs.getString("COLLKEY"), rs.getTimestamp("TIMESTAMP"),
+  private static RepoCollection mapCollectionRow(ResultSet rs) throws SQLException {
+    return new RepoCollection(rs.getInt("ID"), rs.getString("COLLKEY"), rs.getTimestamp("TIMESTAMP"),
                                                rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getInt("VERSIONNUMBER"),
                                                 Status.STATUS_VALUES.get(rs.getInt("STATUS")), rs.getString("TAG"),
                                                 rs.getTimestamp("CREATIONDATE"), rs.getString("VERSIONCHECKSUM"));
@@ -163,18 +163,18 @@ public abstract class SqlService {
   }
 
   // FOR TESTING ONLY
-  public int deleteCollection(Collection collection) throws SQLException {
+  public int deleteCollection(RepoCollection repoCollection) throws SQLException {
 
     PreparedStatement p = null;
 
     try {
 
       p = connectionLocal.get().prepareStatement("DELETE FROM collectionObject WHERE collectionId=?");
-      p.setInt(1, collection.getId());
+      p.setInt(1, repoCollection.getId());
       p.executeUpdate();
 
       p = connectionLocal.get().prepareStatement("DELETE FROM collections WHERE id=?");
-      p.setInt(1, collection.getId());
+      p.setInt(1, repoCollection.getId());
       return p.executeUpdate();
 
 
@@ -595,12 +595,12 @@ public abstract class SqlService {
    * @param limit an Integer used to determine the limit of the response
    * @param includeDeleted a Boolean used to define is the response will include delete collections or not
    * @param tag a single String used to filter the collections regarding the tag property
-   * @return a list of {@link Collection}
+   * @return a list of {@link org.plos.repo.models.RepoCollection}
    * @throws SQLException
    */
-  public List<Collection> listCollections(String bucketName, Integer offset, Integer limit, Boolean includeDeleted, String tag) throws SQLException {
+  public List<RepoCollection> listCollections(String bucketName, Integer offset, Integer limit, Boolean includeDeleted, String tag) throws SQLException {
 
-    List<Collection> collections = new ArrayList<>();
+    List<RepoCollection> repoCollections = new ArrayList<>();
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -622,12 +622,12 @@ public abstract class SqlService {
       result = p.executeQuery();
 
       while (result.next()) {
-        Collection c = mapCollectionRow(result);
+        RepoCollection c = mapCollectionRow(result);
         c.addObjects(listCollectionObjects(c.getId()));
-        collections.add(c);
+        repoCollections.add(c);
       }
 
-      return collections;
+      return repoCollections;
 
     } finally {
       closeDbStuff(result, p);
@@ -642,12 +642,12 @@ public abstract class SqlService {
    * @param limit an Integer used to determine the limit of the response
    * @param includeDeleted a Boolean used to define is the response will include delete collections or not
    * @param tag a single String used to filter the collections regarding the tag property
-   * @return a list of {@link Collection}
+   * @return a list of {@link org.plos.repo.models.RepoCollection}
    * @throws SQLException
    */
-  public List<Collection> listCollectionsMetaData(String bucketName, Integer offset, Integer limit, Boolean includeDeleted, String tag) throws SQLException {
+  public List<RepoCollection> listCollectionsMetaData(String bucketName, Integer offset, Integer limit, Boolean includeDeleted, String tag) throws SQLException {
 
-    List<Collection> collections = new ArrayList<>();
+    List<RepoCollection> repoCollections = new ArrayList<>();
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -669,11 +669,11 @@ public abstract class SqlService {
       result = p.executeQuery();
 
       while (result.next()) {
-        Collection c = mapCollectionRow(result);
-        collections.add(c);
+        RepoCollection c = mapCollectionRow(result);
+        repoCollections.add(c);
       }
 
-      return collections;
+      return repoCollections;
 
     } finally {
       closeDbStuff(result, p);
@@ -699,9 +699,9 @@ public abstract class SqlService {
     return q.toString();
   }
 
-  public List<Collection> listCollections(Timestamp timestamp) throws SQLException {
+  public List<RepoCollection> listCollections(Timestamp timestamp) throws SQLException {
 
-    List<Collection> collections = new ArrayList<>();
+    List<RepoCollection> repoCollections = new ArrayList<>();
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -716,10 +716,10 @@ public abstract class SqlService {
       p.setTimestamp(1, timestamp);
 
       while (result.next()) {
-        collections.add(mapCollectionRow(result));
+        repoCollections.add(mapCollectionRow(result));
       }
 
-      return collections;
+      return repoCollections;
 
     } finally {
       closeDbStuff(result, p);
@@ -772,10 +772,10 @@ public abstract class SqlService {
    * version is defined as the latest created collection with status = USED.
    * @param bucketName a single String representing the bucket name where the collection is stored
    * @param key a single String identifying the collection key
-   * @return {@link org.plos.repo.models.Collection}
+   * @return {@link org.plos.repo.models.RepoCollection}
    * @throws SQLException
    */
-  public Collection getCollection(String bucketName, String key) throws SQLException {
+  public RepoCollection getCollection(String bucketName, String key) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -795,16 +795,16 @@ public abstract class SqlService {
       result = p.executeQuery();
 
       if (result.next()) {
-        Collection collection = mapCollectionRow(result);
+        RepoCollection repoCollection = mapCollectionRow(result);
 
-        if (collection.getStatus() == Status.DELETED) {
-          log.info("searched for collection which has been deleted. id: " + collection.getId());
+        if (repoCollection.getStatus() == Status.DELETED) {
+          log.info("searched for collection which has been deleted. id: " + repoCollection.getId());
           return null;
         }
 
-        collection.addObjects(listCollectionObjects(collection.getId()));
+        repoCollection.addObjects(listCollectionObjects(repoCollection.getId()));
 
-        return collection;
+        return repoCollection;
       }
       else
         return null;
@@ -823,10 +823,10 @@ public abstract class SqlService {
    * @param version an integer used to filter the collection regarding the version property
    * @param tag a single String used to filter the collections regarding the tag property. if tag = null, no filter is needed.
    * @param versionChecksum a single string used to filter the collection regarding the checksum property
-   * @return {@link org.plos.repo.models.Collection}
+   * @return {@link org.plos.repo.models.RepoCollection}
    * @throws SQLException
    */
-  public Collection getCollection(String bucketName, String key, Integer version, String tag, String versionChecksum) throws SQLException {
+  public RepoCollection getCollection(String bucketName, String key, Integer version, String tag, String versionChecksum) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -867,16 +867,16 @@ public abstract class SqlService {
       result = p.executeQuery();
 
       if (result.next()) {
-        Collection collection = mapCollectionRow(result);
+        RepoCollection repoCollection = mapCollectionRow(result);
 
-        if (collection.getStatus() == Status.DELETED) {
-          log.info("searched for collection which has been deleted. id: " + collection.getId());
+        if (repoCollection.getStatus() == Status.DELETED) {
+          log.info("searched for collection which has been deleted. id: " + repoCollection.getId());
           return null;
         }
 
-        collection.addObjects(listCollectionObjects(collection.getId()));
+        repoCollection.addObjects(listCollectionObjects(repoCollection.getId()));
 
-        return collection;
+        return repoCollection;
       }
       else
         return null;
@@ -891,12 +891,12 @@ public abstract class SqlService {
    * List all versions for the given <code>collection</code>
    * @param bucketName a single String identifying the bucket name where the collection is.
    * @param key a single String identifying the collection key
-   * @return a list of {@link org.plos.repo.models.Collection}
+   * @return a list of {@link org.plos.repo.models.RepoCollection}
    * @throws SQLException
    */
-  public List<Collection> listCollectionVersions(String bucketName, String key) throws SQLException {
+  public List<RepoCollection> listCollectionVersions(String bucketName, String key) throws SQLException {
 
-    List<Collection> collections = new ArrayList<Collection>();
+    List<RepoCollection> repoCollections = new ArrayList<RepoCollection>();
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -912,12 +912,12 @@ public abstract class SqlService {
       result = p.executeQuery();
 
       while (result.next()) {
-        Collection c = mapCollectionRow(result);
+        RepoCollection c = mapCollectionRow(result);
         c.addObjects(listCollectionObjects(c.getId()));
-        collections.add(c);
+        repoCollections.add(c);
       }
 
-      return collections;
+      return repoCollections;
 
     } finally {
       closeDbStuff(result, p);
@@ -1010,7 +1010,7 @@ public abstract class SqlService {
     }
   }
 
-  public int insertCollection(Collection collection) throws SQLException {
+  public int insertCollection(RepoCollection repoCollection) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet keys = null;
@@ -1020,14 +1020,14 @@ public abstract class SqlService {
           connectionLocal.get().prepareStatement("INSERT INTO collections (bucketId, collkey, timestamp, status, versionNumber, tag, creationDate, versionChecksum) VALUES (?,?,?,?,?,?,?,?)",
               Statement.RETURN_GENERATED_KEYS);
 
-      p.setInt(1, collection.getBucketId());
-      p.setString(2, collection.getKey());
-      p.setTimestamp(3, collection.getTimestamp());
-      p.setInt(4, collection.getStatus().getValue());
-      p.setInt(5, collection.getVersionNumber());
-      p.setString(6, collection.getTag());
-      p.setTimestamp(7, collection.getCreationDate());
-      p.setString(8, collection.getVersionChecksum());
+      p.setInt(1, repoCollection.getBucketId());
+      p.setString(2, repoCollection.getKey());
+      p.setTimestamp(3, repoCollection.getTimestamp());
+      p.setInt(4, repoCollection.getStatus().getValue());
+      p.setInt(5, repoCollection.getVersionNumber());
+      p.setString(6, repoCollection.getTag());
+      p.setTimestamp(7, repoCollection.getCreationDate());
+      p.setString(8, repoCollection.getVersionChecksum());
 
       p.executeUpdate();
       keys = p.getGeneratedKeys();

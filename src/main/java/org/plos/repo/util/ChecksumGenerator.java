@@ -17,7 +17,7 @@
 
 package org.plos.repo.util;
 
-import org.plos.repo.models.Collection;
+import org.plos.repo.models.RepoCollection;
 import org.plos.repo.service.RepoException;
 
 import java.security.MessageDigest;
@@ -35,7 +35,7 @@ public class ChecksumGenerator {
   public ChecksumGenerator(){
   }
 
-  public String generateVersionChecksum(Collection collection, List<String> objectsChecksum) throws RepoException {
+  public String generateVersionChecksum(RepoCollection repoCollection, List<String> objectsChecksum) throws RepoException {
 
     Collections.sort(objectsChecksum);
 
@@ -45,10 +45,10 @@ public class ChecksumGenerator {
       sb.append(checksum);
     }
 
-    sb.append(collection.getKey());
-    sb.append(TimestampFormatter.getFormattedTimestamp(collection.getCreationDate()));
-    if (collection.getTag() != null){
-      sb.append(collection.getTag());
+    sb.append(repoCollection.getKey());
+    sb.append(TimestampFormatter.getFormattedTimestamp(repoCollection.getCreationDate()));
+    if (repoCollection.getTag() != null){
+      sb.append(repoCollection.getTag());
     }
 
     return checksumToString(this.digest(sb.toString()));

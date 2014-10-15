@@ -19,6 +19,7 @@ package org.plos.repo;
 
 import org.junit.runner.RunWith;
 import org.plos.repo.models.Bucket;
+import org.plos.repo.models.RepoCollection;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.RepoService;
 import org.plos.repo.service.SqlService;
@@ -46,11 +47,11 @@ public abstract class RepoBaseSpringTest {
     sqlService.getConnection();
 
     // remove collections from DB
-    List<org.plos.repo.models.Collection> collectionList = sqlService.listCollections(null,null,null,true,null);
+    List<RepoCollection> repoCollectionList = sqlService.listCollections(null,null,null,true,null);
 
-    for (org.plos.repo.models.Collection collection : collectionList) {
+    for (RepoCollection repoCollection : repoCollectionList) {
 
-      if (sqlService.deleteCollection(collection) == 0)
+      if (sqlService.deleteCollection(repoCollection) == 0)
         throw new Exception("Collection not deleted in DB");
 
     }

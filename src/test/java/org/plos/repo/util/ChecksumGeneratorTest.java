@@ -20,7 +20,7 @@ package org.plos.repo.util;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.plos.repo.models.Collection;
+import org.plos.repo.models.RepoCollection;
 import org.plos.repo.models.Object;
 import org.plos.repo.service.RepoException;
 
@@ -52,9 +52,9 @@ public class ChecksumGeneratorTest {
   private ChecksumGenerator checksumGenerator;
 
   @Mock
-  private Collection collection1;
+  private RepoCollection repoCollection1;
   @Mock
-  private Collection collection2;
+  private RepoCollection repoCollection2;
 
   @Mock
   private Object object1;
@@ -75,18 +75,18 @@ public class ChecksumGeneratorTest {
   @Test
   public void generateChecksumForSameCollection() throws RepoException {
 
-    mockCollectionCalls(collection1, COLLECTION_KEY, TIMESTAMP, TAG);
-    mockCollectionCalls(collection2, COLLECTION_KEY, TIMESTAMP, TAG);
+    mockCollectionCalls(repoCollection1, COLLECTION_KEY, TIMESTAMP, TAG);
+    mockCollectionCalls(repoCollection2, COLLECTION_KEY, TIMESTAMP, TAG);
 
-    String checksumColl1 = checksumGenerator.generateVersionChecksum(collection1, objects1Checksum);
-    String checksumColl2 = checksumGenerator.generateVersionChecksum(collection2, objects2Checksum);
+    String checksumColl1 = checksumGenerator.generateVersionChecksum(repoCollection1, objects1Checksum);
+    String checksumColl2 = checksumGenerator.generateVersionChecksum(repoCollection2, objects2Checksum);
 
     assertNotNull(checksumColl1);
     assertNotNull(checksumColl2);
     assertEquals(checksumColl1, checksumColl2);
 
-    verifyCollectionCalls(collection1, 2);
-    verifyCollectionCalls(collection2, 2);
+    verifyCollectionCalls(repoCollection1, 2);
+    verifyCollectionCalls(repoCollection2, 2);
 
   }
 
@@ -94,18 +94,18 @@ public class ChecksumGeneratorTest {
   @Test
   public void generateChecksumForDifObjsCollection() throws RepoException {
 
-    mockCollectionCalls(collection1, COLLECTION_KEY, TIMESTAMP, TAG);
-    mockCollectionCalls(collection2, COLLECTION_KEY, TIMESTAMP, null);
+    mockCollectionCalls(repoCollection1, COLLECTION_KEY, TIMESTAMP, TAG);
+    mockCollectionCalls(repoCollection2, COLLECTION_KEY, TIMESTAMP, null);
 
-    String checksumColl1 = checksumGenerator.generateVersionChecksum(collection1, objects1Checksum);
-    String checksumColl2 = checksumGenerator.generateVersionChecksum(collection2, objects1Checksum);
+    String checksumColl1 = checksumGenerator.generateVersionChecksum(repoCollection1, objects1Checksum);
+    String checksumColl2 = checksumGenerator.generateVersionChecksum(repoCollection2, objects1Checksum);
 
     assertNotNull(checksumColl1);
     assertNotNull(checksumColl2);
     assertNotEquals(checksumColl1, checksumColl2);
 
-    verifyCollectionCalls(collection1, 2);
-    verifyCollectionCalls(collection2, 1);
+    verifyCollectionCalls(repoCollection1, 2);
+    verifyCollectionCalls(repoCollection2, 1);
 
   }
 
@@ -160,16 +160,16 @@ public class ChecksumGeneratorTest {
     verify(object).getChecksum();
   }
 
-  private void mockCollectionCalls(Collection collection, String collectionKey, Timestamp creationDateTime, String tag) {
-    when(collection.getKey()).thenReturn(collectionKey);
-    when(collection.getCreationDate()).thenReturn(creationDateTime);
-    when(collection.getTag()).thenReturn(tag);
+  private void mockCollectionCalls(RepoCollection repoCollection, String collectionKey, Timestamp creationDateTime, String tag) {
+    when(repoCollection.getKey()).thenReturn(collectionKey);
+    when(repoCollection.getCreationDate()).thenReturn(creationDateTime);
+    when(repoCollection.getTag()).thenReturn(tag);
   }
 
-  private void verifyCollectionCalls(Collection collection, int tagTimes){
-    verify(collection).getKey();
-    verify(collection).getCreationDate();
-    verify(collection, times(tagTimes)).getTag();
+  private void verifyCollectionCalls(RepoCollection repoCollection, int tagTimes){
+    verify(repoCollection).getKey();
+    verify(repoCollection).getCreationDate();
+    verify(repoCollection, times(tagTimes)).getTag();
   }
 
 }

@@ -22,7 +22,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.hsqldb.lib.StringUtil;
 import org.plos.repo.models.Bucket;
-import org.plos.repo.models.Collection;
+import org.plos.repo.models.RepoCollection;
 import org.plos.repo.models.Object;
 import org.plos.repo.models.Status;
 import org.plos.repo.models.input.ElementFilter;
@@ -58,10 +58,10 @@ public class CollectionRepoService extends BaseRepoService {
    * @param limit an Integer used to determine the limit of the response
    * @param includeDeleted a boolean value that defines whether to include deleted collections or not
    * @param tag a single String used to filter the response when collection's tag matches the given param
-   * @return a list of {@link org.plos.repo.models.Collection}
+   * @return a list of {@link org.plos.repo.models.RepoCollection}
    * @throws org.plos.repo.service.RepoException
    */
-  public List<Collection> listCollections(String bucketName, Integer offset, Integer limit, Boolean includeDeleted, String tag) throws RepoException {
+  public List<RepoCollection> listCollections(String bucketName, Integer offset, Integer limit, Boolean includeDeleted, String tag) throws RepoException {
 
     if (offset == null)
       offset = 0;
@@ -98,12 +98,12 @@ public class CollectionRepoService extends BaseRepoService {
    * @param bucketName a single String representing the bucket name in where to look the collection
    * @param key a single String identifying the collection key
    * @param elementFilter a collection filter object used to uniquely identify the collection
-   * @return a collection {@link org.plos.repo.models.Collection} or null is the desired collection does not exists
+   * @return a collection {@link org.plos.repo.models.RepoCollection} or null is the desired collection does not exists
    * @throws RepoException
    */
-  public Collection getCollection(String bucketName, String key, ElementFilter elementFilter) throws RepoException {
+  public RepoCollection getCollection(String bucketName, String key, ElementFilter elementFilter) throws RepoException {
 
-    Collection collection;
+    RepoCollection repoCollection;
 
     try {
       sqlService.getConnection();
@@ -112,11 +112,11 @@ public class CollectionRepoService extends BaseRepoService {
         throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
 
       if (elementFilter == null || elementFilter.isEmpty()) // no filters defined
-        collection = sqlService.getCollection(bucketName, key);
+        repoCollection = sqlService.getCollection(bucketName, key);
       else
-        collection = sqlService.getCollection(bucketName, key, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum());
+        repoCollection = sqlService.getCollection(bucketName, key, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum());
 
-      if (collection == null)
+      if (repoCollection == null)
         throw new RepoException(RepoException.Type.CollectionNotFound);
 
     } catch (SQLException e) {
@@ -125,14 +125,14 @@ public class CollectionRepoService extends BaseRepoService {
       sqlReleaseConnection();
     }
 
-    return collection;
+    return repoCollection;
 
   }
 
   /**
    * Returns a list of all collection versions for the given <code>collection</code>
-   * @param collection a single {@link org.plos.repo.models.Collection}
-   * @return a list of {@link org.plos.repo.models.Collection}
+   * @param collection a single {@link org.plos.repo.models.RepoCollection}
+   * @return a list of {@link org.plos.repo.models.RepoCollection}
    * @throws org.plos.repo.service.RepoException
    */
 
@@ -140,10 +140,10 @@ public class CollectionRepoService extends BaseRepoService {
    * Returns a list of all versions for the given <code>bucketName</code> and <code>key</code>
    * @param bucketName a single a single String identifying the bucket name where the collection is.
    * @param key a single String identifying the collection key
-   * @return a list of {@link org.plos.repo.models.Collection}
+   * @return a list of {@link org.plos.repo.models.RepoCollection}
    * @throws org.plos.repo.service.RepoException
    */
-  public List<Collection> getCollectionVersions(String bucketName, String key) throws RepoException {
+  public List<RepoCollection> getCollectionVersions(String bucketName, String key) throws RepoException {
 
     try {
       sqlService.getConnection();
@@ -156,13 +156,13 @@ public class CollectionRepoService extends BaseRepoService {
         throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
       }
 
-      List<Collection> collections = sqlService.listCollectionVersions(bucketName, key);
+      List<RepoCollection> repoCollections = sqlService.listCollectionVersions(bucketName, key);
 
-      if (collections == null || collections.size() == 0){
+      if (repoCollections == null || repoCollections.size() == 0){
         throw new RepoException(RepoException.Type.CollectionNotFound);
       }
 
-      return collections;
+      return repoCollections;
 
     } catch (SQLException e) {
       throw new RepoException(e);
@@ -228,23 +228,23 @@ public class CollectionRepoService extends BaseRepoService {
    * @param method a {@link org.plos.repo.service.BaseRepoService.CreateMethod}
    * @param inputCollection a {@link org.plos.repo.models.input.InputCollection} that holds the information of the new collection
    *                        to be created
-   * @return {@link org.plos.repo.models.Collection} created
+   * @return {@link org.plos.repo.models.RepoCollection} created
    * @throws RepoException
    */
-  public Collection createCollection(CreateMethod method, InputCollection inputCollection) throws RepoException {
+  public RepoCollection createCollection(CreateMethod method, InputCollection inputCollection) throws RepoException {
 
     inputCollectionValidator.validate(inputCollection);
 
-    Collection existingCollection = null;
+    RepoCollection existingRepoCollection = null;
     boolean rollback = false;
-    Collection newCollection = null;
+    RepoCollection newRepoCollection = null;
 
     try {
 
       // get connection
       sqlService.getConnection();
 
-      existingCollection = sqlService.getCollection(inputCollection.getBucketName(), inputCollection.getKey());
+      existingRepoCollection = sqlService.getCollection(inputCollection.getBucketName(), inputCollection.getKey());
 
       // creates timestamps
       Timestamp creationDate = inputCollection.getCreationDateTime() != null ?
@@ -257,22 +257,22 @@ public class CollectionRepoService extends BaseRepoService {
 
       if (CreateMethod.NEW.equals(method)){
 
-        if (existingCollection != null)
+        if (existingRepoCollection != null)
           throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
-        newCollection = createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
+        newRepoCollection = createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
 
       } else if (CreateMethod.VERSION.equals(method)){
 
-        if (existingCollection == null)
+        if (existingRepoCollection == null)
           throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
-        newCollection = updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, existingCollection, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
+        newRepoCollection = updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, existingRepoCollection, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
 
       } else if (CreateMethod.AUTO.equals(method)){
 
-        if (existingCollection == null)
-          newCollection = createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
+        if (existingRepoCollection == null)
+          newRepoCollection = createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
         else
-          newCollection = updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, existingCollection, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
+          newRepoCollection = updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, existingRepoCollection, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
 
       } else {
         throw new RepoException(RepoException.Type.InvalidCreationMethod);
@@ -281,7 +281,7 @@ public class CollectionRepoService extends BaseRepoService {
       sqlService.transactionCommit();
       rollback = false;
 
-      return newCollection;
+      return newRepoCollection;
 
     } catch (SQLException e) {
       throw new RepoException(e);
@@ -296,7 +296,7 @@ public class CollectionRepoService extends BaseRepoService {
   }
 
 
-  private Collection createNewCollection(String key,
+  private RepoCollection createNewCollection(String key,
                                          String bucketName,
                                          Timestamp timestamp,
                                          List<InputObject> objects,
@@ -321,20 +321,20 @@ public class CollectionRepoService extends BaseRepoService {
 
   }
 
-  private Collection updateCollection(String key,
+  private RepoCollection updateCollection(String key,
                                       String bucketName,
                                       Timestamp timestamp,
-                                      Collection existingCollection,
+                                      RepoCollection existingRepoCollection,
                                       List<InputObject> objects,
                                       String tag,
                                       Timestamp creationDate) throws RepoException {
 
-    if (areCollectionsSimilar(key, bucketName, objects, tag, existingCollection)){
-      return existingCollection;
+    if (areCollectionsSimilar(key, bucketName, objects, tag, existingRepoCollection)){
+      return existingRepoCollection;
     }
 
     try{
-      return createCollection(key, bucketName, timestamp, existingCollection.getBucketId(), objects, tag, creationDate);
+      return createCollection(key, bucketName, timestamp, existingRepoCollection.getBucketId(), objects, tag, creationDate);
     } catch(SQLIntegrityConstraintViolationException e){
       throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
     } catch(SQLException e){
@@ -347,19 +347,19 @@ public class CollectionRepoService extends BaseRepoService {
                                         String bucketName,
                                         List<InputObject> objects,
                                         String tag,
-                                        Collection existingCollection
+                                        RepoCollection existingRepoCollection
   ){
 
-    Boolean similar = existingCollection.getKey().equals(key) &&
-        existingCollection.getBucketName().equals(bucketName) &&
-        existingCollection.getStatus().equals(Status.USED) &&
-        objects.size() == existingCollection.getObjects().size();
+    Boolean similar = existingRepoCollection.getKey().equals(key) &&
+        existingRepoCollection.getBucketName().equals(bucketName) &&
+        existingRepoCollection.getStatus().equals(Status.USED) &&
+        objects.size() == existingRepoCollection.getObjects().size();
 
 
-    if ( similar &&  ( existingCollection.getTag() != null && tag != null) ) {
-      similar = existingCollection.getTag().equals(tag);
+    if ( similar &&  ( existingRepoCollection.getTag() != null && tag != null) ) {
+      similar = existingRepoCollection.getTag().equals(tag);
     } else {
-      similar = similar && !( (existingCollection.getTag() != null && tag == null) || (existingCollection.getTag() == null && tag !=null)) ;
+      similar = similar && !( (existingRepoCollection.getTag() != null && tag == null) || (existingRepoCollection.getTag() == null && tag !=null)) ;
     }
 
     int i = 0;
@@ -369,8 +369,8 @@ public class CollectionRepoService extends BaseRepoService {
       InputObject inputObject = objects.get(i);
 
       int y = 0;
-      for( ; y < existingCollection.getObjects().size(); y++ ){
-        Object object = existingCollection.getObjects().get(y);
+      for( ; y < existingRepoCollection.getObjects().size(); y++ ){
+        Object object = existingRepoCollection.getObjects().get(y);
         if (object.getKey().equals(inputObject.getKey()) &&
             object.getVersionChecksum().equals(inputObject.getVersionChecksum())){
           break;
@@ -378,7 +378,7 @@ public class CollectionRepoService extends BaseRepoService {
         }
       }
 
-      if ( y == existingCollection.getObjects().size()){
+      if ( y == existingRepoCollection.getObjects().size()){
         similar = false;
       }
     }
@@ -388,7 +388,7 @@ public class CollectionRepoService extends BaseRepoService {
 
   }
 
-  private Collection createCollection(String key,
+  private RepoCollection createCollection(String key,
                                       String bucketName,
                                       Timestamp timestamp,
                                       Integer bucketId,
@@ -397,19 +397,19 @@ public class CollectionRepoService extends BaseRepoService {
                                       Timestamp creationDate) throws SQLException, RepoException {
 
     Integer versionNumber;
-    Collection collection;
+    RepoCollection repoCollection;
 
 
     versionNumber = sqlService.getCollectionNextAvailableVersion(bucketName, key);   // change to support collections
 
-    collection = new Collection(null, key, timestamp, bucketId, bucketName, versionNumber, Status.USED, tag, creationDate, null);
+    repoCollection = new RepoCollection(null, key, timestamp, bucketId, bucketName, versionNumber, Status.USED, tag, creationDate, null);
 
     List<String> objectsChecksum = Lists.newArrayList(Iterables.transform(inputObjects, typeFunction()));
 
-    collection.setVersionChecksum(checksumGenerator.generateVersionChecksum(collection, objectsChecksum));
+    repoCollection.setVersionChecksum(checksumGenerator.generateVersionChecksum(repoCollection, objectsChecksum));
 
     // add a record to the DB
-    Integer collId = sqlService.insertCollection(collection);
+    Integer collId = sqlService.insertCollection(repoCollection);
     if (collId == -1) {
       throw new RepoException("Error saving content to database");
     }
@@ -422,7 +422,7 @@ public class CollectionRepoService extends BaseRepoService {
 
     }
 
-    return collection;
+    return repoCollection;
 
 
   }

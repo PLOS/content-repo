@@ -15,52 +15,52 @@
  * limitations under the License.
  */
 
-package org.plos.repo.models.output;
+package org.plos.repo.models;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.plos.repo.models.Status;
-import org.plos.repo.util.TimestampFormatter;
 
-import javax.xml.bind.annotation.XmlRootElement;
 import java.sql.Timestamp;
 import java.util.List;
 
 /**
- * Collection to be return to the client
+ * Collection of objects.
  */
-@XmlRootElement
-public class Collection {
+public class RepoCollection {
 
+  private Integer id; // assigned by the db
   private String key; // what the user specifies
-  private String timestamp;   // created time
+  private Timestamp timestamp;   // created time
+  private Integer bucketId;
+  private String bucketName;
   private Integer versionNumber;
-  private String tag;
-  private String creationDate;
-  private String versionChecksum;
   private Status status;
+  private String tag;
+  private Timestamp creationDate;
+  private String versionChecksum;
   private List<Object> objects;
 
-  private Collection() {
 
+  // empty constructor required for JAXB mapping
+  public RepoCollection() {
   }
 
-  public Collection(org.plos.repo.models.Collection collection) {
-    this.key = collection.getKey();
-    this.timestamp = TimestampFormatter.getFormattedTimestamp(collection.getTimestamp());
-    this.versionNumber = collection.getVersionNumber();
-    this.tag = collection.getTag();
-    this.creationDate = TimestampFormatter.getFormattedTimestamp(collection.getCreationDate());
-    this.versionChecksum = collection.getVersionChecksum();
-    this.status = collection.getStatus();
+  public RepoCollection(Integer id, String key, Timestamp timestamp, Integer bucketId, String bucketName,
+                        Integer versionNumber, Status status, String tag, Timestamp creationDate, String versionChecksum) {
+    this.id = id;
+    this.key = key;
+    this.timestamp = timestamp;
+    this.bucketId = bucketId;
+    this.bucketName = bucketName;
+    this.versionNumber = versionNumber;
+    this.status = status;
+    this.tag = tag;
+    this.creationDate = creationDate;
+    this.versionChecksum = versionChecksum;
+  }
 
-    if(collection.getObjects()!=null && collection.getObjects().size() >0){
-      this.objects = Lists.newArrayList(Iterables.transform(collection.getObjects(), Object.typeFunction()));
-    }
-
+  public Integer getId(){
+    return id;
   }
 
   public void addObjects(List<Object> objects){
@@ -72,24 +72,56 @@ public class Collection {
     return key;
   }
 
-  public String getTimestamp() {
+  public Timestamp getTimestamp() {
     return timestamp;
+  }
+
+  public Integer getBucketId() {
+    return bucketId;
+  }
+
+  public String getBucketName() {
+    return bucketName;
   }
 
   public Integer getVersionNumber() {
     return versionNumber;
   }
 
+  public Status getStatus() {
+    return status;
+  }
+
   public List<Object> getObjects() {
     return objects;
+  }
+
+  public void setId(Integer id) {
+    this.id = id;
   }
 
   public void setKey(String key) {
     this.key = key;
   }
 
+  public void setTimestamp(Timestamp timestamp) {
+    this.timestamp = timestamp;
+  }
+
+  public void setBucketId(Integer bucketId) {
+    this.bucketId = bucketId;
+  }
+
+  public void setBucketName(String bucketName) {
+    this.bucketName = bucketName;
+  }
+
   public void setVersionNumber(Integer versionNumber) {
     this.versionNumber = versionNumber;
+  }
+
+  public void setStatus(Status status) {
+    this.status = status;
   }
 
   public void setObjects(List<Object> objects) {
@@ -104,15 +136,11 @@ public class Collection {
     this.tag = tag;
   }
 
-  public String getCreationDate() {
+  public Timestamp getCreationDate() {
     return creationDate;
   }
 
-  public void setTimestamp(String timestamp) {
-    this.timestamp = timestamp;
-  }
-
-  public void setCreationDate(String creationDate) {
+  public void setCreationDate(Timestamp creationDate) {
     this.creationDate = creationDate;
   }
 
@@ -124,25 +152,12 @@ public class Collection {
     this.versionChecksum = versionChecksum;
   }
 
+  public boolean equals(Object o) {
+    return EqualsBuilder.reflectionEquals(this, o);
+  }
+
   @Override
   public int hashCode() {
     return HashCodeBuilder.reflectionHashCode(this);
   }
-
-  @Override
-  public boolean equals(java.lang.Object obj) {
-    return EqualsBuilder.reflectionEquals(this, obj);
-  }
-
-  public static Function<org.plos.repo.models.Collection, Collection> typeFunction() {
-    return new Function<org.plos.repo.models.Collection, Collection>() {
-
-      @Override
-      public Collection apply(org.plos.repo.models.Collection collection) {
-        return new Collection(collection);
-      }
-
-    };
-  }
-
 }

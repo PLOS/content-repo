@@ -23,7 +23,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.plos.repo.models.Bucket;
-import org.plos.repo.models.Collection;
+import org.plos.repo.models.RepoCollection;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.validator.InputCollectionValidator;
@@ -61,10 +61,10 @@ public class CollectionRepoServiceTest {
   private Bucket bucket;
 
   @Mock
-  private List<Collection> collections;
+  private List<RepoCollection> repoCollections;
 
   @Mock
-  private Collection expectedCollection;
+  private RepoCollection expectedRepoCollection;
 
   @InjectMocks
   private CollectionRepoService collectionRepoService;
@@ -84,12 +84,12 @@ public class CollectionRepoServiceTest {
     doNothing().when(sqlService).getConnection();
     when(sqlService.getBucket(VALID_BUCKET)).thenReturn(bucket);
 
-    when(sqlService.listCollectionsMetaData(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG)).thenReturn(collections);
+    when(sqlService.listCollectionsMetaData(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG)).thenReturn(repoCollections);
 
-    List<Collection> response = collectionRepoService.listCollections(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
+    List<RepoCollection> response = collectionRepoService.listCollections(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
 
     assertNotNull(response);
-    assertEquals(response, collections);
+    assertEquals(response, repoCollections);
 
     verify(sqlService).getConnection();
     verify(sqlService).getBucket(VALID_BUCKET);
@@ -103,7 +103,7 @@ public class CollectionRepoServiceTest {
     doNothing().when(sqlService).getConnection();
     when(sqlService.getBucket(INVALID_BUCKET)).thenReturn(null);
 
-    List<Collection> response = null;
+    List<RepoCollection> response = null;
     try{
       response = collectionRepoService.listCollections(INVALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
       fail(FAIL_MSG);
@@ -124,7 +124,7 @@ public class CollectionRepoServiceTest {
 
     when(sqlService.listCollectionsMetaData(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG)).thenThrow(SQL_EXCEP);
 
-    List<Collection> response = null;
+    List<RepoCollection> response = null;
 
     try{
       response = collectionRepoService.listCollections(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
@@ -144,13 +144,13 @@ public class CollectionRepoServiceTest {
 
     doNothing().when(sqlService).getConnection();
 
-    Collection expCollection = new Collection();
-    when(sqlService.getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, VALID_VERSION, VALID_TAG, null)).thenReturn(expCollection);
+    RepoCollection expRepoCollection = new RepoCollection();
+    when(sqlService.getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, VALID_VERSION, VALID_TAG, null)).thenReturn(expRepoCollection);
 
-    Collection collectionResp = collectionRepoService.getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, new ElementFilter(VALID_VERSION, VALID_TAG, null));
+    RepoCollection repoCollectionResp = collectionRepoService.getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, new ElementFilter(VALID_VERSION, VALID_TAG, null));
 
-    assertNotNull(collectionResp);
-    assertEquals(collectionResp, expCollection);
+    assertNotNull(repoCollectionResp);
+    assertEquals(repoCollectionResp, expRepoCollection);
 
     verify(sqlService, times(1)).getConnection();
     verify(sqlService).getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, VALID_VERSION, VALID_TAG, null);
@@ -162,14 +162,14 @@ public class CollectionRepoServiceTest {
 
     doNothing().when(sqlService).getConnection();
 
-    List<Collection> expCollections = new ArrayList<Collection>();
-    Collection coll1 = mock(Collection.class);
-    Collection coll2 = mock(Collection.class);
-    expCollections.add(coll1);
-    expCollections.add(coll2);
-    when(sqlService.listCollectionVersions(VALID_BUCKET, VALID_COLLECTION_KEY)).thenReturn(expCollections);
+    List<RepoCollection> expRepoCollections = new ArrayList<RepoCollection>();
+    RepoCollection coll1 = mock(RepoCollection.class);
+    RepoCollection coll2 = mock(RepoCollection.class);
+    expRepoCollections.add(coll1);
+    expRepoCollections.add(coll2);
+    when(sqlService.listCollectionVersions(VALID_BUCKET, VALID_COLLECTION_KEY)).thenReturn(expRepoCollections);
 
-    List<Collection> collectionsResp = collectionRepoService.getCollectionVersions(VALID_BUCKET, VALID_COLLECTION_KEY);
+    List<RepoCollection> collectionsResp = collectionRepoService.getCollectionVersions(VALID_BUCKET, VALID_COLLECTION_KEY);
 
     assertNotNull(collectionsResp);
     assertEquals(2, collectionsResp.size());
@@ -184,7 +184,7 @@ public class CollectionRepoServiceTest {
 
     doNothing().when(sqlService).getConnection();
 
-    List<Collection> collectionsResp = null;
+    List<RepoCollection> collectionsResp = null;
     try{
       collectionsResp = collectionRepoService.getCollectionVersions(VALID_BUCKET, "");
       fail("A repo exception was expected");
@@ -201,7 +201,7 @@ public class CollectionRepoServiceTest {
 
     doNothing().when(sqlService).getConnection();
 
-    List<Collection> collectionsResp = null;
+    List<RepoCollection> collectionsResp = null;
     try{
       collectionsResp = collectionRepoService.getCollectionVersions("", "");
       fail("A repo exception was expected");
