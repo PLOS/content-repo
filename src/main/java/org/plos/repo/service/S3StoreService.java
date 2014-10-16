@@ -22,7 +22,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.plos.repo.models.Bucket;
-import org.plos.repo.models.Object;
+import org.plos.repo.models.RepoObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,9 +55,9 @@ public class S3StoreService extends ObjectStore {
     s3Client = new AmazonS3Client(new BasicAWSCredentials(aws_access_key, aws_secret_key));
   }
 
-  public Boolean objectExists(Object object) {
+  public Boolean objectExists(RepoObject repoObject) {
     try {
-      S3Object obj = s3Client.getObject(object.getBucketName(), object.getChecksum());
+      S3Object obj = s3Client.getObject(repoObject.getBucketName(), repoObject.getChecksum());
 
       if (obj == null)
         return false;
@@ -74,16 +74,16 @@ public class S3StoreService extends ObjectStore {
     return true;
   }
 
-  public URL[] getRedirectURLs(Object object) throws RepoException {
+  public URL[] getRedirectURLs(RepoObject repoObject) throws RepoException {
     try {
-      return new URL[]{new URL(s3Client.getResourceUrl(object.getBucketName(), object.getChecksum()))};
+      return new URL[]{new URL(s3Client.getResourceUrl(repoObject.getBucketName(), repoObject.getChecksum()))};
     } catch (MalformedURLException e) {
       throw new RepoException(e);
     }
   }
 
-  public InputStream getInputStream(Object object) {
-    return s3Client.getObject(object.getBucketName(), object.getChecksum()).getObjectContent();
+  public InputStream getInputStream(RepoObject repoObject) {
+    return s3Client.getObject(repoObject.getBucketName(), repoObject.getChecksum()).getObjectContent();
   }
 
   public Boolean bucketExists(Bucket bucket) {
@@ -171,14 +171,14 @@ public class S3StoreService extends ObjectStore {
     }
   }
 
-  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object) {
+  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
 
     int retries = 5;
     int tryCount = 0;
     int waitSecond = 4;
 
     ObjectMapper m = new ObjectMapper();
-    Map<String, java.lang.Object> propsObj = m.convertValue(object, Map.class);
+    Map<String, java.lang.Object> propsObj = m.convertValue(repoObject, Map.class);
 
     Map<String, String> propsStr = new HashMap<>();
 
@@ -230,9 +230,9 @@ public class S3StoreService extends ObjectStore {
     return new File(uploadInfo.getTempLocation()).delete();
   }
 
-  public Boolean deleteObject(Object object) {
+  public Boolean deleteObject(RepoObject repoObject) {
     try {
-      s3Client.deleteObject(object.getBucketName(), object.getChecksum());
+      s3Client.deleteObject(repoObject.getBucketName(), repoObject.getChecksum());
       return true;
     } catch (Exception e) {
       log.error("Error deleting object", e);

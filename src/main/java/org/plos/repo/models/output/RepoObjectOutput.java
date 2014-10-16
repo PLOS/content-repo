@@ -18,17 +18,17 @@
 package org.plos.repo.models.output;
 
 import com.google.common.base.Function;
+import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.Status;
 import org.plos.repo.util.TimestampFormatter;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import java.sql.Timestamp;
 
 /**
  * Collection to be return to the client
  */
 @XmlRootElement
-public class Object {
+public class RepoObjectOutput {
 
   private String key; // what the user specifies
   private String checksum;  // of the file contents
@@ -44,26 +44,26 @@ public class Object {
   private String versionChecksum;
   private String reproxyURL;
 
-  private Object() {
+  private RepoObjectOutput() {
 
   }
 
-  public Object(org.plos.repo.models.Object object) {
+  public RepoObjectOutput(RepoObject repoObject) {
 
-    this.key = object.getKey();
-    this.checksum = object.getChecksum();
-    this.timestamp = TimestampFormatter.getFormattedTimestamp(object.getTimestamp());
-    this.downloadName = object.getDownloadName();
-    this.contentType = object.getContentType();
-    this.size = object.getSize();
-    this.tag = object.getTag();
-    this.versionNumber = object.getVersionNumber();
-    this.status = object.getStatus();
-    this.creationDate = TimestampFormatter.getFormattedTimestamp(object.getCreationDate());
-    this.versionChecksum = object.getVersionChecksum();
+    this.key = repoObject.getKey();
+    this.checksum = repoObject.getChecksum();
+    this.timestamp = TimestampFormatter.getFormattedTimestamp(repoObject.getTimestamp());
+    this.downloadName = repoObject.getDownloadName();
+    this.contentType = repoObject.getContentType();
+    this.size = repoObject.getSize();
+    this.tag = repoObject.getTag();
+    this.versionNumber = repoObject.getVersionNumber();
+    this.status = repoObject.getStatus();
+    this.creationDate = TimestampFormatter.getFormattedTimestamp(repoObject.getCreationDate());
+    this.versionChecksum = repoObject.getVersionChecksum();
 
-    if (object.getReproxyURL() != null ) {
-      this.reproxyURL = object.getReproxyURL().toString();
+    if (repoObject.getReproxyURL() != null ) {
+      this.reproxyURL = repoObject.getReproxyURL().toString();
     }
 
   }
@@ -164,12 +164,12 @@ public class Object {
     this.reproxyURL = reproxyURL;
   }
 
-  public static Function<org.plos.repo.models.Object, Object> typeFunction() {
-    return new Function<org.plos.repo.models.Object, Object>() {
+  public static Function<RepoObject, RepoObjectOutput> typeFunction() {
+    return new Function<RepoObject, RepoObjectOutput>() {
 
       @Override
-      public Object apply(org.plos.repo.models.Object object) {
-        return new Object(object);
+      public RepoObjectOutput apply(RepoObject repoObject) {
+        return new RepoObjectOutput(repoObject);
       }
 
     };

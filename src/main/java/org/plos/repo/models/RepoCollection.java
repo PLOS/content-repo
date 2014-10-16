@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Collection of objects.
  */
-public class Collection {
+public class RepoCollection {
 
   private Integer id; // assigned by the db
   private String key; // what the user specifies
@@ -38,34 +38,27 @@ public class Collection {
   private String tag;
   private Timestamp creationDate;
   private String versionChecksum;
-  private List<Object> objects;
+  private List<RepoObject> repoObjects;
 
 
   // empty constructor required for JAXB mapping
-  public Collection() {
+  public RepoCollection() {
   }
 
-  public Collection(Integer id, String key, Timestamp timestamp, Integer bucketId, String bucketName,
-                    Integer versionNumber, Status status, String tag, Timestamp creationDate, String versionChecksum) {
-    this.id = id;
+  public RepoCollection(String key, Integer bucketId, String bucketName, Status status) {
     this.key = key;
-    this.timestamp = timestamp;
     this.bucketId = bucketId;
     this.bucketName = bucketName;
-    this.versionNumber = versionNumber;
     this.status = status;
-    this.tag = tag;
-    this.creationDate = creationDate;
-    this.versionChecksum = versionChecksum;
   }
 
   public Integer getId(){
     return id;
   }
 
-  public void addObjects(List<Object> objects){
+  public void addObjects(List<RepoObject> repoObjects){
 
-    this.objects = objects;
+    this.repoObjects = repoObjects;
   }
 
   public String getKey() {
@@ -92,8 +85,8 @@ public class Collection {
     return status;
   }
 
-  public List<Object> getObjects() {
-    return objects;
+  public List<RepoObject> getRepoObjects() {
+    return repoObjects;
   }
 
   public void setId(Integer id) {
@@ -124,8 +117,8 @@ public class Collection {
     this.status = status;
   }
 
-  public void setObjects(List<Object> objects) {
-    this.objects = objects;
+  public void setRepoObjects(List<RepoObject> repoObjects) {
+    this.repoObjects = repoObjects;
   }
 
   public String getTag() {
@@ -152,7 +145,7 @@ public class Collection {
     this.versionChecksum = versionChecksum;
   }
 
-  public boolean equals(Object o) {
+  public boolean equals(RepoObject o) {
     return EqualsBuilder.reflectionEquals(this, o);
   }
 

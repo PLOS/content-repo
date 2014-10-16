@@ -22,18 +22,18 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.plos.repo.models.RepoCollection;
 import org.plos.repo.models.Status;
 import org.plos.repo.util.TimestampFormatter;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import java.sql.Timestamp;
 import java.util.List;
 
 /**
  * Collection to be return to the client
  */
 @XmlRootElement
-public class Collection {
+public class RepoCollectionOutput {
 
   private String key; // what the user specifies
   private String timestamp;   // created time
@@ -42,30 +42,30 @@ public class Collection {
   private String creationDate;
   private String versionChecksum;
   private Status status;
-  private List<Object> objects;
+  private List<RepoObjectOutput> objects;
 
-  private Collection() {
+  private RepoCollectionOutput() {
 
   }
 
-  public Collection(org.plos.repo.models.Collection collection) {
-    this.key = collection.getKey();
-    this.timestamp = TimestampFormatter.getFormattedTimestamp(collection.getTimestamp());
-    this.versionNumber = collection.getVersionNumber();
-    this.tag = collection.getTag();
-    this.creationDate = TimestampFormatter.getFormattedTimestamp(collection.getCreationDate());
-    this.versionChecksum = collection.getVersionChecksum();
-    this.status = collection.getStatus();
+  public RepoCollectionOutput(RepoCollection repoCollection) {
+    this.key = repoCollection.getKey();
+    this.timestamp = TimestampFormatter.getFormattedTimestamp(repoCollection.getTimestamp());
+    this.versionNumber = repoCollection.getVersionNumber();
+    this.tag = repoCollection.getTag();
+    this.creationDate = TimestampFormatter.getFormattedTimestamp(repoCollection.getCreationDate());
+    this.versionChecksum = repoCollection.getVersionChecksum();
+    this.status = repoCollection.getStatus();
 
-    if(collection.getObjects()!=null && collection.getObjects().size() >0){
-      this.objects = Lists.newArrayList(Iterables.transform(collection.getObjects(), Object.typeFunction()));
+    if(repoCollection.getRepoObjects()!=null && repoCollection.getRepoObjects().size() >0){
+      this.objects = Lists.newArrayList(Iterables.transform(repoCollection.getRepoObjects(), RepoObjectOutput.typeFunction()));
     }
 
   }
 
-  public void addObjects(List<Object> objects){
+  public void addObjects(List<RepoObjectOutput> repoObjectOutputs){
 
-    this.objects = objects;
+    this.objects = repoObjectOutputs;
   }
 
   public String getKey() {
@@ -80,7 +80,7 @@ public class Collection {
     return versionNumber;
   }
 
-  public List<Object> getObjects() {
+  public List<RepoObjectOutput> getObjects() {
     return objects;
   }
 
@@ -92,7 +92,7 @@ public class Collection {
     this.versionNumber = versionNumber;
   }
 
-  public void setObjects(List<Object> objects) {
+  public void setObjects(List<RepoObjectOutput> objects) {
     this.objects = objects;
   }
 
@@ -134,12 +134,12 @@ public class Collection {
     return EqualsBuilder.reflectionEquals(this, obj);
   }
 
-  public static Function<org.plos.repo.models.Collection, Collection> typeFunction() {
-    return new Function<org.plos.repo.models.Collection, Collection>() {
+  public static Function<RepoCollection, RepoCollectionOutput> typeFunction() {
+    return new Function<RepoCollection, RepoCollectionOutput>() {
 
       @Override
-      public Collection apply(org.plos.repo.models.Collection collection) {
-        return new Collection(collection);
+      public RepoCollectionOutput apply(RepoCollection repoCollection) {
+        return new RepoCollectionOutput(repoCollection);
       }
 
     };

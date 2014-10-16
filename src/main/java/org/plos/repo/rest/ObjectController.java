@@ -24,8 +24,9 @@ import com.wordnik.swagger.annotations.*;
 import org.apache.http.HttpStatus;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.plos.repo.models.RepoError;
+import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.input.ElementFilter;
-import org.plos.repo.models.output.Object;
+import org.plos.repo.models.output.RepoObjectOutput;
 import org.plos.repo.service.RepoException;
 import org.plos.repo.service.RepoInfoService;
 import org.plos.repo.service.RepoService;
@@ -99,7 +100,7 @@ public class ObjectController {
 
 
   @GET
-  @ApiOperation(value = "List objects", response = Object.class, responseContainer = "List")
+  @ApiOperation(value = "List objects", response = RepoObjectOutput.class, responseContainer = "List")
   @ApiResponses(value = {
       @ApiResponse(code = HttpStatus.SC_OK, message = "Success"),
       @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "Bucket not found"),
@@ -116,11 +117,11 @@ public class ObjectController {
 
     try {
 
-      List<org.plos.repo.models.Object> objects = repoService.listObjects(bucketName, offset, limit, includeDeleted, tag);
-      List<Object> outputObjects = Lists.newArrayList(Iterables.transform(objects, Object.typeFunction()));
+      List<RepoObject> repoObjects = repoService.listObjects(bucketName, offset, limit, includeDeleted, tag);
+      List<RepoObjectOutput> outputObjects = Lists.newArrayList(Iterables.transform(repoObjects, RepoObjectOutput.typeFunction()));
 
       return Response.status(Response.Status.OK).entity(
-          new GenericEntity<List<Object>>(
+          new GenericEntity<List<RepoObjectOutput>>(
               outputObjects
           ) {}).build();
     } catch (RepoException e) {
@@ -130,7 +131,7 @@ public class ObjectController {
   }
 
   @GET @Path("/meta/{bucketName}")
-  @ApiOperation(value = "Fetch info about an object and its versions", response = Object.class)
+  @ApiOperation(value = "Fetch info about an object and its versions", response = RepoObjectOutput.class)
   @Produces({MediaType.APPLICATION_JSON})
   public Response readMetadata(
       @ApiParam(required = true) @PathParam("bucketName") String bucketName,
@@ -139,12 +140,12 @@ public class ObjectController {
 
     try {
 
-      org.plos.repo.models.Object object = repoService.getObject(bucketName, key, elementFilter);
+      RepoObject repoObject = repoService.getObject(bucketName, key, elementFilter);
 
-      Object outputObject = new Object(object);
+      RepoObjectOutput outputObject = new RepoObjectOutput(repoObject);
 
       return Response.status(Response.Status.OK)
-          .lastModified(object.getTimestamp())
+          .lastModified(repoObject.getTimestamp())
           .entity(outputObject).build();
     } catch (RepoException e) {
       return handleError(e);
@@ -153,7 +154,7 @@ public class ObjectController {
   }
 
   @GET @Path("/{bucketName}")
-  @ApiOperation(value = "Fetch an object or its metadata", response = Object.class)
+  @ApiOperation(value = "Fetch an object or its metadata", response = RepoObjectOutput.class)
   @Produces({MediaType.APPLICATION_JSON})
   public Response read(@ApiParam(required = true) @PathParam("bucketName") String bucketName,
                        @ApiParam(required = true) @QueryParam("key") String key,
@@ -164,17 +165,17 @@ public class ObjectController {
                        @HeaderParam("If-Modified-Since") String ifModifiedSinceStr
   ) {
 
-    org.plos.repo.models.Object object;
+    RepoObject repoObject;
 
     boolean notModifiedSince = false;
 
     try {
-      object = repoService.getObject(bucketName, key, elementFilter);
+      repoObject = repoService.getObject(bucketName, key, elementFilter);
 
       if (ifModifiedSinceStr != null) {
 
         Date ifModifiedSince = new SimpleDateFormat(RFC1123_DATE_TIME_FORMAT).parse(ifModifiedSinceStr);
-        notModifiedSince = object.getTimestamp().compareTo(ifModifiedSince) <= 0;
+        notModifiedSince = repoObject.getTimestamp().compareTo(ifModifiedSince) <= 0;
       }
 
     } catch (ParseException e) {
@@ -188,9 +189,9 @@ public class ObjectController {
     // if they want the metadata
 
     if (fetchMetadata != null && fetchMetadata) {
-        Object outputObject = new Object(object);
+        RepoObjectOutput outputObject = new RepoObjectOutput(repoObject);
         return Response.status(Response.Status.OK)
-            .lastModified(object.getTimestamp())
+            .lastModified(repoObject.getTimestamp())
             .entity(outputObject).build();
     }
 
@@ -206,8 +207,8 @@ public class ObjectController {
           status = Response.Status.NOT_MODIFIED;
 
         return Response.status(status)
-            .lastModified(object.getTimestamp())
-            .header(REPROXY_HEADER_URL, REPROXY_URL_JOINER.join(repoService.getObjectReproxy(object)))
+            .lastModified(repoObject.getTimestamp())
+            .header(REPROXY_HEADER_URL, REPROXY_URL_JOINER.join(repoService.getObjectReproxy(repoObject)))
             .header(REPROXY_HEADER_CACHE_FOR, REPROXY_CACHE_FOR_HEADER)
             .build();
       } catch (RepoException e) {
@@ -221,14 +222,14 @@ public class ObjectController {
     try {
 
       if (notModifiedSince)
-        return Response.notModified().lastModified(object.getTimestamp()).build();
+        return Response.notModified().lastModified(repoObject.getTimestamp()).build();
 
-      String exportFileName = repoService.getObjectExportFileName(object);
-      String contentType = repoService.getObjectContentType(object);
-      InputStream is = repoService.getObjectInputStream(object);
+      String exportFileName = repoService.getObjectExportFileName(repoObject);
+      String contentType = repoService.getObjectContentType(repoObject);
+      InputStream is = repoService.getObjectInputStream(repoObject);
 
       return Response.ok(is, contentType)
-          .lastModified(object.getTimestamp())
+          .lastModified(repoObject.getTimestamp())
           .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + exportFileName).build();
 
       // the container closes this input stream
@@ -240,19 +241,19 @@ public class ObjectController {
   }
 
   @GET @Path("/versions/{bucketName}")
-  @ApiOperation(value = "Fetch all the object versions", response = Object.class, responseContainer = "List")
+  @ApiOperation(value = "Fetch all the object versions", response = RepoObjectOutput.class, responseContainer = "List")
   @Produces({MediaType.APPLICATION_JSON})
   public Response getVersions(@ApiParam(required = true) @PathParam("bucketName") String bucketName,
                        @ApiParam(required = true) @QueryParam("key") String key) {
 
     try {
 
-      List<org.plos.repo.models.Object> objects = repoService.getObjectVersions(bucketName, key);
+      List<RepoObject> repoObjects = repoService.getObjectVersions(bucketName, key);
 
-      List<Object> outputObjects = Lists.newArrayList(Iterables.transform(objects, Object.typeFunction()));
+      List<RepoObjectOutput> outputObjects = Lists.newArrayList(Iterables.transform(repoObjects, RepoObjectOutput.typeFunction()));
 
       return Response.status(Response.Status.OK).entity(
-          new GenericEntity<List<Object>>(
+          new GenericEntity<List<RepoObjectOutput>>(
               outputObjects
           ) {}).build();
     } catch (RepoException e) {
@@ -295,7 +296,7 @@ public class ObjectController {
           "conform to this format: yyyy-[m]m-[d]d hh:mm:ss[.f...]")
   @Produces({MediaType.APPLICATION_JSON})
   @ApiResponses(value = {
-      @ApiResponse(code = HttpStatus.SC_CREATED, message = "Object successfully created", response = Object.class),
+      @ApiResponse(code = HttpStatus.SC_CREATED, message = "Object successfully created", response = RepoObjectOutput.class),
       @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "The object not found"),
       @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The object was unable to be created (see response text for more details)"),
       @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
@@ -333,8 +334,8 @@ public class ObjectController {
 
       repoInfoService.incrementWriteCount();
 
-      org.plos.repo.models.Object object = repoService.createObject(method, key, bucketName, contentType, downloadName, lastModifiedDateTime, uploadedInputStream, creationDateTimestamp, tag);
-      Object outputObject = new Object(object);
+      RepoObject repoObject = repoService.createObject(method, key, bucketName, contentType, downloadName, lastModifiedDateTime, uploadedInputStream, creationDateTimestamp, tag);
+      RepoObjectOutput outputObject = new RepoObjectOutput(repoObject);
 
       return Response.status(Response.Status.CREATED).entity(
           outputObject).build();

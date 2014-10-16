@@ -21,9 +21,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.wordnik.swagger.annotations.*;
 import org.apache.http.HttpStatus;
+import org.plos.repo.models.RepoCollection;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputCollection;
-import org.plos.repo.models.output.Collection;
+import org.plos.repo.models.output.RepoCollectionOutput;
 import org.plos.repo.service.CollectionRepoService;
 import org.plos.repo.service.RepoException;
 import org.plos.repo.service.RepoInfoService;
@@ -53,7 +54,7 @@ public class CollectionController {
 
 
   @GET
-  @ApiOperation(value = "List collections", response = Collection.class, responseContainer = "List")
+  @ApiOperation(value = "List collections", response = RepoCollectionOutput.class, responseContainer = "List")
   @ApiResponses(value = {
       @ApiResponse(code = HttpStatus.SC_OK, message = "Success"),
       @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "Bucket not found / Collection not found"),
@@ -70,11 +71,11 @@ public class CollectionController {
 
     try {
 
-      List<org.plos.repo.models.Collection> collections = collectionRepoService.listCollections(bucketName, offset, limit, includeDeleted, tag);
-      List<Collection> outputCollections = Lists.newArrayList(Iterables.transform(collections, Collection.typeFunction()));
+      List<RepoCollection> repoCollections = collectionRepoService.listCollections(bucketName, offset, limit, includeDeleted, tag);
+      List<RepoCollectionOutput> outputCollections = Lists.newArrayList(Iterables.transform(repoCollections, RepoCollectionOutput.typeFunction()));
 
       return Response.status(Response.Status.OK)
-          .entity(new GenericEntity<List<Collection>>(outputCollections){})
+          .entity(new GenericEntity<List<RepoCollectionOutput>>(outputCollections){})
           .build();
 
     } catch (RepoException e) {
@@ -86,7 +87,7 @@ public class CollectionController {
 
   @GET
   @Path("/{bucketName}")
-  @ApiOperation(value = "Fetch a collection", response = Collection.class)
+  @ApiOperation(value = "Fetch a collection", response = RepoCollectionOutput.class)
   @ApiResponses(value = {
       @ApiResponse(code = HttpStatus.SC_OK, message = "Success"),
       @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "Bucket not found"),
@@ -101,12 +102,12 @@ public class CollectionController {
 
     try {
 
-      org.plos.repo.models.Collection collection = collectionRepoService.getCollection(bucketName, key, elementFilter);
+      RepoCollection repoCollection = collectionRepoService.getCollection(bucketName, key, elementFilter);
 
-      Collection outputCollection = new Collection(collection);
+      RepoCollectionOutput outputCollection = new RepoCollectionOutput(repoCollection);
 
       return Response.status(Response.Status.OK)
-          .lastModified(collection.getTimestamp())
+          .lastModified(repoCollection.getTimestamp())
           .entity(outputCollection).build();
     } catch (RepoException e) {
       return ObjectController.handleError(e);
@@ -116,7 +117,7 @@ public class CollectionController {
 
   @GET
   @Path("/versions/{bucketName}")
-  @ApiOperation(value = "Fetch all the collection versions", response = Collection.class, responseContainer = "List")
+  @ApiOperation(value = "Fetch all the collection versions", response = RepoCollectionOutput.class, responseContainer = "List")
   @ApiResponses(value = {
       @ApiResponse(code = HttpStatus.SC_OK, message = "Success"),
       @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "Bucket not found"),
@@ -130,12 +131,12 @@ public class CollectionController {
 
     try {
 
-      List<org.plos.repo.models.Collection> collections = collectionRepoService.getCollectionVersions(bucketName, key);
+      List<RepoCollection> repoCollections = collectionRepoService.getCollectionVersions(bucketName, key);
 
-      List<Collection> outputCollections =  Lists.newArrayList(Iterables.transform(collections, Collection.typeFunction()));
+      List<RepoCollectionOutput> outputCollections =  Lists.newArrayList(Iterables.transform(repoCollections, RepoCollectionOutput.typeFunction()));
 
       return Response.status(Response.Status.OK)
-          .entity(new GenericEntity<List<Collection>>(outputCollections){})
+          .entity(new GenericEntity<List<RepoCollectionOutput>>(outputCollections){})
           .build();
     } catch (RepoException e) {
       return ObjectController.handleError(e);
@@ -194,9 +195,9 @@ public class CollectionController {
 
       repoInfoService.incrementWriteCount();
 
-      org.plos.repo.models.Collection collection = collectionRepoService.createCollection(method, inputCollection);
+      RepoCollection repoCollection = collectionRepoService.createCollection(method, inputCollection);
 
-      Collection outputCollection = new Collection(collection);
+      RepoCollectionOutput outputCollection = new RepoCollectionOutput(repoCollection);
 
       return Response.status(Response.Status.CREATED).entity(outputCollection).build();
 

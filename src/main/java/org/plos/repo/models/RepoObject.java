@@ -21,7 +21,7 @@ import java.net.URL;
 import java.sql.Timestamp;
 
 
-public class Object {
+public class RepoObject {
 
   private Integer id; // assigned by the db
   private String key; // what the user specifies
@@ -39,37 +39,25 @@ public class Object {
   private String versionChecksum;
   private URL[] reproxyURL;
 
-  private Object() {
+  public RepoObject() {
   }
 
-  public Object(Integer id, String key, String checksum, Timestamp timestamp, String downloadName,
-                String contentType, Long size, String tag, Integer bucketId, String bucketName,
-                Integer versionNumber, Status status, Timestamp creationDate, String versionChecksum) {
-    this.id = id;
+  public RepoObject(String key, Integer bucketId, String bucketName, Status status) {
     this.key = key;
-    this.checksum = checksum;
-    this.timestamp = timestamp;
-    this.downloadName = downloadName;
-    this.contentType = contentType;
-    this.size = size;
-    this.tag = tag;
     this.bucketId = bucketId;
     this.bucketName = bucketName;
-    this.versionNumber = versionNumber;
     this.status = status;
-    this.creationDate = creationDate;
-    this.versionChecksum = versionChecksum;
   }
 
-  public Boolean areSimilar(Object object){
+  public Boolean areSimilar(RepoObject repoObject){
 
-      return this.key.equals(object.key) &&
-             this.bucketName.equals(object.bucketName) &&
-             this.status.equals(object.status) &&
-             compareNullableElements(this.contentType, object.contentType) &&
-             compareNullableElements(this.downloadName, object.downloadName) &&
-             compareNullableElements(this.tag, object.tag) &&
-             compareNullableElements(this.checksum, object.checksum);
+      return this.key.equals(repoObject.key) &&
+             this.bucketName.equals(repoObject.bucketName) &&
+             this.status.equals(repoObject.status) &&
+             compareNullableElements(this.contentType, repoObject.contentType) &&
+             compareNullableElements(this.downloadName, repoObject.downloadName) &&
+             compareNullableElements(this.tag, repoObject.tag) &&
+             compareNullableElements(this.checksum, repoObject.checksum);
 
   }
 

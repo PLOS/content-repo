@@ -23,6 +23,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.service.RepoService;
 import org.springframework.beans.factory.config.SingletonBeanRegistry;
@@ -152,7 +153,7 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
       new URL("http", "192.168.1.3", "/dev5/789012.fid")
     };
 
-    when(mockRepoService.getObjectReproxy(isA(org.plos.repo.models.Object.class)))
+    when(mockRepoService.getObjectReproxy(isA(RepoObject.class)))
       .thenReturn(urls);
 
     registerObjectInSpring(mockRepoService);
@@ -192,7 +193,7 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
       new URL("http", "192.168.1.3", "/dev5/789012.fid")
     };
 
-    when(mockRepoService.getObjectReproxy(isA(org.plos.repo.models.Object.class)))
+    when(mockRepoService.getObjectReproxy(isA(RepoObject.class)))
       .thenReturn(urls);
 
     registerObjectInSpring(mockRepoService);
@@ -224,21 +225,17 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
     beanRegistry.registerSingleton(REPO_SVC_BEAN_NAME, mock);
   }
 
-  private org.plos.repo.models.Object getObject(DateTime datetime) {
-    return new org.plos.repo.models.Object(
-        Integer.valueOf(1),                         // id
-        KEY_NAME,                                   // key name
-        "checksum",                                 // checksum
-        new Timestamp(datetime.toDate().getTime()), // timestamp
-        "download-name",                            // download name
-        "text/plain",                               // content type
-        Long.valueOf(1),                            // size
-        null,                                       // tag
-        Integer.valueOf(1),                         // bucket id
-        BUCKET_NAME,                                // bucket name
-        Integer.valueOf(0),                         // version#
-        org.plos.repo.models.Status.USED,
-        new Timestamp(datetime.toDate().getTime()),
-        "123456"); // creation date time
+  private RepoObject getObject(DateTime datetime) {
+    RepoObject repoObject = new RepoObject(KEY_NAME, Integer.valueOf(1), BUCKET_NAME, org.plos.repo.models.Status.USED);
+    repoObject.setId(Integer.valueOf(1));
+    repoObject.setChecksum("checksum");
+    repoObject.setTimestamp(new Timestamp(datetime.toDate().getTime()));
+    repoObject.setDownloadName("download-name");
+    repoObject.setContentType("text/plain");
+    repoObject.setSize(Long.valueOf(1));
+    repoObject.setVersionNumber(Integer.valueOf(0));
+    repoObject.setCreationDate(new Timestamp(datetime.toDate().getTime()));
+    repoObject.setVersionChecksum("123456");
+    return repoObject;
   }
 }

@@ -18,7 +18,7 @@
 package org.plos.repo.service;
 
 import org.plos.repo.models.Bucket;
-import org.plos.repo.models.Object;
+import org.plos.repo.models.RepoObject;
 import org.plos.repo.util.ChecksumGenerator;
 
 import javax.inject.Inject;
@@ -47,9 +47,9 @@ public abstract class ObjectStore {
 
   abstract public Boolean hasXReproxy();
 
-  abstract public URL[] getRedirectURLs(org.plos.repo.models.Object object) throws RepoException;
+  abstract public URL[] getRedirectURLs(RepoObject repoObject) throws RepoException;
 
-  abstract public Boolean objectExists(Object object);
+  abstract public Boolean objectExists(RepoObject repoObject);
 
   // we use Boolean here
   abstract public Boolean bucketExists(Bucket bucket);
@@ -60,12 +60,12 @@ public abstract class ObjectStore {
 
   abstract public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException;
 
-  abstract public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, Object object);
+  abstract public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject);
 
-  abstract public Boolean deleteObject(Object object);
+  abstract public Boolean deleteObject(RepoObject repoObject);
 
   abstract public Boolean deleteTempUpload(UploadInfo uploadInfo);
 
-  abstract public InputStream getInputStream(Object object) throws RepoException;
+  abstract public InputStream getInputStream(RepoObject repoObject) throws RepoException;
 
 }

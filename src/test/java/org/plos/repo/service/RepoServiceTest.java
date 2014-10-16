@@ -25,7 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.plos.repo.TestSpringConfig;
 import org.plos.repo.models.Bucket;
-import org.plos.repo.models.Object;
+import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.validator.TimestampInputValidator;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -45,14 +45,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class RepoServiceTest {
 
   private static final String VALID_BUCKET = "bucket-1";
-  private static final String INVALID_BUCKET = "invalid-bucket";
   private static final Integer VALID_OFFSET = 1;
   private static final Integer VALID_LIMIT = 100;
   private static final String VALID_TAG = "tag";
-  private static final String FAIL_MSG = "A repo exception was expected.";
-  private static final Exception SQL_EXCEP = new SQLException();
-  private static final String VALID_COLLECTION_KEY = "collection-1";
-  private static final Integer VALID_VERSION = 0;
 
   @InjectMocks
   private RepoService repoService;
@@ -83,11 +78,13 @@ public class RepoServiceTest {
     doNothing().when(sqlService).getConnection();
     when(sqlService.getBucket(VALID_BUCKET)).thenReturn(bucket);
 
-    List<org.plos.repo.models.Object> objects = new ArrayList<org.plos.repo.models.Object>();
-    Object ob = new Object(0,"key",null,null,null,null,null,null,null,null,null,null,null,null);
-    objects.add(ob);
+    List<RepoObject> repoObjects = new ArrayList<RepoObject>();
+    RepoObject ob = new RepoObject();
+    ob.setId(0);
+    ob.setKey("key");
+    repoObjects.add(ob);
 
-    when(sqlService.listObjects(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG)).thenReturn(objects);
+    when(sqlService.listObjects(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG)).thenReturn(repoObjects);
 
     when(objectStore.hasXReproxy()).thenReturn(true);
 
@@ -98,7 +95,7 @@ public class RepoServiceTest {
 
     doNothing().when(sqlService).releaseConnection();
 
-    List<Object> response = repoService.listObjects(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
+    List<RepoObject> response = repoService.listObjects(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
 
     assertNotNull(response);
     assertNotNull(response.get(0));

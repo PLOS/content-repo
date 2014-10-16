@@ -104,12 +104,6 @@ public class RepoInfoService {
 
     List<Bucket> bucketList = repoService.listBuckets();
 
-    List<org.plos.repo.models.output.Bucket> outBucketList = new ArrayList<org.plos.repo.models.output.Bucket>();
-    for (Bucket b : bucketList){
-      outBucketList.add(new org.plos.repo.models.output.Bucket(b.getBucketName(), repoService.getBucketsSize(b.getBucketId())));
-    }
-
-    status.bucketsSize = outBucketList;
     status.bucketCount = bucketList.size();
     status.serviceStarted = startTime.toString();
     status.readsSinceStart = readCount;
