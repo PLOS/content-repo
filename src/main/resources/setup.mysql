@@ -1,46 +1,71 @@
+#
+# IMPORTANT: From this point forward it is insufficient
+#   READ     to simply change this schema. Each schema
+#            change is now tied to a migration script
+#            in db-migrations directory.
+#
+#            The CREPO_SCHEMA_INFO.schema version string
+#            MUST be set to the appropriate version string.
+#            See the db-migrations/README for more instructions.
+#            See the last INSERT statement at the end of this
+#            script to set the string.
+
+CREATE TABLE IF NOT EXISTS CREPO_SCHEMA_INFO (
+    timestamp timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    schema_ver VARCHAR (100) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS buckets (
-bucketId INTEGER NOT NULL AUTO_INCREMENT,
-bucketName VARCHAR(255) NOT NULL,
-UNIQUE KEY keyBucket (bucketName),
-timestamp timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-creationDate TIMESTAMP DEFAULT 0,
-PRIMARY KEY (bucketId)
+    bucketId INTEGER NOT NULL AUTO_INCREMENT,
+    bucketName VARCHAR(255) NOT NULL,
+    UNIQUE KEY keyBucket (bucketName),
+    timestamp timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    creationDate TIMESTAMP DEFAULT 0,
+    PRIMARY KEY (bucketId)
 );
+
 CREATE TABLE IF NOT EXISTS objects (
-id INTEGER NOT NULL AUTO_INCREMENT,
-bucketId INTEGER REFERENCES buckets,
-objkey VARCHAR (255) NOT NULL,
-checksum VARCHAR (255) NOT NULL,
-timestamp timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-downloadName VARCHAR (1000),
-contentType VARCHAR (200),
-size INTEGER NOT NULL,
-tag VARCHAR (200),
-status TINYINT DEFAULT 0 NOT NULL,
-versionNumber INTEGER NOT NULL,
-creationDate TIMESTAMP DEFAULT 0,
-versionChecksum VARCHAR (255) NOT NULL,
-UNIQUE KEY keySum (bucketId, objkey, versionChecksum),
-PRIMARY KEY (id)
+    id INTEGER NOT NULL AUTO_INCREMENT,
+    bucketId INTEGER REFERENCES buckets,
+    objkey VARCHAR (255) NOT NULL,
+    checksum VARCHAR (255) NOT NULL,
+    timestamp timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    downloadName VARCHAR (1000),
+    contentType VARCHAR (200),
+    size INTEGER NOT NULL,
+    tag VARCHAR (200),
+    status TINYINT DEFAULT 0 NOT NULL,
+    versionNumber INTEGER NOT NULL,
+    creationDate TIMESTAMP DEFAULT 0,
+    versionChecksum VARCHAR (255) NOT NULL,
+    UNIQUE KEY keySum (bucketId, objkey, versionChecksum),
+    PRIMARY KEY (id)
 );
+
 CREATE TABLE IF NOT EXISTS collections (
-id INTEGER NOT NULL AUTO_INCREMENT,
-bucketId INTEGER NOT NULL,
-collkey VARCHAR (255) NOT NULL,
-versionChecksum INTEGER NOT NULL,
-timestamp timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-versionNumber VARCHAR (255) NOT NULL,
-status TINYINT DEFAULT 0 NOT NULL,
-tag VARCHAR (200),
-creationDate TIMESTAMP DEFAULT 0,
-UNIQUE KEY keySum (bucketId, collkey, versionChecksum),
-PRIMARY KEY (id),
-FOREIGN KEY (bucketId) REFERENCES buckets(bucketId)
+    id INTEGER NOT NULL AUTO_INCREMENT,
+    bucketId INTEGER NOT NULL,
+    collkey VARCHAR (255) NOT NULL,
+    versionChecksum INTEGER NOT NULL,
+    timestamp timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    versionNumber VARCHAR (255) NOT NULL,
+    status TINYINT DEFAULT 0 NOT NULL,
+    tag VARCHAR (200),
+    creationDate TIMESTAMP DEFAULT 0,
+    UNIQUE KEY keySum (bucketId, collkey, versionChecksum),
+    PRIMARY KEY (id),
+    FOREIGN KEY (bucketId) REFERENCES buckets(bucketId)
 );
+
 CREATE TABLE IF NOT EXISTS collectionObject (
-collectionId INTEGER NOT NULL,
-objectId INTEGER NOT NULL,
-UNIQUE KEY keySum (collectionId, objectId),
-FOREIGN KEY (collectionId) REFERENCES collections(id),
-FOREIGN KEY (objectId) REFERENCES objects(id)
+    collectionId INTEGER NOT NULL,
+    objectId INTEGER NOT NULL,
+    UNIQUE KEY keySum (collectionId, objectId),
+    FOREIGN KEY (collectionId) REFERENCES collections(id),
+    FOREIGN KEY (objectId) REFERENCES objects(id)
 );
+
+#
+# IMPORTANT: This must be set to the proper version.
+# 
+INSERT CREPO_SCHEMA_INFO SET schema_ver='01-add-collections';

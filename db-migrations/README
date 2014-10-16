@@ -1,0 +1,41 @@
+DB Migrations
+
+This directory was created to facilitate migration of content repo database schema. 
+Each subdirectory contains the necessary scripts to complete a migration from one 
+database schema to the next. Usually this will be an SQL script but other scripts 
+can be included if necessary. 
+
+The directories are numbered to insure directory listing order and to show the order
+of execution  ie XX-SOME-DESCRIPTIVE-TEXT. This same text will be entered in the 
+CREPO_SCHEMA_INFO.schema_ver table of the repo database. Once the migration is complete
+CREPO_SCHEMA_INFO.schema_ver will be updated with the script version name. This 
+will identify what script was last run on the repo db and which scripts will be
+necessary to bring it up to date.
+
+The subdirectories should also include any instructions necessary to apply the 
+migration. The scripts to create a virgin database reside in src/main/resources.
+IMPORTANT: "setup.mysql" and "setup.hsql" scripts must also be updated with the 
+corresponding schema changes and version string. 
+
+At some point we maybe able to automate this process.
+
+Creating a New Migration 
+
+Instructions
+
+1. Create a new directory that is the next in numerical order.
+
+Example:     01-add-collections is the directory with highest numerical
+             name the a new directory 02-SOME-DESCRIPTIVE-TEXT would be
+             the next created.
+
+2. Create and SQL migration script with the same name as the directory.
+
+Example:    02-SOME-DESCRIPTIVE-TEXT.mysql
+
+Running a Migration
+
+1. Check the CREPO_SCHMEA_INFO.schema_ver to see which script was run last.
+
+2. Execute scripts of higher numerical order in order until the database is
+   brought up to date.  
