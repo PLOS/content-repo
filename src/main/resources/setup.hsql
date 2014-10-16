@@ -1,16 +1,16 @@
-#
-# IMPORTANT: From this point forward it is insufficient
-#   READ     to simply change this schema. Each schema 
-#            change is now tied to a migration script 
-#            in db-migrations directory.
-#             
-#            The CREPO_SCHEMA_INFO.schema version string
-#            MUST be set to the appropriate version string.
-#            See the db-migrations/README for more instructions.
-#            See the last INSERT statement at the end of this
-#            script to set the string.
+--
+-- IMPORTANT: From this point forward it is insufficient
+--   READ     to simply change this schema. Each schema 
+--            change is now tied to a migration script 
+--            in db-migrations directory.
+--             
+--            The CREPO_SCHEMA_INFO.schema version string
+--            MUST be set to the appropriate version string.
+--            See the db-migrations/README for more instructions.
+--            See the last INSERT statement at the end of this
+--            script to set the string.
 
-CACHED TABLE IF NOT EXISTS CREPO_SCHEMA_INFO (
+CREATE CACHED TABLE IF NOT EXISTS CREPO_SCHEMA_INFO (
    timestamp timestamp default CURRENT_TIMESTAMP,
    schema_ver VARCHAR (100) NOT NULL
 );
@@ -61,7 +61,7 @@ CREATE CACHED TABLE IF NOT EXISTS collectionObject (
    FOREIGN KEY (objectId) REFERENCES objects(id)
 );
 
-#
-# IMPORTANT: This must be set to the proper version.
-# 
+--
+-- IMPORTANT: This must be set to the proper version.
+-- 
 INSERT INTO CREPO_SCHEMA_INFO  (schema_ver) VALUES ('01-add-collections');
