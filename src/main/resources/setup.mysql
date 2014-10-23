@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS collections (
     id INTEGER NOT NULL AUTO_INCREMENT,
     bucketId INTEGER NOT NULL,
     collkey VARCHAR (255) NOT NULL,
-    versionChecksum INTEGER NOT NULL,
+    versionChecksum VARCHAR (255) NULL,
     timestamp timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     versionNumber VARCHAR (255) NOT NULL,
     status TINYINT DEFAULT 0 NOT NULL,
