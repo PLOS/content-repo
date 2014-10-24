@@ -120,6 +120,14 @@ public class RepoCollectionOutput {
     return versionChecksum;
   }
 
+  public Status getStatus() {
+    return status;
+  }
+
+  public void setStatus(Status status) {
+    this.status = status;
+  }
+
   public void setVersionChecksum(String versionChecksum) {
     this.versionChecksum = versionChecksum;
   }

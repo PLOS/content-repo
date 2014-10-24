@@ -257,18 +257,22 @@ public class CollectionRepoService extends BaseRepoService {
 
       if (CreateMethod.NEW.equals(method)){
 
-        if (existingRepoCollection != null)
+        if (existingRepoCollection != null){
+          log.debug("Error trying to create a collection that already exists. Key: " + inputCollection.getKey() + " create method : new ");
           throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
+        }
         newRepoCollection = createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
 
       } else if (CreateMethod.VERSION.equals(method)){
+        log.debug("Error trying to version a collection that does not exists. Key: " + inputCollection.getKey() + " create method : version ");
+        if (existingRepoCollection == null){
 
-        if (existingRepoCollection == null)
           throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
+        }
         newRepoCollection = updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, existingRepoCollection, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
 
       } else if (CreateMethod.AUTO.equals(method)){
-
+        log.debug("Creation Method: auto. Key: " + inputCollection.getKey() );
         if (existingRepoCollection == null)
           newRepoCollection = createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
         else
@@ -313,8 +317,10 @@ public class CollectionRepoService extends BaseRepoService {
 
       return createCollection(key, bucketName, timestamp, bucket.getBucketId(), objects, tag, creationDate);
     } catch(SQLIntegrityConstraintViolationException e){
+      log.debug("Error trying to create a collection, key: " + key + " . SQLIntegrityConstraintViolationException:  " + e.getMessage());
       throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
     } catch (SQLException e) {
+      log.debug("SQLException:  " + e.getMessage());
       throw new RepoException(e);
     }
 
@@ -336,8 +342,10 @@ public class CollectionRepoService extends BaseRepoService {
     try{
       return createCollection(key, bucketName, timestamp, existingRepoCollection.getBucketId(), objects, tag, creationDate);
     } catch(SQLIntegrityConstraintViolationException e){
+      log.debug("Error trying to version a collection, key: " + key + " . SQLIntegrityConstraintViolationException:  " + e.getMessage());
       throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
     } catch(SQLException e){
+      log.debug("SQLException:  " + e.getMessage());
       throw new RepoException(e);
     }
 
