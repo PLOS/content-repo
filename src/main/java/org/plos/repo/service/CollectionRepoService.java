@@ -264,9 +264,8 @@ public class CollectionRepoService extends BaseRepoService {
         newRepoCollection = createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
 
       } else if (CreateMethod.VERSION.equals(method)){
-        log.debug("Error trying to version a collection that does not exists. Key: " + inputCollection.getKey() + " create method : version ");
         if (existingRepoCollection == null){
-
+          log.debug("Error trying to version a collection that does not exists. Key: " + inputCollection.getKey() + " create method : version ");
           throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
         }
         newRepoCollection = updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, existingRepoCollection, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
