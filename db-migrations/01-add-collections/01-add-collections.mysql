@@ -139,7 +139,7 @@ BEGIN
     END LOOP update_cDate;
     CLOSE ts_cursor;
 END //
-DELIMETER ;
+DELIMITER ;
 
 CALL updateCreationDate();
 CALL updateVerChecksum();
