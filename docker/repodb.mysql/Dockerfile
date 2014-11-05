@@ -20,6 +20,3 @@ RUN chmod +x /usr/local/bin/start-database.sh
 EXPOSE 3306
 
 CMD ["/usr/local/bin/start-database.sh"]
-
-#CMD ["/usr/sbin/mysqld"]
-#CMD ["tail", "-f", "/var/log/mysql/*"]

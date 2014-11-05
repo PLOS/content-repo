@@ -6,7 +6,7 @@ reposvc:
     - repodb:repodb
     - tracker:tracker
   ports:
-    - "8088:8080"
+    - "8085:8080"
 
 repodb:
   build: repodb.mysql
@@ -15,15 +15,13 @@ repodb:
 
 tracker:
   build: tracker
-#  image: rail44/mogile-tracker
-   ports:
-    - "7008:7001"
   links:
-    - db
+    - mogdb
     - node
 
 node:
-  image: rail44/mogile-node
+  build: node
+#  image: rail44/mogile-node
 
-db: # database for mogile
+mogdb: # database for mogile
   image: orchardup/mysql
