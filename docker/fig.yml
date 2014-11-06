@@ -1,0 +1,27 @@
+reposvc:
+  build: reposvc
+  volumes:
+    - ../target:/build
+  links:
+    - repodb:repodb
+    - tracker:tracker
+  ports:
+    - "8085:8080"
+
+repodb:
+  build: repodb.mysql
+  volumes:
+    - ../src/main/resources:/mysql_schema
+
+tracker:
+  build: tracker
+  links:
+    - mogdb
+    - node
+
+node:
+  build: node
+#  image: rail44/mogile-node
+
+mogdb: # database for mogile
+  image: orchardup/mysql
