@@ -356,12 +356,15 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     assertEquals(endCountActive-startCount, count/2); // half of them are deleted, and not counted
 
     int subset = 10;
-    String responseString = target("/objects").queryParam("limit", "" + subset).queryParam("offset", startCount + "").queryParam("includeDeleted", "true").request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+    String responseString = target("/objects").queryParam("bucketName", bucketName + "").queryParam("limit", "" + subset).queryParam("offset", startCount + "").queryParam("includeDeleted", "true").request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
     JsonArray jsonArray = gson.fromJson(responseString, JsonElement.class).getAsJsonArray();
     assertEquals(jsonArray.size(), subset);
     for (int i=0; i<subset; ++i) {
       assertEquals(jsonArray.get(i).getAsJsonObject().get("key").getAsString(), "count" + (i < 10 ? "0" : "") + i);
     }
+
+    Response response = target("/objects").queryParam("limit", "" + subset).queryParam("offset", startCount + "").queryParam("includeDeleted", "true").request().accept(MediaType.APPLICATION_JSON_TYPE).get();
+    assertRepoError(response, Response.Status.BAD_REQUEST, RepoException.Type.NoBucketEntered);
 
     responseString = target("/objects").queryParam("bucketName", bucketName).queryParam("limit", "" + subset).queryParam("offset", 10).request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
     jsonArray = gson.fromJson(responseString, JsonElement.class).getAsJsonArray();

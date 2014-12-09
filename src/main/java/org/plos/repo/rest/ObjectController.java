@@ -109,7 +109,7 @@ public class ObjectController {
   })
   @Produces({MediaType.APPLICATION_JSON})
   public Response listObjects(
-      @ApiParam(required = false) @QueryParam("bucketName") String bucketName,
+      @ApiParam(required = true) @QueryParam("bucketName") String bucketName,
       @ApiParam(required = false) @QueryParam("offset") Integer offset,
       @ApiParam(required = false) @QueryParam("limit") Integer limit,
       @ApiParam(required = false) @DefaultValue("false") @QueryParam("includeDeleted") boolean includeDeleted,

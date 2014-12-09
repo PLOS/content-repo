@@ -18,6 +18,7 @@
 package org.plos.repo.service;
 
 import com.google.common.util.concurrent.Striped;
+import org.hsqldb.lib.StringUtil;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.Status;
@@ -183,6 +184,10 @@ public class RepoService extends BaseRepoService {
   public List<RepoObject> listObjects(String bucketName, Integer offset, Integer limit, boolean includeDeleted, String tag) throws RepoException {
 
     // TODO: should this function return a list of objects and their nested versions instead of one flat last?
+
+    if (StringUtil.isEmpty(bucketName)){
+      throw new RepoException(RepoException.Type.NoBucketEntered);
+    }
 
     List<RepoObject> repoObjects = null;
 
