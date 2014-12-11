@@ -113,11 +113,12 @@ public class ObjectController {
       @ApiParam(required = false) @QueryParam("offset") Integer offset,
       @ApiParam(required = false) @QueryParam("limit") Integer limit,
       @ApiParam(required = false) @DefaultValue("false") @QueryParam("includeDeleted") boolean includeDeleted,
+      @ApiParam(required = false) @DefaultValue("false") @QueryParam("includePurged") boolean includePurged,
       @ApiParam(required = false) @QueryParam("tag") String tag) {
 
     try {
 
-      List<RepoObject> repoObjects = repoService.listObjects(bucketName, offset, limit, includeDeleted, tag);
+      List<RepoObject> repoObjects = repoService.listObjects(bucketName, offset, limit, includeDeleted, includePurged, tag);
       List<RepoObjectOutput> outputObjects = Lists.newArrayList(Iterables.transform(repoObjects, RepoObjectOutput.typeFunction()));
 
       return Response.status(Response.Status.OK).entity(
@@ -286,7 +287,32 @@ public class ObjectController {
 
   }
 
-  @POST
+  @DELETE
+  @Path("/{bucketName}/purge")
+  @ApiOperation(value = "Deletes the object content and set the status as purged")
+  @ApiResponses(value = {
+          @ApiResponse(code = HttpStatus.SC_OK, message = "Object successfully deleted"),
+          @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "The object was not found"),
+          @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The object was unable to be deleted (see response text for more details)"),
+          @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
+  })
+  public Response purge(
+          @ApiParam(required = true) @PathParam("bucketName") String bucketName,
+          @ApiParam(required = true) @QueryParam("key") String key,
+          @ApiParam("elementFilter") @BeanParam ElementFilter elementFilter
+  ) {
+
+      try {
+          repoService.purgeObject(bucketName, key, elementFilter);
+          return Response.status(Response.Status.OK).build();
+      } catch (RepoException e) {
+          return handleError(e);
+      }
+
+  }
+
+
+    @POST
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @ApiOperation(value = "Create a new object or a new version of an existing object",
       notes = "Set the create field to 'new' object if the object you are inserting is not already in the repo. If you want to create a " +

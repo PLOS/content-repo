@@ -145,7 +145,7 @@ public class RepoService extends BaseRepoService {
       if (Boolean.FALSE.equals(objectStore.bucketExists(bucket)))
         throw new RepoException("Bucket exists in database but not in object store: " + name);
 
-      if (sqlService.listObjects(name, 0, 1, true, null).size() != 0)
+      if (sqlService.listObjects(name, 0, 1, true, true, null).size() != 0)
         throw new RepoException(RepoException.Type.CantDeleteNonEmptyBucket);
 
       rollback = true;
@@ -181,7 +181,7 @@ public class RepoService extends BaseRepoService {
     return objectStore.hasXReproxy();
   }
 
-  public List<RepoObject> listObjects(String bucketName, Integer offset, Integer limit, boolean includeDeleted, String tag) throws RepoException {
+  public List<RepoObject> listObjects(String bucketName, Integer offset, Integer limit, boolean includeDeleted, boolean includePurged, String tag) throws RepoException {
 
     // TODO: should this function return a list of objects and their nested versions instead of one flat last?
 
@@ -205,7 +205,7 @@ public class RepoService extends BaseRepoService {
       if (bucketName != null && sqlService.getBucket(bucketName) == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
 
-      repoObjects = sqlService.listObjects(bucketName, offset, limit, includeDeleted, tag);
+      repoObjects = sqlService.listObjects(bucketName, offset, limit, includeDeleted, includePurged, tag);
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
@@ -336,7 +336,15 @@ public class RepoService extends BaseRepoService {
     }
   }
 
+  public void purgeObject(String bucketName, String key, ElementFilter elementFilter) throws RepoException {
+    deleteObject(bucketName, key, elementFilter, Status.PURGED);
+  }
+
   public void deleteObject(String bucketName, String key, ElementFilter elementFilter) throws RepoException {
+    deleteObject(bucketName, key, elementFilter, Status.DELETED);
+  }
+
+  public void deleteObject(String bucketName, String key, ElementFilter elementFilter, Status status ) throws RepoException {
 
     Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
     writeLock.lock();
@@ -357,7 +365,7 @@ public class RepoService extends BaseRepoService {
       rollback = true;
 
       if (elementFilter.getTag() != null & elementFilter.getVersionChecksum() == null & elementFilter.getVersion() == null){
-        if (sqlService.listObjects(bucketName, 0, 10, false, elementFilter.getTag()).size() > 1){
+        if (sqlService.listObjects(bucketName, 0, 10, false, false, elementFilter.getTag()).size() > 1){
           throw new RepoException(RepoException.Type.MoreThanOneTaggedObject);
         }
       }
@@ -366,8 +374,12 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(RepoException.Type.CantDeleteObjectActiveColl);
       }
 
-      if (sqlService.markObjectDeleted(key, bucketName, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag()) == 0)
-        throw new RepoException(RepoException.Type.ObjectNotFound);
+      if (Status.DELETED.equals(status)){
+        if (sqlService.markObjectDeleted(key, bucketName, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag()) == 0)
+          throw new RepoException(RepoException.Type.ObjectNotFound);
+      }else if (Status.PURGED.equals(status)){
+        purgeObjectContentAndDb(key, bucketName, elementFilter);
+      }
 
       sqlService.transactionCommit();
       rollback = false;
@@ -383,6 +395,35 @@ public class RepoService extends BaseRepoService {
       sqlReleaseConnection();
       writeLock.unlock();
     }
+  }
+
+  private void purgeObjectContentAndDb(String key, String bucketName, ElementFilter elementFilter)  throws RepoException {
+
+    try {
+      // verify object existence
+      RepoObject repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag(), true, false);
+      if (repoObject == null){
+        throw new RepoException(RepoException.Type.ObjectNotFound);
+      }
+      try (InputStream content = getObjectInputStream(repoObject)){
+        if (content == null){
+          throw new RepoException(RepoException.Type.ObjectNotFound);
+        }
+      } catch (IOException e) {
+        throw new RepoException(e);
+      }
+
+      if (sqlService.markObjectPurged(key, bucketName, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag()) == 0 ){
+        throw new RepoException(RepoException.Type.ObjectNotFound);
+      }
+      Boolean removed = objectStore.deleteObject(repoObject);
+      if (Boolean.FALSE.equals(removed)){
+        throw new RepoException(RepoException.Type.ObjectNotFound);
+      }
+    } catch (SQLException e) {
+      throw new RepoException(e);
+    }
+
   }
 
   public RepoObject createObject(CreateMethod method,

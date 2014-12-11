@@ -84,7 +84,7 @@ public class RepoServiceTest {
     ob.setKey("key");
     repoObjects.add(ob);
 
-    when(sqlService.listObjects(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG)).thenReturn(repoObjects);
+    when(sqlService.listObjects(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, true, VALID_TAG)).thenReturn(repoObjects);
 
     when(objectStore.hasXReproxy()).thenReturn(true);
 
@@ -95,7 +95,7 @@ public class RepoServiceTest {
 
     doNothing().when(sqlService).releaseConnection();
 
-    List<RepoObject> response = repoService.listObjects(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
+    List<RepoObject> response = repoService.listObjects(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, true, VALID_TAG);
 
     assertNotNull(response);
     assertNotNull(response.get(0));
@@ -103,7 +103,7 @@ public class RepoServiceTest {
 
     verify(sqlService, times(2)).getConnection();
     verify(sqlService).getBucket(VALID_BUCKET);
-    verify(sqlService).listObjects(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
+    verify(sqlService).listObjects(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, true, VALID_TAG);
     verify(objectStore).hasXReproxy();
     verify(objectStore).getRedirectURLs(ob);
     verify(sqlService, times(2)).releaseConnection();

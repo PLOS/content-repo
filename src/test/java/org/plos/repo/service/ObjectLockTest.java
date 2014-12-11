@@ -117,7 +117,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     this.endGate = new CountDownLatch(UPDATE_THREADS + DELETE_THREADS + READER_THREADS);
     execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
-    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
     // since when version an object we don't create a new version if nothing change from last version, only one object with BASE_KEY_NAME is going to be created
     assertEquals(1, repoObjects.size());
 
@@ -157,7 +157,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     this.endGate = new CountDownLatch(INSERT_THREADS + DELETE_THREADS + READER_THREADS);
     execute(INSERT_THREADS, 0, DELETE_THREADS, READER_THREADS, callback);
-    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
     // since when version an object we don't create a new version if nothing change from last version, only one object with BASE_KEY_NAME is going to be created
     assertEquals(1, repoObjects.size());
 
@@ -165,7 +165,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     this.endGate = new CountDownLatch(UPDATE_THREADS + DELETE_THREADS + READER_THREADS);
     execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
-    repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
     // since when version an object we don't create a new version if nothing change from last version, only one object with BASE_KEY_NAME is going to be created
     assertEquals(1 + UPDATE_THREADS, repoObjects.size());
 
@@ -204,7 +204,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     this.endGate = new CountDownLatch(INSERT_THREADS + READER_THREADS);
     execute(INSERT_THREADS, 0, 0, READER_THREADS, callback);
 
-    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
     assertEquals(1, repoObjects.size());
 
     Callback callbackUp = new Callback() {
@@ -218,14 +218,14 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     this.endGate = new CountDownLatch(UPDATE_THREADS  + READER_THREADS);
     execute(0, UPDATE_THREADS, 0, READER_THREADS, callbackUp);
 
-    repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
     assertEquals(1 + UPDATE_THREADS, repoObjects.size());
 
     this.startGate = new CountDownLatch(1);
     this.endGate = new CountDownLatch(DELETE_THREADS + READER_THREADS);
     execute(0, 0, DELETE_THREADS, READER_THREADS, callbackUp);
 
-    repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
     assertEquals(1 + UPDATE_THREADS - DELETE_THREADS, repoObjects.size());
 
     Collections.sort(repoObjects, new ObjectComparator());
@@ -266,7 +266,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     execute(INSERT_THREADS, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
-    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
 
     assertTrue(repoObjects.size() >= INSERT_THREADS - DELETE_THREADS);
 

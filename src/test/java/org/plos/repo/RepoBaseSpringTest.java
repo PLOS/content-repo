@@ -59,7 +59,7 @@ public abstract class RepoBaseSpringTest {
 
     //remove objects from DB
 
-    List<RepoObject> repoObjectList = sqlService.listObjects(null, null, null, true, null);
+    List<RepoObject> repoObjectList = sqlService.listObjects(null, null, null, true, true, null);
 
     for (RepoObject repoObject : repoObjectList) {
 
