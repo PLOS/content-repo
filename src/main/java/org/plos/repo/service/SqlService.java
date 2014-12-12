@@ -1214,4 +1214,33 @@ public abstract class SqlService {
 
   }
 
+  public int countUsedAndDeletedObjectsReference(String bucketName, String checksum) throws SQLException {
+    PreparedStatement p = null;
+    ResultSet result = null;
+
+    try {
+
+      StringBuilder q = new StringBuilder("SELECT COUNT(*) FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
+      q.append(" AND a.status IN (?,?)");
+      q.append(" AND bucketName=?");
+      q.append(" AND checksum=?");
+
+      p = connectionLocal.get().prepareStatement(q.toString());
+
+      p.setInt(1, Status.USED.getValue());
+      p.setInt(2, Status.DELETED.getValue());
+      p.setString(3, bucketName);
+      p.setString(4, checksum);
+
+      result = p.executeQuery();
+
+      if (result.next())
+        return result.getInt(1);
+      else
+        return 0;
+
+    } finally {
+      closeDbStuff(result, p);
+    }
+  }
 }

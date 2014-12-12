@@ -413,13 +413,19 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(e);
       }
 
-      if (sqlService.markObjectPurged(key, bucketName, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag()) == 0 ){
-        throw new RepoException(RepoException.Type.ObjectNotFound);
+        if (sqlService.markObjectPurged(key, bucketName, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag()) == 0 ){
+          throw new RepoException(RepoException.Type.ObjectNotFound);
+        }
+
+      // verify if any other USED or DELETED objects has a reference to the same file. If it is the last reference to the object, remove it from the system,
+      // if not, just mark the record in the DB as purge
+      if (sqlService.countUsedAndDeletedObjectsReference(bucketName, repoObject.getChecksum()) == 0 ){
+        Boolean removed = objectStore.deleteObject(repoObject);
+        if (Boolean.FALSE.equals(removed)){
+          throw new RepoException(RepoException.Type.ObjectNotFound);
+        }
       }
-      Boolean removed = objectStore.deleteObject(repoObject);
-      if (Boolean.FALSE.equals(removed)){
-        throw new RepoException(RepoException.Type.ObjectNotFound);
-      }
+
     } catch (SQLException e) {
       throw new RepoException(e);
     }
