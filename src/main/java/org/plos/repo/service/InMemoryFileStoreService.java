@@ -45,7 +45,11 @@ public class InMemoryFileStoreService extends ObjectStore {
   }
 
   public InputStream getInputStream(RepoObject repoObject) {
-    return new ByteArrayInputStream(data.get(repoObject.getBucketName()).get(repoObject.getChecksum()));
+    byte[] content = data.get(repoObject.getBucketName()).get(repoObject.getChecksum());
+    if (content != null) {
+      return new ByteArrayInputStream(data.get(repoObject.getBucketName()).get(repoObject.getChecksum()));
+    }
+    return null;
   }
 
   public Boolean bucketExists(Bucket bucket) {

@@ -289,7 +289,8 @@ public class ObjectController {
 
   @DELETE
   @Path("/{bucketName}/purge")
-  @ApiOperation(value = "Deletes the object content and set the status as purged")
+  @ApiOperation(value = "Deletes the object content and set the status as purged. The object content is only effective erase when no other object (in used or mark as deleted)" +
+      " is referencing it")
   @ApiResponses(value = {
           @ApiResponse(code = HttpStatus.SC_OK, message = "Object successfully deleted"),
           @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "The object was not found"),

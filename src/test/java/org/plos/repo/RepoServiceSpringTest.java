@@ -539,6 +539,51 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
   }
 
   @Test
+  public void purgeObject() throws Exception {
+
+    repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
+
+    RepoObject object2 = null;
+
+    try {
+
+      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.getBucketName(), null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME, null);
+
+      Timestamp creationDateObj2 = new Timestamp(new Date().getTime());
+      object2 = repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.getBucketName(), null, null, creationDateObj2, IOUtils.toInputStream("data2"), creationDateObj2, null);
+
+      repoService.purgeObject(bucket1.getBucketName(), "key1", new ElementFilter(1, null, null));
+
+    } catch (RepoException e) {
+      Assert.fail(e.getMessage());
+    }
+
+    // check state
+    sqlService.getConnection();
+
+    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), "key1");
+
+    Assert.assertTrue(objFromDb.getKey().equals("key1"));
+
+    Assert.assertTrue(objectStore.objectExists(objFromDb));
+
+    Assert.assertTrue(IOUtils.toString(objectStore.getInputStream(objFromDb)).equals("data1"));
+
+    // verify that the purge object does not exists the DB
+    Assert.assertNull(objectStore.getInputStream(object2));
+    // verify that the purge object does not exists the file system
+    Assert.assertNull(sqlService.getObject(bucket1.getBucketName(), "key1", null, object2.getVersionChecksum(), null));
+
+    sqlService.releaseConnection();
+
+    Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 1);
+    Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, false, false, null).size() == 1);
+    Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, true, false, null).size() == 1);
+    Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, false, true, null).size() == 2);
+    Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, true, true, null).size() == 2);
+  }
+
+  @Test
   public void getObjectReproxy() throws Exception {
 
     repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);

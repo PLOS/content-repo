@@ -309,8 +309,106 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
   }
 
   @Test
+  public void purgeWithErrors() {
+    assertRepoError(target("/objects/" + bucketName + "/purge").queryParam("key", "object5").queryParam("version", "0").request().accept(MediaType.APPLICATION_JSON_TYPE).delete(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
+  }
+
+  @Test
+  public void purgeObject() {
+
+    createBucket(bucketName, CREATION_DATE_TIME);
+
+    Response response = target("/objects").request(MediaType.APPLICATION_JSON_TYPE)
+        .post(Entity.entity(new FormDataMultiPart()
+                .field("bucketName", bucketName).field("create", "new")
+                .field("key", "object1").field("contentType", "text/plain")
+                .field("timestamp", "2012-09-08 11:00:00")
+                .field("tag", "DRAFT")
+                .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
+            MediaType.MULTIPART_FORM_DATA
+        ));
+
+    JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
+    TestCase.assertNotNull(responseObj);
+    String versionChecksum = responseObj.get("versionChecksum").getAsString();
+
+    Response purgeResponse = target("/objects/" + bucketName + "/purge")
+        .queryParam("key", "object1")
+        .queryParam("versionChecksum", versionChecksum)
+        .request()
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .delete();
+
+    assertNotNull(purgeResponse);
+    assertEquals( Response.Status.OK.getStatusCode(), purgeResponse.getStatus());
+
+    assertRepoError(target("/objects/meta/" + bucketName).queryParam("key", "object1").request().accept(MediaType.APPLICATION_JSON_TYPE).get(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
+    assertRepoError(target("/objects/" + bucketName).queryParam("key", "object1").queryParam("fetchMetadata", "false").request().accept(MediaType.APPLICATION_JSON_TYPE).get(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
+
+  }
+
+  @Test
+  public void purgeObjectMoreThanOneObjectWithSameContent() {
+
+    createBucket(bucketName, CREATION_DATE_TIME);
+
+    Response responseObj1 = target("/objects").request(MediaType.APPLICATION_JSON_TYPE)
+        .post(Entity.entity(new FormDataMultiPart()
+                .field("bucketName", bucketName).field("create", "new")
+                .field("key", "object1").field("contentType", "text/plain")
+                .field("timestamp", "2012-09-08 11:00:00")
+                .field("tag", "DRAFT")
+                .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
+            MediaType.MULTIPART_FORM_DATA
+        ));
+
+    Response responseObj2 = target("/objects").request(MediaType.APPLICATION_JSON_TYPE)
+        .post(Entity.entity(new FormDataMultiPart()
+                .field("bucketName", bucketName).field("create", "new")
+                .field("key", "object2").field("contentType", "text/plain")
+                .field("timestamp", "2012-09-08 11:00:00")
+                .field("tag", "DRAFT")
+                .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
+            MediaType.MULTIPART_FORM_DATA
+        ));
+
+    JsonObject jsonResponseObj1 = gson.fromJson(responseObj1.readEntity(String.class), JsonElement.class).getAsJsonObject();
+    TestCase.assertNotNull(jsonResponseObj1);
+    String versionChecksum = jsonResponseObj1.get("versionChecksum").getAsString();
+
+    Response purgeResponse = target("/objects/" + bucketName + "/purge")
+        .queryParam("key", "object1")
+        .queryParam("versionChecksum", versionChecksum)
+        .request()
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .delete();
+
+    assertNotNull(purgeResponse);
+    assertEquals( Response.Status.OK.getStatusCode(), purgeResponse.getStatus());
+
+    assertRepoError(target("/objects/meta/" + bucketName).queryParam("key", "object1").request().accept(MediaType.APPLICATION_JSON_TYPE).get(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
+    assertRepoError(target("/objects/" + bucketName).queryParam("key", "object1").queryParam("fetchMetadata", "false").request().accept(MediaType.APPLICATION_JSON_TYPE).get(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
+
+
+    Response object2MetaResp = target("/objects/meta/" + bucketName)
+                        .queryParam("key", "object2")
+                        .request().accept(MediaType.APPLICATION_JSON_TYPE)
+                        .get();
+    assertNotNull(object2MetaResp);
+    assertEquals( Response.Status.OK.getStatusCode(), object2MetaResp.getStatus());
+
+    Response object2ContentResp = target("/objects/" + bucketName)
+                      .queryParam("key", "object2")
+                      .queryParam("fetchMetadata", "false")
+                      .request().accept(MediaType.APPLICATION_JSON_TYPE).get();
+    assertNotNull(object2MetaResp);
+    assertEquals( Response.Status.OK.getStatusCode(), object2MetaResp.getStatus());
+
+  }
+
+  @Test
   public void listNoBucket() {
-    assertRepoError(target("/objects").queryParam("bucketName", "nonExistingBucket").request().accept(MediaType.APPLICATION_JSON_TYPE).get(), Response.Status.NOT_FOUND, RepoException.Type.BucketNotFound);
+    assertRepoError(target("/objects/" + bucketName ).queryParam("key", "object5").queryParam("version", "0").request().accept(MediaType.APPLICATION_JSON_TYPE).delete(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
   }
 
   @Test
