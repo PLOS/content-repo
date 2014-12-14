@@ -28,6 +28,7 @@ package org.plos.repo;
  import org.plos.repo.models.input.ElementFilter;
  import org.plos.repo.service.*;
 
+ import java.io.InputStream;
  import java.lang.reflect.Field;
  import java.sql.Timestamp;
  import java.util.Calendar;
@@ -539,6 +540,34 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
   }
 
   @Test
+  public void deletePurgedObject() throws Exception {
+
+    repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME.toString());
+    repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.getBucketName(), null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME, null);
+    repoService.purgeObject(bucket1.getBucketName(), "key1", new ElementFilter(0, null, null));
+
+    try {
+      repoService.deleteObject(bucket1.getBucketName(), "key1", new ElementFilter(5, null, null));
+    } catch (RepoException e) {
+      Assert.assertTrue(e.getMessage().startsWith("Object not found"));
+    }
+  }
+
+  @Test
+  public void purgePurgedObject() throws Exception {
+
+    repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME.toString());
+    repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.getBucketName(), null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME, null);
+    repoService.purgeObject(bucket1.getBucketName(), "key1", new ElementFilter(0, null, null));
+
+    try {
+      repoService.purgeObject(bucket1.getBucketName(), "key1", new ElementFilter(5, null, null));
+    } catch (RepoException e) {
+      Assert.assertTrue(e.getMessage().startsWith("Object not found"));
+    }
+  }
+
+  @Test
   public void purgeObject() throws Exception {
 
     repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
@@ -564,9 +593,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), "key1");
 
     Assert.assertTrue(objFromDb.getKey().equals("key1"));
-
     Assert.assertTrue(objectStore.objectExists(objFromDb));
-
     Assert.assertTrue(IOUtils.toString(objectStore.getInputStream(objFromDb)).equals("data1"));
 
     // verify that the purge object does not exists the DB
@@ -577,6 +604,69 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     sqlService.releaseConnection();
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 1);
+    Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, false, false, null).size() == 1);
+    Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, true, false, null).size() == 1);
+    Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, false, true, null).size() == 2);
+    Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, true, true, null).size() == 2);
+  }
+
+  @Test
+  public void purgeObjectSameContent() throws Exception {
+
+    repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
+
+    RepoObject object1 = null;
+    RepoObject object2 = null;
+
+    String dataContent = "data1";
+    InputStream data = IOUtils.toInputStream(dataContent);
+
+    try {
+
+      object1 = repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.getBucketName(), null, null, CREATION_DATE_TIME, data, CREATION_DATE_TIME, null);
+
+      Timestamp creationDateObj2 = new Timestamp(new Date().getTime());
+      object2 = repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.getBucketName(), null, null, creationDateObj2, null, creationDateObj2, "obj2");
+
+      //purge object1
+      repoService.purgeObject(bucket1.getBucketName(), "key1", new ElementFilter(null, null, object1.getVersionChecksum()));
+
+    } catch (RepoException e) {
+      Assert.fail(e.getMessage());
+    }
+
+    // check state
+    sqlService.getConnection();
+
+    // verify that the only object in the DB for objKey="key1" is the last one created
+    RepoObject obj2FromDb = sqlService.getObject(bucket1.getBucketName(), "key1");
+    Assert.assertEquals("obj2", obj2FromDb.getTag());
+
+    // verify that the first object created has been purge
+    RepoObject obj1FromDb = sqlService.getObject(bucket1.getBucketName(), "key1", null, object1.getVersionChecksum(), null);
+    Assert.assertNull(obj1FromDb);
+
+    sqlService.releaseConnection();
+
+    Assert.assertTrue(obj2FromDb.getKey().equals("key1"));
+    Assert.assertTrue(objectStore.objectExists(obj2FromDb));
+    Assert.assertTrue(IOUtils.toString(objectStore.getInputStream(obj2FromDb)).equals(dataContent));
+
+    // verify that at service level we can't get the meta info for object1. object1 has been purged
+    try{
+      repoService.getObject(bucket1.getBucketName(), "key1", new ElementFilter(null, null, object1.getVersionChecksum()));
+      Assert.fail("A repo exception was expected. ");
+    } catch (RepoException e){
+      Assert.assertEquals(e.getType(), RepoException.Type.ObjectNotFound);
+    }
+
+    // since the content of object1 has not been purged, because another object in the same bucket (object2), we can still retrieve the content
+    // using the keys bucketName & checksum
+    InputStream contentObj1 = repoService.getObjectInputStream(object1);
+    InputStream contentObj2 = repoService.getObjectInputStream(object2);
+    Assert.assertTrue(IOUtils.toString(contentObj1).equals(IOUtils.toString(contentObj2)));
+
+    Assert.assertTrue(repoService.getObjectVersions(obj2FromDb.getBucketName(), obj2FromDb.getKey()).size() == 1);
     Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, false, false, null).size() == 1);
     Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, true, false, null).size() == 1);
     Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, false, true, null).size() == 2);

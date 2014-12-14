@@ -329,11 +329,21 @@ public class RepoService extends BaseRepoService {
   }
 
   public InputStream getObjectInputStream(RepoObject repoObject) throws RepoException {
+    InputStream content = null;
     try {
-      return objectStore.getInputStream(repoObject);
+      content = objectStore.getInputStream(repoObject);
     } catch (Exception e) {
+      log.error("Error retrieving content for object.  Key: " + repoObject.getKey() + " , bucketName: "
+          + repoObject.getBucketName() + " , versionChecksum: " + repoObject.getVersionChecksum()
+          + " . Error: " + e.getMessage());
       throw new RepoException(e);
     }
+    if (content == null){
+      log.error("Error retrieving content for object. Content not found.  Key: " + repoObject.getKey() + " , bucketName: "
+          + repoObject.getBucketName() + " , versionChecksum: " + repoObject.getVersionChecksum());
+      throw new RepoException(RepoException.Type.ObjectContentNotFound);
+    }
+    return content;
   }
 
   public void purgeObject(String bucketName, String key, ElementFilter elementFilter) throws RepoException {
@@ -370,6 +380,12 @@ public class RepoService extends BaseRepoService {
         }
       }
 
+      // verify object existence
+      RepoObject repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag(), true, false);
+      if (repoObject == null){
+        throw new RepoException(RepoException.Type.ObjectNotFound);
+      }
+
       if (sqlService.existsActiveCollectionForObject(key, bucketName,  elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag())){
         throw new RepoException(RepoException.Type.CantDeleteObjectActiveColl);
       }
@@ -378,7 +394,7 @@ public class RepoService extends BaseRepoService {
         if (sqlService.markObjectDeleted(key, bucketName, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag()) == 0)
           throw new RepoException(RepoException.Type.ObjectNotFound);
       }else if (Status.PURGED.equals(status)){
-        purgeObjectContentAndDb(key, bucketName, elementFilter);
+        purgeObjectContentAndDb(repoObject, elementFilter);
       }
 
       sqlService.transactionCommit();
@@ -397,14 +413,10 @@ public class RepoService extends BaseRepoService {
     }
   }
 
-  private void purgeObjectContentAndDb(String key, String bucketName, ElementFilter elementFilter)  throws RepoException {
+  private void purgeObjectContentAndDb(RepoObject repoObject, ElementFilter elementFilter)  throws RepoException {
 
     try {
-      // verify object existence
-      RepoObject repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag(), true, false);
-      if (repoObject == null){
-        throw new RepoException(RepoException.Type.ObjectNotFound);
-      }
+
       try (InputStream content = getObjectInputStream(repoObject)){
         if (content == null){
           throw new RepoException(RepoException.Type.ObjectNotFound);
@@ -413,13 +425,13 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(e);
       }
 
-      if (sqlService.markObjectPurged(key, bucketName, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag()) == 0 ){
+      if (sqlService.markObjectPurged(repoObject.getKey(), repoObject.getBucketName(), elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag()) == 0 ){
         throw new RepoException(RepoException.Type.ObjectNotFound);
       }
 
       // verify if any other USED or DELETED objects has a reference to the same file. If it is the last reference to the object, remove it from the system,
       // if not, just mark the record in the DB as purge
-      if (sqlService.countUsedAndDeletedObjectsReference(bucketName, repoObject.getChecksum()) == 0 ){
+      if (sqlService.countUsedAndDeletedObjectsReference(repoObject.getBucketName(), repoObject.getChecksum()) == 0 ){
         Boolean removed = objectStore.deleteObject(repoObject);
         if (Boolean.FALSE.equals(removed)){
           throw new RepoException(RepoException.Type.ObjectNotFound);
@@ -637,6 +649,7 @@ public class RepoService extends BaseRepoService {
       if (uploadedInputStream == null) {
       // handle metadata-only update, the content would be the same as the last version of the object
         newRepoObject.setChecksum(repoObject.getChecksum());
+        newRepoObject.setSize(repoObject.getSize());
       } else {
         // determine if the new object should be added to the store or not
         uploadInfo = objectStore.uploadTempObject(uploadedInputStream);

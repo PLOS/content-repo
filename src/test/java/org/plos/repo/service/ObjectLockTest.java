@@ -158,7 +158,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     this.endGate = new CountDownLatch(INSERT_THREADS + DELETE_THREADS + READER_THREADS);
     execute(INSERT_THREADS, 0, DELETE_THREADS, READER_THREADS, callback);
     List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
-    // since when version an object we don't create a new version if nothing change from last version, only one object with BASE_KEY_NAME is going to be created
+    // creating just one object with same key. The rest of the threads are going to throw an error saying that you can't create an object that already exists
     assertEquals(1, repoObjects.size());
 
     this.startGate = new CountDownLatch(1);
@@ -166,7 +166,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
     repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
-    // since when version an object we don't create a new version if nothing change from last version, only one object with BASE_KEY_NAME is going to be created
+    // update threads version the previous created object. The total objects created should be 1 + UPDATE_THREADS
     assertEquals(1 + UPDATE_THREADS, repoObjects.size());
 
     for (int j = 0; j < repoObjects.size(); j++) {
