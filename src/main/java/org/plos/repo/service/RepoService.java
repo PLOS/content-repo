@@ -336,12 +336,13 @@ public class RepoService extends BaseRepoService {
     }
   }
 
-  public void purgeObject(String bucketName, String key, ElementFilter elementFilter) throws RepoException {
-    deleteObject(bucketName, key, elementFilter, Status.PURGED);
-  }
+  public void deleteObject(String bucketName, String key, Boolean purge, ElementFilter elementFilter) throws RepoException {
+    if (purge){
+      deleteObject(bucketName, key, elementFilter, Status.PURGED);
+    } else {
+      deleteObject(bucketName, key, elementFilter, Status.DELETED);
+    }
 
-  public void deleteObject(String bucketName, String key, ElementFilter elementFilter) throws RepoException {
-    deleteObject(bucketName, key, elementFilter, Status.DELETED);
   }
 
   public void deleteObject(String bucketName, String key, ElementFilter elementFilter, Status status ) throws RepoException {
@@ -368,10 +369,6 @@ public class RepoService extends BaseRepoService {
         if (sqlService.listObjects(bucketName, 0, 10, false, false, elementFilter.getTag()).size() > 1){
           throw new RepoException(RepoException.Type.MoreThanOneTaggedObject);
         }
-      }
-
-      if (sqlService.existsActiveCollectionForObject(key, bucketName,  elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag())){
-        throw new RepoException(RepoException.Type.CantDeleteObjectActiveColl);
       }
 
       if (Status.DELETED.equals(status)){

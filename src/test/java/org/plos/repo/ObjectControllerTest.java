@@ -255,48 +255,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
   }
 
-  @Test
-  public void deleteObjectInActiveCollection() {
-
-    createBucket(bucketName, CREATION_DATE_TIME);
-
-    Response response = target("/objects").request(MediaType.APPLICATION_JSON_TYPE)
-            .post(Entity.entity(new FormDataMultiPart()
-                .field("bucketName", bucketName).field("create", "new")
-                .field("key", "object1").field("contentType", "text/plain")
-                .field("timestamp", "2012-09-08 11:00:00")
-                .field("tag", "DRAFT")
-                .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
-                 MediaType.MULTIPART_FORM_DATA
-                ));
-
-    assertEquals(response.getStatus(),
-        Response.Status.CREATED.getStatusCode()
-    );
-
-    JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
-    TestCase.assertNotNull(responseObj);
-    String versionCheksum =  responseObj.get("versionChecksum").getAsString();
-
-    // create collection 1
-    InputCollection inputCollection = new InputCollection();
-    inputCollection.setBucketName(bucketName);
-    inputCollection.setKey("collection1");
-    inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("object1", versionCheksum)}));
-    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
-
-    target("/collections").request()
-        .accept(MediaType.APPLICATION_JSON_TYPE)
-        .post(collectionEntity);
-
-    assertRepoError(target("/objects/" + bucketName)
-            .queryParam("key", "object1")
-            .queryParam("tag", "DRAFT")
-            .request().accept(MediaType.APPLICATION_JSON_TYPE).delete(),
-        Response.Status.BAD_REQUEST, RepoException.Type.CantDeleteObjectActiveColl);
-
-  }
 
   @Test
   public void deleteWithErrors() {
@@ -310,7 +268,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void purgeWithErrors() {
-    assertRepoError(target("/objects/" + bucketName + "/purge").queryParam("key", "object5").queryParam("version", "0").request().accept(MediaType.APPLICATION_JSON_TYPE).delete(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
+    assertRepoError(target("/objects/" + bucketName).queryParam("key", "object5").queryParam("purge", true).queryParam("version", "0").request().accept(MediaType.APPLICATION_JSON_TYPE).delete(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
   }
 
   @Test
@@ -332,8 +290,9 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     TestCase.assertNotNull(responseObj);
     String versionChecksum = responseObj.get("versionChecksum").getAsString();
 
-    Response purgeResponse = target("/objects/" + bucketName + "/purge")
+    Response purgeResponse = target("/objects/" + bucketName)
         .queryParam("key", "object1")
+        .queryParam("purge", true)
         .queryParam("versionChecksum", versionChecksum)
         .request()
         .accept(MediaType.APPLICATION_JSON_TYPE)
@@ -376,8 +335,9 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     TestCase.assertNotNull(jsonResponseObj1);
     String versionChecksum = jsonResponseObj1.get("versionChecksum").getAsString();
 
-    Response purgeResponse = target("/objects/" + bucketName + "/purge")
+    Response purgeResponse = target("/objects/" + bucketName)
         .queryParam("key", "object1")
+        .queryParam("purge", true)
         .queryParam("versionChecksum", versionChecksum)
         .request()
         .accept(MediaType.APPLICATION_JSON_TYPE)

@@ -482,7 +482,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
       Timestamp creationDateObj2 = new Timestamp(new Date().getTime());
       repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.getBucketName(), null, null, creationDateObj2, IOUtils.toInputStream("data2"), creationDateObj2, null);
 
-      repoService.deleteObject(bucket1.getBucketName(), "key1", new ElementFilter(1, null, null));
+      repoService.deleteObject(bucket1.getBucketName(), "key1", false, new ElementFilter(1, null, null));
 
     } catch (RepoException e) {
       Assert.fail(e.getMessage());
@@ -518,7 +518,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
       repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.getBucketName(), null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data2"), CREATION_DATE_TIME, null);
 
-      repoService.deleteObject(bucket1.getBucketName(), "key1", new ElementFilter(5, null, null));
+      repoService.deleteObject(bucket1.getBucketName(), "key1", false, new ElementFilter(5, null, null));
 
     } catch (RepoException e) {
       Assert.assertTrue(e.getMessage().startsWith("Object not found"));
@@ -552,7 +552,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
       Timestamp creationDateObj2 = new Timestamp(new Date().getTime());
       object2 = repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.getBucketName(), null, null, creationDateObj2, IOUtils.toInputStream("data2"), creationDateObj2, null);
 
-      repoService.purgeObject(bucket1.getBucketName(), "key1", new ElementFilter(1, null, null));
+      repoService.deleteObject(bucket1.getBucketName(), "key1", true, new ElementFilter(1, null, null));
 
     } catch (RepoException e) {
       Assert.fail(e.getMessage());
