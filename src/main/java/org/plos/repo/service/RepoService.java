@@ -371,11 +371,16 @@ public class RepoService extends BaseRepoService {
         }
       }
 
+      RepoObject repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag(), true, false);
+      if (repoObject == null){
+        throw new RepoException(RepoException.Type.ObjectNotFound);
+      }
+
       if (Status.DELETED.equals(status)){
         if (sqlService.markObjectDeleted(key, bucketName, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag()) == 0)
           throw new RepoException(RepoException.Type.ObjectNotFound);
       }else if (Status.PURGED.equals(status)){
-        purgeObjectContentAndDb(key, bucketName, elementFilter);
+        purgeObjectContentAndDb(repoObject, elementFilter);
       }
 
       sqlService.transactionCommit();
@@ -394,14 +399,10 @@ public class RepoService extends BaseRepoService {
     }
   }
 
-  private void purgeObjectContentAndDb(String key, String bucketName, ElementFilter elementFilter)  throws RepoException {
+  private void purgeObjectContentAndDb(RepoObject repoObject, ElementFilter elementFilter)  throws RepoException {
 
     try {
-      // verify object existence
-      RepoObject repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag(), true, false);
-      if (repoObject == null){
-        throw new RepoException(RepoException.Type.ObjectNotFound);
-      }
+      // verify object's content existence
       try (InputStream content = getObjectInputStream(repoObject)){
         if (content == null){
           throw new RepoException(RepoException.Type.ObjectNotFound);
@@ -410,13 +411,13 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(e);
       }
 
-      if (sqlService.markObjectPurged(key, bucketName, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag()) == 0 ){
+      if (sqlService.markObjectPurged(repoObject.getKey(), repoObject.getBucketName(), elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag()) == 0 ){
         throw new RepoException(RepoException.Type.ObjectNotFound);
       }
 
       // verify if any other USED or DELETED objects has a reference to the same file. If it is the last reference to the object, remove it from the system,
       // if not, just mark the record in the DB as purge
-      if (sqlService.countUsedAndDeletedObjectsReference(bucketName, repoObject.getChecksum()) == 0 ){
+      if (sqlService.countUsedAndDeletedObjectsReference(repoObject.getBucketName(), repoObject.getChecksum()) == 0 ){
         Boolean removed = objectStore.deleteObject(repoObject);
         if (Boolean.FALSE.equals(removed)){
           throw new RepoException(RepoException.Type.ObjectNotFound);
