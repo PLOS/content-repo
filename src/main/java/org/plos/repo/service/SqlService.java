@@ -1243,4 +1243,47 @@ public abstract class SqlService {
       closeDbStuff(result, p);
     }
   }
+
+  public int removeBucketContent(String bucketName) throws SQLException {
+
+    PreparedStatement p = null;
+
+    try {
+
+      p = connectionLocal.get().prepareStatement("SELECT bucketId FROM buckets WHERE bucketName=?");
+      p.setString(1, bucketName);
+
+      ResultSet result = p.executeQuery();
+      int bucketId = 0;
+
+      if (result.next())
+        bucketId = result.getInt(1);
+      else
+        return 0;
+
+      p = connectionLocal.get().prepareStatement("DELETE FROM collectionObject " +
+          "WHERE collectionid IN " +
+          "(SELECT id FROM collections " +
+          "WHERE bucketId=?)");
+      p.setInt(1, bucketId);
+      p.executeUpdate();
+
+      p = connectionLocal.get().prepareStatement("DELETE FROM objects WHERE bucketId=?");
+      p.setInt(1, bucketId);
+      p.executeUpdate();
+
+      p = connectionLocal.get().prepareStatement("DELETE FROM collections WHERE bucketId=?");
+      p.setInt(1, bucketId);
+      p.executeUpdate();
+
+      p = connectionLocal.get().prepareStatement("DELETE FROM buckets WHERE bucketId=?");
+      p.setInt(1, bucketId);
+      return p.executeUpdate();
+
+
+    } finally {
+      closeDbStuff(null, p);
+    }
+
+  }
 }

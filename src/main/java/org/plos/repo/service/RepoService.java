@@ -145,16 +145,17 @@ public class RepoService extends BaseRepoService {
       if (Boolean.FALSE.equals(objectStore.bucketExists(bucket)))
         throw new RepoException("Bucket exists in database but not in object store: " + name);
 
-      if (sqlService.listObjects(name, 0, 1, true, true, null).size() != 0)
+      if (sqlService.listObjects(name, 0, 1, true, false, null).size() != 0)
         throw new RepoException(RepoException.Type.CantDeleteNonEmptyBucket);
 
       rollback = true;
 
+      // remove all table references for objects & collections in the bucket
+      if (sqlService.removeBucketContent(name) == 0)
+        throw new RepoException("Unable to delete bucket in database: " + name);
+
       if (Boolean.FALSE.equals(objectStore.deleteBucket(bucket)))
         throw new RepoException("Unable to delete bucket in object store: " + name);
-
-      if (sqlService.deleteBucket(name) == 0)
-        throw new RepoException("Unable to delete bucket in database: " + name);
 
       sqlService.transactionCommit();
       rollback = false;
