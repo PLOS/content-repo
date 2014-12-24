@@ -19,9 +19,7 @@
 
 package org.plos.repo;
 
-import com.amazonaws.util.json.JSONObject;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
