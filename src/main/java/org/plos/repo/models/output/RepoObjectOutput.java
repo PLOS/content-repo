@@ -23,6 +23,9 @@ import org.plos.repo.models.Status;
 import org.plos.repo.util.TimestampFormatter;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Collection to be return to the client
@@ -42,7 +45,7 @@ public class RepoObjectOutput {
   private Status status;
   private String creationDate;
   private String versionChecksum;
-  private String reproxyURL;
+  private List<URL> reproxyURL;
 
   private RepoObjectOutput() {
 
@@ -62,8 +65,10 @@ public class RepoObjectOutput {
     this.creationDate = TimestampFormatter.getFormattedTimestamp(repoObject.getCreationDate());
     this.versionChecksum = repoObject.getVersionChecksum();
 
-    if (repoObject.getReproxyURL() != null ) {
-      this.reproxyURL = repoObject.getReproxyURL().toString();
+    URL[] urls = repoObject.getReproxyURL();
+
+    if (urls != null && urls.length > 0) {
+      reproxyURL = Arrays.asList(urls);
     }
 
   }
@@ -112,7 +117,7 @@ public class RepoObjectOutput {
     return versionChecksum;
   }
 
-  public String getReproxyURL() {
+  public List<URL> getReproxyURL() {
     return reproxyURL;
   }
 
@@ -160,7 +165,7 @@ public class RepoObjectOutput {
     this.versionChecksum = versionChecksum;
   }
 
-  public void setReproxyURL(String reproxyURL) {
+  public void setReproxyURL(List<URL> reproxyURL) {
     this.reproxyURL = reproxyURL;
   }
 
