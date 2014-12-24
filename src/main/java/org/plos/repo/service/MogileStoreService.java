@@ -90,6 +90,12 @@ public class MogileStoreService extends ObjectStore {
       return urls;
 
     } catch (Exception e) {
+      log.error("Exception: + " + e.getMessage() + " when trying to fetch the reproxy url for object :" );
+      log.error("key ----> " + repoObject.getKey());
+      log.error("bucket name ----> " + repoObject.getBucketName());
+      log.error("content checksum ----> " + repoObject.getChecksum());
+      log.error("version number ----> " + repoObject.getVersionNumber());
+      log.error("Content exists in mogile? ----> " + this.objectExists(repoObject));
       throw new RepoException(e);
     }
 
