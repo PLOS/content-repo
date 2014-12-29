@@ -61,11 +61,11 @@ public class FileSystemStoreService extends ObjectStore {
     return new File(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum())).exists();
   }
 
-  public InputStream getInputStream(RepoObject repoObject) throws RepoException {
+  public InputStream getInputStream(RepoObject repoObject){
     try {
       return new FileInputStream(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
     } catch (FileNotFoundException e) {
-      throw new RepoException(e);
+      return null;
     }
   }
 

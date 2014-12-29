@@ -330,11 +330,21 @@ public class RepoService extends BaseRepoService {
   }
 
   public InputStream getObjectInputStream(RepoObject repoObject) throws RepoException {
+    InputStream content = null;
     try {
-      return objectStore.getInputStream(repoObject);
+      content = objectStore.getInputStream(repoObject);
     } catch (Exception e) {
+      log.error("Error retrieving content for object.  Key: " + repoObject.getKey() + " , bucketName: "
+          + repoObject.getBucketName() + " , versionChecksum: " + repoObject.getVersionChecksum()
+          + " . Error: " + e.getMessage());
       throw new RepoException(e);
     }
+    if (content == null){
+      log.error("Error retrieving content for object. Content not found.  Key: " + repoObject.getKey() + " , bucketName: "
+          + repoObject.getBucketName() + " , versionChecksum: " + repoObject.getVersionChecksum());
+      throw new RepoException(RepoException.Type.ObjectContentNotFound);
+    }
+    return content;
   }
 
   public void deleteObject(String bucketName, String key, Boolean purge, ElementFilter elementFilter) throws RepoException {
@@ -373,7 +383,7 @@ public class RepoService extends BaseRepoService {
       }
 
       RepoObject repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag(), true, false);
-      if (repoObject == null){
+      if (repoObject == null) {
         throw new RepoException(RepoException.Type.ObjectNotFound);
       }
 
@@ -403,7 +413,7 @@ public class RepoService extends BaseRepoService {
   private void purgeObjectContentAndDb(RepoObject repoObject, ElementFilter elementFilter)  throws RepoException {
 
     try {
-      // verify object's content existence
+
       try (InputStream content = getObjectInputStream(repoObject)){
         if (content == null){
           throw new RepoException(RepoException.Type.ObjectNotFound);
@@ -636,6 +646,7 @@ public class RepoService extends BaseRepoService {
       if (uploadedInputStream == null) {
       // handle metadata-only update, the content would be the same as the last version of the object
         newRepoObject.setChecksum(repoObject.getChecksum());
+        newRepoObject.setSize(repoObject.getSize());
       } else {
         // determine if the new object should be added to the store or not
         uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
