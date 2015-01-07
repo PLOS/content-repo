@@ -386,7 +386,7 @@ public abstract class SqlService {
 
     try {
 
-      p = connectionLocal.get().prepareStatement("INSERT INTO objects (objKey, checksum, timestamp, bucketId, contentType, downloadName, size, tag, versionNumber, status, creationDate, versionChecksum) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+      p = connectionLocal.get().prepareStatement("INSERT INTO objects (objKey, checksum, timestamp, bucketId, contentType, downloadName, size, tag, versionNumber, status, creationDate, versionChecksum, userMetadata) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
       p.setString(1, repoObject.getKey());
       p.setString(2, repoObject.getChecksum());
@@ -400,6 +400,7 @@ public abstract class SqlService {
       p.setInt(10, repoObject.getStatus().getValue());
       p.setTimestamp(11, repoObject.getTimestamp());
       p.setString(12, repoObject.getVersionChecksum());
+      p.setString(13,repoObject.getUserMetadata());
 
       return p.executeUpdate();
 

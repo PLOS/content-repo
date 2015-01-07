@@ -19,6 +19,7 @@ package org.plos.repo;
 
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.plos.repo.models.validator.InputCollectionValidator;
+import org.plos.repo.models.validator.JsonStringValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
 import org.plos.repo.service.*;
 import org.plos.repo.util.ChecksumGenerator;
@@ -50,6 +51,9 @@ public class TestSpringConfig {
 
   @Bean
   public TimestampInputValidator timestampInputValidator(){ return new TimestampInputValidator(); }
+
+  @Bean
+  public JsonStringValidator jsonStringValidator(){ return new JsonStringValidator(); }
 
   @Bean
   public ChecksumGenerator versionChecksumGenerator(){ return new ChecksumGenerator(); }

@@ -23,6 +23,7 @@ import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.Status;
 import org.plos.repo.models.input.ElementFilter;
+import org.plos.repo.models.validator.JsonStringValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +56,9 @@ public class RepoService extends BaseRepoService {
 
   @Inject
   private TimestampInputValidator timestampValidator;
+
+  @Inject
+  private JsonStringValidator jsonStringValidator;
 
   public List<Bucket> listBuckets() throws RepoException {
     try {
@@ -393,7 +397,8 @@ public class RepoService extends BaseRepoService {
                              Timestamp timestamp,
                              InputStream uploadedInputStream,
                              Timestamp creationDateTime,
-                             String tag) throws RepoException {
+                             String tag,
+                             String userMetadata) throws RepoException {
 
 
     Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
@@ -409,6 +414,8 @@ public class RepoService extends BaseRepoService {
       if (bucketName == null)
         throw new RepoException(RepoException.Type.NoBucketEntered);
 
+      jsonStringValidator.validate(userMetadata, RepoException.Type.InvalidUserMetadataFormat);
+
       try {
         existingRepoObject = getObject(bucketName, key, null);
       } catch (RepoException e) {
@@ -423,18 +430,18 @@ public class RepoService extends BaseRepoService {
         case NEW:
           if (existingRepoObject != null)
             throw new RepoException(RepoException.Type.CantCreateNewObjectWithUsedKey);
-          return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream, creationDateTime, tag);
+          return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream, creationDateTime, tag, userMetadata);
 
         case VERSION:
           if (existingRepoObject == null)
             throw new RepoException(RepoException.Type.CantCreateVersionWithNoOrig);
-          return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingRepoObject, creationDateTime, tag);
+          return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingRepoObject, creationDateTime, tag, userMetadata);
 
         case AUTO:
           if (existingRepoObject == null)
-            return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream, creationDateTime, tag);
+            return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream, creationDateTime, tag, userMetadata);
           else
-            return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingRepoObject, creationDateTime, tag);
+            return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingRepoObject, creationDateTime, tag, userMetadata);
 
         default:
           throw new RepoException(RepoException.Type.InvalidCreationMethod);
@@ -452,7 +459,8 @@ public class RepoService extends BaseRepoService {
                                  Timestamp timestamp,
                                  InputStream uploadedInputStream,
                                  Timestamp cretationDateTime,
-                                 String tag) throws RepoException {
+                                 String tag,
+                                 String userMetadata) throws RepoException {
 
     ObjectStore.UploadInfo uploadInfo = null;
     Integer versionNumber;
@@ -501,6 +509,7 @@ public class RepoService extends BaseRepoService {
       repoObject.setTag(tag);
       repoObject.setVersionNumber(versionNumber);
       repoObject.setCreationDate(cretationDateTime);
+      repoObject.setUserMetadata(userMetadata);
 
       repoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(repoObject));
       rollback = true;
@@ -557,7 +566,8 @@ public class RepoService extends BaseRepoService {
                               InputStream uploadedInputStream,
                               RepoObject repoObject,
                               Timestamp cretationDateTime,
-                              String tag) throws RepoException {
+                              String tag,
+                              String userMetadata) throws RepoException {
 
     ObjectStore.UploadInfo uploadInfo = null;
     boolean rollback = false;
@@ -576,15 +586,21 @@ public class RepoService extends BaseRepoService {
       newRepoObject.setContentType(contentType);
       newRepoObject.setTag(tag);
       newRepoObject.setCreationDate(cretationDateTime);
-      newRepoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(newRepoObject));
+      newRepoObject.setUserMetadata(userMetadata);
+
       sqlService.getConnection();
+
       if (sqlService.getBucket(bucketName) == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
+
       // copy over values from previous object, if they are not specified in the request
       if (contentType == null)
         newRepoObject.setContentType(repoObject.getContentType());
       if (downloadName == null)
         newRepoObject.setDownloadName(repoObject.getDownloadName());
+      if (userMetadata == null) {
+        newRepoObject.setUserMetadata(repoObject.getUserMetadata());
+      }
 
       rollback = true;
       if (uploadedInputStream == null) {
@@ -602,6 +618,8 @@ public class RepoService extends BaseRepoService {
           }
         }
       }
+
+      newRepoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(newRepoObject));
 
       // if the new object and the last version of the object are similar, we just return the last version of the object
       if (repoObject.areSimilar(newRepoObject)){
