@@ -80,7 +80,7 @@ public class TestSpringConfig {
 
 
     JDBCDataSource ds = new JDBCDataSource();
-    ds.setUrl("jdbc:hsqldb:mem:plosrepo-unittest-hsqldb;shutdown=true");
+    ds.setUrl("jdbc:hsqldb:mem:plosrepo-unittest-hsqldb;shutdown=true;sql.syntax_mys=true");
     ds.setUser("");
     ds.setPassword("");
 

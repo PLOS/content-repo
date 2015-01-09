@@ -1143,4 +1143,37 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
         Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound);
   }
 
+  @Test
+  public void createCollection(){
+
+    generateCollectionData();
+
+    Response response = target("/collections/" + bucketName)
+        .queryParam("key", "collection1")
+        .queryParam("tag", "AOP")
+        .queryParam("version", "0")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+    assertEquals(response.getHeaderString("Content-Type"), "application/json");
+
+    JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
+    assertNotNull(responseObj);
+    assertEquals("collection1", responseObj.get("key").getAsString());
+    assertEquals(0, responseObj.get("versionNumber").getAsInt());
+    assertEquals(1, responseObj.get("objects").getAsJsonArray().size());
+
+    assertRepoError(target("/collections/" + bucketName)
+            .queryParam("key", "collection1")
+            .queryParam("tag", "AOP")
+            .queryParam("version", "1")
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .get(),
+        Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound
+    );
+
+  }
+
 }

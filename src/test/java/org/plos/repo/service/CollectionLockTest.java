@@ -95,7 +95,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
     inputObjects = new ArrayList<InputObject>();
     for (int i=0; i < 1000 ; i++ ){
       String key = OBJECT_KEY+i;
-      RepoObject repoObject = repoService.createObject(RepoService.CreateMethod.NEW, key, BUCKET_NAME, null, null, CREATION_DATE_TIME, IOUtils.toInputStream(OBJECT_DATA), CREATION_DATE_TIME, "TAG"+i);
+      RepoObject repoObject = repoService.createObject(RepoService.CreateMethod.NEW, key, BUCKET_NAME, null, null, CREATION_DATE_TIME, IOUtils.toInputStream(OBJECT_DATA), CREATION_DATE_TIME, "TAG"+i, null);
       InputObject inputObject = new InputObject(key, repoObject.getVersionChecksum());
       inputObjects.add(inputObject);
     }
@@ -221,7 +221,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
           try {
             startGate.await();  // don't start until startGate is 0
             try {
-              InputCollection inputColl = new InputCollection(cb.getKeyname(j), cb.getTimestamp().toString(), BUCKET_NAME, RepoService.CreateMethod.NEW.toString(), cb.getTag(j),  objects, cb.getTimestamp().toString());
+              InputCollection inputColl = new InputCollection(cb.getKeyname(j), cb.getTimestamp().toString(), BUCKET_NAME, RepoService.CreateMethod.NEW.toString(), cb.getTag(j),  objects, cb.getTimestamp().toString(), null);
               RepoCollection repoCollection = collectionRepoService.createCollection(RepoService.CreateMethod.NEW, inputColl);
 
               if (!repoCollection.getKey().equals(cb.getKeyname(j))) {
@@ -271,7 +271,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
           try {
             startGate.await();  // don't start until startGate is 0
             try {
-              InputCollection inputColl = new InputCollection(cb.getKeyname(j), cb.getTimestamp().toString(), BUCKET_NAME, RepoService.CreateMethod.VERSION.toString(), cb.getTag(j),  objects, cb.getTimestamp().toString());
+              InputCollection inputColl = new InputCollection(cb.getKeyname(j), cb.getTimestamp().toString(), BUCKET_NAME, RepoService.CreateMethod.VERSION.toString(), cb.getTag(j),  objects, cb.getTimestamp().toString(), null);
               RepoCollection repoCollection = collectionRepoService.createCollection(RepoService.CreateMethod.VERSION, inputColl);
 
               if (!repoCollection.getKey().equals(cb.getKeyname(j))) {

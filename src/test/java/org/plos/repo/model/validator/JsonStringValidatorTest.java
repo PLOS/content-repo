@@ -1,12 +1,14 @@
 /*
- * Copyright (c) 2006-2014 by Public Library of Science
- * http://plos.org
+ * Copyright (c) 2006-2015 by Public Library of Science
+ *
+ *    http://plos.org
+ *    http://ambraproject.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +20,7 @@
 package org.plos.repo.model.validator;
 
 import org.junit.Test;
+import org.plos.repo.models.validator.JsonStringValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
 import org.plos.repo.service.RepoException;
 
@@ -27,17 +30,18 @@ import static org.junit.Assert.fail;
 /**
  * Timestamp Input Validator Test
  */
-public class TimestampInputValidatorTest {
+public class JsonStringValidatorTest {
 
-  private static final String VALID_TIMESTAMP = "2014-09-02 1:55:32";
-  private static final String INVALID_TIMESTAMP = "2014-09-02";
+  private String VALID_JSON_STRING = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\"}";
 
-  private TimestampInputValidator timestampInputValidator = new TimestampInputValidator();
+  private String NOT_VALID_JSON_STRING = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\",}";
+
+  private JsonStringValidator jsonStringValidator = new JsonStringValidator();
 
   @Test
   public void validTimestampTest() throws RepoException {
 
-    timestampInputValidator.validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseTimestamp);
+    jsonStringValidator.validate(VALID_JSON_STRING, RepoException.Type.InvalidUserMetadataFormat);
 
   }
 
@@ -45,11 +49,12 @@ public class TimestampInputValidatorTest {
   public void invalidTimestampTest(){
 
     try{
-      timestampInputValidator.validate(INVALID_TIMESTAMP, RepoException.Type.CouldNotParseTimestamp);
+      jsonStringValidator.validate(NOT_VALID_JSON_STRING, RepoException.Type.InvalidUserMetadataFormat);
       fail("A repo exception was expected. ");
     } catch (RepoException re){
-      assertEquals(re.getType(), RepoException.Type.CouldNotParseTimestamp);
+      assertEquals(re.getType(), RepoException.Type.InvalidUserMetadataFormat);
     }
+
 
   }
 
