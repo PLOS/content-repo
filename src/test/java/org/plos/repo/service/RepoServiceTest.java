@@ -75,7 +75,7 @@ public class RepoServiceTest {
   @Test
   public void testListObjectsHappyPath() throws RepoException, SQLException, MalformedURLException {
 
-    doNothing().when(sqlService).getConnection();
+    doNothing().when(sqlService).getReadOnlyConnection();;
     when(sqlService.getBucket(VALID_BUCKET)).thenReturn(bucket);
 
     List<RepoObject> repoObjects = new ArrayList<RepoObject>();
@@ -101,12 +101,12 @@ public class RepoServiceTest {
     assertNotNull(response.get(0));
     assertNotNull(response.get(0).getReproxyURL());
 
-    verify(sqlService, times(2)).getConnection();
+    verify(sqlService).getReadOnlyConnection();
     verify(sqlService).getBucket(VALID_BUCKET);
     verify(sqlService).listObjects(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
     verify(objectStore).hasXReproxy();
     verify(objectStore).getRedirectURLs(ob);
-    verify(sqlService, times(2)).releaseConnection();
+    verify(sqlService).releaseConnection();
 
   }
 

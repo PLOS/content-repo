@@ -93,6 +93,12 @@ public abstract class SqlService {
     connectionLocal.set(dbConnection);
   }
 
+  public void getReadOnlyConnection() throws SQLException {
+    Connection dbConnection = dataSource.getConnection();
+    dbConnection.setAutoCommit(true);
+    connectionLocal.set(dbConnection);
+  }
+
   public void releaseConnection() throws SQLException {
     Connection dbConnection = connectionLocal.get();
 

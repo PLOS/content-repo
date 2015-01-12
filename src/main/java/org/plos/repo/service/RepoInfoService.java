@@ -115,7 +115,7 @@ public class RepoInfoService {
   public Bucket bucketInfo(String bucketName) throws RepoException {
 
     try {
-      sqlService.getConnection();
+      sqlService.getReadOnlyConnection();
 
       Bucket bucket = sqlService.getBucket(bucketName);
 
