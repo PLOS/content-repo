@@ -87,12 +87,22 @@ public abstract class SqlService {
 
   }
 
+  /**
+   * Set a connection in the ThreadLocal. The autocommit for the connection is disable, meaning that when using this method,
+   * there's a need to commit or rollback the transaction.
+   * @throws SQLException
+   */
   public void getConnection() throws SQLException {
     Connection dbConnection = dataSource.getConnection();
     dbConnection.setAutoCommit(false);
     connectionLocal.set(dbConnection);
   }
 
+  /**
+   * Set a connection in the ThreadLocal. The autocommit for the connection is set to true, meaning that when using this method,
+   * there's no need to perform commit. This method is intended to be used for read operations.
+   * @throws SQLException
+   */
   public void getReadOnlyConnection() throws SQLException {
     Connection dbConnection = dataSource.getConnection();
     dbConnection.setAutoCommit(true);
