@@ -656,7 +656,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
     assertNotNull(responseObj);
     assertEquals(2, responseObj.size());
-
   }
 
   private void createBucket(String bucketName, String creationDateTime){
@@ -687,7 +686,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
 
     // READ
-
     response = target("/objects/meta/" + bucketName).queryParam("key", "object1")
     .request(MediaType.APPLICATION_JSON_TYPE)
         .accept(MediaType.APPLICATION_JSON_TYPE)
