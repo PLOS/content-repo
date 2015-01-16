@@ -55,6 +55,7 @@ public class S3StoreService extends ObjectStore {
     s3Client = new AmazonS3Client(new BasicAWSCredentials(aws_access_key, aws_secret_key));
   }
 
+  @Override
   public Boolean objectExists(RepoObject repoObject) {
     try {
       S3Object obj = s3Client.getObject(repoObject.getBucketName(), repoObject.getChecksum());
@@ -70,10 +71,12 @@ public class S3StoreService extends ObjectStore {
     }
   }
 
+  @Override
   public Boolean hasXReproxy() {
     return true;
   }
 
+  @Override
   public URL[] getRedirectURLs(RepoObject repoObject) throws RepoException {
     try {
       return new URL[]{new URL(s3Client.getResourceUrl(repoObject.getBucketName(), repoObject.getChecksum()))};
@@ -82,6 +85,7 @@ public class S3StoreService extends ObjectStore {
     }
   }
 
+  @Override
   public InputStream getInputStream(RepoObject repoObject) throws RepoException {
     try{
       return s3Client.getObject(repoObject.getBucketName(), repoObject.getChecksum()).getObjectContent();
@@ -91,10 +95,12 @@ public class S3StoreService extends ObjectStore {
 
   }
 
+  @Override
   public Boolean bucketExists(Bucket bucket) {
     return s3Client.doesBucketExist(bucket.getBucketName());
   }
 
+  @Override
   public Boolean createBucket(Bucket bucket) {
 
     try {
@@ -110,6 +116,7 @@ public class S3StoreService extends ObjectStore {
 
   }
 
+  @Override
   public Boolean deleteBucket(Bucket bucket) {
 
     try {
@@ -128,6 +135,7 @@ public class S3StoreService extends ObjectStore {
    * @return
    * @throws Exception
    */
+  @Override
   public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException {
 
     final String tempFileLocation = temp_upload_dir + "/" + UUID.randomUUID().toString() + ".tmp";
@@ -176,6 +184,7 @@ public class S3StoreService extends ObjectStore {
     }
   }
 
+  @Override
   public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
 
     int retries = 5;
@@ -231,10 +240,12 @@ public class S3StoreService extends ObjectStore {
     return false;
   }
 
+  @Override
   public Boolean deleteTempUpload(UploadInfo uploadInfo) {
     return new File(uploadInfo.getTempLocation()).delete();
   }
 
+  @Override
   public Boolean deleteObject(RepoObject repoObject) {
     try {
       s3Client.deleteObject(repoObject.getBucketName(), repoObject.getChecksum());
