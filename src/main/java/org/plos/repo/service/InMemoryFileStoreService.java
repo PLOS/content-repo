@@ -20,6 +20,8 @@ package org.plos.repo.service;
 import org.apache.commons.io.IOUtils;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -31,6 +33,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class InMemoryFileStoreService extends ObjectStore {
+
+  private static final Logger log = LoggerFactory.getLogger(InMemoryFileStoreService.class);
 
   // bucketName -> data checksum -> file content
   private Map<String, Map<String, byte[]>> data = new ConcurrentHashMap<>();
@@ -49,6 +53,11 @@ public class InMemoryFileStoreService extends ObjectStore {
     if (content != null) {
       return new ByteArrayInputStream(data.get(repoObject.getBucketName()).get(repoObject.getChecksum()));
     }
+    log.debug("The content for the object was not found. Object --> key {} , bucket name: {} , content checksum: {} , version number: {} ",
+        repoObject.getKey(),
+        repoObject.getBucketName(),
+        repoObject.getChecksum(),
+        repoObject.getVersionNumber());
     return null;
   }
 

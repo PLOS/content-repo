@@ -82,8 +82,13 @@ public class S3StoreService extends ObjectStore {
     }
   }
 
-  public InputStream getInputStream(RepoObject repoObject) {
-    return s3Client.getObject(repoObject.getBucketName(), repoObject.getChecksum()).getObjectContent();
+  public InputStream getInputStream(RepoObject repoObject) throws RepoException {
+    try{
+      return s3Client.getObject(repoObject.getBucketName(), repoObject.getChecksum()).getObjectContent();
+    } catch (Exception e) {
+      throw new RepoException(e);
+    }
+
   }
 
   public Boolean bucketExists(Bucket bucket) {
