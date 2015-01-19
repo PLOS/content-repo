@@ -44,7 +44,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-public class ObjectControllerUTest{
+/**
+ * ObjectController test where all dependencies are mocked.
+ */
+public class ObjectControllerMockDependenciesTest {
 
   private static final String BUCKET = "bucket-1";
   private static final Integer OFFSET = 1;
