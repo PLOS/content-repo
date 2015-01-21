@@ -67,6 +67,11 @@ public class FileSystemStoreService extends ObjectStore {
     try {
       return new FileInputStream(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
     } catch (FileNotFoundException e) {
+      log.debug("The content for the object was not found. Object --> key {} , bucket name: {} , content checksum: {} , version number: {} ",
+          repoObject.getKey(),
+          repoObject.getBucketName(),
+          repoObject.getChecksum(),
+          repoObject.getVersionNumber());
       return null;
     }
   }
