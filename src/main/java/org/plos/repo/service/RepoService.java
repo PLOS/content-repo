@@ -127,6 +127,16 @@ public class RepoService extends BaseRepoService {
 
   }
 
+  /**
+   * Delete the given bucket <code>name</code> if it does not contain any active or deleted objects.
+   * When deleting the bucket, it also deletes all purge objects and collections (no matter the status)
+   * contained in it.
+   * @param name a string representing the bucket to be deleted.
+   * @throws RepoException if the given bucket is not found in the DB
+   *                       if bucket is found in the DB, but it does not exists in the object store
+   *                       if the bucket can't be deleted because active or deleted objects exist in it
+   *                       if there's an error when attempting to delete the bucket from the DB or the object store
+   */
   public void deleteBucket(String name) throws RepoException {
 
     Lock writeLock = this.rwLocks.get(name).writeLock();
@@ -182,7 +192,22 @@ public class RepoService extends BaseRepoService {
     return objectStore.hasXReproxy();
   }
 
-  public List<RepoObject> listObjects(String bucketName, Integer offset, Integer limit, boolean includeDeleted, boolean includePurged, String tag) throws RepoException {
+  /**
+   * List objects filtered by the parameters passed to the method.
+   * @param bucketName a single string representing the bucket in which the objects must be contained
+   * @param offset a single number used to paginate the response
+   * @param limit a single number used to paginate the response, indicating the limit of rows returned
+   * @param includeDeleted a boolean indicating whether to include the objects mark as deleted
+   * @param includePurged a boolean indicating whether to include the objects mark as purged
+   * @param tag a single integer used to filter the objects matching the given tag. If the label is null,
+   *            no filter is applied on such property
+   * @return a list of objects {@link org.plos.repo.models.RepoObject}
+   * @throws RepoException if bucket name has not been entered
+   *                       if the given bucket is not found in the DB
+   *                       if there's an error when attempting to query the DB
+   */
+  public List<RepoObject> listObjects(String bucketName, Integer offset, Integer limit, boolean includeDeleted,
+                                      boolean includePurged, String tag) throws RepoException {
 
     // TODO: should this function return a list of objects and their nested versions instead of one flat last?
 
@@ -347,6 +372,16 @@ public class RepoService extends BaseRepoService {
     return content;
   }
 
+  /**
+   * Mark object as deleted or purged, depending on the <code>purge</code> value.
+   * @param bucketName a single string representing the bucket in which the objects must be contained
+   * @param key a single string representing the object to be deleted/purged
+   * @param purge a boolean indicating whether to purge or delete the object. When equals to true,
+   *              the object must be purged
+   * @param elementFilter a {@link org.plos.repo.models.input.ElementFilter} is used to identify which object
+   *                      for the given <code>key</code> must be changed
+   * @throws RepoException see {@link org.plos.repo.service.RepoService#deleteObject(String, String, org.plos.repo.models.input.ElementFilter, org.plos.repo.models.Status)}
+   */
   public void deleteObject(String bucketName, String key, Boolean purge, ElementFilter elementFilter) throws RepoException {
     if (purge){
       deleteObject(bucketName, key, elementFilter, Status.PURGED);
@@ -356,6 +391,20 @@ public class RepoService extends BaseRepoService {
 
   }
 
+  /**
+   * Delete or Purge an object identify with <code>bucketName</code>, <code>key</code> and <code>elementFilter</code>
+   * depending on the <code>status</code>. Before deleting/purging and object, it validates if the object identify
+   * exists (has not been purged)
+   * @param bucketName  a single string representing the bucket in which the objects must be contained
+   * @param key a single string representing the object to be deleted/purged
+   * @param elementFilter a {@link org.plos.repo.models.input.ElementFilter} is used to identify which object
+   *                      for the given <code>key</code> must be changed
+   * @param status a {@link org.plos.repo.models.input.ElementFilter} is used to identify which object
+   *                      for the given <code>key</code> must be changed
+   * @throws RepoException if bucket name has not been entered
+   *                       if the elementFilter is null or empty
+   *                       if the object does not exists
+   */
   public void deleteObject(String bucketName, String key, ElementFilter elementFilter, Status status ) throws RepoException {
 
     Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
@@ -410,6 +459,18 @@ public class RepoService extends BaseRepoService {
     }
   }
 
+  /**
+   * Updates the status as PURGED, and try to delete the content of the object from mogile. To do so,
+   *  it checks whether other USED or DELETED objects are pointing to the same content. If there’s no other
+   *  objects pointing to it, or all the objects pointing to that content are marked as PURGE, it proceeds
+   *  to remove the content.
+
+   * @param repoObject object to be purged
+   * @param elementFilter a {@link org.plos.repo.models.input.ElementFilter} is used to identify which object
+   *                      for the given <code>key</code> must be changed
+   * @throws RepoException if the content of the object is not found
+   *                       if the metadata of the object is not found in the DB
+   */
   private void purgeObjectContentAndDb(RepoObject repoObject, ElementFilter elementFilter)  throws RepoException {
 
     try {
