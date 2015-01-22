@@ -140,7 +140,7 @@ public class RepoService extends BaseRepoService {
     writeLock.lock();
 
     boolean rollback = false;
-    boolean bucketDeletetion = false;
+    boolean bucketDeletion = false;
 
     Bucket bucket = new Bucket(name);
 
@@ -157,8 +157,8 @@ public class RepoService extends BaseRepoService {
       if (sqlService.listObjects(name, 0, 1, true, null).size() != 0)
         throw new RepoException(RepoException.Type.CantDeleteNonEmptyBucket);
 
-      bucketDeletetion = objectStore.deleteBucket(bucket);
-      if (Boolean.FALSE.equals(bucketDeletetion))
+      bucketDeletion = objectStore.deleteBucket(bucket);
+      if (Boolean.FALSE.equals(bucketDeletion))
         throw new RepoException("Unable to delete bucket in object store: " + name);
 
       if (sqlService.deleteBucket(name) == 0)
@@ -174,7 +174,7 @@ public class RepoService extends BaseRepoService {
       if (rollback) {
         sqlRollback("bucket " + name);
 
-        if (bucketDeletetion) {
+        if (bucketDeletion) {
           objectStore.createBucket(bucket);
           // TODO: validate objectStore.createBucket return values
         }
