@@ -16,9 +16,9 @@ CREATE TABLE IF NOT EXISTS CREPO_SCHEMA_INFO (
 # Before to create the unique contraint, is important to validate the data and fix the duplicate information if it exists.
 # We can found duplicate information with the following select statements in objects and collections tables respectively:
 #
-# SELECT id, bucketId, objkey, versionNumber FROM repo.objects GROUP BY bucketId, objkey, versionNumber
+# SELECT id, bucketId, objkey, versionNumber FROM objects GROUP BY bucketId, objkey, versionNumber
 #    HAVING count(*) > 1 ORDER BY objkey,versionNumber;
-# SELECT id, bucketId, collkey, versionNumber FROM repo.collections GROUP BY bucketId, collkey, versionNumber
+# SELECT id, bucketId, collkey, versionNumber FROM collections GROUP BY bucketId, collkey, versionNumber
 #    HAVING count(*) > 1 ORDER BY collkey,versionNumber;
 #
 
@@ -26,13 +26,13 @@ CREATE TABLE IF NOT EXISTS CREPO_SCHEMA_INFO (
 # Create the unique constraint to ensure no duplicate values in columns: bucketId, objKey and versionNumber
 #
 
-ALTER TABLE repo.objects ADD CONSTRAINT keyVersion UNIQUE (bucketId, objkey, versionNumber);
+ALTER TABLE objects ADD CONSTRAINT keyVersion UNIQUE (bucketId, objkey, versionNumber);
 
 #
 # Create the unique constraint to ensure no duplicate values in columns: bucketId, collkey and versionNumber
 #
 
-ALTER TABLE repo.collections ADD CONSTRAINT keyVersion UNIQUE (bucketId, collkey, versionNumber);
+ALTER TABLE collections ADD CONSTRAINT keyVersion UNIQUE (bucketId, collkey, versionNumber);
 
 # INSERT the version string. This should happen last.
 # The temporal order will indicate which scripts have been
