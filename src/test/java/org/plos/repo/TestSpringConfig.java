@@ -19,6 +19,7 @@ package org.plos.repo;
 
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.plos.repo.models.validator.InputCollectionValidator;
+import org.plos.repo.models.validator.InputRepoObjectValidator;
 import org.plos.repo.models.validator.JsonStringValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
 import org.plos.repo.service.*;
@@ -48,6 +49,9 @@ public class TestSpringConfig {
 
   @Bean
   public InputCollectionValidator inputCollectionValidator(){ return new InputCollectionValidator(); }
+
+  @Bean
+  public InputRepoObjectValidator inputRepoObjectValidator(){ return new InputRepoObjectValidator(); }
 
   @Bean
   public TimestampInputValidator timestampInputValidator(){ return new TimestampInputValidator(); }

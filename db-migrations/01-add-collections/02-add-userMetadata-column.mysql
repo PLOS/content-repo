@@ -1,0 +1,15 @@
+
+#
+# Objects are being update with user metadata information
+#
+
+ALTER TABLE objects
+ADD COLUMN userMetadata LONGTEXT;
+
+
+#
+# Collections are being update with user metadata information
+#
+
+ALTER TABLE collections
+  ADD COLUMN userMetadata LONGTEXT;

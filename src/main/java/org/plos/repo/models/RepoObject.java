@@ -17,6 +17,8 @@
 
 package org.plos.repo.models;
 
+import org.plos.repo.models.input.InputRepoObject;
+
 import java.net.URL;
 import java.sql.Timestamp;
 

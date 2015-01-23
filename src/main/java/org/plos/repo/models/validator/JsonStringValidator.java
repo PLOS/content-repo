@@ -33,7 +33,7 @@ public class JsonStringValidator {
 
   /**
    * Verifies if the <code>jsonString</code> is a valid json.
-   * @param jsonString a single String representing a timestamp to be validated
+   * @param jsonString a single String representing a json to be validated
    * @param errorType RepoException.Type to be thrown if the String is not a valid json
    * @throws org.plos.repo.service.RepoException
    */

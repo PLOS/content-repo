@@ -26,6 +26,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.plos.repo.models.RepoError;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.input.ElementFilter;
+import org.plos.repo.models.input.InputRepoObject;
 import org.plos.repo.models.output.RepoObjectOutput;
 import org.plos.repo.service.RepoException;
 import org.plos.repo.service.RepoInfoService;
@@ -301,42 +302,24 @@ public class ObjectController {
       @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The object was unable to be created (see response text for more details)"),
       @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
   })
-  public Response createOrUpdate(
-      @ApiParam(required = true) @FormDataParam("key") String key,
-      @ApiParam(required = true) @FormDataParam("bucketName") String bucketName,
-      @ApiParam(value = "MIME type") @FormDataParam("contentType") String contentType,
-      @ApiParam(value = "name of file when downloaded", required = false) @FormDataParam("downloadName") String downloadName,
-      @ApiParam(value = "creation method", allowableValues = "new,version,auto", defaultValue = "new",
-          required = true) @FormDataParam("create") String create,
-      @ApiParam(value = "last modification time", required = false) @FormDataParam("timestamp") String timestamp,
-      @ApiParam(value = "creation time", required = false) @FormDataParam("creationDateTime") String creationDateTime,
-      @ApiParam(value = "creation time", required = false) @FormDataParam("tag") String tag,
-      @ApiParam(value = "user metadata", required = false) @FormDataParam("userMetadata") String userMetadata,
-      @ApiParam(required = false) @FormDataParam("file") InputStream uploadedInputStream
-  ) {
+  public Response createOrUpdate(@BeanParam InputRepoObject inputRepoObject) {
 
     try {
 
       RepoService.CreateMethod method;
 
-      if (create == null)
+      if (inputRepoObject.getCreate() == null)
         throw new RepoException(RepoException.Type.NoCreationMethodEntered);
 
       try {
-        method = RepoService.CreateMethod.valueOf(create.toUpperCase());
+        method = RepoService.CreateMethod.valueOf(inputRepoObject.getCreate().toUpperCase());
       } catch (IllegalArgumentException e) {
         throw new RepoException(RepoException.Type.InvalidCreationMethod);
       }
 
-      Timestamp defaultTimeStamp = new Timestamp(new Date().getTime());
-
-      Timestamp creationDateTimestamp = getValidateTimestamp(creationDateTime, RepoException.Type.CouldNotParseCreationDate, defaultTimeStamp);
-      Timestamp lastModifiedDateTime = getValidateTimestamp(timestamp, RepoException.Type.CouldNotParseTimestamp, creationDateTimestamp);
-
       repoInfoService.incrementWriteCount();
 
-      RepoObject repoObject = repoService.createObject(method, key, bucketName, contentType, downloadName,
-          lastModifiedDateTime, uploadedInputStream, creationDateTimestamp, tag, userMetadata);
+      RepoObject repoObject = repoService.createObject(method, inputRepoObject);
       RepoObjectOutput outputObject = new RepoObjectOutput(repoObject);
 
       return Response.status(Response.Status.CREATED).entity(

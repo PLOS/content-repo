@@ -1,44 +1,47 @@
- /* Copyright (c) 2006-2014 by Public Library of Science
- * http://plos.org
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/* Copyright (c) 2006-2014 by Public Library of Science
+* http://plos.org
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 
 
 package org.plos.repo;
 
- import org.apache.commons.io.IOUtils;
- import org.junit.Assert;
- import org.junit.Before;
- import org.junit.Test;
- import org.mockito.BDDMockito;
- import org.mockito.Mockito;
- import org.plos.repo.models.Bucket;
- import org.plos.repo.models.RepoObject;
- import org.plos.repo.models.input.ElementFilter;
- import org.plos.repo.service.*;
+import org.apache.commons.io.IOUtils;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.models.RepoObject;
+import org.plos.repo.models.input.ElementFilter;
+import org.plos.repo.models.input.InputRepoObject;
+import org.plos.repo.service.*;
 
- import java.lang.reflect.Field;
- import java.sql.Timestamp;
- import java.util.Calendar;
- import java.util.Date;
+import java.lang.reflect.Field;
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.Date;
 
 public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
-  private final Bucket bucket1 = new Bucket("bucket1");
-
-  private final Timestamp CREATION_DATE_TIME = new Timestamp(new Date().getTime());
-  private final String CREATION_DATE_TIME_STRING = CREATION_DATE_TIME.toString();
+  private static final String KEY = "key1";
+  private static final Bucket bucket1 = new Bucket("bucket1");
+  private static final Timestamp CREATION_DATE_TIME = new Timestamp(new Date().getTime());
+  private static final String CREATION_DATE_TIME_STRING = CREATION_DATE_TIME.toString();
+  private static final String CONTENT_TYPE = "text/plain";
+  private static final String DOWNLOAD_NAME = "dlName";
 
   @Before
   public void beforeMethods() throws Exception {
@@ -224,7 +227,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
 
     try {
-      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.getBucketName(), "text!", "dlName", CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME, null, null);
+      repoService.createObject(RepoService.CreateMethod.NEW, createInputRepoObject());
     } catch (RepoException e) {
       Assert.fail(e.getMessage());
     }
@@ -233,18 +236,17 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     sqlService.getConnection();
 
-    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), "key1");
+    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
 
-    Assert.assertTrue(objFromDb.getKey().equals("key1"));
+    Assert.assertTrue(objFromDb.getKey().equals(KEY));
     sqlService.releaseConnection();
     Assert.assertTrue(objectStore.objectExists(objFromDb));
 
     Assert.assertTrue(IOUtils.toString(objectStore.getInputStream(objFromDb)).equals("data1"));
 
-
     Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 1);
-    Assert.assertTrue(repoService.getObjectContentType(objFromDb).equals("text!"));
-    Assert.assertTrue(repoService.getObjectExportFileName(objFromDb).equals("dlName"));
+    Assert.assertTrue(repoService.getObjectContentType(objFromDb).equals(CONTENT_TYPE));
+    Assert.assertTrue(repoService.getObjectExportFileName(objFromDb).equals(DOWNLOAD_NAME));
   }
 
   @Test
@@ -261,7 +263,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     objStoreField.set(repoService, spyObjectStore);
 
     try {
-      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.getBucketName(), null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME, null, null);
+      repoService.createObject(RepoService.CreateMethod.NEW, createInputRepoObject());
       Assert.fail();
     } catch (RepoException e) {
       Assert.assertTrue(e.getType() == RepoException.Type.ServerError);
@@ -271,7 +273,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     // check state
 
     sqlService.getConnection();
-    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), "key1");
+    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
     Assert.assertTrue(objFromDb == null);
     sqlService.releaseConnection();
     RepoObject repoObject = new RepoObject();
@@ -295,7 +297,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     sqlServiceField.set(repoService, spySqlService);
 
     try {
-      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.getBucketName(), null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME, null, null);
+      repoService.createObject(RepoService.CreateMethod.NEW, createInputRepoObject());
       Assert.fail();
     } catch (RepoException e) {
       Assert.assertTrue(e.getType() == RepoException.Type.ServerError);
@@ -305,7 +307,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     // check state
 
     sqlService.getConnection();
-    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), "key1");
+    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
     Assert.assertTrue(objFromDb == null);
     sqlService.releaseConnection();
     RepoObject repoObject = new RepoObject();
@@ -321,10 +323,16 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
 
     try {
+      InputRepoObject inputRepoObject = createInputRepoObject();
+      repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
 
-      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.getBucketName(), "first content type", "first download name", CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME, null, null);
       Timestamp creationDateTimeObj2 = new Timestamp(new Date().getTime());
-      repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.getBucketName(), "new content type", "new download name", creationDateTimeObj2, IOUtils.toInputStream("data2"), creationDateTimeObj2, null, null);
+      inputRepoObject.setContentType("new content type");
+      inputRepoObject.setDownloadName("new download name");
+      inputRepoObject.setTimestamp(creationDateTimeObj2.toString());
+      inputRepoObject.setUploadedInputStream(IOUtils.toInputStream("data2"));
+      inputRepoObject.setCreationDateTime(creationDateTimeObj2.toString());
+      repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
 
     } catch (RepoException e) {
       Assert.fail(e.getMessage());
@@ -334,9 +342,9 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     sqlService.getConnection();
 
-    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), "key1");
+    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
 
-    Assert.assertTrue(objFromDb.getKey().equals("key1"));
+    Assert.assertTrue(objFromDb.getKey().equals(KEY));
     sqlService.releaseConnection();
     Assert.assertTrue(objectStore.objectExists(objFromDb));
 
@@ -348,11 +356,11 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, false, null).size() == 2);
 
     Assert.assertTrue(IOUtils.toString(repoService.getObjectInputStream(
-            repoService.getObject(bucket1.getBucketName(), "key1", new ElementFilter(0, null, null)))).equals("data1")
+            repoService.getObject(bucket1.getBucketName(), KEY, new ElementFilter(0, null, null)))).equals("data1")
     );
 
     Assert.assertTrue(IOUtils.toString(repoService.getObjectInputStream(
-      repoService.getObject(bucket1.getBucketName(), "key1", new ElementFilter(1, null, null)))).equals("data2")
+      repoService.getObject(bucket1.getBucketName(), KEY, new ElementFilter(1, null, null)))).equals("data2")
     );
 
     Assert.assertTrue(repoService.getObjectContentType(objFromDb).equals("new content type"));
@@ -365,7 +373,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     repoService.createBucket("bucket0", CREATION_DATE_TIME_STRING);
 
     try {
-      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.getBucketName(), null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME, null, null);
+      repoService.createObject(RepoService.CreateMethod.NEW, createInputRepoObject());
       Assert.fail();
     } catch (RepoException e) {
       Assert.assertTrue(e.getType() == RepoException.Type.BucketNotFound);
@@ -376,7 +384,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     sqlService.getConnection();
 
-    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), "key1");
+    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
 
     Assert.assertTrue(objFromDb == null);
     sqlService.releaseConnection();
@@ -394,7 +402,8 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
 
-    repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.getBucketName(), "first content type", "first download name", CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME, null, null);
+    InputRepoObject inputRepoObject = createInputRepoObject();
+    repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
 
     SqlService spySqlService = Mockito.spy(sqlService);
 
@@ -406,7 +415,10 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     try {
 
-      repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.getBucketName(), "new content type", "new download name", CREATION_DATE_TIME, IOUtils.toInputStream("data2"), CREATION_DATE_TIME, null, null);
+      inputRepoObject.setContentType("new content type");
+      inputRepoObject.setDownloadName("new download name");
+      inputRepoObject.setUploadedInputStream(IOUtils.toInputStream("data2"));
+      repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
 
       Assert.fail();
     } catch (RepoException e) {
@@ -417,7 +429,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     // check state
 
     sqlService.getConnection();
-    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), "key1");
+    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
     Assert.assertTrue(objFromDb != null);
     sqlService.releaseConnection();
     RepoObject repoObject = new RepoObject();
@@ -434,9 +446,16 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
 
     try {
-      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.getBucketName(), "first content type", "first download name", CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME, null, null);
+      InputRepoObject inputRepoObject = createInputRepoObject();
+      repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
+
       Timestamp creationDateObj2 = new Timestamp(new Date().getTime());
-      repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.getBucketName(), "new content type", "new download name", creationDateObj2, IOUtils.toInputStream(""), creationDateObj2, null, null);
+      inputRepoObject.setContentType("new content type");
+      inputRepoObject.setDownloadName("new download name");
+      inputRepoObject.setUploadedInputStream(IOUtils.toInputStream(""));
+      inputRepoObject.setTimestamp(creationDateObj2.toString());
+      inputRepoObject.setCreationDateTime(creationDateObj2.toString());
+      repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
 
     } catch (RepoException e) {
       Assert.fail(e.getMessage());
@@ -446,9 +465,9 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     sqlService.getConnection();
 
-    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), "key1");
+    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
 
-    Assert.assertTrue(objFromDb.getKey().equals("key1"));
+    Assert.assertTrue(objFromDb.getKey().equals(KEY));
     sqlService.releaseConnection();
     Assert.assertTrue(objectStore.objectExists(objFromDb));
 
@@ -458,11 +477,11 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, false, null).size() == 2);
 
     Assert.assertTrue(IOUtils.toString(repoService.getObjectInputStream(
-        repoService.getObject(bucket1.getBucketName(), "key1", new ElementFilter(0, null, null)))).equals("data1")
+        repoService.getObject(bucket1.getBucketName(), KEY, new ElementFilter(0, null, null)))).equals("data1")
     );
 
     Assert.assertTrue(IOUtils.toString(repoService.getObjectInputStream(
-        repoService.getObject(bucket1.getBucketName(), "key1", new ElementFilter(1, null, null)))).equals("")
+        repoService.getObject(bucket1.getBucketName(), KEY, new ElementFilter(1, null, null)))).equals("")
     );
 
     Assert.assertTrue(repoService.getObjectContentType(objFromDb).equals("new content type"));
@@ -477,12 +496,18 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     try {
 
-      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.getBucketName(), null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME, null, null);
+      InputRepoObject inputRepoObject = createInputRepoObject();
+      inputRepoObject.setContentType(null);
+      inputRepoObject.setDownloadName(null);
+      repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
 
       Timestamp creationDateObj2 = new Timestamp(new Date().getTime());
-      repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.getBucketName(), null, null, creationDateObj2, IOUtils.toInputStream("data2"), creationDateObj2, null, null);
+      inputRepoObject.setUploadedInputStream(IOUtils.toInputStream("data2"));
+      inputRepoObject.setTimestamp(creationDateObj2.toString());
+      inputRepoObject.setCreationDateTime(creationDateObj2.toString());
+      repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
 
-      repoService.deleteObject(bucket1.getBucketName(), "key1", new ElementFilter(1, null, null));
+      repoService.deleteObject(bucket1.getBucketName(), KEY, new ElementFilter(1, null, null));
 
     } catch (RepoException e) {
       Assert.fail(e.getMessage());
@@ -492,14 +517,13 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     sqlService.getConnection();
 
-    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), "key1");
+    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
 
-    Assert.assertTrue(objFromDb.getKey().equals("key1"));
+    Assert.assertTrue(objFromDb.getKey().equals(KEY));
     sqlService.releaseConnection();
     Assert.assertTrue(objectStore.objectExists(objFromDb));
 
     Assert.assertTrue(IOUtils.toString(objectStore.getInputStream(objFromDb)).equals("data1"));
-
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 1);
     Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, false, null).size() == 1);
@@ -514,11 +538,13 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     try {
 
-      repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.getBucketName(), null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME, null, null);
+      InputRepoObject inputRepoObject = createInputRepoObject();
+      repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
 
-      repoService.createObject(RepoService.CreateMethod.VERSION, "key1", bucket1.getBucketName(), null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data2"), CREATION_DATE_TIME, null, null);
+      inputRepoObject.setUploadedInputStream(IOUtils.toInputStream("data2"));
+      repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
 
-      repoService.deleteObject(bucket1.getBucketName(), "key1", new ElementFilter(5, null, null));
+      repoService.deleteObject(bucket1.getBucketName(), KEY, new ElementFilter(5, null, null));
 
     } catch (RepoException e) {
       Assert.assertTrue(e.getMessage().startsWith("Object not found"));
@@ -528,9 +554,9 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     sqlService.getConnection();
 
-    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), "key1");
+    RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
 
-    Assert.assertTrue(objFromDb.getKey().equals("key1"));
+    Assert.assertTrue(objFromDb.getKey().equals(KEY));
     sqlService.releaseConnection();
     Assert.assertTrue(objectStore.objectExists(objFromDb));
 
@@ -543,7 +569,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
 
-    RepoObject newObj = repoService.createObject(RepoService.CreateMethod.NEW, "key1", bucket1.getBucketName(), null, null, CREATION_DATE_TIME, IOUtils.toInputStream("data1"), CREATION_DATE_TIME, null, null);
+    RepoObject newObj = repoService.createObject(RepoService.CreateMethod.NEW, createInputRepoObject());
 
     if (repoService.serverSupportsReproxy()) {
 
@@ -566,17 +592,22 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     cal.set(2014, 10, 30, 1, 1, 1);
     Timestamp creationDateTime1 = new Timestamp(cal.getTime().getTime());
 
-    String key = "key1";
     // create object with creation date time
-    repoService.createObject(RepoService.CreateMethod.NEW, key, bucket1.getBucketName(), null, null, creationDateTime1, IOUtils.toInputStream("data1"), creationDateTime1, null, null);
+    InputRepoObject inputRepoObject = createInputRepoObject();
+    inputRepoObject.setCreationDateTime(creationDateTime1.toString());
+    inputRepoObject.setTimestamp(creationDateTime1.toString());
+    repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
 
     cal.set(2014, 10, 20, 1, 1, 1);
     Timestamp creationDateTime2 = new Timestamp(cal.getTime().getTime());
     // create object with creation date time before object 1 creation date time
-    repoService.createObject(RepoService.CreateMethod.VERSION, key, bucket1.getBucketName(), null, null, creationDateTime2, IOUtils.toInputStream("data2"), creationDateTime2, null, null);
+    inputRepoObject.setCreationDateTime(creationDateTime2.toString());
+    inputRepoObject.setTimestamp(creationDateTime2.toString());
+    inputRepoObject.setUploadedInputStream(IOUtils.toInputStream("data2"));
+    repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
 
     // get the latest object
-    RepoObject repoObject = repoService.getObject(bucket1.getBucketName(), key, null);
+    RepoObject repoObject = repoService.getObject(bucket1.getBucketName(), KEY, null);
 
     // object must match the one with the oldest creation time
     Assert.assertEquals(new Integer(0), repoObject.getVersionNumber());
@@ -594,14 +625,21 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     cal.set(2014, 10, 30, 1, 1, 1);
     Timestamp creationDateTime1 = new Timestamp(cal.getTime().getTime());
 
-    String key = "key1";
+    String key = KEY;
     // create object with creation date time
-    repoService.createObject(RepoService.CreateMethod.NEW, key, bucket1.getBucketName(), null, null, creationDateTime1, IOUtils.toInputStream("data1"), creationDateTime1, "DRAFT", null);
+    InputRepoObject inputRepoObject = createInputRepoObject();
+    inputRepoObject.setCreationDateTime(creationDateTime1.toString());
+    inputRepoObject.setTimestamp(creationDateTime1.toString());
+    inputRepoObject.setTag("DRAFT");
+    repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
 
     cal.set(2014, 10, 20, 1, 1, 1);
     Timestamp creationDateTime2 = new Timestamp(cal.getTime().getTime());
     // create object with creation date time before object 1 creation date time
-    repoService.createObject(RepoService.CreateMethod.VERSION, key, bucket1.getBucketName(), null, null, creationDateTime2, IOUtils.toInputStream("data2"), creationDateTime2, "FINAL", null);
+    inputRepoObject.setCreationDateTime(creationDateTime2.toString());
+    inputRepoObject.setTimestamp(creationDateTime2.toString());
+    inputRepoObject.setTag("FINAL");
+    repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
 
     // get the latest object
     RepoObject repoObject = repoService.getObject(bucket1.getBucketName(), key, new ElementFilter(null, "DRAFT", null));
@@ -622,17 +660,22 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     cal.set(2014, 10, 30, 1, 1, 1);
     Timestamp creationDateTime1 = new Timestamp(cal.getTime().getTime());
 
-    String key = "key1";
     // create object with creation date time
-    repoService.createObject(RepoService.CreateMethod.NEW, key, bucket1.getBucketName(), null, null, creationDateTime1, IOUtils.toInputStream("data1"), creationDateTime1, "FINAL", null);
+    InputRepoObject inputRepoObject = createInputRepoObject();
+    inputRepoObject.setCreationDateTime(creationDateTime1.toString());
+    inputRepoObject.setTimestamp(creationDateTime1.toString());
+    inputRepoObject.setTag("FINAL");
+    repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
 
     cal.set(2014, 10, 20, 1, 1, 1);
     Timestamp creationDateTime2 = new Timestamp(cal.getTime().getTime());
     // create object with creation date time before object 1 creation date time
-    repoService.createObject(RepoService.CreateMethod.VERSION, key, bucket1.getBucketName(), null, null, creationDateTime2, IOUtils.toInputStream("data2"), creationDateTime2, "FINAL", null);
+    inputRepoObject.setCreationDateTime(creationDateTime2.toString());
+    inputRepoObject.setTimestamp(creationDateTime2.toString());
+    repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
 
     // get the latest object
-    RepoObject repoObject = repoService.getObject(bucket1.getBucketName(), key, new ElementFilter(null, "FINAL", null));
+    RepoObject repoObject = repoService.getObject(bucket1.getBucketName(), KEY, new ElementFilter(null, "FINAL", null));
 
     // object must match the one with the oldest creation time
     Assert.assertEquals(new Integer(0), repoObject.getVersionNumber());
@@ -650,23 +693,41 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     cal.set(2014, 10, 30, 1, 1, 1);
     Timestamp creationDateTime1 = new Timestamp(cal.getTime().getTime());
 
-    String key = "key1";
     // create object with creation date time
-    repoService.createObject(RepoService.CreateMethod.NEW, key, bucket1.getBucketName(), null, null, creationDateTime1, IOUtils.toInputStream("data1"), creationDateTime1, "DRAFT", null);
+    InputRepoObject inputRepoObject = createInputRepoObject();
+    inputRepoObject.setCreationDateTime(creationDateTime1.toString());
+    inputRepoObject.setTimestamp(creationDateTime1.toString());
+    inputRepoObject.setTag("DRAFT");
+    repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
 
     cal.set(2014, 10, 20, 1, 1, 1);
     Timestamp creationDateTime2 = new Timestamp(cal.getTime().getTime());
+    inputRepoObject.setCreationDateTime(creationDateTime2.toString());
+    inputRepoObject.setUploadedInputStream(IOUtils.toInputStream("data2"));
+    inputRepoObject.setTimestamp(creationDateTime2.toString());
     // create object with creation date time before object 1 creation date time
-    RepoObject repoObject = repoService.createObject(RepoService.CreateMethod.VERSION, key, bucket1.getBucketName(), null, null, creationDateTime2, IOUtils.toInputStream("data2"), creationDateTime2, "FINAL", null);
+    RepoObject repoObject = repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
 
     // get the latest object
-    RepoObject resultRepoObject = repoService.getObject(bucket1.getBucketName(), key, new ElementFilter(null, "FINAL", repoObject.getVersionChecksum()));
+    RepoObject resultRepoObject = repoService.getObject(bucket1.getBucketName(), KEY, new ElementFilter(null, null, repoObject.getVersionChecksum()));
 
     // object must match the one with the oldest creation time
     Assert.assertEquals(new Integer(1), resultRepoObject.getVersionNumber());
     Assert.assertEquals(creationDateTime2, resultRepoObject.getCreationDate());
     Assert.assertEquals(repoObject.getVersionChecksum(), resultRepoObject.getVersionChecksum());
 
+  }
+
+  private InputRepoObject createInputRepoObject(){
+    InputRepoObject inputRepoObject = new InputRepoObject();
+    inputRepoObject.setKey(KEY);
+    inputRepoObject.setBucketName(bucket1.getBucketName());
+    inputRepoObject.setContentType(CONTENT_TYPE);
+    inputRepoObject.setDownloadName(DOWNLOAD_NAME);
+    inputRepoObject.setTimestamp(CREATION_DATE_TIME_STRING);
+    inputRepoObject.setUploadedInputStream(IOUtils.toInputStream("data1"));
+    inputRepoObject.setCreationDateTime(CREATION_DATE_TIME_STRING);
+    return inputRepoObject;
   }
 
 }

@@ -23,6 +23,8 @@ import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.Status;
 import org.plos.repo.models.input.ElementFilter;
+import org.plos.repo.models.input.InputRepoObject;
+import org.plos.repo.models.validator.InputRepoObjectValidator;
 import org.plos.repo.models.validator.JsonStringValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
 import org.slf4j.Logger;
@@ -55,10 +57,10 @@ public class RepoService extends BaseRepoService {
   private ObjectStore objectStore;
 
   @Inject
-  private TimestampInputValidator timestampValidator;
+  private InputRepoObjectValidator inputRepoObjectValidator;
 
   @Inject
-  private JsonStringValidator jsonStringValidator;
+  private TimestampInputValidator timestampValidator;
 
   public List<Bucket> listBuckets() throws RepoException {
     try {
@@ -390,34 +392,20 @@ public class RepoService extends BaseRepoService {
   }
 
   public RepoObject createObject(CreateMethod method,
-                             String key,
-                             String bucketName,
-                             String contentType,
-                             String downloadName,
-                             Timestamp timestamp,
-                             InputStream uploadedInputStream,
-                             Timestamp creationDateTime,
-                             String tag,
-                             String userMetadata) throws RepoException {
+                                 InputRepoObject inputRepoObject) throws RepoException {
 
 
-    Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
+    Lock writeLock = this.rwLocks.get(inputRepoObject.getBucketName() + inputRepoObject.getKey()).writeLock();
     writeLock.lock();
 
     RepoObject existingRepoObject;
 
     try {
 
-      if (key == null)
-        throw new RepoException(RepoException.Type.NoKeyEntered);
-
-      if (bucketName == null)
-        throw new RepoException(RepoException.Type.NoBucketEntered);
-
-      jsonStringValidator.validate(userMetadata, RepoException.Type.InvalidUserMetadataFormat);
+      inputRepoObjectValidator.validate(inputRepoObject);
 
       try {
-        existingRepoObject = getObject(bucketName, key, null);
+        existingRepoObject = getObject(inputRepoObject.getBucketName(), inputRepoObject.getKey(), null);
       } catch (RepoException e) {
         if (e.getType() == RepoException.Type.ObjectNotFound)
           existingRepoObject = null;
@@ -425,23 +413,30 @@ public class RepoService extends BaseRepoService {
           throw e;
       }
 
+      // creates timestamps
+      Timestamp creationDate = inputRepoObject.getCreationDateTime() != null ?
+          Timestamp.valueOf(inputRepoObject.getCreationDateTime()) : new Timestamp(new Date().getTime());
+
+      Timestamp timestamp = inputRepoObject.getTimestamp() != null ?
+          Timestamp.valueOf(inputRepoObject.getTimestamp()) : creationDate;
+
       switch (method) {
 
         case NEW:
           if (existingRepoObject != null)
             throw new RepoException(RepoException.Type.CantCreateNewObjectWithUsedKey);
-          return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream, creationDateTime, tag, userMetadata);
+          return createNewObject(inputRepoObject, timestamp, creationDate);
 
         case VERSION:
           if (existingRepoObject == null)
             throw new RepoException(RepoException.Type.CantCreateVersionWithNoOrig);
-          return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingRepoObject, creationDateTime, tag, userMetadata);
+          return updateObject(inputRepoObject, timestamp, existingRepoObject, creationDate);
 
         case AUTO:
           if (existingRepoObject == null)
-            return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream, creationDateTime, tag, userMetadata);
+            return createNewObject(inputRepoObject, timestamp, creationDate);
           else
-            return updateObject(bucketName, contentType, downloadName, timestamp, uploadedInputStream, existingRepoObject, creationDateTime, tag, userMetadata);
+            return updateObject(inputRepoObject, timestamp, existingRepoObject, creationDate);
 
         default:
           throw new RepoException(RepoException.Type.InvalidCreationMethod);
@@ -452,15 +447,9 @@ public class RepoService extends BaseRepoService {
 
   }
 
-  private RepoObject createNewObject(String key,
-                                 String bucketName,
-                                 String contentType,
-                                 String downloadName,
+  private RepoObject createNewObject(InputRepoObject inputRepoObject,
                                  Timestamp timestamp,
-                                 InputStream uploadedInputStream,
-                                 Timestamp cretationDateTime,
-                                 String tag,
-                                 String userMetadata) throws RepoException {
+                                 Timestamp cretationDateTime) throws RepoException {
 
     ObjectStore.UploadInfo uploadInfo = null;
     Integer versionNumber;
@@ -474,7 +463,7 @@ public class RepoService extends BaseRepoService {
 
       try {
         sqlService.getConnection();
-        bucket = sqlService.getBucket(bucketName);
+        bucket = sqlService.getBucket(inputRepoObject.getBucketName());
       } catch (SQLException e) {
         throw new RepoException(e);
       }
@@ -482,10 +471,11 @@ public class RepoService extends BaseRepoService {
       if (bucket == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
 
-      uploadInfo = objectStore.uploadTempObject(uploadedInputStream);
+      InputStream content = inputRepoObject.getUploadedInputStream();
+      uploadInfo = objectStore.uploadTempObject(content);
 
       try {
-        uploadedInputStream.close();
+        content.close();
       } catch (IOException e) {
         throw new RepoException(e);
       }
@@ -495,21 +485,24 @@ public class RepoService extends BaseRepoService {
       }
 
       try {
-        versionNumber = sqlService.getObjectNextAvailableVersion(bucketName, key);
+        versionNumber = sqlService.getObjectNextAvailableVersion(inputRepoObject.getBucketName(),
+                                                                  inputRepoObject.getKey());
       } catch (SQLException e) {
         throw new RepoException(e);
       }
 
-      repoObject = new RepoObject(key, bucket.getBucketId(), bucketName, Status.USED);
+      repoObject = new RepoObject(inputRepoObject.getKey(), bucket.getBucketId(),
+          inputRepoObject.getBucketName(), Status.USED);
+      repoObject.setDownloadName(inputRepoObject.getDownloadName());
+      repoObject.setContentType(inputRepoObject.getContentType());
+      repoObject.setUserMetadata(inputRepoObject.getUserMetadata());
+      repoObject.setTag(inputRepoObject.getTag());
       repoObject.setChecksum(uploadInfo.getChecksum());
       repoObject.setTimestamp(timestamp);
-      repoObject.setDownloadName(downloadName);
-      repoObject.setContentType(contentType);
       repoObject.setSize(uploadInfo.getSize());
-      repoObject.setTag(tag);
       repoObject.setVersionNumber(versionNumber);
       repoObject.setCreationDate(cretationDateTime);
-      repoObject.setUserMetadata(userMetadata);
+
 
       repoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(repoObject));
       rollback = true;
@@ -527,7 +520,8 @@ public class RepoService extends BaseRepoService {
         // dont bother storing the file since the data already exists in the system
 
       } else {
-        if (Boolean.FALSE.equals(objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, repoObject))) {
+        if (Boolean.FALSE.equals(objectStore.saveUploadedObject(new Bucket(inputRepoObject.getBucketName()),
+            uploadInfo, repoObject))) {
           throw new RepoException("Error saving content to object store");
         }
       }
@@ -549,7 +543,7 @@ public class RepoService extends BaseRepoService {
         objectStore.deleteTempUpload(uploadInfo);
 
       if (rollback) {
-        sqlRollback("object " + bucketName + ", " + key);
+        sqlRollback("object " + inputRepoObject.getBucketName() + ", " + inputRepoObject.getKey());
         // TODO: handle objectStore rollback, or not?
       }
 
@@ -559,15 +553,11 @@ public class RepoService extends BaseRepoService {
     return repoObject;
   }
 
-  private RepoObject updateObject(String bucketName,
-                              String contentType,
-                              String downloadName,
-                              Timestamp timestamp,
-                              InputStream uploadedInputStream,
-                              RepoObject repoObject,
-                              Timestamp cretationDateTime,
-                              String tag,
-                              String userMetadata) throws RepoException {
+  private RepoObject updateObject(
+      InputRepoObject inputRepoObject,
+                                  Timestamp timestamp,
+                                  RepoObject repoObject,
+                                  Timestamp cretationDateTime) throws RepoException {
 
     ObjectStore.UploadInfo uploadInfo = null;
     boolean rollback = false;
@@ -576,35 +566,17 @@ public class RepoService extends BaseRepoService {
 
     try {
 
-      // since this method can be used some property of the meta data, the content or both together,
-      //if any of the input properties are null, we should populate them with the data of the previous version of the object
-      // TODO: if the object is equals to the last version, do we need to update the timestamp?
-
-      newRepoObject = new RepoObject(repoObject.getKey(), repoObject.getBucketId(), bucketName, Status.USED);
-      newRepoObject.setTimestamp(timestamp);
-      newRepoObject.setDownloadName(downloadName);
-      newRepoObject.setContentType(contentType);
-      newRepoObject.setTag(tag);
-      newRepoObject.setCreationDate(cretationDateTime);
-      newRepoObject.setUserMetadata(userMetadata);
+      newRepoObject = createNewRepoObjectForUpate(inputRepoObject, repoObject, timestamp, cretationDateTime);
 
       sqlService.getConnection();
 
-      if (sqlService.getBucket(bucketName) == null)
+      if (sqlService.getBucket(inputRepoObject.getBucketName()) == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
 
-      // copy over values from previous object, if they are not specified in the request
-      if (contentType == null)
-        newRepoObject.setContentType(repoObject.getContentType());
-      if (downloadName == null)
-        newRepoObject.setDownloadName(repoObject.getDownloadName());
-      if (userMetadata == null) {
-        newRepoObject.setUserMetadata(repoObject.getUserMetadata());
-      }
-
+      InputStream uploadedInputStream = inputRepoObject.getUploadedInputStream();
       rollback = true;
       if (uploadedInputStream == null) {
-      // handle metadata-only update, the content would be the same as the last version of the object
+        // handle metadata-only update, the content would be the same as the last version of the object
         newRepoObject.setChecksum(repoObject.getChecksum());
       } else {
         // determine if the new object should be added to the store or not
@@ -613,7 +585,7 @@ public class RepoService extends BaseRepoService {
         newRepoObject.setChecksum(uploadInfo.getChecksum());
         newRepoObject.setSize(uploadInfo.getSize());
         if (Boolean.FALSE.equals(objectStore.objectExists(newRepoObject))) {
-          if (Boolean.FALSE.equals(objectStore.saveUploadedObject(new Bucket(bucketName), uploadInfo, newRepoObject))) {
+          if (Boolean.FALSE.equals(objectStore.saveUploadedObject(new Bucket(inputRepoObject.getBucketName()), uploadInfo, newRepoObject))) {
             throw new RepoException("Error saving content to object store");
           }
         }
@@ -627,7 +599,7 @@ public class RepoService extends BaseRepoService {
         return repoObject;
       }
 
-      newRepoObject.setVersionNumber(sqlService.getObjectNextAvailableVersion(bucketName, newRepoObject.getKey()));
+      newRepoObject.setVersionNumber(sqlService.getObjectNextAvailableVersion(inputRepoObject.getBucketName(), newRepoObject.getKey()));
       // add a record to the DB for the new object
       if (sqlService.insertObject(newRepoObject) == 0) {
         throw new RepoException("Error saving content to database");
@@ -643,7 +615,7 @@ public class RepoService extends BaseRepoService {
         objectStore.deleteTempUpload(uploadInfo);
 
       if (rollback) {
-        sqlRollback("object " + bucketName + ", " + repoObject.getKey());
+        sqlRollback("object " + inputRepoObject.getBucketName() + ", " + repoObject.getKey());
         // TODO: handle objectStore rollback, or not?
       }
 
@@ -652,6 +624,53 @@ public class RepoService extends BaseRepoService {
     }
 
     return newRepoObject;
+  }
+
+  /**
+   * Create a {@link org.plos.repo.models.RepoObject} to be updated. If any of the properties from <code>inputRepoObject</code> is null,
+   * it gets that properties from <code>repoObject</code>
+   * @param inputRepoObject a single {@link org.plos.repo.models.input.InputRepoObject} used as input for the new repo object
+   * @param repoObject a single {@link org.plos.repo.models.RepoObject} used to obtain the values for the new repo object that
+   *                   are null in <code>inputRepoObjecy</code>
+   * @param timestamp a valid timestamp for the new repo object
+   * @param cretationDateTime a valid creation date time for the new repo objec
+   * @return a new repo object
+   */
+  private RepoObject createNewRepoObjectForUpate(InputRepoObject inputRepoObject, RepoObject repoObject, Timestamp timestamp, Timestamp cretationDateTime){
+    // TODO: if the object is equals to the last version, do we need to update the timestamp?
+
+    RepoObject newRepoObject =
+        new RepoObject(repoObject.getKey(), repoObject.getBucketId(), inputRepoObject.getBucketName(), Status.USED);
+    newRepoObject.setTimestamp(timestamp);
+    newRepoObject.setCreationDate(cretationDateTime);
+
+    // copy over values from previous object, if they are not specified in the request
+    if (inputRepoObject.getContentType() == null){
+      newRepoObject.setContentType(repoObject.getContentType());
+    } else {
+      newRepoObject.setContentType(inputRepoObject.getContentType());
+    }
+
+    if (inputRepoObject.getDownloadName() == null){
+      newRepoObject.setDownloadName(repoObject.getDownloadName());
+    } else {
+      newRepoObject.setDownloadName(inputRepoObject.getDownloadName());
+    }
+
+    if (inputRepoObject.getUserMetadata() == null) {
+      newRepoObject.setUserMetadata(repoObject.getUserMetadata());
+    } else {
+      newRepoObject.setUserMetadata(inputRepoObject.getUserMetadata());
+    }
+
+    if (inputRepoObject.getTag() == null) {
+      newRepoObject.setTag(repoObject.getTag());
+    } else {
+      newRepoObject.setTag(inputRepoObject.getTag());
+    }
+
+    return newRepoObject;
+
   }
 
    @Override

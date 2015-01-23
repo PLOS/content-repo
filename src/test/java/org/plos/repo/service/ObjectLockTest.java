@@ -1,19 +1,19 @@
 /*
- * Copyright (c) 2006-2014 by Public Library of Science
- * http://plos.org
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+* Copyright (c) 2006-2014 by Public Library of Science
+* http://plos.org
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 
 package org.plos.repo.service;
 
@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.plos.repo.RepoBaseSpringTest;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.input.ElementFilter;
+import org.plos.repo.models.input.InputRepoObject;
 
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
@@ -56,7 +57,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     /**
     * JUnit only captures assertion errors raised in the main thread, so we'll
-    * create an explicit error instance to record assertion failures in 
+    * create an explicit error instance to record assertion failures in
     * in worker threads (only the first). Guard access with lock object.
     */
 
@@ -291,7 +292,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
    INSERT
 
- ------------------------------------------------------------------ */
+------------------------------------------------------------------ */
 
 
     for (int i = 0; i < insertThreads; i++) {
@@ -301,8 +302,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
           try {
             startGate.await();  // don't start until startGate is 0
             try {
-              Timestamp creationDateTime = new Timestamp(new Date().getTime());
-              RepoObject repoObject = repoService.createObject(RepoService.CreateMethod.NEW, cb.getKeyname(j), BUCKET_NAME, null, null, creationDateTime, IOUtils.toInputStream(OBJECT_DATA), creationDateTime, cb.getTag(j), null);
+              RepoObject repoObject = repoService.createObject(RepoService.CreateMethod.NEW, createInputRepoObject(cb, j));
 
               if (!repoObject.getKey().equals(cb.getKeyname(j))) {
                 synchronized (lock) {
@@ -336,11 +336,11 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       t.start();
     }
 
- /* ------------------------------------------------------------------
+/* ------------------------------------------------------------------
 
    UPDATE
 
- ------------------------------------------------------------------ */
+------------------------------------------------------------------ */
 
 
     for (int i = 0; i < updateThreads; i++) {
@@ -350,8 +350,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
           try {
             startGate.await();  // don't start until startGate is 0
             try {
-              Timestamp creationDateTime = new Timestamp(new Date().getTime());
-              RepoObject versionedRepoObject = repoService.createObject(RepoService.CreateMethod.VERSION, cb.getKeyname(j), BUCKET_NAME, null, null, creationDateTime, IOUtils.toInputStream(OBJECT_DATA), creationDateTime, cb.getTag(j), null);
+              RepoObject versionedRepoObject = repoService.createObject(RepoService.CreateMethod.VERSION, createInputRepoObject(cb, j));
 
               if (!versionedRepoObject.getKey().equals(cb.getKeyname(j))) {
                 synchronized (lock) {
@@ -390,7 +389,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
   DELETE
 
- ------------------------------------------------------------------ */
+------------------------------------------------------------------ */
 
 
     for (int i = 0; i < deleteThreads; i++) {
@@ -398,7 +397,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       final Thread t = new Thread() {
         public void run() {
           try {
-            startGate.await();  // don't start until startGate is 0 
+            startGate.await();  // don't start until startGate is 0
             try {
               repoService.deleteObject(BUCKET_NAME, cb.getKeyname(j), new ElementFilter(null, cb.getTag(j), null));
             } finally {
@@ -424,11 +423,11 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       t.start();
     }
 
- /* ------------------------------------------------------------------
+/* ------------------------------------------------------------------
 
   READER
 
- ------------------------------------------------------------------ */
+------------------------------------------------------------------ */
 
 
     for (int i = 0; i < readerThreads; i++) {
@@ -436,7 +435,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       final Thread t = new Thread() {
         public void run() {
           try {
-            startGate.await();  // don't start until startGate is 0 
+            startGate.await();  // don't start until startGate is 0
             try {
 
               RepoObject repoObject = repoService.getObject(BUCKET_NAME, cb.getKeyname(j), new ElementFilter(null, cb.getTag(j), null));
@@ -487,15 +486,27 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     }
 
     startGate.countDown();
- //start all client threads
+//start all client threads
 
     endGate.await();
- //wait until all threads have finished (L=0)
+//wait until all threads have finished (L=0)
 
 
     if (this.assertionFailure != null) {
       throw this.assertionFailure;
     }
+  }
+
+  private InputRepoObject createInputRepoObject(Callback cb, int threadNumber) {
+    Timestamp creationDateTime = new Timestamp(new Date().getTime());
+    InputRepoObject inputRepoObject = new InputRepoObject();
+    inputRepoObject.setKey(cb.getKeyname(threadNumber));
+    inputRepoObject.setBucketName(BUCKET_NAME);
+    inputRepoObject.setTimestamp(creationDateTime.toString());
+    inputRepoObject.setUploadedInputStream(IOUtils.toInputStream(OBJECT_DATA));
+    inputRepoObject.setCreationDateTime(creationDateTime.toString());
+    inputRepoObject.setTag(cb.getTag(threadNumber));
+    return inputRepoObject;
   }
 
 }

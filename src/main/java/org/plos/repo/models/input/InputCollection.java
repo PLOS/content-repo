@@ -39,16 +39,6 @@ public class InputCollection {
   public InputCollection() {
   }
 
-  public InputCollection(String key, String timestamp, String bucketName, String create, String tag, List<InputObject> objects, String creationDateTime, String userMetadata) {
-    this.key = key;
-    this.timestamp = timestamp;
-    this.bucketName = bucketName;
-    this.create = create;
-    this.tag = tag;
-    this.objects = objects;
-    this.creationDateTime = creationDateTime;
-  }
-
   public String getKey() {
     return key;
   }
