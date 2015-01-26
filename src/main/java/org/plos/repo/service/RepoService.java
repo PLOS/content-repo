@@ -359,14 +359,18 @@ public class RepoService extends BaseRepoService {
     try {
       content = objectStore.getInputStream(repoObject);
     } catch (Exception e) {
-      log.error("Error retrieving content for object.  Key: " + repoObject.getKey() + " , bucketName: "
-          + repoObject.getBucketName() + " , versionChecksum: " + repoObject.getVersionChecksum()
-          + " . Error: " + e.getMessage());
+      log.error("Error retrieving content for object.  Key: {} , bucketName: {} , versionChecksum: {} . Error: {}",
+          repoObject.getKey(),
+          repoObject.getBucketName(),
+          repoObject.getVersionChecksum(),
+          e.getMessage());
       throw new RepoException(e);
     }
     if (content == null){
-      log.error("Error retrieving content for object. Content not found.  Key: " + repoObject.getKey() + " , bucketName: "
-          + repoObject.getBucketName() + " , versionChecksum: " + repoObject.getVersionChecksum());
+      log.error("Error retrieving content for object. Content not found.  Key: {} , bucketName: {} , versionChecksum: {} ",
+          repoObject.getKey(),
+          repoObject.getBucketName(),
+          repoObject.getVersionChecksum());
       throw new RepoException(RepoException.Type.ObjectContentNotFound);
     }
     return content;
@@ -437,9 +441,14 @@ public class RepoService extends BaseRepoService {
       }
 
       if (Status.DELETED.equals(status)){
-        if (sqlService.markObjectDeleted(key, bucketName, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag()) == 0)
+
+        int objectDeteled = sqlService.markObjectDeleted(key, bucketName, elementFilter.getVersion(),
+            elementFilter.getVersionChecksum(), elementFilter.getTag());
+
+        if (objectDeteled == 0)
           throw new RepoException(RepoException.Type.ObjectNotFound);
-      }else if (Status.PURGED.equals(status)){
+
+      } else if (Status.PURGED.equals(status)){
         purgeObjectContentAndDb(repoObject, elementFilter);
       }
 
@@ -483,7 +492,10 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(e);
       }
 
-      if (sqlService.markObjectPurged(repoObject.getKey(), repoObject.getBucketName(), elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag()) == 0 ){
+      int objectPurged = sqlService.markObjectPurged(repoObject.getKey(), repoObject.getBucketName(),
+                            elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag());
+
+      if (objectPurged == 0){
         throw new RepoException(RepoException.Type.ObjectNotFound);
       }
 

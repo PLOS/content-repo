@@ -386,7 +386,8 @@ public abstract class SqlService {
 
   }
 
-  public RepoObject getObject(String bucketName, String key, Integer version, String versionChecksum, String tag, boolean searchInDeleted, boolean searchInPurged) throws SQLException {
+  public RepoObject getObject(String bucketName, String key, Integer version, String versionChecksum,
+                              String tag, boolean searchInDeleted, boolean searchInPurged) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -429,15 +430,15 @@ public abstract class SqlService {
       if (tag != null){
         p.setString(i++, tag);
       }
-      if (!searchInDeleted && !searchInPurged)
+
+      if ((!searchInDeleted && !searchInPurged) ||
+          (!searchInDeleted && searchInPurged) || (searchInDeleted && !searchInPurged)) {
         p.setInt(i++, Status.USED.getValue());
-      if (searchInDeleted && !searchInPurged){
-        p.setInt(i++, Status.USED.getValue());
-        p.setInt(i++, Status.DELETED.getValue());
-      }
-      if (!searchInDeleted && searchInPurged){
-        p.setInt(i++, Status.USED.getValue());
-        p.setInt(i++, Status.PURGED.getValue());
+        if (searchInDeleted){
+          p.setInt(i++, Status.DELETED.getValue());
+        } else if (searchInPurged){
+          p.setInt(i++, Status.PURGED.getValue());
+        }
       }
 
       result = p.executeQuery();
