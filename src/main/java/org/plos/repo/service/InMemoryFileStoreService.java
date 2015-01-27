@@ -51,9 +51,12 @@ public class InMemoryFileStoreService extends ObjectStore {
 
   @Override
   public InputStream getInputStream(RepoObject repoObject) {
-    byte[] content = data.get(repoObject.getBucketName()).get(repoObject.getChecksum());
-    if (content != null) {
-      return new ByteArrayInputStream(content);
+    Map<String, byte[]> bucket = data.get(repoObject.getBucketName());
+    if (bucket != null){
+      byte[] content = bucket.get(repoObject.getChecksum());
+      if (content != null) {
+        return new ByteArrayInputStream(content);
+      }
     }
     log.debug("The content for the object was not found. Object --> key {} , bucket name: {} , content checksum: {} , version number: {} ",
         repoObject.getKey(),
