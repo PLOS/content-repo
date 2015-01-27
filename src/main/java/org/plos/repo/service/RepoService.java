@@ -503,7 +503,7 @@ public class RepoService extends BaseRepoService {
       // if not, just mark the record in the DB as purge
       if (sqlService.countUsedAndDeletedObjectsReference(repoObject.getBucketName(), repoObject.getChecksum()) == 0 ){
         Boolean removed = objectStore.deleteObject(repoObject);
-        if (Boolean.FALSE.equals(removed)){
+        if (!removed){
           throw new RepoException(RepoException.Type.ObjectNotFound);
         }
       }

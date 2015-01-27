@@ -392,28 +392,28 @@ public abstract class SqlService {
     PreparedStatement p = null;
     ResultSet result = null;
 
+    StringBuilder query = new StringBuilder();
+    query.append("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=?");
+
+    if (version != null){
+      query.append(" AND versionNumber=?");
+    }
+    if (versionChecksum != null){
+      query.append(" AND versionChecksum=?");
+    }
+    if (tag != null){
+      query.append(" AND tag=?");
+    }
+    if (!searchInDeleted && !searchInPurged){
+      query.append(" AND status=?");
+    }
+    if ((!searchInDeleted && searchInPurged) || (searchInDeleted && !searchInPurged)){
+      query.append(" AND status in (?,?)");
+    }
+
+    query.append(" ORDER BY a.creationDate DESC LIMIT 1");
+
     try {
-
-      StringBuilder query = new StringBuilder();
-      query.append("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=?");
-
-      if (version != null){
-        query.append(" AND versionNumber=?");
-      }
-      if (versionChecksum != null){
-        query.append(" AND versionChecksum=?");
-      }
-      if (tag != null){
-        query.append(" AND tag=?");
-      }
-      if (!searchInDeleted && !searchInPurged){
-        query.append(" AND status=?");
-      }
-      if ((!searchInDeleted && searchInPurged) || (searchInDeleted && !searchInPurged)){
-        query.append(" AND status in (?,?)");
-      }
-
-      query.append(" ORDER BY a.creationDate DESC LIMIT 1");
 
       p = connectionLocal.get().prepareStatement(query.toString());
 
@@ -1219,12 +1219,12 @@ public abstract class SqlService {
     PreparedStatement p = null;
     ResultSet result = null;
 
-    try {
+    StringBuilder q = new StringBuilder("SELECT COUNT(*) FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
+    q.append(" AND a.status IN (?,?)");
+    q.append(" AND bucketName=?");
+    q.append(" AND checksum=?");
 
-      StringBuilder q = new StringBuilder("SELECT COUNT(*) FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
-      q.append(" AND a.status IN (?,?)");
-      q.append(" AND bucketName=?");
-      q.append(" AND checksum=?");
+    try {
 
       p = connectionLocal.get().prepareStatement(q.toString());
 
