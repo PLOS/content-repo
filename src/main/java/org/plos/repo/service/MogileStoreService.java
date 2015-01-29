@@ -93,6 +93,12 @@ public class MogileStoreService extends ObjectStore {
       return urls;
 
     } catch (Exception e) {
+      log.error("Exception: {} when trying to fetch reproxy url, key: {} , bucket name: {} , content checksum: {} , version number: {} ",
+          e.getMessage(),
+          repoObject.getKey(),
+          repoObject.getBucketName(),
+          repoObject.getChecksum(),
+          repoObject.getVersionNumber());
       throw new RepoException(e);
     }
 

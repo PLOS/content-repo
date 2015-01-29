@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS objects (
     creationDate TIMESTAMP DEFAULT 0,
     versionChecksum VARCHAR (255) NOT NULL,
     UNIQUE KEY keySum (bucketId, objkey, versionChecksum),
+    UNIQUE KEY keyVersion (bucketId, objkey, versionNumber),
     PRIMARY KEY (id)
 );
 
@@ -53,6 +54,7 @@ CREATE TABLE IF NOT EXISTS collections (
     tag VARCHAR (200),
     creationDate TIMESTAMP DEFAULT 0,
     UNIQUE KEY keySum (bucketId, collkey, versionChecksum),
+    UNIQUE KEY keyVersion (bucketId, collkey, versionNumber),
     PRIMARY KEY (id),
     FOREIGN KEY (bucketId) REFERENCES buckets(bucketId)
 );

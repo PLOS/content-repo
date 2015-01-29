@@ -81,7 +81,7 @@ public class CollectionRepoServiceTest {
   @Test
   public void testListCollectionsHappyPath() throws RepoException, SQLException {
 
-    doNothing().when(sqlService).getConnection();
+    doNothing().when(sqlService).getReadOnlyConnection();;
     when(sqlService.getBucket(VALID_BUCKET)).thenReturn(bucket);
 
     when(sqlService.listCollectionsMetaData(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG)).thenReturn(repoCollections);
@@ -91,7 +91,7 @@ public class CollectionRepoServiceTest {
     assertNotNull(response);
     assertEquals(response, repoCollections);
 
-    verify(sqlService).getConnection();
+    verify(sqlService).getReadOnlyConnection();
     verify(sqlService).getBucket(VALID_BUCKET);
     verify(sqlService).listCollectionsMetaData(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
 
@@ -100,7 +100,7 @@ public class CollectionRepoServiceTest {
   @Test
   public void testListCollectionsInvalidBucket() throws RepoException, SQLException {
 
-    doNothing().when(sqlService).getConnection();
+    doNothing().when(sqlService).getReadOnlyConnection();
     when(sqlService.getBucket(INVALID_BUCKET)).thenReturn(null);
 
     List<RepoCollection> response = null;
@@ -110,7 +110,7 @@ public class CollectionRepoServiceTest {
     } catch(RepoException re){
       assertNull(response);
       assertEquals(re.getType(), RepoException.Type.BucketNotFound);
-      verify(sqlService).getConnection();
+      verify(sqlService).getReadOnlyConnection();
       verify(sqlService).getBucket(INVALID_BUCKET);
     }
 
@@ -119,7 +119,7 @@ public class CollectionRepoServiceTest {
   @Test
   public void testListCollectionsRepoServiceThrowsExc() throws RepoException, SQLException {
 
-    doNothing().when(sqlService).getConnection();
+    doNothing().when(sqlService).getReadOnlyConnection();
     when(sqlService.getBucket(VALID_BUCKET)).thenReturn(bucket);
 
     when(sqlService.listCollectionsMetaData(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG)).thenThrow(SQL_EXCEP);
@@ -132,7 +132,7 @@ public class CollectionRepoServiceTest {
     } catch(RepoException re){
       assertNull(response);
       assertEquals(re.getCause(), SQL_EXCEP);
-      verify(sqlService).getConnection();
+      verify(sqlService).getReadOnlyConnection();
       verify(sqlService).getBucket(VALID_BUCKET);
       verify(sqlService).listCollectionsMetaData(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
     }
@@ -142,7 +142,7 @@ public class CollectionRepoServiceTest {
   @Test
   public void testGetCollectionHappyPath() throws RepoException, SQLException {
 
-    doNothing().when(sqlService).getConnection();
+    doNothing().when(sqlService).getReadOnlyConnection();
 
     RepoCollection expRepoCollection = new RepoCollection();
     when(sqlService.getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, VALID_VERSION, VALID_TAG, null)).thenReturn(expRepoCollection);
@@ -152,7 +152,7 @@ public class CollectionRepoServiceTest {
     assertNotNull(repoCollectionResp);
     assertEquals(repoCollectionResp, expRepoCollection);
 
-    verify(sqlService, times(1)).getConnection();
+    verify(sqlService, times(1)).getReadOnlyConnection();
     verify(sqlService).getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, VALID_VERSION, VALID_TAG, null);
 
   }
@@ -160,7 +160,7 @@ public class CollectionRepoServiceTest {
   @Test
   public void testGetCollectionVersionHappyPath() throws RepoException, SQLException {
 
-    doNothing().when(sqlService).getConnection();
+    doNothing().when(sqlService).getReadOnlyConnection();
 
     List<RepoCollection> expRepoCollections = new ArrayList<RepoCollection>();
     RepoCollection coll1 = mock(RepoCollection.class);
@@ -174,7 +174,7 @@ public class CollectionRepoServiceTest {
     assertNotNull(collectionsResp);
     assertEquals(2, collectionsResp.size());
 
-    verify(sqlService).getConnection();
+    verify(sqlService).getReadOnlyConnection();
     verify(sqlService).listCollectionVersions(VALID_BUCKET, VALID_COLLECTION_KEY);
 
   }
@@ -182,7 +182,7 @@ public class CollectionRepoServiceTest {
   @Test
   public void testGetCollectionVersionNoKey() throws RepoException, SQLException {
 
-    doNothing().when(sqlService).getConnection();
+    doNothing().when(sqlService).getReadOnlyConnection();
 
     List<RepoCollection> collectionsResp = null;
     try{
@@ -191,7 +191,7 @@ public class CollectionRepoServiceTest {
     }catch(RepoException e){
       assertEquals(RepoException.Type.NoCollectionKeyEntered, e.getType());
       assertNull(collectionsResp);
-      verify(sqlService).getConnection();
+      verify(sqlService).getReadOnlyConnection();
     }
 
   }
@@ -199,7 +199,7 @@ public class CollectionRepoServiceTest {
   @Test
   public void testGetCollectionVersionNoBucket() throws RepoException, SQLException {
 
-    doNothing().when(sqlService).getConnection();
+    doNothing().when(sqlService).getReadOnlyConnection();
 
     List<RepoCollection> collectionsResp = null;
     try{
@@ -208,7 +208,7 @@ public class CollectionRepoServiceTest {
     }catch(RepoException e){
       assertEquals(RepoException.Type.NoBucketEntered, e.getType());
       assertNull(collectionsResp);
-      verify(sqlService).getConnection();
+      verify(sqlService).getReadOnlyConnection();
     }
 
   }

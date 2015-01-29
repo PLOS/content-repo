@@ -78,7 +78,7 @@ public class ThreadLocalTest extends RepoBaseSpringTest {
     assertNull( conn );
 
     // NoConnection : SET
-    this.sqlService.getConnection();  
+    this.sqlService.getConnection();
     Connection conn1 = threadLocalHnd.get();
     assertNotNull( conn1 );
 
@@ -110,7 +110,7 @@ public class ThreadLocalTest extends RepoBaseSpringTest {
           try {
             startGate.await();
             try {
-              sqlService.getConnection();
+              sqlService.getReadOnlyConnection();;
               connections.add( threadLocalHnd.get() );
               sqlService.releaseConnection();
             } finally {

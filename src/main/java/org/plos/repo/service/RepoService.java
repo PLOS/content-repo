@@ -58,9 +58,8 @@ public class RepoService extends BaseRepoService {
 
   public List<Bucket> listBuckets() throws RepoException {
     try {
-      sqlService.getConnection();
+      sqlService.getReadOnlyConnection();
       return sqlService.listBuckets();
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
@@ -76,6 +75,7 @@ public class RepoService extends BaseRepoService {
     writeLock.lock();
 
     boolean rollback = false;
+    boolean bucketCreation = false;
 
     Bucket bucket = new Bucket(name);
 
@@ -85,16 +85,18 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(RepoException.Type.IllegalBucketName);
 
       sqlService.getConnection();
+      rollback = true;
 
       if (sqlService.getBucket(name) != null)
         throw new RepoException(RepoException.Type.BucketAlreadyExists);
 
+
       if (Boolean.TRUE.equals(objectStore.bucketExists(bucket)))
         throw new RepoException("Bucket exists in object store but not in database: " + name);
 
-      rollback = true;
+      bucketCreation = objectStore.createBucket(bucket);
 
-      if (Boolean.FALSE.equals(objectStore.createBucket(bucket)))
+      if (Boolean.FALSE.equals(bucketCreation))
         throw new RepoException("Unable to create bucket in object store: " + name);
 
       Timestamp creationDate = creationDateTimeString != null ?
@@ -104,11 +106,12 @@ public class RepoService extends BaseRepoService {
         throw new RepoException("Unable to create bucket in database: " + name);
       }
 
-      sqlService.transactionCommit();
+      Bucket newBucket = sqlService.getBucket(name);
 
+      sqlService.transactionCommit();
       rollback = false;
 
-      return sqlService.getBucket(name);
+      return newBucket;
 
     } catch (SQLException e) {
       throw new RepoException(e);
@@ -116,8 +119,12 @@ public class RepoService extends BaseRepoService {
 
       if (rollback) {
         sqlRollback("bucket " + name);
-        objectStore.deleteBucket(bucket);
-        // TODO: check to make sure objectStore.deleteBucket didnt fail
+
+        if (bucketCreation) {
+          objectStore.deleteBucket(bucket);
+          // TODO: check to make sure objectStore.deleteBucket didnt fail
+        }
+
       }
 
       sqlReleaseConnection();
@@ -143,11 +150,13 @@ public class RepoService extends BaseRepoService {
     writeLock.lock();
 
     boolean rollback = false;
+    boolean bucketDeletion = false;
 
     Bucket bucket = new Bucket(name);
 
     try {
       sqlService.getConnection();
+      rollback = true;
 
       if (sqlService.getBucket(name) == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
@@ -158,14 +167,14 @@ public class RepoService extends BaseRepoService {
       if (sqlService.listObjects(name, 0, 1, true, false, null).size() != 0)
         throw new RepoException(RepoException.Type.CantDeleteNonEmptyBucket);
 
-      rollback = true;
-
       // remove all table references for objects & collections in the bucket
       if (sqlService.removeBucketContent(name) == 0)
         throw new RepoException("Unable to delete bucket in database: " + name);
 
-      if (Boolean.FALSE.equals(objectStore.deleteBucket(bucket)))
+      bucketDeletion = objectStore.deleteBucket(bucket);
+      if (!bucketDeletion){
         throw new RepoException("Unable to delete bucket in object store: " + name);
+      }
 
       sqlService.transactionCommit();
       rollback = false;
@@ -177,8 +186,10 @@ public class RepoService extends BaseRepoService {
       if (rollback) {
         sqlRollback("bucket " + name);
 
-        objectStore.createBucket(bucket);
-        // TODO: validate objectStore.createBucket return values
+        if (bucketDeletion) {
+          objectStore.createBucket(bucket);
+          // TODO: validate objectStore.createBucket return values
+        }
 
       }
 
@@ -226,12 +237,13 @@ public class RepoService extends BaseRepoService {
 
       validatePagination(offset, limit);
 
-      sqlService.getConnection();
+      sqlService.getReadOnlyConnection();
 
       if (bucketName != null && sqlService.getBucket(bucketName) == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
 
       repoObjects = sqlService.listObjects(bucketName, offset, limit, includeDeleted, includePurged, tag);
+
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
@@ -274,7 +286,7 @@ public class RepoService extends BaseRepoService {
     RepoObject repoObject = null;
 
     try {
-      sqlService.getConnection();
+      sqlService.getReadOnlyConnection();
 
       if ((elementFilter == null) || (elementFilter.isEmpty())){
         repoObject = sqlService.getObject(bucketName, key);
@@ -306,7 +318,7 @@ public class RepoService extends BaseRepoService {
 
     List<RepoObject> repoObjects = null ;
     try {
-      sqlService.getConnection();
+      sqlService.getReadOnlyConnection();
       repoObjects =  sqlService.listObjectVersions(bucketName, objectKey);
     } catch (SQLException e) {
       throw new RepoException(e);
@@ -321,12 +333,9 @@ public class RepoService extends BaseRepoService {
 
   public URL[] getObjectReproxy(RepoObject repoObject) throws RepoException {
     try {
-      sqlService.getConnection();
       return objectStore.getRedirectURLs(repoObject);
     } catch (Exception e) {
       throw new RepoException(e);
-    } finally {
-      sqlReleaseConnection();
     }
   }
 
@@ -418,8 +427,6 @@ public class RepoService extends BaseRepoService {
 
     try {
 
-      sqlService.getConnection();
-
       if (key == null)
         throw new RepoException(RepoException.Type.NoKeyEntered);
 
@@ -427,6 +434,7 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(RepoException.Type.NoFilterEntered);
       }
 
+      sqlService.getConnection();
       rollback = true;
 
       if (elementFilter.getTag() != null & elementFilter.getVersionChecksum() == null & elementFilter.getVersion() == null){
@@ -595,6 +603,7 @@ public class RepoService extends BaseRepoService {
 
       try {
         sqlService.getConnection();
+        rollback = true;
         bucket = sqlService.getBucket(bucketName);
       } catch (SQLException e) {
         throw new RepoException(e);
@@ -632,7 +641,6 @@ public class RepoService extends BaseRepoService {
       repoObject.setCreationDate(cretationDateTime);
 
       repoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(repoObject));
-      rollback = true;
 
       // determine if the object should be added to the store or not
       if (objectStore.objectExists(repoObject)) {
@@ -706,7 +714,10 @@ public class RepoService extends BaseRepoService {
       newRepoObject.setTag(tag);
       newRepoObject.setCreationDate(cretationDateTime);
       newRepoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(newRepoObject));
+
       sqlService.getConnection();
+      rollback = true;
+
       if (sqlService.getBucket(bucketName) == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
       // copy over values from previous object, if they are not specified in the request
@@ -715,7 +726,6 @@ public class RepoService extends BaseRepoService {
       if (downloadName == null)
         newRepoObject.setDownloadName(repoObject.getDownloadName());
 
-      rollback = true;
       if (uploadedInputStream == null) {
       // handle metadata-only update, the content would be the same as the last version of the object
         newRepoObject.setChecksum(repoObject.getChecksum());
@@ -744,6 +754,7 @@ public class RepoService extends BaseRepoService {
       if (sqlService.insertObject(newRepoObject) == 0) {
         throw new RepoException("Error saving content to database");
       }
+
       sqlService.transactionCommit();
       rollback = false;
 
