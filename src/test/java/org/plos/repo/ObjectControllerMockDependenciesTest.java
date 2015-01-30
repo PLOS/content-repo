@@ -107,9 +107,9 @@ public class ObjectControllerMockDependenciesTest {
     repoObjects.add(object3);
     repoObjects.add(object4);
 
-    when(repoService.listObjects(BUCKET, OFFSET, LIMIT, true, TAG)).thenReturn(repoObjects);
+    when(repoService.listObjects(BUCKET, OFFSET, LIMIT, true, false, TAG)).thenReturn(repoObjects);
 
-    Response objectsResponse = objectController.listObjects(BUCKET, OFFSET, LIMIT, true, TAG);
+    Response objectsResponse = objectController.listObjects(BUCKET, OFFSET, LIMIT, true, false, TAG);
 
     assertNotNull(objectsResponse);
     assertEquals(objectsResponse.getStatus(), Response.Status.OK.getStatusCode());

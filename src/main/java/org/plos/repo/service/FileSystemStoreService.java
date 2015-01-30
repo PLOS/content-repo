@@ -57,22 +57,31 @@ public class FileSystemStoreService extends ObjectStore {
     return getBucketLocationString(bucketName) + checksum.substring(0, 2) + "/" + checksum;
   }
 
+  @Override
   public Boolean objectExists(RepoObject repoObject) {
     return new File(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum())).exists();
   }
 
-  public InputStream getInputStream(RepoObject repoObject) throws RepoException {
+  @Override
+  public InputStream getInputStream(RepoObject repoObject){
     try {
       return new FileInputStream(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
     } catch (FileNotFoundException e) {
-      throw new RepoException(e);
+      log.debug("The content for the object was not found. Object --> key {} , bucket name: {} , content checksum: {} , version number: {} ",
+          repoObject.getKey(),
+          repoObject.getBucketName(),
+          repoObject.getChecksum(),
+          repoObject.getVersionNumber());
+      return null;
     }
   }
 
+  @Override
   public Boolean bucketExists(Bucket bucket) {
     return (new File(getBucketLocationString(bucket.getBucketName())).isDirectory());
   }
 
+  @Override
   public Boolean createBucket(Bucket bucket) {
 
     File dir = new File(getBucketLocationString(bucket.getBucketName()));
@@ -84,10 +93,12 @@ public class FileSystemStoreService extends ObjectStore {
     return result;
   }
 
+  @Override
   public Boolean hasXReproxy() {
     return reproxyBaseUrl != null;
   }
 
+  @Override
   public URL[] getRedirectURLs(RepoObject repoObject) throws RepoException {
 
     if (!hasXReproxy())
@@ -105,11 +116,13 @@ public class FileSystemStoreService extends ObjectStore {
 
   }
 
+  @Override
   public Boolean deleteBucket(Bucket bucket) {
     File dir = new File(getBucketLocationString(bucket.getBucketName()));
     return dir.delete();
   }
 
+  @Override
   public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
     File tempFile = new File(uploadInfo.getTempLocation());
 
@@ -128,6 +141,7 @@ public class FileSystemStoreService extends ObjectStore {
     return tempFile.renameTo(newFile);
   }
 
+  @Override
   public Boolean deleteObject(RepoObject repoObject) {
 
     File file = new File(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
@@ -143,11 +157,12 @@ public class FileSystemStoreService extends ObjectStore {
     return result;
   }
 
+  @Override
   public Boolean deleteTempUpload(UploadInfo uploadInfo) {
     return new File(uploadInfo.getTempLocation()).delete();
   }
 
-
+  @Override
   public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException {
     final String tempFileLocation = dataDirectory + "/" + UUID.randomUUID().toString() + ".tmp";
 

@@ -91,7 +91,7 @@ public class BucketLockTest extends RepoBaseSpringTest {
   @Test
   public void testManyDeletesForExistingBucket() throws Exception {
 
-    repoService.createBucket(BUCKET_NAME, CREATION_DATE_TIME_STRING);
+    Bucket bucket = repoService.createBucket(BUCKET_NAME, CREATION_DATE_TIME_STRING);
 
     final int INSERT_THREADS = 0;
     final int DELETE_THREADS = 5;
@@ -104,7 +104,7 @@ public class BucketLockTest extends RepoBaseSpringTest {
     // +2 for createBucket
     verify(spySqlService, times(DELETE_THREADS + 2)).getBucket(anyString());
     verify(spyObjectStore, times(1)).deleteBucket(any(Bucket.class));
-    verify(spySqlService, times(1)).deleteBucket(anyString());
+    verify(spySqlService, times(1)).removeBucketContent(eq(BUCKET_NAME));
   }
 
   @Test
