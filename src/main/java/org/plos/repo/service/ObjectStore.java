@@ -66,6 +66,16 @@ public abstract class ObjectStore {
 
   abstract public Boolean deleteTempUpload(UploadInfo uploadInfo);
 
+  /**
+   * Retrieve the data of the given repo object <code>repoObject</code>. Return null if the
+   * data does not exist, or throw a {@link org.plos.repo.service.RepoException} if an error
+   * occurs.
+   *
+   * @param repoObject a single {@link org.plos.repo.models.RepoObject} that represents the
+   *                   object to be searched.
+   * @return an inputStream object wih the data of the given repoObject
+   * @throws RepoException
+   */
   abstract public InputStream getInputStream(RepoObject repoObject) throws RepoException;
 
 }

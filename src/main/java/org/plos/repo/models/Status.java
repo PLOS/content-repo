@@ -28,7 +28,9 @@ import java.util.EnumSet;
  */
 public enum Status {
 
-  USED(0), DELETED(1);
+  USED(0),
+  DELETED(1),
+  PURGED(2);
 
   private final int value;
 

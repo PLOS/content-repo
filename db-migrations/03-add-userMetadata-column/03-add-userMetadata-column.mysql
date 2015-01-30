@@ -30,4 +30,4 @@ ALTER TABLE collections
 # INSERT the version string. This should happen last.
 # The temporal order will indicate which scripts have been
 # run to update this database.
-INSERT CREPO_SCHEMA_INFO SET schema_ver = '02-add-userMetadata-column';
+INSERT CREPO_SCHEMA_INFO SET schema_ver = '03-add-userMetadata-column';

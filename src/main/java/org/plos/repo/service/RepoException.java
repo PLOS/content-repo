@@ -31,6 +31,7 @@ public class RepoException extends Exception {
     BucketNotFound(2, "Bucket not found"),
     CollectionNotFound(3, "Collection not found"),
     ObjectCollectionNotFound(4, "One of the objects of the Collection was not found"),
+    ObjectContentNotFound(5, "The content of the object was not found"),
 
     // user errors for entered parameters
     NoBucketEntered(10, "No bucket entered"),

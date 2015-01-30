@@ -114,11 +114,12 @@ public class ObjectController {
       @ApiParam(required = false) @QueryParam("offset") Integer offset,
       @ApiParam(required = false) @QueryParam("limit") Integer limit,
       @ApiParam(required = false) @DefaultValue("false") @QueryParam("includeDeleted") boolean includeDeleted,
+      @ApiParam(required = false) @DefaultValue("false") @QueryParam("includePurged") boolean includePurged,
       @ApiParam(required = false) @QueryParam("tag") String tag) {
 
     try {
 
-      List<RepoObject> repoObjects = repoService.listObjects(bucketName, offset, limit, includeDeleted, tag);
+      List<RepoObject> repoObjects = repoService.listObjects(bucketName, offset, limit, includeDeleted, includePurged, tag);
       List<RepoObjectOutput> outputObjects = Lists.newArrayList(Iterables.transform(repoObjects, RepoObjectOutput.typeFunction()));
 
       return Response.status(Response.Status.OK).entity(
@@ -275,11 +276,12 @@ public class ObjectController {
   public Response delete(
       @ApiParam(required = true) @PathParam("bucketName") String bucketName,
       @ApiParam(required = true) @QueryParam("key") String key,
+      @ApiParam(required = false) @DefaultValue("false") @QueryParam("purge") Boolean purge,
       @ApiParam("elementFilter") @BeanParam ElementFilter elementFilter
   ) {
 
     try {
-      repoService.deleteObject(bucketName, key, elementFilter);
+      repoService.deleteObject(bucketName, key, purge, elementFilter);
       return Response.status(Response.Status.OK).build();
     } catch (RepoException e) {
       return handleError(e);
@@ -287,7 +289,7 @@ public class ObjectController {
 
   }
 
-  @POST
+    @POST
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @ApiOperation(value = "Create a new object or a new version of an existing object",
       notes = "Set the create field to 'new' object if the object you are inserting is not already in the repo. If you want to create a " +

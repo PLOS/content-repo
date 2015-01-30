@@ -20,6 +20,8 @@ package org.plos.repo.service;
 import org.apache.commons.io.IOUtils;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -32,6 +34,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class InMemoryFileStoreService extends ObjectStore {
 
+  private static final Logger log = LoggerFactory.getLogger(InMemoryFileStoreService.class);
+
   // bucketName -> data checksum -> file content
   private Map<String, Map<String, byte[]>> data = new ConcurrentHashMap<>();
 
@@ -40,30 +44,49 @@ public class InMemoryFileStoreService extends ObjectStore {
   public InMemoryFileStoreService() {
   }
 
+  @Override
   public Boolean objectExists(RepoObject repoObject) {
     return (data.get(repoObject.getBucketName()) != null && data.get(repoObject.getBucketName()).get(repoObject.getChecksum()) != null);
   }
 
+  @Override
   public InputStream getInputStream(RepoObject repoObject) {
-    return new ByteArrayInputStream(data.get(repoObject.getBucketName()).get(repoObject.getChecksum()));
+    Map<String, byte[]> bucket = data.get(repoObject.getBucketName());
+    if (bucket != null){
+      byte[] content = bucket.get(repoObject.getChecksum());
+      if (content != null) {
+        return new ByteArrayInputStream(content);
+      }
+    }
+    log.debug("The content for the object was not found. Object --> key {} , bucket name: {} , content checksum: {} , version number: {} ",
+        repoObject.getKey(),
+        repoObject.getBucketName(),
+        repoObject.getChecksum(),
+        repoObject.getVersionNumber());
+    return null;
   }
 
+  @Override
   public Boolean bucketExists(Bucket bucket) {
     return (data.containsKey(bucket.getBucketName()));
   }
 
+  @Override
   public Boolean createBucket(Bucket bucket) {
     return (data.put(bucket.getBucketName(), new HashMap<String, byte[]>()) == null);
   }
 
+  @Override
   public Boolean hasXReproxy() {
     return false;
   }
 
+  @Override
   public URL[] getRedirectURLs(RepoObject repoObject) {
     return new URL[]{}; // since the filesystem is not reproxyable
   }
 
+  @Override
   public Boolean deleteBucket(Bucket bucket) {
 
     // TODO: what if it contains stuff?
@@ -71,6 +94,7 @@ public class InMemoryFileStoreService extends ObjectStore {
     return (data.remove(bucket.getBucketName()) != null);
   }
 
+  @Override
   public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
 
     byte[] tempContent = tempdata.get(uploadInfo.getTempLocation());
@@ -79,6 +103,7 @@ public class InMemoryFileStoreService extends ObjectStore {
 
   }
 
+  @Override
   public Boolean deleteObject(RepoObject repoObject) {
 
     if (!objectExists(repoObject))
@@ -88,13 +113,14 @@ public class InMemoryFileStoreService extends ObjectStore {
 
   }
 
+  @Override
   public Boolean deleteTempUpload(UploadInfo uploadInfo) {
     tempdata.remove(uploadInfo.getTempLocation());
 
     return true;
   }
 
-
+  @Override
   public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException {
 
     try {

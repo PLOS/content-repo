@@ -19,16 +19,22 @@ package org.plos.repo;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import junit.framework.TestCase;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.junit.Before;
 import org.junit.Test;
+import org.plos.repo.models.input.InputCollection;
+import org.plos.repo.models.input.InputObject;
 import org.plos.repo.service.RepoException;
+import org.springframework.http.HttpStatus;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
@@ -126,6 +132,113 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
 
     response = target("/buckets/" + bucketName).request().delete();
     assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+
+  }
+
+  @Test
+  public void deleteBucketWithDeletedContent(){
+
+    // create bucket
+    Response createBucketResponse = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
+        .post(Entity.form(new Form().param("name", bucketName).param("creationDateTime",CREATION_DATE_TIME_STRING)));
+
+    assertEquals(createBucketResponse.getStatus(), Response.Status.CREATED.getStatusCode());
+
+    // create object
+    Response createObjResponse = target("/objects").request()
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .post(Entity.entity(new FormDataMultiPart()
+                .field("bucketName", bucketName).field("create", "new")
+                .field("key", "object3").field("contentType", "text/something")
+                .field("downloadName", "object3.text")
+                .field("file", "testData2", MediaType.TEXT_PLAIN_TYPE),
+            MediaType.MULTIPART_FORM_DATA
+        ));
+
+    JsonObject responseObj = gson.fromJson(createObjResponse.readEntity(String.class), JsonElement.class).getAsJsonObject();
+    TestCase.assertNotNull(responseObj);
+    String versionChecksum = responseObj.get("versionChecksum").getAsString();
+
+    Response deleteObjectResponse = target("/objects/" + bucketName)
+        .queryParam("key", "object3")
+        .queryParam("versionChecksum", versionChecksum)
+        .request()
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .delete();
+
+    Response deleteBucketResponse = target("/buckets/" + bucketName).request().accept(MediaType.APPLICATION_JSON_TYPE).delete();
+
+    assertRepoError(deleteBucketResponse, Response.Status.BAD_REQUEST, RepoException.Type.CantDeleteNonEmptyBucket);
+
+  }
+
+  @Test
+  public void deleteBucketWithPurgeContent(){
+
+    Response createBucketResponse = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
+        .post(Entity.form(new Form().param("name", bucketName).param("creationDateTime",CREATION_DATE_TIME_STRING)));
+
+    assertEquals(createBucketResponse.getStatus(), Response.Status.CREATED.getStatusCode());
+
+    // create object
+    Response createObjResponse = target("/objects").request()
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .post(Entity.entity(new FormDataMultiPart()
+                .field("bucketName", bucketName).field("create", "new")
+                .field("key", "object3").field("contentType", "text/something")
+                .field("downloadName", "object3.text")
+                .field("file", "testData2", MediaType.TEXT_PLAIN_TYPE),
+            MediaType.MULTIPART_FORM_DATA
+        ));
+
+
+    JsonObject responseObj = gson.fromJson(createObjResponse.readEntity(String.class), JsonElement.class).getAsJsonObject();
+    TestCase.assertNotNull(responseObj);
+    String versionChecksumObj = responseObj.get("versionChecksum").getAsString();
+
+    InputObject object1 = new InputObject("object3", versionChecksumObj);
+
+    // create collection
+    InputCollection inputCollection = new InputCollection();
+    inputCollection.setBucketName(bucketName);
+    inputCollection.setKey("collection1");
+    inputCollection.setCreate("new");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
+    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
+
+    Response createCollResponse = target("/collections").request()
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .post(collectionEntity);
+
+    JsonObject responseColl = gson.fromJson(createCollResponse.readEntity(String.class), JsonElement.class).getAsJsonObject();
+    TestCase.assertNotNull(responseObj);
+    String versionChecksumColl = responseObj.get("versionChecksum").getAsString();
+
+    // purge object
+    Response purgeResponse = target("/objects/" + bucketName)
+        .queryParam("key", "object3")
+        .queryParam("purge", true)
+        .queryParam("versionChecksum", versionChecksumObj)
+        .request()
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .delete();
+
+    // delete bucket
+    Response deleteBucketResponse = target("/buckets/" + bucketName).request().accept(MediaType.APPLICATION_JSON_TYPE).delete();
+    assertEquals(Response.Status.OK.getStatusCode(), deleteBucketResponse.getStatus());
+
+    // get object
+    Response getObjResponse = target("/objects/" + bucketName).queryParam("key", "object1").queryParam("versionChecksum", versionChecksumObj).request().get();
+    assertRepoError(getObjResponse, Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
+
+    // get object
+    Response getColResponse = target("/collections/" + bucketName)
+        .queryParam("key", "collection1")
+        .queryParam("versionChecksum", versionChecksumColl)
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+    assertRepoError(getColResponse, Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound);
 
   }
 

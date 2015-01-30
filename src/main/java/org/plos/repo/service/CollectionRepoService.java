@@ -73,7 +73,7 @@ public class CollectionRepoService extends BaseRepoService {
 
       validatePagination(offset, limit);
 
-      sqlService.getConnection();
+      sqlService.getReadOnlyConnection();
 
       if (StringUtil.isEmpty(bucketName)){
         throw new RepoException(RepoException.Type.NoBucketEntered);
@@ -107,7 +107,7 @@ public class CollectionRepoService extends BaseRepoService {
     RepoCollection repoCollection;
 
     try {
-      sqlService.getConnection();
+      sqlService.getReadOnlyConnection();
 
       if (StringUtil.isEmpty(key))
         throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
@@ -147,7 +147,7 @@ public class CollectionRepoService extends BaseRepoService {
   public List<RepoCollection> getCollectionVersions(String bucketName, String key) throws RepoException {
 
     try {
-      sqlService.getConnection();
+      sqlService.getReadOnlyConnection();
 
       if (StringUtil.isEmpty(bucketName)){
         throw new RepoException(RepoException.Type.NoBucketEntered);
@@ -187,8 +187,6 @@ public class CollectionRepoService extends BaseRepoService {
 
     try {
 
-      sqlService.getConnection();
-
       if (StringUtil.isEmpty(key))
         throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
 
@@ -196,6 +194,7 @@ public class CollectionRepoService extends BaseRepoService {
         throw new RepoException(RepoException.Type.NoFilterEntered);
       }
 
+      sqlService.getConnection();
       rollback = true;
 
       if (elementFilter.getTag() != null & elementFilter.getVersionChecksum() == null & elementFilter.getVersion() == null){
@@ -244,6 +243,7 @@ public class CollectionRepoService extends BaseRepoService {
 
       // get connection
       sqlService.getConnection();
+      rollback = true;
 
       existingRepoCollection = sqlService.getCollection(inputCollection.getBucketName(), inputCollection.getKey());
 
@@ -253,8 +253,6 @@ public class CollectionRepoService extends BaseRepoService {
 
       Timestamp timestamp = inputCollection.getTimestamp() != null ?
           Timestamp.valueOf(inputCollection.getTimestamp()) : creationDate;
-
-      rollback = true;
 
       if (CreateMethod.NEW.equals(method)){
 

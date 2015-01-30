@@ -58,6 +58,7 @@ public class MogileStoreService extends ObjectStore {
     return checksum + "-" + bucketName;
   }
 
+  @Override
   public Boolean objectExists(RepoObject repoObject) {
     try {
       InputStream in = mfs.getFileStream(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
@@ -73,10 +74,12 @@ public class MogileStoreService extends ObjectStore {
     }
   }
 
+  @Override
   public Boolean hasXReproxy() {
     return true;
   }
 
+  @Override
   public URL[] getRedirectURLs(RepoObject repoObject) throws RepoException {
 
     try {
@@ -90,11 +93,18 @@ public class MogileStoreService extends ObjectStore {
       return urls;
 
     } catch (Exception e) {
+      log.error("Exception: {} when trying to fetch reproxy url, key: {} , bucket name: {} , content checksum: {} , version number: {} ",
+          e.getMessage(),
+          repoObject.getKey(),
+          repoObject.getBucketName(),
+          repoObject.getChecksum(),
+          repoObject.getVersionNumber());
       throw new RepoException(e);
     }
 
   }
 
+  @Override
   public InputStream getInputStream(RepoObject repoObject) throws RepoException {
     try {
       return mfs.getFileStream(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
@@ -103,19 +113,23 @@ public class MogileStoreService extends ObjectStore {
     }
   }
 
+  @Override
   public Boolean bucketExists(Bucket bucket) {
     return null;
   }
 
+  @Override
   public Boolean createBucket(Bucket bucket) {
     // we use file paths instead of domains so this function does not need to do anything
     return null;
   }
 
+  @Override
   public Boolean deleteBucket(Bucket bucket) {
     return null;
   }
 
+  @Override
   public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException {
 
     final String tempFileLocation = UUID.randomUUID().toString() + ".tmp";
@@ -158,6 +172,7 @@ public class MogileStoreService extends ObjectStore {
     }
   }
 
+  @Override
   public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
     try {
       mfs.rename(uploadInfo.getTempLocation(), getObjectLocationString(bucket.getBucketName(), uploadInfo.getChecksum()));
@@ -167,6 +182,7 @@ public class MogileStoreService extends ObjectStore {
     }
   }
 
+  @Override
   public Boolean deleteTempUpload(UploadInfo uploadInfo) {
     try {
       mfs.delete(uploadInfo.getTempLocation());
@@ -176,6 +192,7 @@ public class MogileStoreService extends ObjectStore {
     }
   }
 
+  @Override
   public Boolean deleteObject(RepoObject repoObject) {
     try {
       mfs.delete(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));

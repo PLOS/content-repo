@@ -118,7 +118,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     this.endGate = new CountDownLatch(UPDATE_THREADS + DELETE_THREADS + READER_THREADS);
     execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
-    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
     // since when version an object we don't create a new version if nothing change from last version, only one object with BASE_KEY_NAME is going to be created
     assertEquals(1, repoObjects.size());
 
@@ -158,16 +158,16 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     this.endGate = new CountDownLatch(INSERT_THREADS + DELETE_THREADS + READER_THREADS);
     execute(INSERT_THREADS, 0, DELETE_THREADS, READER_THREADS, callback);
-    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
-    // since when version an object we don't create a new version if nothing change from last version, only one object with BASE_KEY_NAME is going to be created
+    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
+    // creating just one object with same key. The rest of the threads are going to throw an error saying that you can't create an object that already exists
     assertEquals(1, repoObjects.size());
 
     this.startGate = new CountDownLatch(1);
     this.endGate = new CountDownLatch(UPDATE_THREADS + DELETE_THREADS + READER_THREADS);
     execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
-    repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
-    // since when version an object we don't create a new version if nothing change from last version, only one object with BASE_KEY_NAME is going to be created
+    repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
+    // update threads version the previous created object. The total objects created should be 1 + UPDATE_THREADS
     assertEquals(1 + UPDATE_THREADS, repoObjects.size());
 
     for (int j = 0; j < repoObjects.size(); j++) {
@@ -205,7 +205,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     this.endGate = new CountDownLatch(INSERT_THREADS + READER_THREADS);
     execute(INSERT_THREADS, 0, 0, READER_THREADS, callback);
 
-    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
     assertEquals(1, repoObjects.size());
 
     Callback callbackUp = new Callback() {
@@ -219,14 +219,14 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     this.endGate = new CountDownLatch(UPDATE_THREADS  + READER_THREADS);
     execute(0, UPDATE_THREADS, 0, READER_THREADS, callbackUp);
 
-    repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
     assertEquals(1 + UPDATE_THREADS, repoObjects.size());
 
     this.startGate = new CountDownLatch(1);
     this.endGate = new CountDownLatch(DELETE_THREADS + READER_THREADS);
     execute(0, 0, DELETE_THREADS, READER_THREADS, callbackUp);
 
-    repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
     assertEquals(1 + UPDATE_THREADS - DELETE_THREADS, repoObjects.size());
 
     Collections.sort(repoObjects, new ObjectComparator());
@@ -241,7 +241,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     verify(spySqlService, times(INSERT_THREADS + UPDATE_THREADS + READER_THREADS)).getObject(anyString(), anyString()); // insert object + list objects + update objets
 
-    verify(spySqlService, times(DELETE_THREADS + READER_THREADS*2)).getObject(anyString(), anyString(), anyInt(), anyString(), anyString()); // reading objects (3 times) + deleting objects
+    verify(spySqlService, times(READER_THREADS*2)).getObject(anyString(), anyString(), anyInt(), anyString(), anyString()); // reading objects (3 times) + deleting objects
   }
 
 @Test
@@ -267,7 +267,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     execute(INSERT_THREADS, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
-    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, null);
+    List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
 
     assertTrue(repoObjects.size() >= INSERT_THREADS - DELETE_THREADS);
 
@@ -280,7 +280,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     }
 
     // when deleting an object, we first verify that the object is not contain in an active collection. For that end, we look for the existing object using sqlService getObject
-    verify(spySqlService, times(READER_THREADS + DELETE_THREADS)).getObject(anyString(), anyString(), anyInt(), anyString(), anyString());
+    verify(spySqlService, times(READER_THREADS)).getObject(anyString(), anyString(), anyInt(), anyString(), anyString());
   }
 
   private void execute(final int insertThreads, final int updateThreads,
@@ -399,7 +399,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
           try {
             startGate.await();  // don't start until startGate is 0
             try {
-              repoService.deleteObject(BUCKET_NAME, cb.getKeyname(j), new ElementFilter(null, cb.getTag(j), null));
+              repoService.deleteObject(BUCKET_NAME, cb.getKeyname(j), false, new ElementFilter(null, cb.getTag(j), null));
             } finally {
               endGate.countDown();
             }
