@@ -558,7 +558,7 @@ public class RepoService extends BaseRepoService {
       switch (method) {
 
         case NEW:
-          if (existingRepoObject != null)
+          if (existingRepoObject != null && !Status.MISSING_DATA.equals(existingRepoObject))
             throw new RepoException(RepoException.Type.CantCreateNewObjectWithUsedKey);
           return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream, creationDateTime, tag);
 

@@ -30,7 +30,8 @@ public enum Status {
 
   USED(0),
   DELETED(1),
-  PURGED(2);
+  PURGED(2),
+  MISSING_DATA(3);
 
   private final int value;
 

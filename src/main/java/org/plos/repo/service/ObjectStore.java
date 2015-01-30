@@ -47,7 +47,7 @@ public abstract class ObjectStore {
 
   abstract public Boolean hasXReproxy();
 
-  abstract public URL[] getRedirectURLs(RepoObject repoObject) throws RepoException;
+  abstract public URL[]  getRedirectURLs(RepoObject repoObject) throws RepoException;
 
   abstract public Boolean objectExists(RepoObject repoObject);
 

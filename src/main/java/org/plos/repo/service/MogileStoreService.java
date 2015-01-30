@@ -23,6 +23,7 @@ import com.guba.mogilefs.PooledMogileFSImpl;
 import org.apache.commons.io.IOUtils;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
+import org.plos.repo.models.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,27 +82,30 @@ public class MogileStoreService extends ObjectStore {
 
   @Override
   public URL[] getRedirectURLs(RepoObject repoObject) throws RepoException {
-
+    URL[] urls = null;
     try {
       String[] paths = mfs.getPaths(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()), true);
-      int pathCount = paths.length;
-      URL[] urls = new URL[pathCount];
+      if( paths != null && paths.length > 0 ) {
+        int pathCount = paths.length;
+        urls = new URL[pathCount];
 
-      for (int i = 0; i < pathCount; i++) {
-        urls[i] = new URL(paths[i]);
+        for (int i = 0; i < pathCount; i++) {
+          urls[i] = new URL(paths[i]);
+        }
+
+      } else { //If the data is missing change the status and log error
+        repoObject.setStatus(Status.MISSING_DATA);
+        log.info(" Missing Data when trying to fetch reproxy url, key: {} , bucket name: {} , content checksum: {} , version number: {} ",
+                repoObject.getKey(),
+                repoObject.getBucketName(),
+                repoObject.getChecksum(),
+                repoObject.getVersionNumber());
       }
-      return urls;
 
     } catch (Exception e) {
-      log.error("Exception: {} when trying to fetch reproxy url, key: {} , bucket name: {} , content checksum: {} , version number: {} ",
-          e.getMessage(),
-          repoObject.getKey(),
-          repoObject.getBucketName(),
-          repoObject.getChecksum(),
-          repoObject.getVersionNumber());
       throw new RepoException(e);
     }
-
+    return urls;
   }
 
   @Override
