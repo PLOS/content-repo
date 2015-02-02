@@ -1,5 +1,8 @@
-/*
-* Copyright (c) 2006-2014 by Public Library of Science
+package org.plos.repo.service;
+
+import org.plos.repo.RepoBaseSpringTest;
+
+/* Copyright (c) 2006-2014 by Public Library of Science
 * http://plos.org
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +17,6 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-
-package org.plos.repo.service;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -55,11 +56,12 @@ public class ObjectLockTest extends RepoBaseSpringTest {
   private CountDownLatch startGate;
   private CountDownLatch endGate;
 
-    /**
+/*
     * JUnit only captures assertion errors raised in the main thread, so we'll
     * create an explicit error instance to record assertion failures in
     * in worker threads (only the first). Guard access with lock object.
-    */
+*/
+
 
   private AssertionError assertionFailure;
   private final java.lang.Object lock = new java.lang.Object();
@@ -295,6 +297,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 ------------------------------------------------------------------ */
 
 
+
     for (int i = 0; i < insertThreads; i++) {
       final int j = i;
       final Thread t = new Thread() {
@@ -336,11 +339,12 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       t.start();
     }
 
-/* ------------------------------------------------------------------
+ /*------------------------------------------------------------------
 
    UPDATE
 
 ------------------------------------------------------------------ */
+
 
 
     for (int i = 0; i < updateThreads; i++) {
@@ -368,7 +372,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
-                        "Can not version object:%s Reason:%s", cb.getKeyname(j),
+                        "Can not version object:%s , tag:%s , Reason:%s", cb.getKeyname(j),
+                        cb.getTag(j),
                         e.getMessage()));
                   }
                 }
@@ -385,11 +390,12 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       t.start();
     }
 
-/*  ------------------------------------------------------------------
+/* ------------------------------------------------------------------
 
   DELETE
 
 ------------------------------------------------------------------ */
+
 
 
     for (int i = 0; i < deleteThreads; i++) {
@@ -428,6 +434,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
   READER
 
 ------------------------------------------------------------------ */
+
 
 
     for (int i = 0; i < readerThreads; i++) {

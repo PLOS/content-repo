@@ -706,6 +706,7 @@ public class RepoService extends BaseRepoService {
     try {
 
       newRepoObject = createNewRepoObjectForUpate(inputRepoObject, repoObject, timestamp, cretationDateTime);
+      /*newRepoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(newRepoObject));*/
 
       sqlService.getConnection();
       rollback = true;

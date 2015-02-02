@@ -618,7 +618,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     }
 
     // check state
-    sqlService.getConnection();
+    sqlService.getReadOnlyConnection();
 
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
 
@@ -630,6 +630,9 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     // verify that the purge object does not exists the DB
     Assert.assertNull(objectStore.getInputStream(object2));
+
+    sqlService.getReadOnlyConnection();
+
     // verify that the purge object does not exists the file system
     Assert.assertNull(sqlService.getObject(bucket1.getBucketName(), "key1", null, object2.getVersionChecksum(), null));
 
