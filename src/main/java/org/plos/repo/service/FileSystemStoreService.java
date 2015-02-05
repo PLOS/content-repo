@@ -99,21 +99,17 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
   @Override
-  public URL[] getRedirectURLs(RepoObject repoObject) throws RepoException {
-
+  public String[] getFilePaths(RepoObject repoObject) throws RepoException {
+    String paths[] = null;
+    
     if (!hasXReproxy())
-      return new URL[]{}; // since the filesystem is not reproxyable
+      return new String[0]; // since the filesystem is not reproxyable
 
-    try {
-
-      URL[] urls = new URL[1];
-      urls[0] = new URL(reproxyBaseUrl + "/" + repoObject.getBucketName() + "/" + repoObject.getChecksum().substring(0, 2) + "/" + repoObject.getChecksum());
-      return urls;
-
-    } catch (MalformedURLException e) {
-      throw new RepoException(RepoException.Type.ServerError);
+    String path = new String(reproxyBaseUrl + "/" + repoObject.getBucketName() + "/" + repoObject.getChecksum().substring(0, 2) + "/" + repoObject.getChecksum());
+    if(path != null){
+      paths = new String[]{path};
     }
-
+    return paths;
   }
 
   @Override

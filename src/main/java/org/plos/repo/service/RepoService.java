@@ -558,7 +558,7 @@ public class RepoService extends BaseRepoService {
       switch (method) {
 
         case NEW:
-          if (existingRepoObject != null && !Status.MISSING_DATA.equals(existingRepoObject))
+          if (existingRepoObject != null)
             throw new RepoException(RepoException.Type.CantCreateNewObjectWithUsedKey);
           return createNewObject(key, bucketName, contentType, downloadName, timestamp, uploadedInputStream, creationDateTime, tag);
 
@@ -744,10 +744,10 @@ public class RepoService extends BaseRepoService {
       }
 
       // if the new object and the last version of the object are similar, we just return the last version of the object
-      if (repoObject.areSimilar(newRepoObject)){
-        rollback = false; // if we are not modifying the DB and reached this point, then the operations were successfully performed
-        return repoObject;
-      }
+      //if (repoObject.areSimilar(newRepoObject)){
+      //  rollback = false; // if we are not modifying the DB and reached this point, then the operations were successfully performed
+      //  return repoObject;
+      //}
 
       newRepoObject.setVersionNumber(sqlService.getObjectNextAvailableVersion(bucketName, newRepoObject.getKey()));
       // add a record to the DB for the new object

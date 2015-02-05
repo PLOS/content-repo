@@ -118,18 +118,18 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
 
     List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
-    // since when version an object we don't create a new version if nothing change from last version, only one object with BASE_KEY_NAME is going to be created
-    assertEquals(1, repoObjects.size());
+    // since BASE_KEY_NAME is created we create a new version for each iteration even if nothing change from last version
+    assertEquals(101, repoObjects.size());
 
     RepoObject obj = repoObjects.get(0);
 
     assertEquals(BASE_KEY_NAME, obj.getKey());
-    assertEquals(Integer.valueOf(0), obj.getVersionNumber());
+    //assertEquals(Integer.valueOf(0), obj.getVersionNumber());
     assertTrue(this.objectStore.objectExists(obj));
 
     List<RepoObject> versions = repoService.getObjectVersions(obj.getBucketName(), obj.getKey());
 
-    assertEquals(1, versions.size());
+    assertEquals(101, versions.size());
 
     // create new objects + list objects + update objects + list objects ----> all operations calls getObject underneath
     verify(spySqlService, times(READER_THREADS*3 + INSERT_THREADS)).getObject(anyString(), anyString());

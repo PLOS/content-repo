@@ -19,15 +19,21 @@ package org.plos.repo.service;
 
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
+import org.plos.repo.models.Status;
 import org.plos.repo.util.ChecksumGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.regex.Pattern;
 
 public abstract class ObjectStore {
 
+  private static final Logger log = LoggerFactory.getLogger(MogileStoreService.class);
+  
   @Inject
   protected ChecksumGenerator checksumGenerator;
 
@@ -44,10 +50,49 @@ public abstract class ObjectStore {
 //  public static boolean isValidBucketName(String bucketName) {
 //    return BucketNameUtils.isValidV2BucketName(bucketName);
 //  }
+  /**
+   * Retrieve the URLs of the given repo object <code>repoObject</code>. Return null if the
+   * data does not exist and set the status MISSING_DATA to object, or throw a 
+   * {@link org.plos.repo.service.RepoException} if an error occurs.
+   *
+   * @param repoObject a single {@link org.plos.repo.models.RepoObject} that represents the
+   *                   object to be searched.
+   * @return an URL array  wih the url of data of the given repoObject
+   * @throws RepoException
+   */
+  protected URL[] getRedirectURLs(RepoObject repoObject) throws RepoException{
+    URL[] urls = null;
+    try {
+      String[] paths = getFilePaths(repoObject);
+      if( paths != null && paths.length > 0 ) {
+        int pathCount = paths.length;
+        urls = new URL[pathCount];
+
+        for (int i = 0; i < pathCount; i++) {
+          urls[i] = new URL(paths[i]);
+        }
+        
+      } else { 
+        repoObject.setStatus(Status.MISSING_DATA);
+        log.info(" Missing Data when trying to fetch reproxy url, key: {} , bucket name: {} , content checksum: {} , version number: {} ",
+                repoObject.getKey(),
+                repoObject.getBucketName(),
+                repoObject.getChecksum(),
+                repoObject.getVersionNumber());
+      }
+
+    } catch (MalformedURLException e) {
+      throw new RepoException(RepoException.Type.ServerError);
+    } catch (Exception e) {
+      throw new RepoException(e);
+    }
+    return urls;
+    
+  }
 
   abstract public Boolean hasXReproxy();
 
-  abstract public URL[]  getRedirectURLs(RepoObject repoObject) throws RepoException;
+  abstract public String[]  getFilePaths(RepoObject repoObject) throws RepoException;
 
   abstract public Boolean objectExists(RepoObject repoObject);
 

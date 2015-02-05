@@ -144,6 +144,11 @@ public class ObjectController {
 
       RepoObject repoObject = repoService.getObject(bucketName, key, elementFilter);
 
+      //If the data is missing for a specific object show 500 "Server Error"
+      if(Status.MISSING_DATA.equals(repoObject.getStatus())){
+          throw new RepoException(RepoException.Type.ObjectContentNotFound);
+      }
+
       RepoObjectOutput outputObject = new RepoObjectOutput(repoObject);
 
       return Response.status(Response.Status.OK)

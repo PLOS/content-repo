@@ -81,33 +81,16 @@ public class MogileStoreService extends ObjectStore {
   }
 
   @Override
-  public URL[] getRedirectURLs(RepoObject repoObject) throws RepoException {
-    URL[] urls = null;
+  public String[] getFilePaths(RepoObject repoObject) throws RepoException {
+    String[]  paths = null;
     try {
-      String[] paths = mfs.getPaths(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()), true);
-      if( paths != null && paths.length > 0 ) {
-        int pathCount = paths.length;
-        urls = new URL[pathCount];
-
-        for (int i = 0; i < pathCount; i++) {
-          urls[i] = new URL(paths[i]);
-        }
-
-      } else { //If the data is missing change the status and log error
-        repoObject.setStatus(Status.MISSING_DATA);
-        log.info(" Missing Data when trying to fetch reproxy url, key: {} , bucket name: {} , content checksum: {} , version number: {} ",
-                repoObject.getKey(),
-                repoObject.getBucketName(),
-                repoObject.getChecksum(),
-                repoObject.getVersionNumber());
-      }
-
-    } catch (Exception e) {
+      paths = mfs.getPaths(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()), true);
+    } catch (Exception e){
       throw new RepoException(e);
     }
-    return urls;
+    return paths;
   }
-
+  
   @Override
   public InputStream getInputStream(RepoObject repoObject) throws RepoException {
     try {
