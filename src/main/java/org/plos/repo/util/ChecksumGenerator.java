@@ -60,7 +60,7 @@ public class ChecksumGenerator {
     StringBuilder sb = new StringBuilder();
 
     sb.append(repoObject.getKey());
-    sb.append(TimestampFormatter.getFormattedTimestamp(repoObject.getCreationDate()));
+    sb.append(TimestampFormatter.getFormattedTimestamp(repoObject.getCreationDate())).append(System.nanoTime());
     if (repoObject.getTag() != null){
       sb.append(repoObject.getTag());
     }

@@ -672,7 +672,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
       // TODO: get the URLs and verify their downloaded content
 
     } else {
-      Assert.assertTrue(repoService.getObjectReproxy(newObj).length == 0);
+      Assert.assertNull(repoService.getObjectReproxy(newObj));
     }
   }
 
