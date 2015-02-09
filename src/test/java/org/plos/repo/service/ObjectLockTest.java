@@ -116,9 +116,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       }
 
       public String getData(int i) {
-        String data = OBJECT_DATA;
-        System.out.println("Different Data: " + data);
-        return data;
+        return OBJECT_DATA;
       }
     };
 
@@ -166,9 +164,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       }
 
       public String getData(int i){
-        String data = OBJECT_DATA + i;
-        System.out.println("Different Data: " + data);
-        return data;
+        return OBJECT_DATA + i;
       }
 
     };
