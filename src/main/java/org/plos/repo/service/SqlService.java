@@ -17,10 +17,7 @@
 
 package org.plos.repo.service;
 
-import org.plos.repo.models.Bucket;
-import org.plos.repo.models.RepoCollection;
-import org.plos.repo.models.RepoObject;
-import org.plos.repo.models.Status;
+import org.plos.repo.models.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
@@ -1297,6 +1294,31 @@ public abstract class SqlService {
       p.setInt(1, bucketId);
       return p.executeUpdate();
 
+
+    } finally {
+      closeDbStuff(null, p);
+    }
+
+  }
+
+  public boolean insertJournal(Journal journal) throws SQLException {
+
+    PreparedStatement p = null;
+
+    try {
+      
+      p = connectionLocal.get().prepareStatement("INSERT INTO journal (bucketName, objKey, collKey, operation, versionChecksum) VALUES (?,?,?,?,?)");
+
+      p.setString(1, journal.getBucketName());
+      //The object could be NULL if the operation is about bucket or collection
+      p.setString(2, journal.getObjKey() == null ? "" : journal.getObjKey());
+      //The collection could be NULL if the operation is about bucket or object
+      p.setString(3, journal.getCollKey() == null ? "" : journal.getCollKey());
+      p.setString(4,journal.getOperation().getValue());
+      //The versionChecksum could be NULL if the operation is about bucket
+      p.setString(5, journal.getVersionChecksum() == null ? "" : journal.getVersionChecksum());
+
+      return p.executeUpdate() > 0;
 
     } finally {
       closeDbStuff(null, p);

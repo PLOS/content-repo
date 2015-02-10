@@ -21,10 +21,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.hsqldb.lib.StringUtil;
-import org.plos.repo.models.Bucket;
-import org.plos.repo.models.RepoCollection;
-import org.plos.repo.models.RepoObject;
-import org.plos.repo.models.Status;
+import org.plos.repo.models.*;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.input.InputObject;
@@ -202,9 +199,13 @@ public class CollectionRepoService extends BaseRepoService {
         }
       }
 
-      if (sqlService.markCollectionDeleted(key, bucketName, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum()) == 0)
+      if (sqlService.markCollectionDeleted(key, bucketName, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum()) == 0) {
         throw new RepoException(RepoException.Type.CollectionNotFound);
-
+      } else {
+        // insert to journal the delete collection operation
+        Journal journal = new Journal(bucketName, null, key, Operation.DELETED,  elementFilter.getVersionChecksum());
+        sqlService.insertJournal(journal);
+      }
       sqlService.transactionCommit();
       rollback = false;
 
@@ -421,12 +422,23 @@ public class CollectionRepoService extends BaseRepoService {
     Integer collId = sqlService.insertCollection(repoCollection);
     if (collId == -1) {
       throw new RepoException("Error saving content to database");
+    } else {
+      // insert to journal the create/update collection operation
+      Journal journal = new Journal(bucketName, null, key, Operation.CREATE, repoCollection.getVersionChecksum());
+      if(repoCollection.getVersionNumber() > 0 ){
+        journal.setOperation(Operation.UPDATE);
+      }
+      sqlService.insertJournal(journal);
     }
 
     for (InputObject inputObject : inputObjects){
 
       if (sqlService.insertCollectionObjects(collId, inputObject.getKey(), bucketName, inputObject.getVersionChecksum()) == 0){
         throw new RepoException(RepoException.Type.ObjectCollectionNotFound);
+      } else {
+        // insert to journal the create collection/object relation
+        Journal journal = new Journal(bucketName, inputObject.getKey(), key, Operation.CREATE, repoCollection.getVersionChecksum());
+        sqlService.insertJournal(journal);
       }
 
     }

@@ -19,9 +19,7 @@ package org.plos.repo.service;
 
 import com.google.common.util.concurrent.Striped;
 import org.hsqldb.lib.StringUtil;
-import org.plos.repo.models.Bucket;
-import org.plos.repo.models.RepoObject;
-import org.plos.repo.models.Status;
+import org.plos.repo.models.*;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.validator.TimestampInputValidator;
 import org.slf4j.Logger;
@@ -104,6 +102,8 @@ public class RepoService extends BaseRepoService {
 
       if (!sqlService.insertBucket(bucket, creationDate)) {
         throw new RepoException("Unable to create bucket in database: " + name);
+      } else {
+        sqlService.insertJournal(new Journal(bucket.getBucketName(), Operation.CREATE));
       }
 
       Bucket newBucket = sqlService.getBucket(name);
@@ -168,8 +168,12 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(RepoException.Type.CantDeleteNonEmptyBucket);
 
       // remove all table references for objects & collections in the bucket
-      if (sqlService.removeBucketContent(name) == 0)
+      if (sqlService.removeBucketContent(name) == 0) {
         throw new RepoException("Unable to delete bucket in database: " + name);
+      } else {
+          // insert to journal the removeBucket operation
+          sqlService.insertJournal(new Journal(name, Operation.DELETED));
+      }
 
       bucketDeletion = objectStore.deleteBucket(bucket);
       if (!bucketDeletion){
@@ -453,8 +457,13 @@ public class RepoService extends BaseRepoService {
         int objectDeteled = sqlService.markObjectDeleted(key, bucketName, elementFilter.getVersion(),
             elementFilter.getVersionChecksum(), elementFilter.getTag());
 
-        if (objectDeteled == 0)
+        if (objectDeteled == 0) {
           throw new RepoException(RepoException.Type.ObjectNotFound);
+        } else {
+          // insert to journal the delete object operation
+          Journal journal = new Journal(bucketName, key, null, Operation.DELETED, elementFilter.getVersionChecksum());
+          sqlService.insertJournal(journal);
+        }
 
       } else if (Status.PURGED.equals(status)){
         purgeObjectContentAndDb(repoObject, elementFilter);
@@ -505,6 +514,11 @@ public class RepoService extends BaseRepoService {
 
       if (objectPurged == 0){
         throw new RepoException(RepoException.Type.ObjectNotFound);
+      } else {
+        // insert to journal the purge object operation
+        Journal journal = new Journal(repoObject.getBucketName(), repoObject.getKey(), null, Operation.PURGED,
+                 elementFilter.getVersionChecksum());
+        sqlService.insertJournal(journal);
       }
 
       // verify if any other USED or DELETED objects has a reference to the same file. If it is the last reference to the object, remove it from the system,
@@ -664,6 +678,11 @@ public class RepoService extends BaseRepoService {
 
       if (sqlService.insertObject(repoObject) == 0) {
         throw new RepoException("Error saving content to database");
+      } else {
+        // insert to journal the create object operation
+          Journal journal = new Journal(repoObject.getBucketName(), repoObject.getKey(), null, Operation.CREATE, 
+                  repoObject.getVersionChecksum());
+          sqlService.insertJournal(journal);
       }
 
       sqlService.transactionCommit();
@@ -753,6 +772,11 @@ public class RepoService extends BaseRepoService {
       // add a record to the DB for the new object
       if (sqlService.insertObject(newRepoObject) == 0) {
         throw new RepoException("Error saving content to database");
+      } else {
+        // insert to journal the update object operation
+        Journal journal = new Journal(repoObject.getBucketName(), repoObject.getKey(), null, Operation.UPDATE,
+                repoObject.getVersionChecksum());
+        sqlService.insertJournal(journal);
       }
 
       sqlService.transactionCommit();
