@@ -17,6 +17,11 @@
 
 package org.plos.repo.models;
 
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+
+import java.util.EnumSet;
 
 public enum Operation {
 
@@ -31,4 +36,13 @@ public enum Operation {
   public String getValue() {
     return value;
   }
+
+  public static final ImmutableMap<String, Operation> OPERATION_VALUES = Maps.uniqueIndex(EnumSet.allOf(Operation.class),
+          new Function<Operation, String>() {
+            @Override
+            public String apply(Operation operation) {
+              return operation.getValue();
+            }
+          });
+
 }

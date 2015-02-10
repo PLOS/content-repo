@@ -70,6 +70,14 @@ public abstract class SqlService {
     return collection;
   }
 
+  private static Journal mapJournalRow(ResultSet rs) throws SQLException {
+
+    Journal journal = new Journal(rs.getString("BUCKETNAME"), rs.getString("OBJKEY"), rs.getString("COLLKEY"), Operation.OPERATION_VALUES.get(rs.getString("OPERATION")), rs.getString("VERSIONCHECKSUM"));
+    journal.setId(rs.getInt("ID"));
+    journal.setTimestamp(rs.getTimestamp("TIMESTAMP"));
+    return journal;
+  }
+  
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
     return new Bucket(rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getTimestamp("TIMESTAMP"), rs.getTimestamp("CREATIONDATE"));
   }
@@ -1314,7 +1322,7 @@ public abstract class SqlService {
       p.setString(2, journal.getObjKey() == null ? "" : journal.getObjKey());
       //The collection could be NULL if the operation is about bucket or object
       p.setString(3, journal.getCollKey() == null ? "" : journal.getCollKey());
-      p.setString(4,journal.getOperation().getValue());
+      p.setString(4, journal.getOperation().getValue());
       //The versionChecksum could be NULL if the operation is about bucket
       p.setString(5, journal.getVersionChecksum() == null ? "" : journal.getVersionChecksum());
 
@@ -1324,5 +1332,59 @@ public abstract class SqlService {
       closeDbStuff(null, p);
     }
 
+  }
+
+  /**
+   * List the journal, for testing only
+   * @param bucketName a single String representing the bucket name where the journal is stored
+   * @param objectKey a single String identifying the object key
+   * @param collKey a single String identifying the collection key
+   * @param timestamp a timestamp used to filter the journal by date.
+   * @return {@link org.plos.repo.models.Journal List}
+   * @throws SQLException
+   */
+  public List<Journal> listJournal(String bucketName, String objectKey, String collKey, Timestamp timestamp) throws SQLException {
+
+    List<Journal> repoJournal = new ArrayList<Journal>();
+
+    PreparedStatement p = null;
+    ResultSet result = null;
+
+    try {
+      StringBuilder query = new StringBuilder("SELECT * FROM journal WHERE bucketName = ?");
+
+      if(objectKey  != null)
+        query.append(" and objKey = ? ");
+      if(collKey != null)
+        query.append(" and collKey = ? ");
+      if(timestamp != null)
+        query.append(" and timestamp >= ? ");
+      
+      p = connectionLocal.get().prepareStatement(query.toString());
+      
+      p.setString(1, bucketName);
+      
+      int i = 2;
+      if (objectKey != null){
+        p.setString(i++, objectKey);
+      }
+      if (collKey != null){
+        p.setString(i++, collKey);
+      }
+      if (timestamp != null){
+        p.setTimestamp(i++, timestamp);
+      }
+      
+      result = p.executeQuery();
+
+      while (result.next()) {
+        repoJournal.add(mapJournalRow(result));
+      }
+
+      return repoJournal;
+
+    } finally {
+      closeDbStuff(result, p);
+    }
   }
 }

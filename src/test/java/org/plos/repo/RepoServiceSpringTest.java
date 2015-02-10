@@ -23,9 +23,7 @@ package org.plos.repo;
  import org.junit.Test;
  import org.mockito.BDDMockito;
  import org.mockito.Mockito;
- import org.plos.repo.models.Bucket;
- import org.plos.repo.models.RepoObject;
- import org.plos.repo.models.Status;
+ import org.plos.repo.models.*;
  import org.plos.repo.models.input.ElementFilter;
  import org.plos.repo.service.*;
 
@@ -34,8 +32,9 @@ package org.plos.repo;
  import java.sql.Timestamp;
  import java.util.Calendar;
  import java.util.Date;
+ import java.util.List;
 
-public class RepoServiceSpringTest extends RepoBaseSpringTest {
+ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
   private final Bucket bucket1 = new Bucket("bucket1");
 
@@ -69,6 +68,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     Assert.assertTrue(repoService.listBuckets().size() == 0);
     repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
     Assert.assertTrue(repoService.listBuckets().size() == 1);
+    sqlService.getConnection();
   }
 
   @Test
@@ -98,9 +98,10 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     } catch (RepoException e) {
       Assert.fail(e.getMessage());
     }
-
+    
     sqlService.getReadOnlyConnection();
     Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) != null);
+    Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), null, null, null).size() == 1);
     sqlService.releaseConnection();
     Assert.assertTrue(objectStore.bucketExists(bucket1));
   }
@@ -138,6 +139,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     try {
       repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
+      Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), null, null, null).size() == 0);
       Assert.fail();
     } catch (RepoException e) {
       Assert.assertTrue(e.getType() == RepoException.Type.ServerError);
@@ -175,6 +177,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     sqlService.getReadOnlyConnection();
     Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) == null);
+    Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), null, null, null).size() == 0);
     sqlService.releaseConnection();
     Assert.assertFalse(objectStore.bucketExists(bucket1));
 
@@ -195,6 +198,10 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     sqlService.getReadOnlyConnection();
     Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) == null);
+    List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), null, null, null); 
+    Assert.assertTrue(journalList.size() == 2);
+    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE));
+    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.DELETED));
     sqlService.releaseConnection();
     Assert.assertFalse(objectStore.bucketExists(bucket1));
 
@@ -236,6 +243,11 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     sqlService.getReadOnlyConnection();
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), "key1");
     Assert.assertTrue(objFromDb.getKey().equals("key1"));
+    List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), "key1", null, null);
+    Assert.assertTrue(journalList.size() == 1);
+    Assert.assertTrue(journalList.get(0).getBucketName().equals(bucket1.getBucketName()));
+    Assert.assertTrue(journalList.get(0).getObjKey().equals("key1"));
+    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE));
     sqlService.releaseConnection();
 
     Assert.assertTrue(objectStore.objectExists(objFromDb));
