@@ -389,8 +389,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
-                            "Can not version object:%s , tag:%s , Reason:%s", cb.getKeyname(j),
-                            cb.getTag(j),
+                            "Can not version object:%s , tag:%s , data:%s , Reason:%s", cb.getKeyname(j),
+                            cb.getTag(j), cb.getData(j),
                             e.getMessage()));
                   }
                 }
