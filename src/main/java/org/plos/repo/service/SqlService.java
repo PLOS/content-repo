@@ -72,7 +72,9 @@ public abstract class SqlService {
 
   private static Journal mapJournalRow(ResultSet rs) throws SQLException {
 
-    Journal journal = new Journal(rs.getString("BUCKETNAME"), rs.getString("OBJKEY"), rs.getString("COLLKEY"), Operation.OPERATION_VALUES.get(rs.getString("OPERATION")), rs.getString("VERSIONCHECKSUM"));
+    Journal journal = new Journal(rs.getString("BUCKETNAME"), rs.getString("OBJKEY"), rs.getString("COLLKEY"), 
+            Operation.OPERATION_VALUES.get(rs.getString("OPERATION")), rs.getString("VERSIONCHECKSUMOBJECT"), 
+            rs.getString("VERSIONCHECKSUMCOLLECTION"));
     journal.setId(rs.getInt("ID"));
     journal.setTimestamp(rs.getTimestamp("TIMESTAMP"));
     return journal;

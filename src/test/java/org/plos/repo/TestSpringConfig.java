@@ -55,6 +55,9 @@ public class TestSpringConfig {
   public ChecksumGenerator versionChecksumGenerator(){ return new ChecksumGenerator(); }
 
   @Bean
+  public JournalService journalService(){ return new JournalService(); }
+
+  @Bean
   public ObjectStore objectStore() throws Exception {
     return new InMemoryFileStoreService();
 //    return new FileSystemStoreService("/tmp/repo_unittest");

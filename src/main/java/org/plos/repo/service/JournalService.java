@@ -49,7 +49,8 @@ public class JournalService {
     public void deletePurgeObject(String bucketName, String objKey, Operation operation){
         final boolean result;
         try {
-            RepoObject object = sqlService.getObject(bucketName, objKey);
+            //getObject but searchInDeleted and searchInPurge
+            RepoObject object = sqlService.getObject(bucketName, objKey, null, null, null, true, true);
             result = sqlService.insertJournal(new Journal(bucketName, objKey, operation, object.getVersionChecksum()));
             if(result)
                 sqlService.transactionCommit();

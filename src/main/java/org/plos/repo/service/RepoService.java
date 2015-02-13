@@ -606,7 +606,7 @@ public class RepoService extends BaseRepoService {
     Integer versionNumber;
     Bucket bucket;
 
-    RepoObject repoObject;
+    RepoObject repoObject = null;
 
     boolean rollback = false;
 
@@ -691,7 +691,9 @@ public class RepoService extends BaseRepoService {
         sqlRollback("object " + bucketName + ", " + key);
         // TODO: handle objectStore rollback, or not?
       } else {
-        journalService.createUpdateObject(bucketName, key, Operation.CREATE, repoObject.getVersionChecksum());
+        if(repoObject != null) {
+          journalService.createUpdateObject(bucketName, key, Operation.CREATE, repoObject.getVersionChecksum());
+        }
         
       }
       sqlReleaseConnection();
