@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 
 public abstract class ObjectStore {
 
-  private static final Logger log = LoggerFactory.getLogger(MogileStoreService.class);
+  private static final Logger log = LoggerFactory.getLogger(ObjectStore.class);
   
   @Inject
   protected ChecksumGenerator checksumGenerator;
@@ -73,6 +73,7 @@ public abstract class ObjectStore {
         }
         
       } else { 
+        urls = new URL[0];
         repoObject.setStatus(Status.MISSING_DATA);
         log.info(" Missing Data when trying to fetch reproxy url, key: {} , bucket name: {} , content checksum: {} , version number: {} ",
                 repoObject.getKey(),

@@ -25,7 +25,6 @@ import org.apache.http.HttpStatus;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.plos.repo.models.RepoError;
 import org.plos.repo.models.RepoObject;
-import org.plos.repo.models.Status;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.output.RepoObjectOutput;
 import org.plos.repo.service.RepoException;
@@ -144,11 +143,6 @@ public class ObjectController {
 
       RepoObject repoObject = repoService.getObject(bucketName, key, elementFilter);
 
-      //If the data is missing for a specific object show 500 "Server Error"
-      if(Status.MISSING_DATA.equals(repoObject.getStatus())){
-          throw new RepoException(RepoException.Type.ObjectContentNotFound);
-      }
-
       RepoObjectOutput outputObject = new RepoObjectOutput(repoObject);
 
       return Response.status(Response.Status.OK)
@@ -178,11 +172,6 @@ public class ObjectController {
 
     try {
       repoObject = repoService.getObject(bucketName, key, elementFilter);
-
-      //If the data is missing for a specific object show 500 "Server Error"
-      if(Status.MISSING_DATA.equals(repoObject.getStatus())){
-        throw new RepoException(RepoException.Type.ObjectContentNotFound);
-      }
 
       if (ifModifiedSinceStr != null) {
 
