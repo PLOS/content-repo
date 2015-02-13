@@ -25,7 +25,7 @@ import java.util.EnumSet;
 
 public enum Operation {
 
-  CREATE("create"), UPDATE("update"), DELETED("delete"), PURGED("purge");
+  CREATE("CREATE"), UPDATE("UPDATE"), DELETE("DELETE"), PURGE("PURGE");
   
   private final String value;
 

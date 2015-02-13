@@ -54,6 +54,9 @@ public class RepoService extends BaseRepoService {
   @Inject
   private TimestampInputValidator timestampValidator;
 
+  @Inject
+  private JournalService journalService;
+
   public List<Bucket> listBuckets() throws RepoException {
     try {
       sqlService.getReadOnlyConnection();
@@ -102,8 +105,6 @@ public class RepoService extends BaseRepoService {
 
       if (!sqlService.insertBucket(bucket, creationDate)) {
         throw new RepoException("Unable to create bucket in database: " + name);
-      } else {
-        sqlService.insertJournal(new Journal(bucket.getBucketName(), Operation.CREATE));
       }
 
       Bucket newBucket = sqlService.getBucket(name);
@@ -125,6 +126,8 @@ public class RepoService extends BaseRepoService {
           // TODO: check to make sure objectStore.deleteBucket didnt fail
         }
 
+      } else {
+        journalService.createBucket(name);
       }
 
       sqlReleaseConnection();
@@ -170,9 +173,6 @@ public class RepoService extends BaseRepoService {
       // remove all table references for objects & collections in the bucket
       if (sqlService.removeBucketContent(name) == 0) {
         throw new RepoException("Unable to delete bucket in database: " + name);
-      } else {
-          // insert to journal the removeBucket operation
-          sqlService.insertJournal(new Journal(name, Operation.DELETED));
       }
 
       bucketDeletion = objectStore.deleteBucket(bucket);
@@ -195,6 +195,9 @@ public class RepoService extends BaseRepoService {
           // TODO: validate objectStore.createBucket return values
         }
 
+      } else {
+        journalService.deleteBucket(name);
+        
       }
 
       sqlReleaseConnection();
@@ -459,10 +462,6 @@ public class RepoService extends BaseRepoService {
 
         if (objectDeteled == 0) {
           throw new RepoException(RepoException.Type.ObjectNotFound);
-        } else {
-          // insert to journal the delete object operation
-          Journal journal = new Journal(bucketName, key, null, Operation.DELETED, elementFilter.getVersionChecksum());
-          sqlService.insertJournal(journal);
         }
 
       } else if (Status.PURGED.equals(status)){
@@ -478,6 +477,9 @@ public class RepoService extends BaseRepoService {
 
       if (rollback) {
         sqlRollback("object " + bucketName + ", " + key + ", " + elementFilter);
+      } else {
+        // insert to journal the delete object operation
+        journalService.deletePurgeObject(bucketName, key, Status.DELETED.equals(status) ? Operation.DELETE : Operation.PURGE);
       }
 
       sqlReleaseConnection();
@@ -514,11 +516,6 @@ public class RepoService extends BaseRepoService {
 
       if (objectPurged == 0){
         throw new RepoException(RepoException.Type.ObjectNotFound);
-      } else {
-        // insert to journal the purge object operation
-        Journal journal = new Journal(repoObject.getBucketName(), repoObject.getKey(), null, Operation.PURGED,
-                 elementFilter.getVersionChecksum());
-        sqlService.insertJournal(journal);
       }
 
       // verify if any other USED or DELETED objects has a reference to the same file. If it is the last reference to the object, remove it from the system,
@@ -678,11 +675,6 @@ public class RepoService extends BaseRepoService {
 
       if (sqlService.insertObject(repoObject) == 0) {
         throw new RepoException("Error saving content to database");
-      } else {
-        // insert to journal the create object operation
-          Journal journal = new Journal(repoObject.getBucketName(), repoObject.getKey(), null, Operation.CREATE, 
-                  repoObject.getVersionChecksum());
-          sqlService.insertJournal(journal);
       }
 
       sqlService.transactionCommit();
@@ -698,8 +690,10 @@ public class RepoService extends BaseRepoService {
       if (rollback) {
         sqlRollback("object " + bucketName + ", " + key);
         // TODO: handle objectStore rollback, or not?
+      } else {
+        journalService.createUpdateObject(bucketName, key, Operation.CREATE, repoObject.getVersionChecksum());
+        
       }
-
       sqlReleaseConnection();
     }
 
@@ -772,11 +766,6 @@ public class RepoService extends BaseRepoService {
       // add a record to the DB for the new object
       if (sqlService.insertObject(newRepoObject) == 0) {
         throw new RepoException("Error saving content to database");
-      } else {
-        // insert to journal the update object operation
-        Journal journal = new Journal(repoObject.getBucketName(), repoObject.getKey(), null, Operation.UPDATE,
-                repoObject.getVersionChecksum());
-        sqlService.insertJournal(journal);
       }
 
       sqlService.transactionCommit();
@@ -792,6 +781,9 @@ public class RepoService extends BaseRepoService {
       if (rollback) {
         sqlRollback("object " + bucketName + ", " + repoObject.getKey());
         // TODO: handle objectStore rollback, or not?
+      } else {
+        journalService.createUpdateObject(bucketName, repoObject.getKey(), Operation.UPDATE, newRepoObject.getVersionChecksum());
+
       }
 
       sqlReleaseConnection();

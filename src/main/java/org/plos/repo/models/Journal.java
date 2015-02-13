@@ -27,15 +27,24 @@ public class Journal {
   private String objKey;
   private String collKey;
   private Operation operation;
-  private String versionChecksum;
+  private String versionChecksumObject;
+  private String versionChecksumCollection;
   private Timestamp timestamp;
-  
-  public Journal(String bucketName, String objKey, String collKey, Operation operation, String versionChecksum) {
+
+  public Journal(String bucketName, String objKey, Operation operation, String versionChecksumObject) {
+    this.bucketName = bucketName;
+    this.objKey = objKey;
+    this.operation = operation;
+    this.versionChecksumObject = versionChecksumObject;
+  }
+
+  public Journal(String bucketName, String objKey, String collKey, Operation operation, String versionChecksumObject, String versionChecksumCollection) {
     this.bucketName = bucketName;
     this.objKey = objKey;
     this.collKey = collKey;
     this.operation = operation;
-    this.versionChecksum = versionChecksum;
+    this.versionChecksumObject = versionChecksumObject;
+    this.versionChecksumCollection = versionChecksumCollection;
   }
   
   public Journal(String bucketName, Operation operation) {
@@ -67,8 +76,12 @@ public class Journal {
     return operation; 
   }
 
-  public String getVersionChecksum() { 
-    return versionChecksum; 
+  public String getVersionChecksumObject() { 
+    return versionChecksumObject; 
+  }
+
+  public String getVersionChecksumCollection() {
+    return versionChecksumCollection;
   }
 
   public void setId(Integer id) {

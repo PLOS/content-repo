@@ -73,7 +73,8 @@ CREATE TABLE IF NOT EXISTS journal (
     objkey VARCHAR (255),
     collKey VARCHAR (255),
     operation VARCHAR (10),
-    versionChecksum VARCHAR (255),
+    versionChecksumObject VARCHAR (255),
+    versionChecksumCollection VARCHAR (255),
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
 );

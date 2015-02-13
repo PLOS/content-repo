@@ -1315,7 +1315,7 @@ public abstract class SqlService {
 
     try {
       
-      p = connectionLocal.get().prepareStatement("INSERT INTO journal (bucketName, objKey, collKey, operation, versionChecksum) VALUES (?,?,?,?,?)");
+      p = connectionLocal.get().prepareStatement("INSERT INTO journal (bucketName, objKey, collKey, operation, versionChecksumObject, versionChecksumCollection) VALUES (?,?,?,?,?,?)");
 
       p.setString(1, journal.getBucketName());
       //The object could be NULL if the operation is about bucket or collection
@@ -1323,9 +1323,11 @@ public abstract class SqlService {
       //The collection could be NULL if the operation is about bucket or object
       p.setString(3, journal.getCollKey() == null ? "" : journal.getCollKey());
       p.setString(4, journal.getOperation().getValue());
-      //The versionChecksum could be NULL if the operation is about bucket
-      p.setString(5, journal.getVersionChecksum() == null ? "" : journal.getVersionChecksum());
-
+      //The versionChecksumObject could be NULL if the operation is about bucket
+      p.setString(5, journal.getVersionChecksumObject() == null ? "" : journal.getVersionChecksumObject());
+      //The versionChecksumCollection could be NULL if the operation is about bucket
+      p.setString(6, journal.getVersionChecksumCollection() == null ? "" : journal.getVersionChecksumCollection());
+      
       return p.executeUpdate() > 0;
 
     } finally {
@@ -1386,5 +1388,26 @@ public abstract class SqlService {
     } finally {
       closeDbStuff(result, p);
     }
+  }
+
+/**
+ * Remove journal for testing only
+ */
+  public int deleteJournal() throws SQLException {
+
+    PreparedStatement p = null;
+    final int result; 
+    try {
+
+      p = connectionLocal.get().prepareStatement("DELETE FROM journal");
+
+      result = p.executeUpdate();
+
+      transactionCommit();
+      
+    } finally {
+      closeDbStuff(null, p);
+    }
+    return result;
   }
 }

@@ -46,6 +46,8 @@ public class CollectionRepoService extends BaseRepoService {
   @Inject
   private InputCollectionValidator inputCollectionValidator;
 
+  @Inject
+  private JournalService journalService;
 
   /**
    * Returns a list of collections meta data for the given bucket name <code>bucketName</code>. In case pagination
@@ -201,11 +203,8 @@ public class CollectionRepoService extends BaseRepoService {
 
       if (sqlService.markCollectionDeleted(key, bucketName, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum()) == 0) {
         throw new RepoException(RepoException.Type.CollectionNotFound);
-      } else {
-        // insert to journal the delete collection operation
-        Journal journal = new Journal(bucketName, null, key, Operation.DELETED,  elementFilter.getVersionChecksum());
-        sqlService.insertJournal(journal);
-      }
+      } 
+
       sqlService.transactionCommit();
       rollback = false;
 
@@ -215,6 +214,8 @@ public class CollectionRepoService extends BaseRepoService {
 
       if (rollback) {
         sqlRollback("object " + bucketName + ", " + key + ", " + elementFilter.toString());
+      } else {
+        journalService.deleteCollection(bucketName, key, elementFilter.getVersionChecksum());
       }
 
       sqlReleaseConnection();
@@ -291,6 +292,14 @@ public class CollectionRepoService extends BaseRepoService {
 
       if (rollback) {
         sqlRollback("collection " + inputCollection.getBucketName() + ", " + inputCollection.getKey());
+      } else {
+        if(existingRepoCollection == null) {
+          journalService.createUpdateCollection(inputCollection.getBucketName(), inputCollection.getKey(), Operation.CREATE,
+                  newRepoCollection.getVersionChecksum(), inputCollection.getObjects());
+        } else {
+          journalService.createUpdateCollection(inputCollection.getBucketName(), inputCollection.getKey(), Operation.UPDATE,
+                  newRepoCollection.getVersionChecksum(), inputCollection.getObjects());
+        }
       }
       sqlReleaseConnection();
     }
@@ -422,23 +431,12 @@ public class CollectionRepoService extends BaseRepoService {
     Integer collId = sqlService.insertCollection(repoCollection);
     if (collId == -1) {
       throw new RepoException("Error saving content to database");
-    } else {
-      // insert to journal the create/update collection operation
-      Journal journal = new Journal(bucketName, null, key, Operation.CREATE, repoCollection.getVersionChecksum());
-      if(repoCollection.getVersionNumber() > 0 ){
-        journal.setOperation(Operation.UPDATE);
-      }
-      sqlService.insertJournal(journal);
     }
 
     for (InputObject inputObject : inputObjects){
 
       if (sqlService.insertCollectionObjects(collId, inputObject.getKey(), bucketName, inputObject.getVersionChecksum()) == 0){
         throw new RepoException(RepoException.Type.ObjectCollectionNotFound);
-      } else {
-        // insert to journal the create collection/object relation
-        Journal journal = new Journal(bucketName, inputObject.getKey(), key, Operation.CREATE, repoCollection.getVersionChecksum());
-        sqlService.insertJournal(journal);
       }
 
     }
