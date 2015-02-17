@@ -19,7 +19,9 @@ package org.plos.repo.service;
 
 import com.google.common.util.concurrent.Striped;
 import org.hsqldb.lib.StringUtil;
-import org.plos.repo.models.*;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.models.RepoObject;
+import org.plos.repo.models.Status;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.validator.TimestampInputValidator;
 import org.slf4j.Logger;
@@ -79,7 +81,7 @@ public class RepoService extends BaseRepoService {
     boolean bucketCreation = false;
 
     Bucket bucket = new Bucket(name);
-
+    Bucket newBucket = null;
     try {
 
       if (!ObjectStore.isValidFileName(name))
@@ -107,12 +109,10 @@ public class RepoService extends BaseRepoService {
         throw new RepoException("Unable to create bucket in database: " + name);
       }
 
-      Bucket newBucket = sqlService.getBucket(name);
+      newBucket = sqlService.getBucket(name);
 
       sqlService.transactionCommit();
       rollback = false;
-
-      return newBucket;
 
     } catch (SQLException e) {
       throw new RepoException(e);
@@ -126,15 +126,17 @@ public class RepoService extends BaseRepoService {
           // TODO: check to make sure objectStore.deleteBucket didnt fail
         }
 
-      } else {
-        journalService.createBucket(name);
       }
 
       sqlReleaseConnection();
       writeLock.unlock();
 
     }
-
+    if(!rollback){
+        journalService.createBucket(name);
+      
+    }
+    return newBucket;
   }
 
   /**
@@ -171,9 +173,8 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(RepoException.Type.CantDeleteNonEmptyBucket);
 
       // remove all table references for objects & collections in the bucket
-      if (sqlService.removeBucketContent(name) == 0) {
+      if (sqlService.removeBucketContent(name) == 0)
         throw new RepoException("Unable to delete bucket in database: " + name);
-      }
 
       bucketDeletion = objectStore.deleteBucket(bucket);
       if (!bucketDeletion){
@@ -195,15 +196,16 @@ public class RepoService extends BaseRepoService {
           // TODO: validate objectStore.createBucket return values
         }
 
-      } else {
-        journalService.deleteBucket(name);
-        
       }
 
       sqlReleaseConnection();
       writeLock.unlock();
     }
 
+    if(!rollback) {
+      journalService.deleteBucket(name);
+
+    }
   }
 
   public boolean serverSupportsReproxy() {
@@ -460,9 +462,8 @@ public class RepoService extends BaseRepoService {
         int objectDeteled = sqlService.markObjectDeleted(key, bucketName, elementFilter.getVersion(),
             elementFilter.getVersionChecksum(), elementFilter.getTag());
 
-        if (objectDeteled == 0) {
+        if (objectDeteled == 0)
           throw new RepoException(RepoException.Type.ObjectNotFound);
-        }
 
       } else if (Status.PURGED.equals(status)){
         purgeObjectContentAndDb(repoObject, elementFilter);
@@ -477,13 +478,14 @@ public class RepoService extends BaseRepoService {
 
       if (rollback) {
         sqlRollback("object " + bucketName + ", " + key + ", " + elementFilter);
-      } else {
-        // insert to journal the delete object operation
-        journalService.deletePurgeObject(bucketName, key, Status.DELETED.equals(status) ? Operation.DELETE : Operation.PURGE);
       }
 
       sqlReleaseConnection();
       writeLock.unlock();
+    }
+    if(!rollback){
+      journalService.deletePurgeObject(bucketName, key, status, elementFilter);
+      
     }
   }
 
@@ -690,13 +692,13 @@ public class RepoService extends BaseRepoService {
       if (rollback) {
         sqlRollback("object " + bucketName + ", " + key);
         // TODO: handle objectStore rollback, or not?
-      } else {
-        if(repoObject != null) {
-          journalService.createUpdateObject(bucketName, key, Operation.CREATE, repoObject.getVersionChecksum());
-        }
-        
       }
+
       sqlReleaseConnection();
+    }
+
+    if(!rollback && repoObject != null) {
+      journalService.createObject(bucketName, key, repoObject.getVersionChecksum());
     }
 
     return repoObject;
@@ -783,15 +785,15 @@ public class RepoService extends BaseRepoService {
       if (rollback) {
         sqlRollback("object " + bucketName + ", " + repoObject.getKey());
         // TODO: handle objectStore rollback, or not?
-      } else {
-        journalService.createUpdateObject(bucketName, repoObject.getKey(), Operation.UPDATE, newRepoObject.getVersionChecksum());
-
       }
 
       sqlReleaseConnection();
 
     }
+    if(!rollback) {
+      journalService.updateObject(bucketName, repoObject.getKey(), newRepoObject.getVersionChecksum());
 
+    }
     return newRepoObject;
   }
 

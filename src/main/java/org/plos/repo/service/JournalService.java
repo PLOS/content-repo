@@ -2,14 +2,13 @@ package org.plos.repo.service;
 
 
 
-import org.plos.repo.models.Journal;
-import org.plos.repo.models.Operation;
+import org.plos.repo.models.*;
 
 import java.sql.SQLException;
 import java.util.List;
 
-import org.plos.repo.models.RepoCollection;
-import org.plos.repo.models.RepoObject;
+import javax.inject.Inject;
+import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.input.InputObject;
 import org.slf4j.Logger;
@@ -19,18 +18,21 @@ public class JournalService {
 
     private static final Logger log = LoggerFactory.getLogger(JournalService.class);
 
-    @javax.inject.Inject
+    @Inject
     private SqlService sqlService;
     
     
     public void createBucket(String bucketName){
         final boolean result;
         try {
-            result = sqlService.insertJournal(new Journal(bucketName, Operation.CREATE));
+            sqlService.getConnection();
+            result = sqlService.insertJournal(new Journal(bucketName, Operation.CREATE_BUCKET));
             if(result)
                 sqlService.transactionCommit();
         } catch (SQLException e){
-            log.error("Error saving create bucket operation in journal",e);
+            log.error("Error saving create bucket operation",e);
+        } finally {
+            sqlReleaseConnection();
         }
     }
 
@@ -38,71 +40,143 @@ public class JournalService {
         final boolean result;
         try {
             sqlService.getConnection();
-            result = sqlService.insertJournal(new Journal(bucketName, Operation.DELETE));
+            result = sqlService.insertJournal(new Journal(bucketName, Operation.DELETE_BUCKET));
             if(result)  
                 sqlService.transactionCommit();
         } catch (SQLException e){
-            log.error("Error saving delete bucket operation in journal",e);
+            log.error("Error saving delete bucket operation",e);
+        } finally {
+            sqlReleaseConnection();
         }
     }
 
-    public void deletePurgeObject(String bucketName, String objKey, Operation operation){
+    public void deletePurgeObject(String bucketName, String objKey, Status status, ElementFilter elementFilter){
         final boolean result;
+        final Operation operation = Status.DELETED.equals(status) ? Operation.DELETE_OBJECT : Operation.PURGE_OBJECT;
         try {
-            //getObject but searchInDeleted and searchInPurge
-            RepoObject object = sqlService.getObject(bucketName, objKey, null, null, null, true, true);
-            result = sqlService.insertJournal(new Journal(bucketName, objKey, operation, object.getVersionChecksum()));
-            if(result)
-                sqlService.transactionCommit();
-        } catch (SQLException e){
-            log.error("Error saving " + operation.getValue() + " object operation in journal",e);
-        }
-    }
-
-    public void createUpdateObject(String bucketName, String objKey, Operation operation, String versionChecksum){
-        final boolean result;
-        try {
+            String versionChecksum = elementFilter.getVersionChecksum();
+            if(versionChecksum == null){
+                versionChecksum = getObjectVersionChecksum(bucketName, objKey, elementFilter);
+            }
+            sqlService.getConnection();
             result = sqlService.insertJournal(new Journal(bucketName, objKey, operation, versionChecksum));
             if(result)
                 sqlService.transactionCommit();
         } catch (SQLException e){
-            log.error("Error saving " + operation.getValue() + " object operation in journal",e);
+            log.error("Error saving " + operation.getValue() + " object operation",e);
+        } finally {
+            sqlReleaseConnection();
         }
     }
 
-    public void createUpdateCollection(String bucketName, String collKey, Operation operation, String versionChecksum, List<InputObject> objects){
-        boolean result;
-        try {
-            result = sqlService.insertJournal(new Journal(bucketName, null, collKey, operation, null, versionChecksum));
-            if(result) {
-                for (InputObject inputObject : objects) {
-                    Journal journal = new Journal(bucketName, inputObject.getKey(), collKey, Operation.CREATE, inputObject.getVersionChecksum(), versionChecksum);
-                    if (!sqlService.insertJournal(journal)) {
-                        result = false;
-                        break;
-                    }
-                }
-            }
-            if(result)
-                sqlService.transactionCommit();
-        } catch (SQLException e){
-            log.error("Error saving " + operation.getValue() + " collection operation in journal",e);
-        }
-    }
-
-    public void deleteCollection(String bucketName, String collKey, String versionChecksum){
+    public void createObject(String bucketName, String objKey, String versionChecksum){
         final boolean result;
         try {
-            if(versionChecksum == null) {
-                RepoCollection collection = sqlService.getCollection(bucketName, collKey);
-                if(collection != null)
-                    versionChecksum = collection.getVersionChecksum();
-            }
-            result = sqlService.insertJournal(new Journal(bucketName, null, collKey, Operation.DELETE, null, versionChecksum));
+            sqlService.getConnection();
+            result = sqlService.insertJournal(new Journal(bucketName, objKey, Operation.CREATE_OBJECT, versionChecksum));
             if(result)
                 sqlService.transactionCommit();
         } catch (SQLException e){
-            log.error("Error saving " + Operation.DELETE.getValue() + " collection operation in journal",e);
+            log.error("Error saving create object operation",e);
+        } finally {
+            sqlReleaseConnection();
         }
+    }
+
+    public void updateObject(String bucketName, String objKey, String versionChecksum){
+        final boolean result;
+        try {
+            sqlService.getConnection();
+            result = sqlService.insertJournal(new Journal(bucketName, objKey, Operation.UPDATE_OBJECT, versionChecksum));
+            if(result)
+                sqlService.transactionCommit();
+        } catch (SQLException e){
+            log.error("Error saving update object operation",e);
+        } finally {
+            sqlReleaseConnection();
+        }
+    }
+
+    public void createCollection(String bucketName, String collKey, String versionChecksum){
+        boolean result;
+        try {
+            sqlService.getConnection();
+            result = sqlService.insertJournal(new Journal(bucketName, collKey, Operation.CREATE_COLLECTION, versionChecksum));
+            if(result)
+                sqlService.transactionCommit();
+        } catch (SQLException e){
+            log.error("Error saving create collection operation",e);
+        } finally {
+            sqlReleaseConnection();
+        }
+    }
+
+    public void updateCollection(String bucketName, String collKey, String versionChecksum){
+        boolean result;
+        try {
+            sqlService.getConnection();
+            result = sqlService.insertJournal(new Journal(bucketName, collKey, Operation.UPDATE_COLLECTION, versionChecksum));
+            if(result)
+                sqlService.transactionCommit();
+        } catch (SQLException e){
+            log.error("Error saving update collection operation",e);
+        } finally {
+            sqlReleaseConnection();
+        }
+    }
+
+    public void deleteCollection(String bucketName, String collKey, ElementFilter elementFilter){
+        final boolean result;
+        try {
+            String versionChecksum = elementFilter.getVersionChecksum();
+            if(versionChecksum == null) {
+                versionChecksum = getCollectionVersionChecksum(bucketName, collKey, elementFilter);
+            }
+            sqlService.getConnection();
+            result = sqlService.insertJournal(new Journal(bucketName, collKey,Operation.DELETE_COLLECTION, versionChecksum));
+            if(result)
+                sqlService.transactionCommit();
+        } catch (SQLException e){
+            log.error("Error saving delete collection operation",e);
+        } finally {
+            sqlReleaseConnection();
+        }
+    }
+
+    private String getObjectVersionChecksum(String bucketName, String objKey, ElementFilter elementFilter) throws SQLException{
+        String versionChecksum = null;
+        try {
+            sqlService.getReadOnlyConnection();
+            RepoObject object = sqlService.getObject(bucketName, objKey, elementFilter.getVersion(),
+                    elementFilter.getVersionChecksum(), elementFilter.getTag(), true, true);
+            if(object != null)
+                versionChecksum = object.getVersionChecksum();
+        } finally {
+            sqlReleaseConnection();
+        }
+        return versionChecksum;
+    }
+    
+    private String getCollectionVersionChecksum(String bucketName, String collKey, ElementFilter elementFilter) throws SQLException{
+        String versionChecksum = null;
+        try {
+            sqlService.getReadOnlyConnection();
+            RepoCollection collection = sqlService.getCollection(bucketName, collKey, elementFilter.getVersion(),
+                    elementFilter.getVersionChecksum(), elementFilter.getTag(), true);
+            if (collection != null)
+                versionChecksum = collection.getVersionChecksum();
+        } finally {
+            sqlReleaseConnection();
+        }
+        return versionChecksum;
+    }
+    
+    private void sqlReleaseConnection() {
+        try {
+            sqlService.releaseConnection();
+        } catch (SQLException e) {
+            log.error("Error release collection",e);
+        }
+
     }
 }

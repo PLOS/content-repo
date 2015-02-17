@@ -21,7 +21,10 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.hsqldb.lib.StringUtil;
-import org.plos.repo.models.*;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.models.RepoCollection;
+import org.plos.repo.models.RepoObject;
+import org.plos.repo.models.Status;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.input.InputObject;
@@ -113,7 +116,7 @@ public class CollectionRepoService extends BaseRepoService {
       if (elementFilter == null || elementFilter.isEmpty()) // no filters defined
         repoCollection = sqlService.getCollection(bucketName, key);
       else
-        repoCollection = sqlService.getCollection(bucketName, key, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum());
+        repoCollection = sqlService.getCollection(bucketName, key, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum(), false);
 
       if (repoCollection == null)
         throw new RepoException(RepoException.Type.CollectionNotFound);
@@ -201,9 +204,8 @@ public class CollectionRepoService extends BaseRepoService {
         }
       }
 
-      if (sqlService.markCollectionDeleted(key, bucketName, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum()) == 0) {
+      if (sqlService.markCollectionDeleted(key, bucketName, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum()) == 0)
         throw new RepoException(RepoException.Type.CollectionNotFound);
-      } 
 
       sqlService.transactionCommit();
       rollback = false;
@@ -214,12 +216,13 @@ public class CollectionRepoService extends BaseRepoService {
 
       if (rollback) {
         sqlRollback("object " + bucketName + ", " + key + ", " + elementFilter.toString());
-      } else {
-        journalService.deleteCollection(bucketName, key, elementFilter.getVersionChecksum());
       }
 
       sqlReleaseConnection();
 
+    }
+    if(!rollback) {
+      journalService.deleteCollection(bucketName, key, elementFilter);
     }
   }
 
@@ -284,26 +287,23 @@ public class CollectionRepoService extends BaseRepoService {
       sqlService.transactionCommit();
       rollback = false;
 
-      return newRepoCollection;
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
 
       if (rollback) {
         sqlRollback("collection " + inputCollection.getBucketName() + ", " + inputCollection.getKey());
-      } else {
-        if(existingRepoCollection == null) {
-          journalService.createUpdateCollection(inputCollection.getBucketName(), inputCollection.getKey(), Operation.CREATE,
-                  newRepoCollection.getVersionChecksum(), inputCollection.getObjects());
-        } else {
-          journalService.createUpdateCollection(inputCollection.getBucketName(), inputCollection.getKey(), Operation.UPDATE,
-                  newRepoCollection.getVersionChecksum(), inputCollection.getObjects());
-        }
       }
       sqlReleaseConnection();
     }
-
+    if(!rollback) {
+      if (existingRepoCollection == null) {
+        journalService.createCollection(inputCollection.getBucketName(), inputCollection.getKey(), newRepoCollection.getVersionChecksum());
+      } else {
+        journalService.updateCollection(inputCollection.getBucketName(), inputCollection.getKey(), newRepoCollection.getVersionChecksum());
+      }
+    }
+    return newRepoCollection;
   }
 
 

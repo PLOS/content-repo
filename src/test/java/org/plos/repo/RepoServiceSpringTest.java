@@ -200,8 +200,8 @@ package org.plos.repo;
     Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) == null);
     List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), null, null, null); 
     Assert.assertTrue(journalList.size() == 2);
-    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE));
-    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.DELETE));
+    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE_BUCKET));
+    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.DELETE_BUCKET));
     sqlService.releaseConnection();
     Assert.assertFalse(objectStore.bucketExists(bucket1));
 
@@ -245,9 +245,10 @@ package org.plos.repo;
     Assert.assertTrue(objFromDb.getKey().equals("key1"));
     List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), "key1", null, null);
     Assert.assertTrue(journalList.size() == 1);
-    Assert.assertTrue(journalList.get(0).getBucketName().equals(bucket1.getBucketName()));
-    Assert.assertTrue(journalList.get(0).getObjKey().equals("key1"));
-    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE));
+    Journal journal = journalList.get(0);
+    Assert.assertTrue(journal.getBucket().equals(bucket1.getBucketName()));
+    Assert.assertTrue(journal.getKey().equals("key1"));
+    Assert.assertTrue(journal.getOperation().equals(Operation.CREATE_OBJECT));
     sqlService.releaseConnection();
 
     Assert.assertTrue(objectStore.objectExists(objFromDb));
@@ -319,7 +320,7 @@ package org.plos.repo;
     sqlService.getReadOnlyConnection();
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), "key1");
     Assert.assertTrue(objFromDb == null);
-    Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), "key1", null, null).size() == 0);
+    Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), "key1", Operation.CREATE_OBJECT, null).size() == 0);
     sqlService.releaseConnection();
     RepoObject repoObject = new RepoObject();
     repoObject.setChecksum("cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151");
@@ -349,8 +350,8 @@ package org.plos.repo;
     Assert.assertTrue(objFromDb.getKey().equals("key1"));
     List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), "key1", null, null);
     Assert.assertTrue(journalList.size() == 2);
-    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE));
-    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.UPDATE));
+    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE_OBJECT));
+    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.UPDATE_OBJECT));
     sqlService.releaseConnection();
 
     Assert.assertTrue(objectStore.objectExists(objFromDb));
@@ -462,8 +463,8 @@ package org.plos.repo;
     Assert.assertTrue(objFromDb.getKey().equals("key1"));
     List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), "key1", null, null);
     Assert.assertTrue(journalList.size() == 2);
-    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE));
-    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.UPDATE));
+    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE_OBJECT));
+    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.UPDATE_OBJECT));
     sqlService.releaseConnection();
 
     Assert.assertTrue(objectStore.objectExists(objFromDb));
@@ -510,7 +511,7 @@ package org.plos.repo;
     Assert.assertTrue(objFromDb.getKey().equals("key1"));
     List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), "key1", null, null);
     Assert.assertTrue(journalList.size() == 3);
-    Assert.assertTrue(journalList.get(2).getOperation().equals(Operation.DELETE));
+    Assert.assertTrue(journalList.get(2).getOperation().equals(Operation.DELETE_OBJECT));
     sqlService.releaseConnection();
 
     Assert.assertTrue(objectStore.objectExists(objFromDb));
@@ -568,8 +569,8 @@ package org.plos.repo;
     sqlService.getReadOnlyConnection();
     List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), "key1", null, null);
     Assert.assertTrue(journalList.size() == 2);
-    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE));
-    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.PURGE));
+    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE_OBJECT));
+    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.PURGE_OBJECT));
     sqlService.releaseConnection();      
       
   }
@@ -623,9 +624,9 @@ package org.plos.repo;
     Assert.assertNull(sqlService.getObject(bucket1.getBucketName(), "key1", null, object2.getVersionChecksum(), null));
     List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), "key1", null, null);
     Assert.assertTrue(journalList.size() == 3);
-    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE));
-    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.UPDATE));
-    Assert.assertTrue(journalList.get(2).getOperation().equals(Operation.PURGE));
+    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE_OBJECT));
+    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.UPDATE_OBJECT));
+    Assert.assertTrue(journalList.get(2).getOperation().equals(Operation.PURGE_OBJECT));
     sqlService.releaseConnection();
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 1);

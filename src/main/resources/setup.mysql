@@ -70,11 +70,9 @@ CREATE TABLE IF NOT EXISTS collectionObject (
 CREATE TABLE IF NOT EXISTS journal (
     id INTEGER NOT NULL AUTO_INCREMENT,
     bucketName VARCHAR (255) NOT NULL,
-    objkey VARCHAR (255),
-    collKey VARCHAR (255),
-    operation VARCHAR (10),
-    versionChecksumObject VARCHAR (255),
-    versionChecksumCollection VARCHAR (255),
+    keyValue VARCHAR (255),
+    operation VARCHAR (20) NOT NULL,
+    versionChecksum VARCHAR (255),
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
 );

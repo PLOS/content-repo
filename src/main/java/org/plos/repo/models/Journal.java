@@ -23,32 +23,22 @@ import java.sql.Timestamp;
 public class Journal {
   
   private Integer id;
-  private String bucketName;
-  private String objKey;
-  private String collKey;
+  private String bucket;
+  private String key;
   private Operation operation;
-  private String versionChecksumObject;
-  private String versionChecksumCollection;
+  private String versionChecksum;
   private Timestamp timestamp;
 
-  public Journal(String bucketName, String objKey, Operation operation, String versionChecksumObject) {
-    this.bucketName = bucketName;
-    this.objKey = objKey;
-    this.operation = operation;
-    this.versionChecksumObject = versionChecksumObject;
-  }
 
-  public Journal(String bucketName, String objKey, String collKey, Operation operation, String versionChecksumObject, String versionChecksumCollection) {
-    this.bucketName = bucketName;
-    this.objKey = objKey;
-    this.collKey = collKey;
+  public Journal(String bucket, String key, Operation operation, String versionChecksum) {
+    this.bucket = bucket;
+    this.key = key;
     this.operation = operation;
-    this.versionChecksumObject = versionChecksumObject;
-    this.versionChecksumCollection = versionChecksumCollection;
+    this.versionChecksum = versionChecksum;
   }
   
-  public Journal(String bucketName, Operation operation) {
-    this.bucketName = bucketName;
+  public Journal(String bucket, Operation operation) {
+    this.bucket = bucket;
     this.operation = operation;
   }
 
@@ -56,32 +46,24 @@ public class Journal {
     return id;
   }
 
-  public String getBucketName() {
-    return bucketName;
+  public String getBucket() {
+    return bucket;
+  }
+
+  public String getKey() {
+    return key;
   }
 
   public Timestamp getTimestamp() {
     return timestamp;
   }
 
-  public String getObjKey() {
-    return objKey;
-  }
-
-  public String getCollKey() {
-    return collKey;
-  }
-
-  public Operation getOperation() { 
+  public Operation getOperation() {
     return operation; 
   }
 
-  public String getVersionChecksumObject() { 
-    return versionChecksumObject; 
-  }
-
-  public String getVersionChecksumCollection() {
-    return versionChecksumCollection;
+  public String getVersionChecksum() { 
+    return versionChecksum; 
   }
 
   public void setId(Integer id) {
@@ -92,7 +74,5 @@ public class Journal {
     this.timestamp = timestamp;
   }
 
-  public void setOperation(Operation operation) {
-    this.operation = operation;
-  }
+  public void setOperation(Operation operation) { this.operation = operation; }
 }
