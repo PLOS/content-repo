@@ -18,9 +18,8 @@ CREATE TABLE IF NOT EXISTS CREPO_SCHEMA_INFO (
 CREATE TABLE IF NOT EXISTS journal (
     id INTEGER NOT NULL AUTO_INCREMENT,
     bucketName VARCHAR (255) NOT NULL,
-    objkey VARCHAR (255),
-    collKey VARCHAR (255),
-    operation VARCHAR (10),
+    keyValue VARCHAR (255),
+    operation VARCHAR (20) NOT NULL,
     versionChecksum VARCHAR (255),
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
@@ -30,4 +29,4 @@ CREATE TABLE IF NOT EXISTS journal (
 # INSERT the version string. This should happen last.
 # The temporal order will indicate which scripts have been
 # run to update this database.
-INSERT CREPO_SCHEMA_INFO SET schema_ver = '02-add-journal';
+INSERT CREPO_SCHEMA_INFO SET schema_ver = '03-add-journal';
