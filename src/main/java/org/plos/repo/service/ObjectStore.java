@@ -51,9 +51,9 @@ public abstract class ObjectStore {
 //    return BucketNameUtils.isValidV2BucketName(bucketName);
 //  }
   /**
-   * Retrieve the URLs of the given repo object <code>repoObject</code>. Return null if the
-   * data does not exist and set the status MISSING_DATA to object, or throw a 
-   * {@link org.plos.repo.service.RepoException} if an error occurs.
+   * Retrieve the URLs of the given repo object <code>repoObject</code>. 
+   * Set the status MISSING_DATA to object if the file paths are null or occurs an error trying to get them,
+   * throw a {@link org.plos.repo.service.RepoException} if an error occurs.
    *
    * @param repoObject a single {@link org.plos.repo.models.RepoObject} that represents the
    *                   object to be searched.
@@ -61,27 +61,28 @@ public abstract class ObjectStore {
    * @throws RepoException
    */
   protected URL[] getRedirectURLs(RepoObject repoObject) throws RepoException{
-    URL[] urls = null;
+
+    URL[] urls = new URL[0];
     try {
+
       String[] paths = getFilePaths(repoObject);
-      if( paths != null && paths.length > 0 ) {
+      
+      if(paths.length > 0) {
         int pathCount = paths.length;
         urls = new URL[pathCount];
 
         for (int i = 0; i < pathCount; i++) {
           urls[i] = new URL(paths[i]);
         }
-        
-      } else { 
-        urls = new URL[0];
-        repoObject.setStatus(Status.MISSING_DATA);
-        log.info(" Missing Data when trying to fetch reproxy url, key: {} , bucket name: {} , content checksum: {} , version number: {} ",
-                repoObject.getKey(),
-                repoObject.getBucketName(),
-                repoObject.getChecksum(),
-                repoObject.getVersionNumber());
       }
-
+      
+    } catch (RepoException e){
+      repoObject.setStatus(Status.MISSING_DATA);
+      log.error(" Missing Data when trying to fetch reproxy url, key: {} , bucket name: {} , content checksum: {} , version number: {} ",
+              repoObject.getKey(),
+              repoObject.getBucketName(),
+              repoObject.getChecksum(),
+              repoObject.getVersionNumber());
     } catch (MalformedURLException e) {
       throw new RepoException(RepoException.Type.ServerError);
     } catch (Exception e) {
@@ -93,7 +94,15 @@ public abstract class ObjectStore {
 
   abstract public Boolean hasXReproxy();
 
-  abstract public String[]  getFilePaths(RepoObject repoObject) throws RepoException;
+  /**
+   * Retrieve the file paths of the given repo object <code>repoObject</code>.
+   * Throw a {@link org.plos.repo.service.RepoException} if the path is null or an error occurs.
+   * @param repoObject a single {@link org.plos.repo.models.RepoObject} that represents the
+   *                   object to be searched.
+   * @return an String array wih the file paths of the given repoObject
+   * @throws RepoException
+   */
+  abstract public String[]  getFilePaths(RepoObject repoObject) throws Exception;
 
   abstract public Boolean objectExists(RepoObject repoObject);
 

@@ -19,6 +19,7 @@ package org.plos.repo.service;
 
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
+import org.plos.repo.models.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,17 +100,18 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
   @Override
-  public String[] getFilePaths(RepoObject repoObject) throws RepoException {
-    String paths[] = null;
+  public String[] getFilePaths(RepoObject repoObject) throws Exception {
     
     if (!hasXReproxy())
       return new String[0]; // since the filesystem is not reproxyable
-
-    String path = new String(reproxyBaseUrl + "/" + repoObject.getBucketName() + "/" + repoObject.getChecksum().substring(0, 2) + "/" + repoObject.getChecksum());
-    if(path != null){
-      paths = new String[]{path};
-    }
-    return paths;
+    
+    String path = reproxyBaseUrl + "/" + repoObject.getBucketName() + "/" + repoObject.getChecksum().substring(0, 2) + "/" + repoObject.getChecksum();
+    
+    if (path == null) {
+      throw new RepoException(RepoException.Type.ObjectFilePathMissing);
+    } 
+    
+    return new String[]{path};
   }
 
   @Override

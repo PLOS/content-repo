@@ -111,11 +111,11 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     };
 
     this.endGate = new CountDownLatch(INSERT_THREADS + DELETE_THREADS + READER_THREADS);
-    execute(INSERT_THREADS, 0, DELETE_THREADS, READER_THREADS, callback);
+    execute(INSERT_THREADS, 0, DELETE_THREADS, READER_THREADS, callback, false);
 
     this.startGate = new CountDownLatch(1);
     this.endGate = new CountDownLatch(UPDATE_THREADS + DELETE_THREADS + READER_THREADS);
-    execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
+    execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback, true);
 
     List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
     // since BASE_KEY_NAME is created we create a new version for each iteration even if nothing change from last version
@@ -156,14 +156,14 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     };
 
     this.endGate = new CountDownLatch(INSERT_THREADS + DELETE_THREADS + READER_THREADS);
-    execute(INSERT_THREADS, 0, DELETE_THREADS, READER_THREADS, callback);
+    execute(INSERT_THREADS, 0, DELETE_THREADS, READER_THREADS, callback, false);
     List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
     // creating just one object with same key. The rest of the threads are going to throw an error saying that you can't create an object that already exists
     assertEquals(1, repoObjects.size());
 
     this.startGate = new CountDownLatch(1);
     this.endGate = new CountDownLatch(UPDATE_THREADS + DELETE_THREADS + READER_THREADS);
-    execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
+    execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback, false);
 
     repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
     // update threads version the previous created object. The total objects created should be 1 + UPDATE_THREADS
@@ -202,7 +202,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     };
 
     this.endGate = new CountDownLatch(INSERT_THREADS + READER_THREADS);
-    execute(INSERT_THREADS, 0, 0, READER_THREADS, callback);
+    execute(INSERT_THREADS, 0, 0, READER_THREADS, callback, false);
 
     List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
     assertEquals(1, repoObjects.size());
@@ -216,14 +216,14 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     this.startGate = new CountDownLatch(1);
     this.endGate = new CountDownLatch(UPDATE_THREADS  + READER_THREADS);
-    execute(0, UPDATE_THREADS, 0, READER_THREADS, callbackUp);
+    execute(0, UPDATE_THREADS, 0, READER_THREADS, callbackUp, true);
 
     repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
     assertEquals(1 + UPDATE_THREADS, repoObjects.size());
 
     this.startGate = new CountDownLatch(1);
     this.endGate = new CountDownLatch(DELETE_THREADS + READER_THREADS);
-    execute(0, 0, DELETE_THREADS, READER_THREADS, callbackUp);
+    execute(0, 0, DELETE_THREADS, READER_THREADS, callbackUp, false);
 
     repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
     assertEquals(1 + UPDATE_THREADS - DELETE_THREADS, repoObjects.size());
@@ -264,7 +264,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     };
 
-    execute(INSERT_THREADS, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
+    execute(INSERT_THREADS, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback, false);
 
     List<RepoObject> repoObjects = repoService.listObjects(BUCKET_NAME, null, null, false, false, null);
 
@@ -284,7 +284,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
   private void execute(final int insertThreads, final int updateThreads,
                        final int deleteThreads,
-                       final int readerThreads, final Callback cb)
+                       final int readerThreads, final Callback cb,
+                       final boolean isSleep)
       throws InterruptedException {
 
 /* ------------------------------------------------------------------
@@ -350,6 +351,11 @@ public class ObjectLockTest extends RepoBaseSpringTest {
           try {
             startGate.await();  // don't start until startGate is 0
             try {
+              // The thread sleep for a second to prevent the SQLIntegrityConstraintViolationException with KEYSUM constraint
+              if(isSleep) {
+                Thread.sleep(j * 1000);
+              }
+              
               Timestamp creationDateTime = new Timestamp(new Date().getTime());
               RepoObject versionedRepoObject = repoService.createObject(RepoService.CreateMethod.VERSION, cb.getKeyname(j), BUCKET_NAME, null, null, creationDateTime, IOUtils.toInputStream(OBJECT_DATA), creationDateTime, cb.getTag(j));
 

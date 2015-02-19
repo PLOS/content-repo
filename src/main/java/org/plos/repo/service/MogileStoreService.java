@@ -81,13 +81,12 @@ public class MogileStoreService extends ObjectStore {
   }
 
   @Override
-  public String[] getFilePaths(RepoObject repoObject) throws RepoException {
-    String[]  paths = null;
-    try {
-      paths = mfs.getPaths(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()), true);
-    } catch (Exception e){
-      throw new RepoException(e);
-    }
+  public String[] getFilePaths(RepoObject repoObject) throws Exception {
+
+    String[]  paths = mfs.getPaths(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()), true);
+      if (paths == null)
+        throw new RepoException(RepoException.Type.ObjectFilePathMissing);
+
     return paths;
   }
   
