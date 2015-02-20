@@ -15,7 +15,7 @@ TIMEOUT = 30         # API call timeout, in seconds
 wait_timeout = 60
 
 # WebDriver's Page Load timeout (in seconds)
-page_load_timeout = 20
+page_load_timeout = 30
 
 # Framework's link verification timeout (in seconds)
 verify_link_timeout = 3
@@ -40,6 +40,9 @@ when **WEBDRIVER_ENVIRONMENT** is `dev`
 
 environment = getenv('WEBDRIVER_ENVIRONMENT', 'dev')
 base_url = getenv('WEBDRIVER_TARGET_URL', 'http://one-dpro.plosjournals.org/wombat')
+rhino_url = getenv('WEBDRIVER_RHINO_URL', 'http://one-dpro.plosjournals.org/v1')
+mysql_host = getenv('WEBDRIVER_MYSQL_HOST', 'sfo-dpro-devstack01.int.plos.org')
+crepo_host = getenv('WEBDRIVER_CREPO_HOST', 'sfo-dpro-devstack01.int.plos.org')
 
 
 """
@@ -48,14 +51,14 @@ Create a DB Configuration for use in MySQL.py
 
 dbconfig = {'user': 'root',
             'password': '',
-            'host': 'sfo-dpro-devstack01.int.plos.org',
+            'host': mysql_host,
             'port': 3306,
             'database': 'ambra',
             'connection_timeout': 10,
             }
 
 repo_config = {'transport': 'http',
-               'host': 'sfo-dpro-devstack01.int.plos.org',
+               'host': crepo_host,
                'port': 8016,
                'path': '/v1',
                }
