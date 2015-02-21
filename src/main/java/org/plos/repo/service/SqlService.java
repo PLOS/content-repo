@@ -58,6 +58,7 @@ public abstract class SqlService {
     repoObject.setVersionNumber(rs.getInt("VERSIONNUMBER"));
     repoObject.setCreationDate(rs.getTimestamp("CREATIONDATE"));
     repoObject.setVersionChecksum(rs.getString("VERSIONCHECKSUM"));
+    repoObject.setUserMetadata(rs.getString("USERMETADATA"));
     return  repoObject;
   }
 
@@ -70,6 +71,7 @@ public abstract class SqlService {
     collection.setTag(rs.getString("TAG"));
     collection.setCreationDate(rs.getTimestamp("CREATIONDATE"));
     collection.setVersionChecksum(rs.getString("VERSIONCHECKSUM"));
+    collection.setUserMetadata(rs.getString("USERMETADATA"));
     return collection;
   }
 
@@ -481,7 +483,8 @@ public abstract class SqlService {
 
     try {
 
-      p = connectionLocal.get().prepareStatement("INSERT INTO objects (objKey, checksum, timestamp, bucketId, contentType, downloadName, size, tag, versionNumber, status, creationDate, versionChecksum) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+      p = connectionLocal.get().prepareStatement("INSERT INTO objects (objKey, checksum, timestamp, bucketId, contentType, downloadName, size, " +
+          "tag, versionNumber, status, creationDate, versionChecksum, userMetadata) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
       p.setString(1, repoObject.getKey());
       p.setString(2, repoObject.getChecksum());
@@ -495,6 +498,7 @@ public abstract class SqlService {
       p.setInt(10, repoObject.getStatus().getValue());
       p.setTimestamp(11, repoObject.getTimestamp());
       p.setString(12, repoObject.getVersionChecksum());
+      p.setString(13,repoObject.getUserMetadata());
 
       return p.executeUpdate();
 
@@ -1137,7 +1141,7 @@ public abstract class SqlService {
 
     try {
       p =
-          connectionLocal.get().prepareStatement("INSERT INTO collections (bucketId, collkey, timestamp, status, versionNumber, tag, creationDate, versionChecksum) VALUES (?,?,?,?,?,?,?,?)",
+          connectionLocal.get().prepareStatement("INSERT INTO collections (bucketId, collkey, timestamp, status, versionNumber, tag, creationDate, versionChecksum, userMetadata) VALUES (?,?,?,?,?,?,?,?,?)",
               Statement.RETURN_GENERATED_KEYS);
 
       p.setInt(1, repoCollection.getBucketId());
@@ -1148,6 +1152,7 @@ public abstract class SqlService {
       p.setString(6, repoCollection.getTag());
       p.setTimestamp(7, repoCollection.getCreationDate());
       p.setString(8, repoCollection.getVersionChecksum());
+      p.setString(9,repoCollection.getUserMetadata());
 
       p.executeUpdate();
       keys = p.getGeneratedKeys();

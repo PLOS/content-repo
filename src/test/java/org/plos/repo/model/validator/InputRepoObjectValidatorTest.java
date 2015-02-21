@@ -1,12 +1,14 @@
 /*
- * Copyright (c) 2006-2014 by Public Library of Science
- * http://plos.org
+ * Copyright (c) 2006-2015 by Public Library of Science
+ *
+ *    http://plos.org
+ *    http://ambraproject.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,7 +25,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.input.InputObject;
+import org.plos.repo.models.input.InputRepoObject;
 import org.plos.repo.models.validator.InputCollectionValidator;
+import org.plos.repo.models.validator.InputRepoObjectValidator;
 import org.plos.repo.models.validator.JsonStringValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
 import org.plos.repo.service.RepoException;
@@ -39,7 +43,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 /**
  * Input Collection Validator test.
  */
-public class InputCollectionValidatorTest {
+public class InputRepoObjectValidatorTest {
 
   private static final String VALID_KEY = "valid-key";
   private static final String VALID_BUCKET_NAME = "valid-bucket-name";
@@ -48,13 +52,13 @@ public class InputCollectionValidatorTest {
   private static final String VALID_USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\"}";
 
   @InjectMocks
-  private InputCollectionValidator inputCollectionValidator;
+  private InputRepoObjectValidator inputRepoObjectValidator;
 
   @Mock
   private TimestampInputValidator timestampInputValidator;
 
   @Mock
-  private InputCollection inputCollection;
+  private InputRepoObject inputRepoObject;
 
   @Mock
   private JsonStringValidator jsonStringValidator;
@@ -63,7 +67,7 @@ public class InputCollectionValidatorTest {
 
   @Before
   public void setUp(){
-    inputCollectionValidator = new InputCollectionValidator();
+    inputRepoObjectValidator = new InputRepoObjectValidator();
     initMocks(this);
   }
 
@@ -72,7 +76,7 @@ public class InputCollectionValidatorTest {
 
     mockInputCollectionCalls(inputObjects);
 
-    inputCollectionValidator.validate(inputCollection);
+    inputRepoObjectValidator.validate(inputRepoObject);
 
     verifyInputCollectionCalls(2);
 
@@ -82,11 +86,11 @@ public class InputCollectionValidatorTest {
   public void validateNoKeyTest() throws RepoException {
 
     try{
-      inputCollectionValidator.validate(inputCollection);
+      inputRepoObjectValidator.validate(inputRepoObject);
       fail(FAIL_MSG);
     } catch(RepoException re){
-      assertEquals(re.getType(), RepoException.Type.NoCollectionKeyEntered);
-      verify(inputCollection).getKey();
+      assertEquals(re.getType(), RepoException.Type.NoKeyEntered);
+      verify(inputRepoObject).getKey();
     }
 
   }
@@ -94,56 +98,40 @@ public class InputCollectionValidatorTest {
   @Test
   public void validateNoBucketNameTest() throws RepoException {
 
-    when(inputCollection.getKey()).thenReturn(VALID_KEY);
+    when(inputRepoObject.getKey()).thenReturn(VALID_KEY);
     try{
-      inputCollectionValidator.validate(inputCollection);
+      inputRepoObjectValidator.validate(inputRepoObject);
       fail(FAIL_MSG);
     } catch(RepoException re){
       assertEquals(re.getType(), RepoException.Type.NoBucketEntered);
-      verify(inputCollection).getKey();
-    }
-
-  }
-
-  @Test
-  public void validateNoObjectsTest() throws RepoException {
-    mockInputCollectionCalls(null);
-    try{
-      inputCollectionValidator.validate(inputCollection);
-      fail(FAIL_MSG);
-    } catch(RepoException re){
-      assertEquals(re.getType(), RepoException.Type.CantCreateCollectionWithNoObjects);
-      verifyInputCollectionCalls(1);
+      verify(inputRepoObject).getKey();
     }
 
   }
 
   private void mockInputCollectionCalls(List<InputObject> objects) throws RepoException {
-    when(inputCollection.getKey()).thenReturn(VALID_KEY);
-    when(inputCollection.getBucketName()).thenReturn(VALID_BUCKET_NAME);
-    when(inputCollection.getTimestamp()).thenReturn(VALID_TIMESTAMP);
-    when(inputCollection.getCreationDateTime()).thenReturn(VALID_TIMESTAMP);
-    when(inputCollection.getUserMetadata()).thenReturn(VALID_USER_METADATA);
+    when(inputRepoObject.getKey()).thenReturn(VALID_KEY);
+    when(inputRepoObject.getBucketName()).thenReturn(VALID_BUCKET_NAME);
+    when(inputRepoObject.getTimestamp()).thenReturn(VALID_TIMESTAMP);
+    when(inputRepoObject.getCreationDateTime()).thenReturn(VALID_TIMESTAMP);
+    when(inputRepoObject.getUserMetadata()).thenReturn(VALID_USER_METADATA);
 
     doNothing().when(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseTimestamp);
     doNothing().when(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseCreationDate);
     doNothing().when(jsonStringValidator).validate(VALID_USER_METADATA, RepoException.Type.InvalidUserMetadataFormat);
 
-    when(inputCollection.getObjects()).thenReturn(objects);
   }
 
   private void verifyInputCollectionCalls(Integer getObjectsCalls) throws RepoException{
-    verify(inputCollection).getKey();
-    verify(inputCollection).getKey();
-    verify(inputCollection).getBucketName();
-    verify(inputCollection).getTimestamp();
-    verify(inputCollection).getCreationDateTime();
-    verify(inputCollection).getUserMetadata();
+    verify(inputRepoObject).getKey();
+    verify(inputRepoObject).getKey();
+    verify(inputRepoObject).getBucketName();
+    verify(inputRepoObject).getTimestamp();
+    verify(inputRepoObject).getCreationDateTime();
+    verify(inputRepoObject).getUserMetadata();
 
     verify(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseTimestamp);
     verify(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseCreationDate);
-
-    verify(inputCollection, times(getObjectsCalls)).getObjects();
 
     verify(jsonStringValidator).validate(VALID_USER_METADATA, RepoException.Type.InvalidUserMetadataFormat);
   }

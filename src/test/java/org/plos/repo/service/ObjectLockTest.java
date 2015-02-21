@@ -1,21 +1,22 @@
-/*
- * Copyright (c) 2006-2014 by Public Library of Science
- * http://plos.org
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.plos.repo.service;
+
+import org.plos.repo.RepoBaseSpringTest;
+
+/* Copyright (c) 2006-2014 by Public Library of Science
+* http://plos.org
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -23,6 +24,7 @@ import org.junit.Test;
 import org.plos.repo.RepoBaseSpringTest;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.input.ElementFilter;
+import org.plos.repo.models.input.InputRepoObject;
 
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
@@ -31,6 +33,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -54,11 +57,12 @@ public class ObjectLockTest extends RepoBaseSpringTest {
   private CountDownLatch startGate;
   private CountDownLatch endGate;
 
-    /**
+/*
     * JUnit only captures assertion errors raised in the main thread, so we'll
-    * create an explicit error instance to record assertion failures in 
+    * create an explicit error instance to record assertion failures in
     * in worker threads (only the first). Guard access with lock object.
-    */
+*/
+
 
   private AssertionError assertionFailure;
   private final java.lang.Object lock = new java.lang.Object();
@@ -69,6 +73,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     String getKeyname(int i);
 
     String getTag(int i);
+
+    String getData(int i);
   }
 
   @Before
@@ -107,6 +113,10 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
       public String getTag(int i) {
         return null;
+      }
+
+      public String getData(int i) {
+        return OBJECT_DATA;
       }
     };
 
@@ -151,6 +161,10 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
       public String getTag(int i) {
         return "TAG" + i;
+      }
+
+      public String getData(int i){
+        return OBJECT_DATA + i;
       }
 
     };
@@ -199,6 +213,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
       public String getTag(int i) { return null; }
 
+      public String getData(int i) { return OBJECT_DATA + 1; }
+
     };
 
     this.endGate = new CountDownLatch(INSERT_THREADS + READER_THREADS);
@@ -211,6 +227,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       public String getKeyname(int i) { return BASE_KEY_NAME; }
 
       public String getTag(int i) { return "TAG" + i; }
+
+      public String getData(int i) { return OBJECT_DATA + i; }
 
     };
 
@@ -243,7 +261,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     verify(spySqlService, times(READER_THREADS*2)).getObject(anyString(), anyString(), anyInt(), anyString(), anyString()); // reading objects (3 times) + deleting objects
   }
 
-@Test
+  @Test
 
   // TODO : rewrite test to include the new changes
   public void testReaderAndWritersDifferentKeys() throws Exception {
@@ -261,6 +279,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       }
 
       public String getTag(int i) { return "TAG" + i; }
+
+      public String getData(int i) { return OBJECT_DATA + i; }
 
     };
 
@@ -285,13 +305,14 @@ public class ObjectLockTest extends RepoBaseSpringTest {
   private void execute(final int insertThreads, final int updateThreads,
                        final int deleteThreads,
                        final int readerThreads, final Callback cb)
-      throws InterruptedException {
+          throws InterruptedException {
 
 /* ------------------------------------------------------------------
 
    INSERT
 
- ------------------------------------------------------------------ */
+------------------------------------------------------------------ */
+
 
 
     for (int i = 0; i < insertThreads; i++) {
@@ -301,15 +322,14 @@ public class ObjectLockTest extends RepoBaseSpringTest {
           try {
             startGate.await();  // don't start until startGate is 0
             try {
-              Timestamp creationDateTime = new Timestamp(new Date().getTime());
-              RepoObject repoObject = repoService.createObject(RepoService.CreateMethod.NEW, cb.getKeyname(j), BUCKET_NAME, null, null, creationDateTime, IOUtils.toInputStream(OBJECT_DATA), creationDateTime, cb.getTag(j));
+              RepoObject repoObject = repoService.createObject(RepoService.CreateMethod.NEW, createInputRepoObject(cb, j));
 
               if (!repoObject.getKey().equals(cb.getKeyname(j))) {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
-                        "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), repoObject.getKey(),
-                        "insert failed"));
+                            "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), repoObject.getKey(),
+                            "insert failed"));
                   }
                 }
               }
@@ -319,8 +339,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
-                        "Can not create new object:%s Reason:%s", cb.getKeyname(j),
-                        e.getMessage()));
+                            "Can not create new object:%s Reason:%s", cb.getKeyname(j),
+                            e.getMessage()));
                   }
                 }
               }
@@ -336,11 +356,12 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       t.start();
     }
 
- /* ------------------------------------------------------------------
+ /*------------------------------------------------------------------
 
    UPDATE
 
- ------------------------------------------------------------------ */
+------------------------------------------------------------------ */
+
 
 
     for (int i = 0; i < updateThreads; i++) {
@@ -350,15 +371,14 @@ public class ObjectLockTest extends RepoBaseSpringTest {
           try {
             startGate.await();  // don't start until startGate is 0
             try {
-              Timestamp creationDateTime = new Timestamp(new Date().getTime());
-              RepoObject versionedRepoObject = repoService.createObject(RepoService.CreateMethod.VERSION, cb.getKeyname(j), BUCKET_NAME, null, null, creationDateTime, IOUtils.toInputStream(OBJECT_DATA), creationDateTime, cb.getTag(j));
+              RepoObject versionedRepoObject = repoService.createObject(RepoService.CreateMethod.AUTO, createInputRepoObject(cb, j));
 
               if (!versionedRepoObject.getKey().equals(cb.getKeyname(j))) {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
-                        "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), versionedRepoObject.getKey(),
-                        "insert failed"));
+                            "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), versionedRepoObject.getKey(),
+                            "insert failed"));
                   }
                 }
               }
@@ -369,8 +389,9 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
-                        "Can not version object:%s Reason:%s", cb.getKeyname(j),
-                        e.getMessage()));
+                            "Can not version object:%s , tag:%s , data:%s , Reason:%s", cb.getKeyname(j),
+                            cb.getTag(j), cb.getData(j),
+                            e.getMessage()));
                   }
                 }
               }
@@ -386,11 +407,12 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       t.start();
     }
 
-/*  ------------------------------------------------------------------
+/* ------------------------------------------------------------------
 
   DELETE
 
- ------------------------------------------------------------------ */
+------------------------------------------------------------------ */
+
 
 
     for (int i = 0; i < deleteThreads; i++) {
@@ -398,7 +420,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       final Thread t = new Thread() {
         public void run() {
           try {
-            startGate.await();  // don't start until startGate is 0 
+            startGate.await();  // don't start until startGate is 0
             try {
               repoService.deleteObject(BUCKET_NAME, cb.getKeyname(j), false, new ElementFilter(null, cb.getTag(j), null));
             } finally {
@@ -411,7 +433,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
               synchronized (lock) {
                 if (assertionFailure == null) {
                   assertionFailure = new AssertionError(String.format(
-                      "Delete failed for:%s Reason:%s", cb.getKeyname(j), e.getMessage()));
+                          "Delete failed for:%s Reason:%s", cb.getKeyname(j), e.getMessage()));
                 }
               }
             }
@@ -424,11 +446,12 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       t.start();
     }
 
- /* ------------------------------------------------------------------
+/* ------------------------------------------------------------------
 
   READER
 
- ------------------------------------------------------------------ */
+------------------------------------------------------------------ */
+
 
 
     for (int i = 0; i < readerThreads; i++) {
@@ -436,7 +459,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       final Thread t = new Thread() {
         public void run() {
           try {
-            startGate.await();  // don't start until startGate is 0 
+            startGate.await();  // don't start until startGate is 0
             try {
 
               RepoObject repoObject = repoService.getObject(BUCKET_NAME, cb.getKeyname(j), new ElementFilter(null, cb.getTag(j), null));
@@ -447,18 +470,18 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
-                        "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), repoObject.getKey(),
-                        "read metadata failed"));
+                            "Expected:%s Actual:%s Reason:%s", cb.getKeyname(j), repoObject.getKey(),
+                            "read metadata failed"));
                   }
                 }
               }
 
-              if (!outputData.equals(OBJECT_DATA)) {
+              if (!outputData.equals(cb.getData(j))) {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
-                        "Expected:%s Actual:%s Reason:%s", OBJECT_DATA, outputData,
-                        "data read mismatch"));
+                            "Expected:%s Actual:%s Reason:%s", cb.getData(j), outputData,
+                            "data read mismatch"));
                   }
                 }
               }
@@ -473,7 +496,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
               synchronized (lock) {
                 if (assertionFailure == null) {
                   assertionFailure = new AssertionError(String.format(
-                      "Read failed for:%s Reason:%s", cb.getKeyname(j), e.getMessage()));
+                          "Read failed for:%s Reason:%s", cb.getKeyname(j), e.getMessage()));
                 }
               }
             }
@@ -487,15 +510,28 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     }
 
     startGate.countDown();
- //start all client threads
+//start all client threads
 
     endGate.await();
- //wait until all threads have finished (L=0)
+//wait until all threads have finished (L=0)
 
 
     if (this.assertionFailure != null) {
       throw this.assertionFailure;
     }
+  }
+
+  private InputRepoObject createInputRepoObject(Callback cb, int threadNumber) {
+
+    Timestamp creationDateTime = new Timestamp(new Date().getTime());
+    InputRepoObject inputRepoObject = new InputRepoObject();
+    inputRepoObject.setKey(cb.getKeyname(threadNumber));
+    inputRepoObject.setBucketName(BUCKET_NAME);
+    inputRepoObject.setTimestamp(creationDateTime.toString());
+    inputRepoObject.setUploadedInputStream(IOUtils.toInputStream(cb.getData(threadNumber)));
+    inputRepoObject.setCreationDateTime(creationDateTime.toString());
+    inputRepoObject.setTag(cb.getTag(threadNumber));
+    return inputRepoObject;
   }
 
 }
