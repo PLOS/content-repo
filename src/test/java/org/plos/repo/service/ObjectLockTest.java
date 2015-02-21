@@ -149,10 +149,10 @@ public class ObjectLockTest extends RepoBaseSpringTest {
   @Test
   public void testReaderAndWritersSameKeyDifferentData() throws Exception {
 
-    final int INSERT_THREADS = 25;
-    final int UPDATE_THREADS = 100;
+    final int INSERT_THREADS = 10;
+    final int UPDATE_THREADS = 20;
     final int DELETE_THREADS = 0;
-    final int READER_THREADS = 100;
+    final int READER_THREADS = 25;
 
     Callback callback = new Callback() {
       public String getKeyname(int i) {
@@ -204,9 +204,9 @@ public class ObjectLockTest extends RepoBaseSpringTest {
   public void testReaderAndWritersSameKeyWithDeletions() throws Exception {
 
     final int INSERT_THREADS = 25;
-    final int UPDATE_THREADS = 100;
+    final int UPDATE_THREADS = 20;
     final int DELETE_THREADS = 10;
-    final int READER_THREADS = 125;
+    final int READER_THREADS = 25;
 
     Callback callback = new Callback() {
       public String getKeyname(int i) { return BASE_KEY_NAME; }
