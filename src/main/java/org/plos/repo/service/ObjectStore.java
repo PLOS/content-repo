@@ -77,12 +77,16 @@ public abstract class ObjectStore {
       }
       
     } catch (RepoException e){
-      repoObject.setStatus(Status.MISSING_DATA);
-      log.error(" Missing Data when trying to fetch reproxy url, key: {} , bucket name: {} , content checksum: {} , version number: {} ",
-              repoObject.getKey(),
-              repoObject.getBucketName(),
-              repoObject.getChecksum(),
-              repoObject.getVersionNumber());
+      if(RepoException.Type.ObjectFilePathMissing.equals(e.getType()) ) {
+        repoObject.setStatus(Status.MISSING_DATA);
+        log.error(" Missing Data when trying to fetch reproxy url, key: {} , bucket name: {} , content checksum: {} , version number: {} ",
+                repoObject.getKey(),
+                repoObject.getBucketName(),
+                repoObject.getChecksum(),
+                repoObject.getVersionNumber());
+      } else {
+        throw e;
+      }
     } catch (MalformedURLException e) {
       throw new RepoException(RepoException.Type.ServerError);
     } catch (Exception e) {
@@ -102,7 +106,7 @@ public abstract class ObjectStore {
    * @return an String array wih the file paths of the given repoObject
    * @throws RepoException
    */
-  abstract public String[]  getFilePaths(RepoObject repoObject) throws Exception;
+  abstract public String[]  getFilePaths(RepoObject repoObject) throws RepoException;
 
   abstract public Boolean objectExists(RepoObject repoObject);
 

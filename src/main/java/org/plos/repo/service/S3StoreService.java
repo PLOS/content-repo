@@ -80,12 +80,14 @@ public class S3StoreService extends ObjectStore {
 
   @Override
   public String[] getFilePaths(RepoObject repoObject) throws RepoException {
-    String[] paths = null;
+    
     String s3Url = s3Client.getResourceUrl(repoObject.getBucketName(), repoObject.getChecksum());
-    if(s3Url != null){
-      paths = new String[]{s3Url};
+    
+    if (s3Url == null) {
+      throw new RepoException(RepoException.Type.ObjectFilePathMissing);
     }
-    return paths;
+
+    return new String[]{s3Url};
   }
 
   @Override

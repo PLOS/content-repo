@@ -100,17 +100,22 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
   @Override
-  public String[] getFilePaths(RepoObject repoObject) throws Exception {
-    
-    if (!hasXReproxy())
-      return new String[0]; // since the filesystem is not reproxyable
-    
-    String path = reproxyBaseUrl + "/" + repoObject.getBucketName() + "/" + repoObject.getChecksum().substring(0, 2) + "/" + repoObject.getChecksum();
-    
-    if (path == null) {
-      throw new RepoException(RepoException.Type.ObjectFilePathMissing);
-    } 
-    
+  public String[] getFilePaths(RepoObject repoObject) throws RepoException {
+    String path = null;
+    try {
+      
+      if (!hasXReproxy())
+        return new String[0]; // since the filesystem is not reproxyable
+
+      path = reproxyBaseUrl + "/" + repoObject.getBucketName() + "/" + repoObject.getChecksum().substring(0, 2) + "/" + repoObject.getChecksum();
+
+      if (path == null) {
+        throw new RepoException(RepoException.Type.ObjectFilePathMissing);
+      }
+      
+    }catch (Exception e){
+      throw new RepoException(e);
+    }
     return new String[]{path};
   }
 

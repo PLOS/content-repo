@@ -84,7 +84,7 @@ public class InMemoryFileStoreService extends ObjectStore {
 
   @Override
   public String[] getFilePaths(RepoObject repoObject) throws RepoException {
-    return new String[]{}; // since the filesystem is not reproxyable
+    return new String[0]; // since the filesystem is not reproxyable
   }
 
   @Override

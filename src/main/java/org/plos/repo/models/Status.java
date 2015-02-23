@@ -25,7 +25,7 @@ import java.util.EnumSet;
 
 /**
  * Represents the status of an model object.
- * The MISSING_DATA status represents a object with missing URL's into Mogile store, 
+ * The MISSING_DATA status is about not having the actual data that goes with the content repo row/record,
  * The MISSING_DATA status is merely to inform is not saved in the DB
  */
 public enum Status {
