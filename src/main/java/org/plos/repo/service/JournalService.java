@@ -50,16 +50,16 @@ public class JournalService {
         }
     }
 
-    public void deletePurgeObject(String bucketName, String objKey, Status status, ElementFilter elementFilter){
+    public void deletePurgeObject(RepoObject object){
         final boolean result;
-        final Operation operation = Status.DELETED.equals(status) ? Operation.DELETE_OBJECT : Operation.PURGE_OBJECT;
+        final Operation operation = Status.DELETED.equals(object.getStatus()) ? Operation.DELETE_OBJECT : Operation.PURGE_OBJECT;
         try {
-            String versionChecksum = elementFilter.getVersionChecksum();
+            /*String versionChecksum = elementFilter.getVersionChecksum();
             if(versionChecksum == null){
                 versionChecksum = getObjectVersionChecksum(bucketName, objKey, elementFilter);
-            }
+            }*/
             sqlService.getConnection();
-            result = sqlService.insertJournal(new Journal(bucketName, objKey, operation, versionChecksum));
+            result = sqlService.insertJournal(new Journal(object.getBucketName(), object.getKey(), operation, object.getVersionChecksum()));
             if(result)
                 sqlService.transactionCommit();
         } catch (SQLException e){
@@ -69,57 +69,33 @@ public class JournalService {
         }
     }
 
-    public void createObject(String bucketName, String objKey, String versionChecksum){
+    public void createUpdateObject(RepoObject object){
         final boolean result;
+        final Operation operation = object.getVersionNumber() > 0 ? Operation.UPDATE_OBJECT : Operation.CREATE_OBJECT;
         try {
+            Journal journal = new Journal(object.getBucketName(), object.getKey(), operation, object.getVersionChecksum());;
             sqlService.getConnection();
-            result = sqlService.insertJournal(new Journal(bucketName, objKey, Operation.CREATE_OBJECT, versionChecksum));
+            result = sqlService.insertJournal(journal);
             if(result)
                 sqlService.transactionCommit();
         } catch (SQLException e){
-            log.error("Error saving create object operation",e);
+            log.error("Error saving " + operation.getValue() + " operation",e);
         } finally {
             sqlReleaseConnection();
         }
     }
 
-    public void updateObject(String bucketName, String objKey, String versionChecksum){
+    public void createUpdateCollection(RepoCollection collection){
         final boolean result;
+        final Operation operation = collection.getVersionNumber() > 0 ? Operation.UPDATE_COLLECTION : Operation.CREATE_COLLECTION;
         try {
+            Journal journal = new Journal(collection.getBucketName(), collection.getKey(), operation, collection.getVersionChecksum());
             sqlService.getConnection();
-            result = sqlService.insertJournal(new Journal(bucketName, objKey, Operation.UPDATE_OBJECT, versionChecksum));
+            result = sqlService.insertJournal(journal);
             if(result)
                 sqlService.transactionCommit();
         } catch (SQLException e){
-            log.error("Error saving update object operation",e);
-        } finally {
-            sqlReleaseConnection();
-        }
-    }
-
-    public void createCollection(String bucketName, String collKey, String versionChecksum){
-        boolean result;
-        try {
-            sqlService.getConnection();
-            result = sqlService.insertJournal(new Journal(bucketName, collKey, Operation.CREATE_COLLECTION, versionChecksum));
-            if(result)
-                sqlService.transactionCommit();
-        } catch (SQLException e){
-            log.error("Error saving create collection operation",e);
-        } finally {
-            sqlReleaseConnection();
-        }
-    }
-
-    public void updateCollection(String bucketName, String collKey, String versionChecksum){
-        boolean result;
-        try {
-            sqlService.getConnection();
-            result = sqlService.insertJournal(new Journal(bucketName, collKey, Operation.UPDATE_COLLECTION, versionChecksum));
-            if(result)
-                sqlService.transactionCommit();
-        } catch (SQLException e){
-            log.error("Error saving update collection operation",e);
+            log.error("Error saving " + operation.getValue() + " operation",e);
         } finally {
             sqlReleaseConnection();
         }
@@ -129,10 +105,14 @@ public class JournalService {
         final boolean result;
         try {
             String versionChecksum = elementFilter.getVersionChecksum();
-            if(versionChecksum == null) {
-                versionChecksum = getCollectionVersionChecksum(bucketName, collKey, elementFilter);
-            }
             sqlService.getConnection();
+            if(versionChecksum == null) {
+                RepoCollection collection = sqlService.getCollection(bucketName, collKey, elementFilter.getVersion(),
+                        elementFilter.getVersionChecksum(), elementFilter.getTag(), true);
+                if(collection != null) {
+                    versionChecksum = collection.getVersionChecksum();
+                }
+            }
             result = sqlService.insertJournal(new Journal(bucketName, collKey,Operation.DELETE_COLLECTION, versionChecksum));
             if(result)
                 sqlService.transactionCommit();
@@ -142,40 +122,12 @@ public class JournalService {
             sqlReleaseConnection();
         }
     }
-
-    private String getObjectVersionChecksum(String bucketName, String objKey, ElementFilter elementFilter) throws SQLException{
-        String versionChecksum = null;
-        try {
-            sqlService.getReadOnlyConnection();
-            RepoObject object = sqlService.getObject(bucketName, objKey, elementFilter.getVersion(),
-                    elementFilter.getVersionChecksum(), elementFilter.getTag(), true, true);
-            if(object != null)
-                versionChecksum = object.getVersionChecksum();
-        } finally {
-            sqlReleaseConnection();
-        }
-        return versionChecksum;
-    }
-    
-    private String getCollectionVersionChecksum(String bucketName, String collKey, ElementFilter elementFilter) throws SQLException{
-        String versionChecksum = null;
-        try {
-            sqlService.getReadOnlyConnection();
-            RepoCollection collection = sqlService.getCollection(bucketName, collKey, elementFilter.getVersion(),
-                    elementFilter.getVersionChecksum(), elementFilter.getTag(), true);
-            if (collection != null)
-                versionChecksum = collection.getVersionChecksum();
-        } finally {
-            sqlReleaseConnection();
-        }
-        return versionChecksum;
-    }
     
     private void sqlReleaseConnection() {
         try {
             sqlService.releaseConnection();
         } catch (SQLException e) {
-            log.error("Error release collection",e);
+            log.error("Error release connection",e);
         }
 
     }

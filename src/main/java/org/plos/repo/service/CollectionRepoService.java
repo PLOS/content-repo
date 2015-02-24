@@ -296,12 +296,8 @@ public class CollectionRepoService extends BaseRepoService {
       }
       sqlReleaseConnection();
     }
-    if(!rollback) {
-      if (existingRepoCollection == null) {
-        journalService.createCollection(inputCollection.getBucketName(), inputCollection.getKey(), newRepoCollection.getVersionChecksum());
-      } else {
-        journalService.updateCollection(inputCollection.getBucketName(), inputCollection.getKey(), newRepoCollection.getVersionChecksum());
-      }
+    if(!rollback && newRepoCollection != null) {
+        journalService.createUpdateCollection(newRepoCollection);
     }
     return newRepoCollection;
   }

@@ -433,7 +433,7 @@ public class RepoService extends BaseRepoService {
     writeLock.lock();
 
     boolean rollback = false;
-
+    RepoObject repoObject = null;
     try {
 
       if (key == null)
@@ -452,7 +452,7 @@ public class RepoService extends BaseRepoService {
         }
       }
 
-      RepoObject repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag(), true, false);
+      repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag(), true, false);
       if (repoObject == null) {
         throw new RepoException(RepoException.Type.ObjectNotFound);
       }
@@ -483,8 +483,9 @@ public class RepoService extends BaseRepoService {
       sqlReleaseConnection();
       writeLock.unlock();
     }
-    if(!rollback){
-      journalService.deletePurgeObject(bucketName, key, status, elementFilter);
+    if(!rollback && repoObject != null){
+      repoObject.setStatus(status);
+      journalService.deletePurgeObject(repoObject);
       
     }
   }
@@ -698,7 +699,7 @@ public class RepoService extends BaseRepoService {
     }
 
     if(!rollback && repoObject != null) {
-      journalService.createObject(bucketName, key, repoObject.getVersionChecksum());
+      journalService.createUpdateObject(repoObject);
     }
 
     return repoObject;
@@ -790,8 +791,8 @@ public class RepoService extends BaseRepoService {
       sqlReleaseConnection();
 
     }
-    if(!rollback) {
-      journalService.updateObject(bucketName, repoObject.getKey(), newRepoObject.getVersionChecksum());
+    if(!rollback && newRepoObject != null) {
+      journalService.createUpdateObject(newRepoObject);
 
     }
     return newRepoObject;
