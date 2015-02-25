@@ -42,7 +42,7 @@ class BucketsJson(BaseServiceTest):
     elif(API_BASE_URL == 'http://rwc-prod-plosrepo.int.plos.org:8002'):
       expected_bucket = u'mogilefs-prod-repo'
     else:
-      expected_bucket = u'crepo'
+      expected_bucket = u'corpus'
 
     print ('Validating buckets...'),
     actual_buckets = self.parsed.get_bucketName()
