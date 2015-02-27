@@ -50,6 +50,7 @@ public class RepoException extends Exception {
     NoFilterEntered(23, "At least one of the filters is required"),
     MoreThanOneTaggedCollection(24, "There are more than one collections with that tag. Please specify version or versionNumber. "),
     MoreThanOneTaggedObject(25, "There are more than one object with that tag. Please specify version or versionNumber. "),
+    InvalidUserMetadataFormat(26, "The user metadata must be a valid json. "),
 
 
     // user errors for system state

@@ -39,6 +39,7 @@ public class RepoCollection {
   private Timestamp creationDate;
   private String versionChecksum;
   private List<RepoObject> repoObjects;
+  private String userMetadata;
 
 
   // empty constructor required for JAXB mapping
@@ -152,5 +153,15 @@ public class RepoCollection {
   @Override
   public int hashCode() {
     return HashCodeBuilder.reflectionHashCode(this);
+  }
+
+  public String getUserMetadata() {
+    return userMetadata;
+  }
+
+  public void setUserMetadata(String userMetadata) {
+    if (userMetadata != null){
+      this.userMetadata = userMetadata.trim();
+    }
   }
 }

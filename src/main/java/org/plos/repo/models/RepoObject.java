@@ -17,6 +17,8 @@
 
 package org.plos.repo.models;
 
+import org.plos.repo.models.input.InputRepoObject;
+
 import java.net.URL;
 import java.sql.Timestamp;
 
@@ -38,6 +40,7 @@ public class RepoObject {
   private Timestamp creationDate;
   private String versionChecksum;
   private URL[] reproxyURL;
+  private String userMetadata;
 
   public RepoObject() {
   }
@@ -57,7 +60,8 @@ public class RepoObject {
              compareNullableElements(this.contentType, repoObject.contentType) &&
              compareNullableElements(this.downloadName, repoObject.downloadName) &&
              compareNullableElements(this.tag, repoObject.tag) &&
-             compareNullableElements(this.checksum, repoObject.checksum);
+             compareNullableElements(this.checksum, repoObject.checksum) &&
+             compareNullableElements(this.userMetadata, repoObject.getUserMetadata());
 
   }
 
@@ -189,5 +193,15 @@ public class RepoObject {
 
   public void setReproxyURL(URL[] reproxyURL) {
     this.reproxyURL = reproxyURL;
+  }
+
+  public String getUserMetadata() {
+    return userMetadata;
+  }
+
+  public void setUserMetadata(String userMetadata) {
+    if (userMetadata != null){
+      this.userMetadata = userMetadata.trim();
+    }
   }
 }

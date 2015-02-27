@@ -1,19 +1,19 @@
 /*
- * Copyright (c) 2006-2014 by Public Library of Science
- * http://plos.org
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+* Copyright (c) 2006-2014 by Public Library of Science
+* http://plos.org
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 
 package org.plos.repo.service;
 
@@ -26,6 +26,7 @@ import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.input.InputObject;
+import org.plos.repo.models.input.InputRepoObject;
 
 import javax.inject.Inject;
 import java.lang.reflect.Field;
@@ -95,7 +96,14 @@ public class CollectionLockTest extends RepoBaseSpringTest {
     inputObjects = new ArrayList<InputObject>();
     for (int i=0; i < 1000 ; i++ ){
       String key = OBJECT_KEY+i;
-      RepoObject repoObject = repoService.createObject(RepoService.CreateMethod.NEW, key, BUCKET_NAME, null, null, CREATION_DATE_TIME, IOUtils.toInputStream(OBJECT_DATA), CREATION_DATE_TIME, "TAG"+i);
+      InputRepoObject inputRepoObject = new InputRepoObject();
+      inputRepoObject.setKey(key);
+      inputRepoObject.setBucketName(BUCKET_NAME);
+      inputRepoObject.setUploadedInputStream(IOUtils.toInputStream(OBJECT_DATA));
+      inputRepoObject.setTag("TAG" + i);
+      inputRepoObject.setTimestamp(CREATION_DATE_TIME.toString());
+      inputRepoObject.setCreationDateTime(CREATION_DATE_TIME.toString());
+      RepoObject repoObject = repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
       InputObject inputObject = new InputObject(key, repoObject.getVersionChecksum());
       inputObjects.add(inputObject);
     }
@@ -206,11 +214,11 @@ public class CollectionLockTest extends RepoBaseSpringTest {
                        final Callback cb)
       throws InterruptedException {
 
- /*------------------------------------------------------------------
+/*------------------------------------------------------------------
 
    INSERT
 
- ------------------------------------------------------------------*/
+------------------------------------------------------------------*/
 
 
 
@@ -221,7 +229,8 @@ public class CollectionLockTest extends RepoBaseSpringTest {
           try {
             startGate.await();  // don't start until startGate is 0
             try {
-              InputCollection inputColl = new InputCollection(cb.getKeyname(j), cb.getTimestamp().toString(), BUCKET_NAME, RepoService.CreateMethod.NEW.toString(), cb.getTag(j),  objects, cb.getTimestamp().toString());
+              InputCollection inputColl = createInputCollection(cb, objects, j, RepoService.CreateMethod.NEW.toString());
+
               RepoCollection repoCollection = collectionRepoService.createCollection(RepoService.CreateMethod.NEW, inputColl);
 
               if (!repoCollection.getKey().equals(cb.getKeyname(j))) {
@@ -256,11 +265,11 @@ public class CollectionLockTest extends RepoBaseSpringTest {
       t.start();
     }
 
- /*------------------------------------------------------------------
+/*------------------------------------------------------------------
 
    UPDATE
 
- ------------------------------------------------------------------*/
+------------------------------------------------------------------*/
 
 
 
@@ -271,7 +280,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
           try {
             startGate.await();  // don't start until startGate is 0
             try {
-              InputCollection inputColl = new InputCollection(cb.getKeyname(j), cb.getTimestamp().toString(), BUCKET_NAME, RepoService.CreateMethod.VERSION.toString(), cb.getTag(j),  objects, cb.getTimestamp().toString());
+              InputCollection inputColl = createInputCollection(cb, objects, j, RepoService.CreateMethod.VERSION.toString());
               RepoCollection repoCollection = collectionRepoService.createCollection(RepoService.CreateMethod.VERSION, inputColl);
 
               if (!repoCollection.getKey().equals(cb.getKeyname(j))) {
@@ -311,7 +320,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
 
   DELETE
 
- ------------------------------------------------------------------*/
+------------------------------------------------------------------*/
 
 
 
@@ -346,11 +355,11 @@ public class CollectionLockTest extends RepoBaseSpringTest {
       t.start();
     }
 
- /*------------------------------------------------------------------
+/*------------------------------------------------------------------
 
   READER
 
- ------------------------------------------------------------------*/
+------------------------------------------------------------------*/
 
     for (int i = 0; i < readerThreads; i++) {
       final int j = i;//(i % insertThreads);
@@ -405,6 +414,18 @@ public class CollectionLockTest extends RepoBaseSpringTest {
     if (this.assertionFailure != null) {
       throw this.assertionFailure;
     }
+  }
+
+  private InputCollection createInputCollection(Callback cb, List<InputObject> objects, int threadNumber, String method) {
+    InputCollection inputColl = new InputCollection();
+    inputColl.setKey(cb.getKeyname(threadNumber));
+    inputColl.setTimestamp(cb.getTimestamp().toString());
+    inputColl.setBucketName(BUCKET_NAME);
+    inputColl.setCreate(method);
+    inputColl.setTag(cb.getTag(threadNumber));
+    inputColl.setObjects(objects);
+    inputColl.setCreationDateTime(cb.getTimestamp().toString());
+    return inputColl;
   }
 
 }

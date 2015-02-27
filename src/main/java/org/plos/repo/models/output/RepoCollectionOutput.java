@@ -43,6 +43,7 @@ public class RepoCollectionOutput {
   private String versionChecksum;
   private Status status;
   private List<RepoObjectOutput> objects;
+  private String userMetadata;
 
   private RepoCollectionOutput() {
 
@@ -56,6 +57,7 @@ public class RepoCollectionOutput {
     this.creationDate = TimestampFormatter.getFormattedTimestamp(repoCollection.getCreationDate());
     this.versionChecksum = repoCollection.getVersionChecksum();
     this.status = repoCollection.getStatus();
+    this.userMetadata = repoCollection.getUserMetadata();
 
     if(repoCollection.getRepoObjects()!=null && repoCollection.getRepoObjects().size() >0){
       this.objects = Lists.newArrayList(Iterables.transform(repoCollection.getRepoObjects(), RepoObjectOutput.typeFunction()));
@@ -130,6 +132,14 @@ public class RepoCollectionOutput {
 
   public void setVersionChecksum(String versionChecksum) {
     this.versionChecksum = versionChecksum;
+  }
+
+  public String getUserMetadata() {
+    return userMetadata;
+  }
+
+  public void setUserMetadata(String userMetadata) {
+    this.userMetadata = userMetadata;
   }
 
   @Override

@@ -51,7 +51,6 @@ public class TimestampInputValidatorTest {
       assertEquals(re.getType(), RepoException.Type.CouldNotParseTimestamp);
     }
 
-
   }
 
 }

@@ -45,7 +45,9 @@ public class RepoObjectOutput {
   private Status status;
   private String creationDate;
   private String versionChecksum;
+  private String userMetadata;
   private List<URL> reproxyURL;
+
 
   private RepoObjectOutput() {
 
@@ -64,6 +66,7 @@ public class RepoObjectOutput {
     this.status = repoObject.getStatus();
     this.creationDate = TimestampFormatter.getFormattedTimestamp(repoObject.getCreationDate());
     this.versionChecksum = repoObject.getVersionChecksum();
+    this.userMetadata = repoObject.getUserMetadata();
 
     URL[] urls = repoObject.getReproxyURL();
 
@@ -180,4 +183,11 @@ public class RepoObjectOutput {
     };
   }
 
+  public String getUserMetadata() {
+    return userMetadata;
+  }
+
+  public void setUserMetadata(String userMetadata) {
+    this.userMetadata = userMetadata;
+  }
 }

@@ -29,6 +29,7 @@ import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.input.InputObject;
 import org.plos.repo.models.validator.InputCollectionValidator;
+import org.plos.repo.models.validator.JsonStringValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -259,21 +260,21 @@ public class CollectionRepoService extends BaseRepoService {
           log.debug("Error trying to create a collection that already exists. Key: " + inputCollection.getKey() + " create method : new ");
           throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
         }
-        newRepoCollection = createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
+        newRepoCollection = createNewCollection(inputCollection, timestamp, creationDate);
 
       } else if (CreateMethod.VERSION.equals(method)){
         if (existingRepoCollection == null){
           log.debug("Error trying to version a collection that does not exists. Key: " + inputCollection.getKey() + " create method : version ");
           throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
         }
-        newRepoCollection = updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, existingRepoCollection, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
+        newRepoCollection = updateCollection(inputCollection, timestamp, existingRepoCollection, creationDate);
 
       } else if (CreateMethod.AUTO.equals(method)){
         log.debug("Creation Method: auto. Key: " + inputCollection.getKey() );
         if (existingRepoCollection == null)
-          newRepoCollection = createNewCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
+          newRepoCollection = createNewCollection(inputCollection, timestamp, creationDate);
         else
-          newRepoCollection = updateCollection(inputCollection.getKey(), inputCollection.getBucketName(), timestamp, existingRepoCollection, inputCollection.getObjects(), inputCollection.getTag(), creationDate);
+          newRepoCollection = updateCollection(inputCollection, timestamp, existingRepoCollection, creationDate);
 
       } else {
         throw new RepoException(RepoException.Type.InvalidCreationMethod);
@@ -297,24 +298,27 @@ public class CollectionRepoService extends BaseRepoService {
   }
 
 
-  private RepoCollection createNewCollection(String key,
-                                         String bucketName,
-                                         Timestamp timestamp,
-                                         List<InputObject> objects,
-                                         String tag,
-                                         Timestamp creationDate) throws RepoException {
+  private RepoCollection createNewCollection(InputCollection inputCollection, Timestamp timestamp, Timestamp creationDate) throws RepoException {
     Bucket bucket = null;
 
     try {
-      bucket = sqlService.getBucket(bucketName);
+      bucket = sqlService.getBucket(inputCollection.getBucketName());
 
-      if (bucket == null)
+      if (bucket == null) {
         throw new RepoException(RepoException.Type.BucketNotFound);
+      }
 
+      RepoCollection repoCollection
+          = new RepoCollection(inputCollection.getKey(), bucket.getBucketId(), inputCollection.getBucketName(), Status.USED);
+      repoCollection.setTimestamp(timestamp);
+      repoCollection.setTag(inputCollection.getTag());
+      repoCollection.setCreationDate(creationDate);
+      repoCollection.setUserMetadata(inputCollection.getUserMetadata());
 
-      return createCollection(key, bucketName, timestamp, bucket.getBucketId(), objects, tag, creationDate);
+      return createCollection(repoCollection, inputCollection.getObjects());
+
     } catch(SQLIntegrityConstraintViolationException e){
-      log.debug("Error trying to create a collection, key: " + key + " . SQLIntegrityConstraintViolationException:  " + e.getMessage());
+      log.debug("Error trying to create a collection, key: " + inputCollection.getKey() + " . SQLIntegrityConstraintViolationException:  " + e.getMessage());
       throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
     } catch (SQLException e) {
       log.debug("SQLException:  " + e.getMessage());
@@ -324,22 +328,22 @@ public class CollectionRepoService extends BaseRepoService {
 
   }
 
-  private RepoCollection updateCollection(String key,
-                                      String bucketName,
-                                      Timestamp timestamp,
-                                      RepoCollection existingRepoCollection,
-                                      List<InputObject> objects,
-                                      String tag,
-                                      Timestamp creationDate) throws RepoException {
+  private RepoCollection updateCollection(InputCollection inputCollection, Timestamp timestamp,
+                                      RepoCollection existingRepoCollection, Timestamp creationDate) throws RepoException {
 
-    if (areCollectionsSimilar(key, bucketName, objects, tag, existingRepoCollection)){
+    if (areCollectionsSimilar(inputCollection, existingRepoCollection)){
       return existingRepoCollection;
     }
-
+    RepoCollection repoCollection = new RepoCollection(inputCollection.getKey(),
+        existingRepoCollection.getBucketId(), inputCollection.getBucketName(), Status.USED);
+    repoCollection.setTimestamp(timestamp);
+    repoCollection.setTag(inputCollection.getTag());
+    repoCollection.setCreationDate(creationDate);
+    repoCollection.setUserMetadata(inputCollection.getUserMetadata());
     try{
-      return createCollection(key, bucketName, timestamp, existingRepoCollection.getBucketId(), objects, tag, creationDate);
+      return createCollection(repoCollection, inputCollection.getObjects());
     } catch(SQLIntegrityConstraintViolationException e){
-      log.debug("Error trying to version a collection, key: " + key + " . SQLIntegrityConstraintViolationException:  " + e.getMessage());
+      log.debug("Error trying to version a collection, key: " + inputCollection.getKey() + " . SQLIntegrityConstraintViolationException:  " + e.getMessage());
       throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
     } catch(SQLException e){
       log.debug("SQLException:  " + e.getMessage());
@@ -348,30 +352,34 @@ public class CollectionRepoService extends BaseRepoService {
 
   }
 
-  private Boolean areCollectionsSimilar(String key,
-                                        String bucketName,
-                                        List<InputObject> objects,
-                                        String tag,
+  private Boolean areCollectionsSimilar(InputCollection inputCollection,
                                         RepoCollection existingRepoCollection
   ){
 
-    Boolean similar = existingRepoCollection.getKey().equals(key) &&
-        existingRepoCollection.getBucketName().equals(bucketName) &&
+    Boolean similar = existingRepoCollection.getKey().equals(inputCollection.getKey()) &&
+        existingRepoCollection.getBucketName().equals(inputCollection.getBucketName()) &&
         existingRepoCollection.getStatus().equals(Status.USED) &&
-        objects.size() == existingRepoCollection.getRepoObjects().size();
+        inputCollection.getObjects().size() == existingRepoCollection.getRepoObjects().size();
 
-
-    if ( similar &&  ( existingRepoCollection.getTag() != null && tag != null) ) {
-      similar = existingRepoCollection.getTag().equals(tag);
+    if ( similar &&  ( existingRepoCollection.getTag() != null && inputCollection.getTag() != null) ) {
+      similar = existingRepoCollection.getTag().equals(inputCollection.getTag());
     } else {
-      similar = similar && !( (existingRepoCollection.getTag() != null && tag == null) || (existingRepoCollection.getTag() == null && tag !=null)) ;
+      similar = similar && !( (existingRepoCollection.getTag() != null && inputCollection.getTag() == null)
+          || (existingRepoCollection.getTag() == null && inputCollection.getTag() !=null)) ;
+    }
+
+    if ( similar &&  ( existingRepoCollection.getUserMetadata() != null && inputCollection.getUserMetadata() != null) ) {
+      similar = existingRepoCollection.getUserMetadata().equals(inputCollection.getUserMetadata());
+    } else {
+      similar = similar && !( (existingRepoCollection.getUserMetadata() != null && inputCollection.getUserMetadata() == null)
+          || (existingRepoCollection.getUserMetadata() == null && inputCollection.getUserMetadata() !=null)) ;
     }
 
     int i = 0;
 
-    for ( ; i <  objects.size() & similar ; i++){
+    for ( ; i <  inputCollection.getObjects().size() & similar; i++){
 
-      InputObject inputObject = objects.get(i);
+      InputObject inputObject = inputCollection.getObjects().get(i);
 
       int y = 0;
       for( ; y < existingRepoCollection.getRepoObjects().size(); y++ ){
@@ -393,25 +401,11 @@ public class CollectionRepoService extends BaseRepoService {
 
   }
 
-  private RepoCollection createCollection(String key,
-                                      String bucketName,
-                                      Timestamp timestamp,
-                                      Integer bucketId,
-                                      List<InputObject> inputObjects,
-                                      String tag,
-                                      Timestamp creationDate) throws SQLException, RepoException {
+  private RepoCollection createCollection(RepoCollection repoCollection,
+                                      List<InputObject> inputObjects) throws SQLException, RepoException {
 
-    Integer versionNumber;
-    RepoCollection repoCollection;
-
-
-    versionNumber = sqlService.getCollectionNextAvailableVersion(bucketName, key);   // change to support collections
-
-    repoCollection = new RepoCollection(key, bucketId, bucketName, Status.USED);
-    repoCollection.setTimestamp(timestamp);
+    Integer versionNumber = sqlService.getCollectionNextAvailableVersion(repoCollection.getBucketName(), repoCollection.getKey());   // change to support collections
     repoCollection.setVersionNumber(versionNumber);
-    repoCollection.setTag(tag);
-    repoCollection.setCreationDate(creationDate);
 
     List<String> objectsChecksum = Lists.newArrayList(Iterables.transform(inputObjects, typeFunction()));
 
@@ -425,7 +419,7 @@ public class CollectionRepoService extends BaseRepoService {
 
     for (InputObject inputObject : inputObjects){
 
-      if (sqlService.insertCollectionObjects(collId, inputObject.getKey(), bucketName, inputObject.getVersionChecksum()) == 0){
+      if (sqlService.insertCollectionObjects(collId, inputObject.getKey(), repoCollection.getBucketName(), inputObject.getVersionChecksum()) == 0){
         throw new RepoException(RepoException.Type.ObjectCollectionNotFound);
       }
 

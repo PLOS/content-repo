@@ -70,6 +70,9 @@ public class ChecksumGenerator {
     if (repoObject.getDownloadName() != null ){
       sb.append(repoObject.getDownloadName());
     }
+    if (repoObject.getUserMetadata() != null ){
+      sb.append(repoObject.getUserMetadata());
+    }
 
     sb.append(repoObject.getChecksum());
 
