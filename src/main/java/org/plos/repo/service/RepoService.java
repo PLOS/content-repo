@@ -734,14 +734,8 @@ public class RepoService extends BaseRepoService {
       }
 
       newRepoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(newRepoObject));
-
-      // if the new object and the last version of the object are similar, we just return the last version of the object
-      //if (repoObject.areSimilar(newRepoObject)){
-      //  rollback = false; // if we are not modifying the DB and reached this point, then the operations were successfully performed
-      //  return repoObject;
-      //}
-
       newRepoObject.setVersionNumber(sqlService.getObjectNextAvailableVersion(inputRepoObject.getBucketName(), newRepoObject.getKey()));
+      
       // add a record to the DB for the new object
       if (sqlService.insertObject(newRepoObject) == 0) {
         throw new RepoException("Error saving content to database");
