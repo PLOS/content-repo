@@ -36,6 +36,7 @@ CREATE CACHED TABLE IF NOT EXISTS objects (
    versionNumber INTEGER NOT NULL,
    creationDate TIMESTAMP NOT NULL,
    versionChecksum VARCHAR (255) NOT NULL,
+   userMetadata LONGTEXT,
    CONSTRAINT keySum UNIQUE (bucketId, objKey, versionChecksum),
    CONSTRAINT keyVersion UNIQUE (bucketId, objkey, versionNumber)
 );
@@ -50,6 +51,7 @@ CREATE CACHED TABLE IF NOT EXISTS collections (
    versionNumber INTEGER NOT NULL,
    tag VARCHAR (200),
    creationDate TIMESTAMP NOT NULL,
+   userMetadata LONGTEXT,
    CONSTRAINT keySumColl UNIQUE (bucketId, collkey, versionChecksum),
    CONSTRAINT keyVersionColl UNIQUE (bucketId, collkey, versionNumber),
    FOREIGN KEY (bucketId) REFERENCES buckets(bucketId)

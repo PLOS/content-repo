@@ -33,19 +33,10 @@ public class InputCollection {
   private String tag;
   private List<InputObject> objects;
   private String creationDateTime;   // created time
+  private String userMetadata;
 
   // empty constructor required for JAXB mapping
   public InputCollection() {
-  }
-
-  public InputCollection(String key, String timestamp, String bucketName, String create, String tag, List<InputObject> objects, String creationDateTime) {
-    this.key = key;
-    this.timestamp = timestamp;
-    this.bucketName = bucketName;
-    this.create = create;
-    this.tag = tag;
-    this.objects = objects;
-    this.creationDateTime = creationDateTime;
   }
 
   public String getKey() {
@@ -102,5 +93,13 @@ public class InputCollection {
 
   public void setCreationDateTime(String creationDateTime) {
     this.creationDateTime = creationDateTime;
+  }
+
+  public String getUserMetadata() {
+    return userMetadata;
+  }
+
+  public void setUserMetadata(String userMetadata) {
+    this.userMetadata = userMetadata;
   }
 }

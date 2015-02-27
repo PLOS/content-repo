@@ -1,4 +1,3 @@
-
 #
 # Start tracking the Content Repo Schema Versions
 # The string in schema_ver will indicate the last
@@ -13,20 +12,22 @@ CREATE TABLE IF NOT EXISTS CREPO_SCHEMA_INFO (
 );
 
 #
-# Create the table representing Journal.
+# Objects are being update with user metadata information
 #
-CREATE TABLE IF NOT EXISTS journal (
-    id INTEGER NOT NULL AUTO_INCREMENT,
-    bucketName VARCHAR (255) NOT NULL,
-    keyValue VARCHAR (255),
-    operation VARCHAR (20) NOT NULL,
-    versionChecksum VARCHAR (255),
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
-);
+
+ALTER TABLE objects
+ADD COLUMN userMetadata LONGTEXT;
+
+
+#
+# Collections are being update with user metadata information
+#
+
+ALTER TABLE collections
+  ADD COLUMN userMetadata LONGTEXT;
 
 
 # INSERT the version string. This should happen last.
 # The temporal order will indicate which scripts have been
 # run to update this database.
-INSERT CREPO_SCHEMA_INFO SET schema_ver = '03-add-journal';
+INSERT CREPO_SCHEMA_INFO SET schema_ver = '03-add-userMetadata-column';

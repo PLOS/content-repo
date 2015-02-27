@@ -30,12 +30,21 @@ class BucketsJson(BaseServiceTest):
   @needs('parsed', 'parse_response_as_json()')
   def verify_buckets(self):
     """
-    Verifies a valid response
-    :param
-    :return: Bucket List + OK
+    Verifies a valid response to api request GET /buckets
+    by validating the corpus bucket specific to either our
+    development or performance stack environments.
+
+    :param API_BASE_URL from Base.Config or environment variable
+    :return: Success or Error msg on Failure
     """
+    if(API_BASE_URL == 'http://sfo-perf-plosrepo01.int.plos.org:8002'):
+      expected_bucket = u'mogilefs-prod-repo'
+    elif(API_BASE_URL == 'http://rwc-prod-plosrepo.int.plos.org:8002'):
+      expected_bucket = u'mogilefs-prod-repo'
+    else:
+      expected_bucket = u'corpus'
+
     print ('Validating buckets...'),
     actual_buckets = self.parsed.get_bucketName()
-    print(str(actual_buckets))
-    assert actual_buckets
-    print ('OK')
+    #print(unicode(actual_buckets))
+    self.assertTrue(expected_bucket in actual_buckets, expected_bucket + ' not found in ' + unicode(actual_buckets))

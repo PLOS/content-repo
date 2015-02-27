@@ -58,6 +58,10 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
   private final String CREATION_DATE_TIME = new Timestamp(new Date().getTime()).toString();
 
+  private String VALID_USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\"}";
+
+  private String NOT_VALID_USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\",}";
+
   @Before
   public void setup() throws Exception {
     RepoBaseSpringTest.clearData(objectStore, sqlService);
@@ -210,6 +214,22 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
                     .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA)),
         Response.Status.BAD_REQUEST, RepoException.Type.InvalidCreationMethod);
+  }
+
+  @Test
+  public void createInvalidUserMetadata() {
+
+    createBucket(bucketName, CREATION_DATE_TIME);
+
+    assertRepoError(target("/objects").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(Entity.entity(new FormDataMultiPart()
+                    .field("bucketName", bucketName).field("create", "new")
+                    .field("key", "object2").field("contentType", "text/something")
+                    .field("downloadName", "object2.text").field("userMetadata", NOT_VALID_USER_METADATA)
+                    .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
+                MediaType.MULTIPART_FORM_DATA)),
+        Response.Status.BAD_REQUEST, RepoException.Type.InvalidUserMetadataFormat);
   }
 
   @Test
@@ -696,7 +716,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
     assertNotNull(responseObj);
     assertEquals(2, responseObj.size());
-
   }
 
   private void createBucket(String bucketName, String creationDateTime){
@@ -713,5 +732,37 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     System.out.println(urls);
     System.out.println(urls[0]);
   }
+
+  @Test
+  public void createObjectWithUserMetadata() throws Exception {
+
+    Form form = new Form().param("name", bucketName);
+    Response response = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(form));
+    assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
+
+    // CREATE
+    response = target("/objects").request()
+            .post(Entity.entity(new FormDataMultiPart()
+                    .field("bucketName", bucketName).field("create", "new")
+                    .field("key", "object1").field("contentType", "text/plain")
+                    .field("timestamp", "2012-09-08 11:00:00")
+                    .field("userMetadata", VALID_USER_METADATA)
+                    .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
+                MediaType.MULTIPART_FORM_DATA
+            ));
+
+    assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
+
+    // READ
+    response = target("/objects/meta/" + bucketName).queryParam("key", "object1")
+    .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+    JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
+    assertNotNull(responseObj);
+    assertEquals(VALID_USER_METADATA, responseObj.get("userMetadata").getAsString());
+
+  }
+
 
 }

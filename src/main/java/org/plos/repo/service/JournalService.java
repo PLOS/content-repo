@@ -54,10 +54,6 @@ public class JournalService {
         final boolean result;
         final Operation operation = Status.DELETED.equals(object.getStatus()) ? Operation.DELETE_OBJECT : Operation.PURGE_OBJECT;
         try {
-            /*String versionChecksum = elementFilter.getVersionChecksum();
-            if(versionChecksum == null){
-                versionChecksum = getObjectVersionChecksum(bucketName, objKey, elementFilter);
-            }*/
             sqlService.getConnection();
             result = sqlService.insertJournal(new Journal(object.getBucketName(), object.getKey(), operation, object.getVersionChecksum()));
             if(result)
