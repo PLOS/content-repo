@@ -17,10 +17,7 @@
 
 package org.plos.repo.service;
 
-import org.plos.repo.models.Bucket;
-import org.plos.repo.models.RepoCollection;
-import org.plos.repo.models.RepoObject;
-import org.plos.repo.models.Status;
+import org.plos.repo.models.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
@@ -75,6 +72,15 @@ public abstract class SqlService {
     return collection;
   }
 
+  private static Journal mapJournalRow(ResultSet rs) throws SQLException {
+
+    Journal journal = new Journal(rs.getString("BUCKETNAME"), rs.getString("KEYVALUE"),
+            Operation.OPERATION_VALUES.get(rs.getString("OPERATION")), rs.getString("VERSIONCHECKSUM"));
+    journal.setId(rs.getInt("ID"));
+    journal.setTimestamp(rs.getTimestamp("TIMESTAMP"));
+    return journal;
+  }
+  
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
     return new Bucket(rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getTimestamp("TIMESTAMP"), rs.getTimestamp("CREATIONDATE"));
   }
@@ -950,7 +956,7 @@ public abstract class SqlService {
    * @return {@link org.plos.repo.models.RepoCollection}
    * @throws SQLException
    */
-  public RepoCollection getCollection(String bucketName, String key, Integer version, String tag, String versionChecksum) throws SQLException {
+  public RepoCollection getCollection(String bucketName, String key, Integer version, String tag, String versionChecksum, Boolean includeDeleted) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -993,7 +999,7 @@ public abstract class SqlService {
       if (result.next()) {
         RepoCollection repoCollection = mapCollectionRow(result);
 
-        if (repoCollection.getStatus() == Status.DELETED) {
+        if (!includeDeleted && repoCollection.getStatus() == Status.DELETED) {
           log.info("searched for collection which has been deleted. id: " + repoCollection.getId());
           return null;
         }
@@ -1307,5 +1313,103 @@ public abstract class SqlService {
       closeDbStuff(null, p);
     }
 
+  }
+
+  public boolean insertJournal(Journal journal) throws SQLException {
+
+    PreparedStatement p = null;
+
+    try {
+      
+      p = connectionLocal.get().prepareStatement("INSERT INTO journal (bucketName, keyValue, operation, versionChecksum) VALUES (?,?,?,?)");
+
+      p.setString(1, journal.getBucket());
+      //The object could be NULL if the operation is about bucket or collection
+      p.setString(2, journal.getKey() == null ? "" : journal.getKey());
+      p.setString(3, journal.getOperation().getValue());
+      //The versionChecksum could be NULL if the operation is about bucket
+      p.setString(4, journal.getVersionChecksum() == null ? "" : journal.getVersionChecksum());
+      
+      return p.executeUpdate() > 0;
+
+    } finally {
+      closeDbStuff(null, p);
+    }
+
+  }
+
+  /**
+   * List the journal, for testing only
+   * @param bucket a single String representing the bucket name where the journal is stored
+   * @param key a single String identifying the object key
+   * @param operation a single String identifying the collection key
+   * @param timestamp a timestamp used to filter the journal by date.
+   * @return {@link org.plos.repo.models.Journal List}
+   * @throws SQLException
+   */
+  public List<Journal> listJournal(String bucket, String key, Operation operation, Timestamp timestamp) throws SQLException {
+
+    List<Journal> repoJournal = new ArrayList<Journal>();
+
+    PreparedStatement p = null;
+    ResultSet result = null;
+
+    try {
+      StringBuilder query = new StringBuilder("SELECT * FROM journal WHERE bucketName = ?");
+
+      if(key  != null)
+        query.append(" and keyValue = ? ");
+      if(operation  != null)
+        query.append(" and operation = ? ");      
+      if(timestamp != null)
+        query.append(" and timestamp >= ? ");
+      
+      p = connectionLocal.get().prepareStatement(query.toString());
+      
+      p.setString(1, bucket);
+      
+      int i = 2;
+      if (key != null){
+        p.setString(i++, key);
+      }
+      if (operation != null){
+        p.setString(i++, operation.getValue());
+      }
+      if (timestamp != null){
+        p.setTimestamp(i++, timestamp);
+      }
+      
+      result = p.executeQuery();
+
+      while (result.next()) {
+        repoJournal.add(mapJournalRow(result));
+      }
+
+      return repoJournal;
+
+    } finally {
+      closeDbStuff(result, p);
+    }
+  }
+
+/**
+ * Remove journal for testing only
+ */
+  public int deleteJournal() throws SQLException {
+
+    PreparedStatement p = null;
+    final int result; 
+    try {
+
+      p = connectionLocal.get().prepareStatement("DELETE FROM journal");
+
+      result = p.executeUpdate();
+
+      transactionCommit();
+      
+    } finally {
+      closeDbStuff(null, p);
+    }
+    return result;
   }
 }

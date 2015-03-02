@@ -50,6 +50,8 @@ public class CollectionRepoService extends BaseRepoService {
   @Inject
   private InputCollectionValidator inputCollectionValidator;
 
+  @Inject
+  private JournalService journalService;
 
   /**
    * Returns a list of collections meta data for the given bucket name <code>bucketName</code>. In case pagination
@@ -115,7 +117,7 @@ public class CollectionRepoService extends BaseRepoService {
       if (elementFilter == null || elementFilter.isEmpty()) // no filters defined
         repoCollection = sqlService.getCollection(bucketName, key);
       else
-        repoCollection = sqlService.getCollection(bucketName, key, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum());
+        repoCollection = sqlService.getCollection(bucketName, key, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum(), false);
 
       if (repoCollection == null)
         throw new RepoException(RepoException.Type.CollectionNotFound);
@@ -220,6 +222,9 @@ public class CollectionRepoService extends BaseRepoService {
       sqlReleaseConnection();
 
     }
+    if(!rollback) {
+      journalService.deleteCollection(bucketName, key, elementFilter);
+    }
   }
 
   /**
@@ -283,8 +288,6 @@ public class CollectionRepoService extends BaseRepoService {
       sqlService.transactionCommit();
       rollback = false;
 
-      return newRepoCollection;
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
@@ -294,7 +297,10 @@ public class CollectionRepoService extends BaseRepoService {
       }
       sqlReleaseConnection();
     }
-
+    if(!rollback && newRepoCollection != null) {
+        journalService.createUpdateCollection(newRepoCollection);
+    }
+    return newRepoCollection;
   }
 
 

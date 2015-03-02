@@ -1,43 +1,46 @@
-/* Copyright (c) 2006-2014 by Public Library of Science
-* http://plos.org
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ /* Copyright (c) 2006-2014 by Public Library of Science
+ * http://plos.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 
 package org.plos.repo;
 
-import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.BDDMockito;
-import org.mockito.Mockito;
-import org.plos.repo.models.Bucket;
-import org.plos.repo.models.RepoObject;
-import org.plos.repo.models.Status;
-import org.plos.repo.models.input.ElementFilter;
-import org.plos.repo.models.input.InputRepoObject;
-import org.plos.repo.service.*;
+ import org.apache.commons.io.IOUtils;
+ import org.junit.Assert;
+ import org.junit.Before;
+ import org.junit.Test;
+ import org.mockito.BDDMockito;
+ import org.mockito.Mockito;
+ import org.plos.repo.models.Bucket;
+ import org.plos.repo.models.Journal;
+ import org.plos.repo.models.Operation;
+ import org.plos.repo.models.RepoObject;
+ import org.plos.repo.models.Status;
+ import org.plos.repo.models.input.ElementFilter;
+ import org.plos.repo.models.input.InputRepoObject;
+ import org.plos.repo.service.*;
 
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.Date;
+ import java.io.InputStream;
+ import java.lang.reflect.Field;
+ import java.sql.Timestamp;
+ import java.util.Calendar;
+ import java.util.Date;
+ import java.util.List;
 
 
-public class RepoServiceSpringTest extends RepoBaseSpringTest {
+ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
   private static final String KEY = "key1";
   private static final Bucket bucket1 = new Bucket("bucket1");
@@ -102,9 +105,10 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     } catch (RepoException e) {
       Assert.fail(e.getMessage());
     }
-
+    
     sqlService.getReadOnlyConnection();
     Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) != null);
+    Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), null, null, null).size() == 1);
     sqlService.releaseConnection();
     Assert.assertTrue(objectStore.bucketExists(bucket1));
   }
@@ -142,6 +146,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     try {
       repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
+      Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), null, null, null).size() == 0);
       Assert.fail();
     } catch (RepoException e) {
       Assert.assertTrue(e.getType() == RepoException.Type.ServerError);
@@ -179,6 +184,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     sqlService.getReadOnlyConnection();
     Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) == null);
+    Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), null, null, null).size() == 0);
     sqlService.releaseConnection();
     Assert.assertFalse(objectStore.bucketExists(bucket1));
 
@@ -199,6 +205,10 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     sqlService.getReadOnlyConnection();
     Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) == null);
+    List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), null, null, null); 
+    Assert.assertTrue(journalList.size() == 2);
+    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE_BUCKET));
+    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.DELETE_BUCKET));
     sqlService.releaseConnection();
     Assert.assertFalse(objectStore.bucketExists(bucket1));
 
@@ -241,7 +251,12 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
 
     Assert.assertTrue(objFromDb.getKey().equals(KEY));
-
+    List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), KEY, null, null);
+    Assert.assertTrue(journalList.size() == 1);
+    Journal journal = journalList.get(0);
+    Assert.assertTrue(journal.getBucket().equals(bucket1.getBucketName()));
+    Assert.assertTrue(journal.getKey().equals(KEY));
+    Assert.assertTrue(journal.getOperation().equals(Operation.CREATE_OBJECT));
     sqlService.releaseConnection();
 
     Assert.assertTrue(objectStore.objectExists(objFromDb));
@@ -278,6 +293,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
 
     Assert.assertTrue(objFromDb == null);
+    Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), KEY, null, null).size() == 0);
     sqlService.releaseConnection();
 
     RepoObject repoObject = new RepoObject();
@@ -313,6 +329,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
 
     Assert.assertTrue(objFromDb == null);
+    Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), KEY, Operation.CREATE_OBJECT, null).size() == 0);
     sqlService.releaseConnection();
     RepoObject repoObject = new RepoObject();
     repoObject.setChecksum("cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151");
@@ -347,7 +364,10 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
     Assert.assertTrue(objFromDb.getKey().equals(KEY));
-
+    List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), KEY, null, null);
+    Assert.assertTrue(journalList.size() == 2);
+    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE_OBJECT));
+    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.UPDATE_OBJECT));
     sqlService.releaseConnection();
 
     Assert.assertTrue(objectStore.objectExists(objFromDb));
@@ -433,6 +453,8 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
 
     Assert.assertTrue(objFromDb != null);
+    Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), null, null, null).size() == 2);
+    Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), KEY, null, null).size() == 1);
     sqlService.releaseConnection();
 
     RepoObject repoObject = new RepoObject();
@@ -469,7 +491,10 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
     Assert.assertTrue(objFromDb.getKey().equals(KEY));
-
+    List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), KEY, null, null);
+    Assert.assertTrue(journalList.size() == 2);
+    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE_OBJECT));
+    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.UPDATE_OBJECT));
     sqlService.releaseConnection();
 
     Assert.assertTrue(objectStore.objectExists(objFromDb));
@@ -500,9 +525,9 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     try {
 
       InputRepoObject inputRepoObject = createInputRepoObject();
-      inputRepoObject.setContentType(null);
+        inputRepoObject.setContentType(null);
       inputRepoObject.setDownloadName(null);
-      repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
+        repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
 
       Timestamp creationDateObj2 = new Timestamp(new Date().getTime());
       inputRepoObject.setUploadedInputStream(IOUtils.toInputStream("data2"));
@@ -522,10 +547,12 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
     Assert.assertTrue(objFromDb.getKey().equals(KEY));
-
+    List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), KEY, null, null);
+    Assert.assertTrue(journalList.size() == 3);
+    Assert.assertTrue(journalList.get(2).getOperation().equals(Operation.DELETE_OBJECT));
     sqlService.releaseConnection();
 
-    Assert.assertTrue(objectStore.objectExists(objFromDb));
+      Assert.assertTrue(objectStore.objectExists(objFromDb));
     Assert.assertTrue(IOUtils.toString(objectStore.getInputStream(objFromDb)).equals("data1"));
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 1);
@@ -543,7 +570,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     try {
 
       InputRepoObject inputRepoObject = createInputRepoObject();
-      repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
+        repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
 
       inputRepoObject.setUploadedInputStream(IOUtils.toInputStream("data2"));
       repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
@@ -551,7 +578,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
       repoService.deleteObject(bucket1.getBucketName(), KEY, false, new ElementFilter(5, null, null));
 
     } catch (RepoException e) {
-      Assert.assertTrue(e.getMessage().startsWith("Object not found"));
+        Assert.assertTrue(e.getMessage().startsWith("Object not found"));
     }
 
     // check state
@@ -562,7 +589,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     Assert.assertTrue(objectStore.objectExists(objFromDb));
     Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 2);
-    Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, false, false, null).size() == 2);
+      Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, false, false, null).size() == 2);
   }
 
   @Test
@@ -577,6 +604,15 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     } catch (RepoException e) {
       Assert.assertTrue(e.getMessage().startsWith("Object not found"));
     }
+      
+    // check state
+      sqlService.getReadOnlyConnection();
+    List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), KEY, null, null);
+    Assert.assertTrue(journalList.size() == 2);
+    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE_OBJECT));
+    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.PURGE_OBJECT));
+    sqlService.releaseConnection();      
+      
   }
 
   @Test
@@ -635,7 +671,11 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     // verify that the purge object does not exists the file system
     Assert.assertNull(sqlService.getObject(bucket1.getBucketName(), "key1", null, object2.getVersionChecksum(), null));
-
+    List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), "key1", null, null);
+    Assert.assertTrue(journalList.size() == 3);
+    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE_OBJECT));
+    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.UPDATE_OBJECT));
+    Assert.assertTrue(journalList.get(2).getOperation().equals(Operation.PURGE_OBJECT));
     sqlService.releaseConnection();
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 1);
@@ -686,11 +726,11 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     RepoObject obj1FromDb = sqlService.getObject(bucket1.getBucketName(), "key1", null, object1.getVersionChecksum(), null);
     Assert.assertNull(obj1FromDb);
 
-    sqlService.releaseConnection();
+      sqlService.releaseConnection();
 
     Assert.assertTrue(obj2FromDb.getKey().equals("key1"));
     Assert.assertTrue(objectStore.objectExists(obj2FromDb));
-    Assert.assertTrue(IOUtils.toString(objectStore.getInputStream(obj2FromDb)).equals(dataContent));
+      Assert.assertTrue(IOUtils.toString(objectStore.getInputStream(obj2FromDb)).equals(dataContent));
 
     // verify that at service level we can't get the meta info for object1. object1 has been purged
     try{
@@ -704,7 +744,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     // using the keys bucketName & checksum
     InputStream contentObj1 = repoService.getObjectInputStream(object1);
     InputStream contentObj2 = repoService.getObjectInputStream(object2);
-    Assert.assertTrue(IOUtils.toString(contentObj1).equals(IOUtils.toString(contentObj2)));
+      Assert.assertTrue(IOUtils.toString(contentObj1).equals(IOUtils.toString(contentObj2)));
 
     Assert.assertTrue(repoService.getObjectVersions(obj2FromDb.getBucketName(), obj2FromDb.getKey()).size() == 1);
     Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, false, false, null).size() == 1);
@@ -778,8 +818,8 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     // create object with creation date time
     InputRepoObject inputRepoObject = createInputRepoObject();
     inputRepoObject.setCreationDateTime(creationDateTime1.toString());
-    inputRepoObject.setTimestamp(creationDateTime1.toString());
-    inputRepoObject.setTag("DRAFT");
+      inputRepoObject.setTimestamp(creationDateTime1.toString());
+      inputRepoObject.setTag("DRAFT");
     repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
 
     cal.set(2014, 10, 20, 1, 1, 1);
@@ -787,7 +827,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     // create object with creation date time before object 1 creation date time
     inputRepoObject.setCreationDateTime(creationDateTime2.toString());
     inputRepoObject.setTimestamp(creationDateTime2.toString());
-    inputRepoObject.setTag("FINAL");
+      inputRepoObject.setTag("FINAL");
     repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
 
     // get the latest object
@@ -812,15 +852,15 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     // create object with creation date time
     InputRepoObject inputRepoObject = createInputRepoObject();
     inputRepoObject.setCreationDateTime(creationDateTime1.toString());
-    inputRepoObject.setTimestamp(creationDateTime1.toString());
-    inputRepoObject.setTag("FINAL");
-    repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
+      inputRepoObject.setTimestamp(creationDateTime1.toString());
+      inputRepoObject.setTag("FINAL");
+      repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
 
-    cal.set(2014, 10, 20, 1, 1, 1);
+      cal.set(2014, 10, 20, 1, 1, 1);
     Timestamp creationDateTime2 = new Timestamp(cal.getTime().getTime());
     // create object with creation date time before object 1 creation date time
-    inputRepoObject.setCreationDateTime(creationDateTime2.toString());
-    inputRepoObject.setTimestamp(creationDateTime2.toString());
+      inputRepoObject.setCreationDateTime(creationDateTime2.toString());
+      inputRepoObject.setTimestamp(creationDateTime2.toString());
     repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
 
     // get the latest object

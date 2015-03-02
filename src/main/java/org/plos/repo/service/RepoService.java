@@ -62,6 +62,9 @@ public class RepoService extends BaseRepoService {
   @Inject
   private TimestampInputValidator timestampValidator;
 
+  @Inject
+  private JournalService journalService;
+
   public List<Bucket> listBuckets() throws RepoException {
     try {
       sqlService.getReadOnlyConnection();
@@ -84,7 +87,7 @@ public class RepoService extends BaseRepoService {
     boolean bucketCreation = false;
 
     Bucket bucket = new Bucket(name);
-
+    Bucket newBucket = null;
     try {
 
       if (!ObjectStore.isValidFileName(name))
@@ -112,12 +115,10 @@ public class RepoService extends BaseRepoService {
         throw new RepoException("Unable to create bucket in database: " + name);
       }
 
-      Bucket newBucket = sqlService.getBucket(name);
+      newBucket = sqlService.getBucket(name);
 
       sqlService.transactionCommit();
       rollback = false;
-
-      return newBucket;
 
     } catch (SQLException e) {
       throw new RepoException(e);
@@ -137,7 +138,11 @@ public class RepoService extends BaseRepoService {
       writeLock.unlock();
 
     }
-
+    if(!rollback){
+        journalService.createBucket(name);
+      
+    }
+    return newBucket;
   }
 
   /**
@@ -203,6 +208,10 @@ public class RepoService extends BaseRepoService {
       writeLock.unlock();
     }
 
+    if(!rollback) {
+      journalService.deleteBucket(name);
+
+    }
   }
 
   public boolean serverSupportsReproxy() {
@@ -430,7 +439,7 @@ public class RepoService extends BaseRepoService {
     writeLock.lock();
 
     boolean rollback = false;
-
+    RepoObject repoObject = null;
     try {
 
       if (key == null)
@@ -449,7 +458,7 @@ public class RepoService extends BaseRepoService {
         }
       }
 
-      RepoObject repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag(), true, false);
+      repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag(), true, false);
       if (repoObject == null) {
         throw new RepoException(RepoException.Type.ObjectNotFound);
       }
@@ -479,6 +488,11 @@ public class RepoService extends BaseRepoService {
 
       sqlReleaseConnection();
       writeLock.unlock();
+    }
+    if(!rollback && repoObject != null){
+      repoObject.setStatus(status);
+      journalService.deletePurgeObject(repoObject);
+      
     }
   }
 
@@ -592,7 +606,7 @@ public class RepoService extends BaseRepoService {
     Integer versionNumber;
     Bucket bucket;
 
-    RepoObject repoObject;
+    RepoObject repoObject = null;
 
     boolean rollback = false;
 
@@ -689,6 +703,10 @@ public class RepoService extends BaseRepoService {
       sqlReleaseConnection();
     }
 
+    if(!rollback && repoObject != null) {
+      journalService.createUpdateObject(repoObject);
+    }
+
     return repoObject;
   }
 
@@ -759,7 +777,10 @@ public class RepoService extends BaseRepoService {
       sqlReleaseConnection();
 
     }
+    if(!rollback && newRepoObject != null) {
+      journalService.createUpdateObject(newRepoObject);
 
+    }
     return newRepoObject;
   }
 

@@ -145,7 +145,7 @@ public class CollectionRepoServiceTest {
     doNothing().when(sqlService).getReadOnlyConnection();
 
     RepoCollection expRepoCollection = new RepoCollection();
-    when(sqlService.getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, VALID_VERSION, VALID_TAG, null)).thenReturn(expRepoCollection);
+    when(sqlService.getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, VALID_VERSION, VALID_TAG, null, false)).thenReturn(expRepoCollection);
 
     RepoCollection repoCollectionResp = collectionRepoService.getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, new ElementFilter(VALID_VERSION, VALID_TAG, null));
 
@@ -153,7 +153,7 @@ public class CollectionRepoServiceTest {
     assertEquals(repoCollectionResp, expRepoCollection);
 
     verify(sqlService, times(1)).getReadOnlyConnection();
-    verify(sqlService).getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, VALID_VERSION, VALID_TAG, null);
+    verify(sqlService).getCollection(VALID_BUCKET, VALID_COLLECTION_KEY, VALID_VERSION, VALID_TAG, null, false);
 
   }
 
