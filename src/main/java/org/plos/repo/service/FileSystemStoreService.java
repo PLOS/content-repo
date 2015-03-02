@@ -19,6 +19,7 @@ package org.plos.repo.service;
 
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
+import org.plos.repo.models.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,21 +100,23 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
   @Override
-  public URL[] getRedirectURLs(RepoObject repoObject) throws RepoException {
-
-    if (!hasXReproxy())
-      return new URL[]{}; // since the filesystem is not reproxyable
-
+  public String[] getFilePaths(RepoObject repoObject) throws RepoException {
+    String path = null;
     try {
+      
+      if (!hasXReproxy())
+        return new String[0]; // since the filesystem is not reproxyable
 
-      URL[] urls = new URL[1];
-      urls[0] = new URL(reproxyBaseUrl + "/" + repoObject.getBucketName() + "/" + repoObject.getChecksum().substring(0, 2) + "/" + repoObject.getChecksum());
-      return urls;
+      path = reproxyBaseUrl + "/" + repoObject.getBucketName() + "/" + repoObject.getChecksum().substring(0, 2) + "/" + repoObject.getChecksum();
 
-    } catch (MalformedURLException e) {
-      throw new RepoException(RepoException.Type.ServerError);
+      if (path == null) {
+        throw new RepoException(RepoException.Type.ObjectFilePathMissing);
+      }
+      
+    }catch (Exception e){
+      throw new RepoException(e);
     }
-
+    return new String[]{path};
   }
 
   @Override

@@ -23,6 +23,7 @@ import com.guba.mogilefs.PooledMogileFSImpl;
 import org.apache.commons.io.IOUtils;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
+import org.plos.repo.models.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,30 +81,24 @@ public class MogileStoreService extends ObjectStore {
   }
 
   @Override
-  public URL[] getRedirectURLs(RepoObject repoObject) throws RepoException {
+  public String[] getFilePaths(RepoObject repoObject) throws RepoException {
+    String[] paths = null;
+    try{
+      
+      paths = mfs.getPaths(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()), true);
 
-    try {
-      String[] paths = mfs.getPaths(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()), true);
-      int pathCount = paths.length;
-      URL[] urls = new URL[pathCount];
-
-      for (int i = 0; i < pathCount; i++) {
-        urls[i] = new URL(paths[i]);
+      if (paths == null) {
+        throw new RepoException(RepoException.Type.ObjectFilePathMissing);
       }
-      return urls;
-
-    } catch (Exception e) {
-      log.error("Exception: {} when trying to fetch reproxy url, key: {} , bucket name: {} , content checksum: {} , version number: {} ",
-          e.getMessage(),
-          repoObject.getKey(),
-          repoObject.getBucketName(),
-          repoObject.getChecksum(),
-          repoObject.getVersionNumber());
+      
+    } catch(Exception e){
       throw new RepoException(e);
+      
     }
-
+    
+    return paths;
   }
-
+  
   @Override
   public InputStream getInputStream(RepoObject repoObject) throws RepoException {
     try {

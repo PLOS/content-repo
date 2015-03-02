@@ -79,12 +79,15 @@ public class S3StoreService extends ObjectStore {
   }
 
   @Override
-  public URL[] getRedirectURLs(RepoObject repoObject) throws RepoException {
-    try {
-      return new URL[]{new URL(s3Client.getResourceUrl(repoObject.getBucketName(), repoObject.getChecksum()))};
-    } catch (MalformedURLException e) {
-      throw new RepoException(e);
+  public String[] getFilePaths(RepoObject repoObject) throws RepoException {
+    
+    String s3Url = s3Client.getResourceUrl(repoObject.getBucketName(), repoObject.getChecksum());
+    
+    if (s3Url == null) {
+      throw new RepoException(RepoException.Type.ObjectFilePathMissing);
     }
+
+    return new String[]{s3Url};
   }
 
   @Override

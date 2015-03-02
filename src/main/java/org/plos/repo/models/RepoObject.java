@@ -61,8 +61,7 @@ public class RepoObject {
              compareNullableElements(this.downloadName, repoObject.downloadName) &&
              compareNullableElements(this.tag, repoObject.tag) &&
              compareNullableElements(this.checksum, repoObject.checksum) &&
-             compareNullableElements(this.userMetadata, repoObject.getUserMetadata())
-          ;
+             compareNullableElements(this.userMetadata, repoObject.getUserMetadata());
 
   }
 
