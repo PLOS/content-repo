@@ -634,7 +634,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     sqlService.getReadOnlyConnection();
 
     // verify that the purge object does not exists the file system
-    Assert.assertNull(sqlService.getObject(bucket1.getBucketName(), "key1", null, object2.getVersionChecksum(), null));
+    Assert.assertNull(sqlService.getObject(bucket1.getBucketName(), "key1", null, object2.getUuid(), null));
 
     sqlService.releaseConnection();
 
@@ -669,7 +669,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
       object2 = repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
 
       //purge object1
-      repoService.deleteObject(bucket1.getBucketName(), "key1", new ElementFilter(null, null, object1.getVersionChecksum()), Status.PURGED);
+      repoService.deleteObject(bucket1.getBucketName(), "key1", new ElementFilter(null, null, object1.getUuid().toString()), Status.PURGED);
 
     } catch (RepoException e) {
       Assert.fail(e.getMessage());
@@ -683,7 +683,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     Assert.assertEquals("obj2", obj2FromDb.getTag());
 
     // verify that the first object created has been purge
-    RepoObject obj1FromDb = sqlService.getObject(bucket1.getBucketName(), "key1", null, object1.getVersionChecksum(), null);
+    RepoObject obj1FromDb = sqlService.getObject(bucket1.getBucketName(), "key1", null, object1.getUuid(), null);
     Assert.assertNull(obj1FromDb);
 
     sqlService.releaseConnection();

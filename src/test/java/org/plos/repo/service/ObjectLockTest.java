@@ -194,7 +194,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       assertEquals(1 + UPDATE_THREADS, versions.size());
     }
 
-    verify(spySqlService, times(READER_THREADS*2)).getObject(anyString(), anyString(), anyInt(), anyString(), anyString());
+    verify(spySqlService, times(READER_THREADS*2)).getObject(anyString(), anyString(), anyInt(), any(UUID.class), anyString());
   }
 
 
@@ -258,7 +258,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     verify(spySqlService, times(INSERT_THREADS + UPDATE_THREADS + READER_THREADS)).getObject(anyString(), anyString()); // insert object + list objects + update objets
 
-    verify(spySqlService, times(READER_THREADS*2)).getObject(anyString(), anyString(), anyInt(), anyString(), anyString()); // reading objects (3 times) + deleting objects
+    verify(spySqlService, times(READER_THREADS*2)).getObject(anyString(), anyString(), anyInt(), any(UUID.class), anyString()); // reading objects (3 times) + deleting objects
   }
 
   @Test
@@ -299,7 +299,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     }
 
     // when deleting an object, we first verify that the object is not contain in an active collection. For that end, we look for the existing object using sqlService getObject
-    verify(spySqlService, times(READER_THREADS)).getObject(anyString(), anyString(), anyInt(), anyString(), anyString());
+    verify(spySqlService, times(READER_THREADS)).getObject(anyString(), anyString(), anyInt(), any(UUID.class), anyString());
   }
 
   private void execute(final int insertThreads, final int updateThreads,

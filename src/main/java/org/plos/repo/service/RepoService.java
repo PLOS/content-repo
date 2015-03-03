@@ -25,8 +25,8 @@ import org.plos.repo.models.Status;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputRepoObject;
 import org.plos.repo.models.validator.InputRepoObjectValidator;
-import org.plos.repo.models.validator.JsonStringValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
+import org.plos.repo.util.UUIDFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +41,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 
@@ -297,8 +298,11 @@ public class RepoService extends BaseRepoService {
       if ((elementFilter == null) || (elementFilter.isEmpty())){
         repoObject = sqlService.getObject(bucketName, key);
       }
-      else
-        repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag());
+      else{
+        UUID uuid = UUIDFormatter.getUuidWithDashes(elementFilter.getUuid());
+        repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), uuid, elementFilter.getTag());
+      }
+
 
       if (repoObject == null)
         throw new RepoException(RepoException.Type.ObjectNotFound);
@@ -443,13 +447,14 @@ public class RepoService extends BaseRepoService {
       sqlService.getConnection();
       rollback = true;
 
-      if (elementFilter.getTag() != null & elementFilter.getVersionChecksum() == null & elementFilter.getVersion() == null){
+      if (elementFilter.getTag() != null & elementFilter.getUuid() == null & elementFilter.getVersion() == null){
         if (sqlService.listObjects(bucketName, 0, 10, false, false, elementFilter.getTag()).size() > 1){
           throw new RepoException(RepoException.Type.MoreThanOneTaggedObject);
         }
       }
 
-      RepoObject repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag(), true, false);
+      UUID uuid = UUIDFormatter.getUuidWithDashes(elementFilter.getUuid());
+      RepoObject repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), uuid, elementFilter.getTag(), true, false);
       if (repoObject == null) {
         throw new RepoException(RepoException.Type.ObjectNotFound);
       }
@@ -457,7 +462,7 @@ public class RepoService extends BaseRepoService {
       if (Status.DELETED.equals(status)){
 
         int objectDeteled = sqlService.markObjectDeleted(key, bucketName, elementFilter.getVersion(),
-            elementFilter.getVersionChecksum(), elementFilter.getTag());
+            uuid, elementFilter.getTag());
 
         if (objectDeteled == 0)
           throw new RepoException(RepoException.Type.ObjectNotFound);
@@ -506,8 +511,9 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(e);
       }
 
+      UUID uuid = UUIDFormatter.getUuidWithDashes(elementFilter.getUuid());
       int objectPurged = sqlService.markObjectPurged(repoObject.getKey(), repoObject.getBucketName(),
-                            elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag());
+                            elementFilter.getVersion(), uuid, elementFilter.getTag());
 
       if (objectPurged == 0){
         throw new RepoException(RepoException.Type.ObjectNotFound);
@@ -643,8 +649,10 @@ public class RepoService extends BaseRepoService {
       repoObject.setVersionNumber(versionNumber);
       repoObject.setCreationDate(cretationDateTime);
 
-
+      // TODO : remove when dropping versionChecksum column from objects table
       repoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(repoObject));
+
+      repoObject.setUuid(UUID.randomUUID());
 
       // determine if the object should be added to the store or not
       if (objectStore.objectExists(repoObject)) {
@@ -733,7 +741,9 @@ public class RepoService extends BaseRepoService {
         }
       }
 
+      // TODO : remove when dropping versionChecksum column from objects table
       newRepoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(newRepoObject));
+      newRepoObject.setUuid(UUID.randomUUID());
 
       // if the new object and the last version of the object are similar, we just return the last version of the object
       if (repoObject.areSimilar(newRepoObject)){

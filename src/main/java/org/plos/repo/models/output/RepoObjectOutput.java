@@ -47,6 +47,7 @@ public class RepoObjectOutput {
   private String versionChecksum;
   private String userMetadata;
   private List<URL> reproxyURL;
+  private String uuid;
 
 
   private RepoObjectOutput() {
@@ -67,6 +68,10 @@ public class RepoObjectOutput {
     this.creationDate = TimestampFormatter.getFormattedTimestamp(repoObject.getCreationDate());
     this.versionChecksum = repoObject.getVersionChecksum();
     this.userMetadata = repoObject.getUserMetadata();
+
+    if (repoObject.getUuid() != null){
+      this.uuid = repoObject.getUuid().toString();
+    }
 
     URL[] urls = repoObject.getReproxyURL();
 
@@ -172,6 +177,22 @@ public class RepoObjectOutput {
     this.reproxyURL = reproxyURL;
   }
 
+  public String getUserMetadata() {
+    return userMetadata;
+  }
+
+  public void setUserMetadata(String userMetadata) {
+    this.userMetadata = userMetadata;
+  }
+
+  public String getUuid() {
+    return uuid;
+  }
+
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
+  }
+
   public static Function<RepoObject, RepoObjectOutput> typeFunction() {
     return new Function<RepoObject, RepoObjectOutput>() {
 
@@ -183,11 +204,4 @@ public class RepoObjectOutput {
     };
   }
 
-  public String getUserMetadata() {
-    return userMetadata;
-  }
-
-  public void setUserMetadata(String userMetadata) {
-    this.userMetadata = userMetadata;
-  }
 }

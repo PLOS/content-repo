@@ -29,7 +29,7 @@ import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.input.InputObject;
 import org.plos.repo.models.validator.InputCollectionValidator;
-import org.plos.repo.models.validator.JsonStringValidator;
+import org.plos.repo.util.UUIDFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,8 +37,10 @@ import javax.inject.Inject;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * This service handles all communication for collections with sqlservice
@@ -114,8 +116,11 @@ public class CollectionRepoService extends BaseRepoService {
 
       if (elementFilter == null || elementFilter.isEmpty()) // no filters defined
         repoCollection = sqlService.getCollection(bucketName, key);
-      else
-        repoCollection = sqlService.getCollection(bucketName, key, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum());
+      else{
+        UUID uuid = UUIDFormatter.getUuidWithDashes(elementFilter.getUuid());
+        repoCollection = sqlService.getCollection(bucketName, key, elementFilter.getVersion(), elementFilter.getTag(), uuid);
+      }
+
 
       if (repoCollection == null)
         throw new RepoException(RepoException.Type.CollectionNotFound);
@@ -131,14 +136,7 @@ public class CollectionRepoService extends BaseRepoService {
   }
 
   /**
-   * Returns a list of all collection versions for the given <code>collection</code>
-   * @param collection a single {@link org.plos.repo.models.RepoCollection}
-   * @return a list of {@link org.plos.repo.models.RepoCollection}
-   * @throws org.plos.repo.service.RepoException
-   */
-
-  /**
-   * Returns a list of all versions for the given <code>bucketName</code> and <code>key</code>
+   * Return a list of all versions for the given <code>bucketName</code> and <code>key</code>
    * @param bucketName a single a single String identifying the bucket name where the collection is.
    * @param key a single String identifying the collection key
    * @return a list of {@link org.plos.repo.models.RepoCollection}
@@ -197,13 +195,14 @@ public class CollectionRepoService extends BaseRepoService {
       sqlService.getConnection();
       rollback = true;
 
-      if (elementFilter.getTag() != null & elementFilter.getVersionChecksum() == null & elementFilter.getVersion() == null){
+      if (elementFilter.getTag() != null & elementFilter.getUuid() == null & elementFilter.getVersion() == null){
         if (sqlService.listCollections(bucketName, 0, 10, false, elementFilter.getTag()).size() > 1){
           throw new RepoException(RepoException.Type.MoreThanOneTaggedCollection);
         }
       }
 
-      if (sqlService.markCollectionDeleted(key, bucketName, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum()) == 0)
+      UUID uuid = UUIDFormatter.getUuidWithDashes(elementFilter.getUuid());
+      if (sqlService.markCollectionDeleted(key, bucketName, elementFilter.getVersion(), elementFilter.getTag(), uuid) == 0)
         throw new RepoException(RepoException.Type.CollectionNotFound);
 
       sqlService.transactionCommit();
@@ -385,7 +384,7 @@ public class CollectionRepoService extends BaseRepoService {
       for( ; y < existingRepoCollection.getRepoObjects().size(); y++ ){
         RepoObject repoObject = existingRepoCollection.getRepoObjects().get(y);
         if (repoObject.getKey().equals(inputObject.getKey()) &&
-            repoObject.getVersionChecksum().equals(inputObject.getVersionChecksum())){
+            repoObject.getUuid().equals(inputObject.getUuid())) {
           break;
 
         }
@@ -407,9 +406,10 @@ public class CollectionRepoService extends BaseRepoService {
     Integer versionNumber = sqlService.getCollectionNextAvailableVersion(repoCollection.getBucketName(), repoCollection.getKey());   // change to support collections
     repoCollection.setVersionNumber(versionNumber);
 
-    List<String> objectsChecksum = Lists.newArrayList(Iterables.transform(inputObjects, typeFunction()));
+    // TODO : remove when dropping versionChecksum column from collections table
+    repoCollection.setVersionChecksum(checksumGenerator.generateVersionChecksum(repoCollection, new ArrayList<String>()));
 
-    repoCollection.setVersionChecksum(checksumGenerator.generateVersionChecksum(repoCollection, objectsChecksum));
+    repoCollection.setUuid(UUID.randomUUID());
 
     // add a record to the DB
     Integer collId = sqlService.insertCollection(repoCollection);
@@ -419,7 +419,8 @@ public class CollectionRepoService extends BaseRepoService {
 
     for (InputObject inputObject : inputObjects){
 
-      if (sqlService.insertCollectionObjects(collId, inputObject.getKey(), repoCollection.getBucketName(), inputObject.getVersionChecksum()) == 0){
+      UUID objectUUID = UUIDFormatter.getUuidWithDashes(inputObject.getUuid());
+      if (sqlService.insertCollectionObjects(collId, inputObject.getKey(), repoCollection.getBucketName(), objectUUID) == 0){
         throw new RepoException(RepoException.Type.ObjectCollectionNotFound);
       }
 
@@ -428,17 +429,6 @@ public class CollectionRepoService extends BaseRepoService {
     return repoCollection;
 
 
-  }
-
-  private Function<InputObject, String> typeFunction() {
-    return new Function<InputObject, String>() {
-
-      @Override
-      public String apply(InputObject inputObject) {
-        return inputObject.getVersionChecksum();
-      }
-
-    };
   }
 
   @Override

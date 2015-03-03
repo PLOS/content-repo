@@ -44,6 +44,7 @@ public class RepoCollectionOutput {
   private Status status;
   private List<RepoObjectOutput> objects;
   private String userMetadata;
+  private String uuid;
 
   private RepoCollectionOutput() {
 
@@ -58,6 +59,10 @@ public class RepoCollectionOutput {
     this.versionChecksum = repoCollection.getVersionChecksum();
     this.status = repoCollection.getStatus();
     this.userMetadata = repoCollection.getUserMetadata();
+
+    if (repoCollection.getUuid() != null){
+      this.uuid = repoCollection.getUuid().toString();
+    }
 
     if(repoCollection.getRepoObjects()!=null && repoCollection.getRepoObjects().size() >0){
       this.objects = Lists.newArrayList(Iterables.transform(repoCollection.getRepoObjects(), RepoObjectOutput.typeFunction()));
@@ -140,6 +145,14 @@ public class RepoCollectionOutput {
 
   public void setUserMetadata(String userMetadata) {
     this.userMetadata = userMetadata;
+  }
+
+  public String getUuid() {
+    return uuid;
+  }
+
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
   }
 
   @Override

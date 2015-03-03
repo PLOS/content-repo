@@ -11,17 +11,17 @@ public class ElementFilter {
   @QueryParam("tag")
   private String tag;
 
-  @QueryParam("versionChecksum")
-  private String versionChecksum;
+  @QueryParam("uuid")
+  private String uuid;
 
   public ElementFilter(){
 
   }
 
-  public ElementFilter(Integer version, String tag, String versionChecksum){
+  public ElementFilter(Integer version, String tag, String uuid){
     this.version = version;
     this.tag = tag;
-    this.versionChecksum = versionChecksum;
+    this.uuid = uuid;
   }
 
   public Integer getVersion() {
@@ -32,8 +32,8 @@ public class ElementFilter {
     return tag;
   }
 
-  public String getVersionChecksum() {
-    return versionChecksum;
+  public String getUuid() {
+    return uuid;
   }
 
   public void setVersion(Integer version) {
@@ -44,12 +44,12 @@ public class ElementFilter {
     this.tag = tag;
   }
 
-  public void setVersionChecksum(String versionChecksum) {
-    this.versionChecksum = versionChecksum;
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
   }
 
   public Boolean isEmpty(){
-    return version == null && tag == null && versionChecksum == null;
+    return version == null && tag == null && uuid == null;
   }
 
   @Override
@@ -57,7 +57,7 @@ public class ElementFilter {
     return "CollectionFilter{" +
         "version=" + version +
         ", tag='" + tag + '\'' +
-        ", versionChecksum='" + versionChecksum + '\'' +
+        ", uuid='" + uuid + '\'' +
         '}';
   }
 }

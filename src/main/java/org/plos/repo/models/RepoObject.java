@@ -21,6 +21,7 @@ import org.plos.repo.models.input.InputRepoObject;
 
 import java.net.URL;
 import java.sql.Timestamp;
+import java.util.UUID;
 
 
 public class RepoObject {
@@ -41,6 +42,7 @@ public class RepoObject {
   private String versionChecksum;
   private URL[] reproxyURL;
   private String userMetadata;
+  private UUID uuid;
 
   public RepoObject() {
   }
@@ -204,5 +206,13 @@ public class RepoObject {
     if (userMetadata != null){
       this.userMetadata = userMetadata.trim();
     }
+  }
+
+  public UUID getUuid() {
+    return uuid;
+  }
+
+  public void setUuid(UUID uuid) {
+    this.uuid = uuid;
   }
 }
