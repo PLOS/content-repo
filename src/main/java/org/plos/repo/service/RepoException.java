@@ -81,7 +81,7 @@ public class RepoException extends Exception {
   }
 
 
-  private Type repoExceptionType;
+  private final Type repoExceptionType;
 
   public Type getType() {
     return repoExceptionType;
@@ -95,7 +95,7 @@ public class RepoException extends Exception {
 
   public RepoException(Exception e) {  // server errors only
     super(e);
-    repoExceptionType = Type.ServerError;
+    repoExceptionType = (e instanceof RepoException) ? ((RepoException) e).getType() : Type.ServerError;
   }
 
   public RepoException(String message) {  // server errors only
