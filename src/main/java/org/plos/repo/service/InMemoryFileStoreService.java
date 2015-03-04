@@ -45,7 +45,7 @@ public class InMemoryFileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean objectExists(RepoObject repoObject) {
+  public boolean objectExists(RepoObject repoObject) {
     return (data.get(repoObject.getBucketName()) != null && data.get(repoObject.getBucketName()).get(repoObject.getChecksum()) != null);
   }
 
@@ -67,17 +67,17 @@ public class InMemoryFileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean bucketExists(Bucket bucket) {
+  public boolean bucketExists(Bucket bucket) {
     return (data.containsKey(bucket.getBucketName()));
   }
 
   @Override
-  public Boolean createBucket(Bucket bucket) {
+  public boolean createBucket(Bucket bucket) {
     return (data.put(bucket.getBucketName(), new HashMap<String, byte[]>()) == null);
   }
 
   @Override
-  public Boolean hasXReproxy() {
+  public boolean hasXReproxy() {
     return false;
   }
 
@@ -88,7 +88,7 @@ public class InMemoryFileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean deleteBucket(Bucket bucket) {
+  public boolean deleteBucket(Bucket bucket) {
 
     // TODO: what if it contains stuff?
 
@@ -96,7 +96,7 @@ public class InMemoryFileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
+  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
 
     byte[] tempContent = tempdata.get(uploadInfo.getTempLocation());
     data.get(bucket.getBucketName()).put(uploadInfo.getChecksum(), tempContent);
@@ -105,7 +105,7 @@ public class InMemoryFileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean deleteObject(RepoObject repoObject) {
+  public boolean deleteObject(RepoObject repoObject) {
 
     if (!objectExists(repoObject))
       return false;
@@ -115,7 +115,7 @@ public class InMemoryFileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean deleteTempUpload(UploadInfo uploadInfo) {
+  public boolean deleteTempUpload(UploadInfo uploadInfo) {
     tempdata.remove(uploadInfo.getTempLocation());
 
     return true;

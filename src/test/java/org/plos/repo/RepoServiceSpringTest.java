@@ -118,7 +118,7 @@ package org.plos.repo;
 
     ObjectStore spyObjectStore = Mockito.spy(objectStore);
 
-    BDDMockito.willReturn(null).given(spyObjectStore).bucketExists(Mockito.any(Bucket.class));
+    BDDMockito.willReturn(false).given(spyObjectStore).bucketExists(Mockito.any(Bucket.class));
 
     Field objStoreField = RepoService.class.getDeclaredField("objectStore");
     objStoreField.setAccessible(true);

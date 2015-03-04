@@ -58,7 +58,7 @@ public class S3StoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean objectExists(RepoObject repoObject) {
+  public boolean objectExists(RepoObject repoObject) {
     try {
       S3Object obj = s3Client.getObject(repoObject.getBucketName(), repoObject.getChecksum());
 
@@ -74,7 +74,7 @@ public class S3StoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean hasXReproxy() {
+  public boolean hasXReproxy() {
     return true;
   }
 
@@ -101,12 +101,12 @@ public class S3StoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean bucketExists(Bucket bucket) {
+  public boolean bucketExists(Bucket bucket) {
     return s3Client.doesBucketExist(bucket.getBucketName());
   }
 
   @Override
-  public Boolean createBucket(Bucket bucket) {
+  public boolean createBucket(Bucket bucket) {
 
     try {
       CreateBucketRequest bucketRequest = new CreateBucketRequest(bucket.getBucketName(), Region.US_West);
@@ -122,7 +122,7 @@ public class S3StoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean deleteBucket(Bucket bucket) {
+  public boolean deleteBucket(Bucket bucket) {
 
     try {
       s3Client.deleteBucket(bucket.getBucketName());
@@ -190,7 +190,7 @@ public class S3StoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
+  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
 
     int retries = 5;
     int tryCount = 0;
@@ -246,12 +246,12 @@ public class S3StoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean deleteTempUpload(UploadInfo uploadInfo) {
+  public boolean deleteTempUpload(UploadInfo uploadInfo) {
     return new File(uploadInfo.getTempLocation()).delete();
   }
 
   @Override
-  public Boolean deleteObject(RepoObject repoObject) {
+  public boolean deleteObject(RepoObject repoObject) {
     try {
       s3Client.deleteObject(repoObject.getBucketName(), repoObject.getChecksum());
       return true;

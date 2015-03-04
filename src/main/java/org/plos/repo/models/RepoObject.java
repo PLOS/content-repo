@@ -52,7 +52,7 @@ public class RepoObject {
     this.status = status;
   }
 
-  public Boolean areSimilar(RepoObject repoObject){
+  public boolean areSimilar(RepoObject repoObject){
 
       return this.key.equals(repoObject.key) &&
              this.bucketName.equals(repoObject.bucketName) &&
@@ -65,7 +65,7 @@ public class RepoObject {
 
   }
 
-  private Boolean compareNullableElements(String string1, String string2){
+  private boolean compareNullableElements(String string1, String string2){
     if (string1 != null && string2 != null) {
       return string1.equals(string2);
     } else if(string1 == null && string2 == null) {
