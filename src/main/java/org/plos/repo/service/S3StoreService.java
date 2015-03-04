@@ -23,6 +23,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
 import org.slf4j.Logger;
@@ -101,35 +102,38 @@ public class S3StoreService extends ObjectStore {
   }
 
   @Override
-  public boolean bucketExists(Bucket bucket) {
-    return s3Client.doesBucketExist(bucket.getBucketName());
+  public Optional<Boolean> bucketExists(Bucket bucket) {
+    return Optional.of(s3Client.doesBucketExist(bucket.getBucketName()));
   }
 
+  private static final Optional<Boolean> TRUE = Optional.of(true);
+  private static final Optional<Boolean> FALSE = Optional.of(false);
+
   @Override
-  public boolean createBucket(Bucket bucket) {
+  public Optional<Boolean> createBucket(Bucket bucket) {
 
     try {
       CreateBucketRequest bucketRequest = new CreateBucketRequest(bucket.getBucketName(), Region.US_West);
       bucketRequest.withCannedAcl(CannedAccessControlList.PublicRead);
       s3Client.createBucket(bucketRequest);
 
-      return true;
+      return TRUE;
     } catch (Exception e) {
       log.error("Error creating bucket", e);
-      return false;
+      return FALSE;
     }
 
   }
 
   @Override
-  public boolean deleteBucket(Bucket bucket) {
+  public Optional<Boolean> deleteBucket(Bucket bucket) {
 
     try {
       s3Client.deleteBucket(bucket.getBucketName());
-      return true;
+      return TRUE;
     } catch (Exception e) {
       log.error("Error deleting bucket", e);
-      return false;
+      return FALSE;
     }
   }
 

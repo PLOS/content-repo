@@ -17,6 +17,7 @@
 
 package org.plos.repo;
 
+ import com.google.common.base.Optional;
  import org.apache.commons.io.IOUtils;
  import org.junit.Assert;
  import org.junit.Before;
@@ -110,7 +111,7 @@ package org.plos.repo;
     Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) != null);
     Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), null, null, null).size() == 1);
     sqlService.releaseConnection();
-    Assert.assertTrue(objectStore.bucketExists(bucket1));
+    Assert.assertTrue(objectStore.bucketExists(bucket1).get());
   }
 
   @Test
@@ -118,7 +119,7 @@ package org.plos.repo;
 
     ObjectStore spyObjectStore = Mockito.spy(objectStore);
 
-    BDDMockito.willReturn(false).given(spyObjectStore).bucketExists(Mockito.any(Bucket.class));
+    BDDMockito.willReturn(Optional.absent()).given(spyObjectStore).bucketExists(Mockito.any(Bucket.class));
 
     Field objStoreField = RepoService.class.getDeclaredField("objectStore");
     objStoreField.setAccessible(true);
@@ -138,7 +139,7 @@ package org.plos.repo;
 
     ObjectStore spyObjectStore = Mockito.spy(objectStore);
 
-    BDDMockito.willReturn(false).given(spyObjectStore).createBucket(Mockito.any(Bucket.class));
+    BDDMockito.willReturn(Optional.of(false)).given(spyObjectStore).createBucket(Mockito.any(Bucket.class));
 
     Field objStoreField = RepoService.class.getDeclaredField("objectStore");
     objStoreField.setAccessible(true);
@@ -158,7 +159,7 @@ package org.plos.repo;
     sqlService.getReadOnlyConnection();
     Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) == null);
     sqlService.releaseConnection();
-    Assert.assertFalse(objectStore.bucketExists(bucket1));
+    Assert.assertFalse(objectStore.bucketExists(bucket1).get());
   }
 
   @Test
@@ -186,7 +187,7 @@ package org.plos.repo;
     Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) == null);
     Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), null, null, null).size() == 0);
     sqlService.releaseConnection();
-    Assert.assertFalse(objectStore.bucketExists(bucket1));
+    Assert.assertFalse(objectStore.bucketExists(bucket1).get());
 
   }
 
@@ -210,7 +211,7 @@ package org.plos.repo;
     Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE_BUCKET));
     Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.DELETE_BUCKET));
     sqlService.releaseConnection();
-    Assert.assertFalse(objectStore.bucketExists(bucket1));
+    Assert.assertFalse(objectStore.bucketExists(bucket1).get());
 
   }
 
@@ -219,7 +220,7 @@ package org.plos.repo;
 
     ObjectStore spyObjectStore = Mockito.spy(objectStore);
 
-    BDDMockito.willReturn(false).given(spyObjectStore).bucketExists(Mockito.any(Bucket.class));
+    BDDMockito.willReturn(Optional.of(false)).given(spyObjectStore).bucketExists(Mockito.any(Bucket.class));
 
     Field objStoreField = RepoService.class.getDeclaredField("objectStore");
     objStoreField.setAccessible(true);

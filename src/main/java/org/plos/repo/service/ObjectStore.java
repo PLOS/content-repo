@@ -17,6 +17,7 @@
 
 package org.plos.repo.service;
 
+import com.google.common.base.Optional;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.Status;
@@ -110,12 +111,23 @@ public abstract class ObjectStore {
 
   abstract public boolean objectExists(RepoObject repoObject);
 
-  // we use boolean here
-  abstract public boolean bucketExists(Bucket bucket);
+  /**
+   * @return true if the bucket exists; false if it does not exist; absent if the implementation does not persist
+   * buckets
+   */
+  abstract public Optional<Boolean> bucketExists(Bucket bucket);
 
-  abstract public boolean createBucket(Bucket bucket);
+  /**
+   * @return true if the bucket was created; false if it could not be created; absent if this was a no-op because the
+   * implementation does not persist buckets
+   */
+  abstract public Optional<Boolean> createBucket(Bucket bucket);
 
-  abstract public boolean deleteBucket(Bucket bucket);
+  /**
+   * @return true if the bucket existed and was deleted; false if it did not exist or could not be deleted; absent if
+   * this was a no-op because the implementation does not persist buckets
+   */
+  abstract public Optional<Boolean> deleteBucket(Bucket bucket);
 
   abstract public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException;
 

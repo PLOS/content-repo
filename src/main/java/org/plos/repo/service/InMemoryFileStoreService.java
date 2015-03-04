@@ -17,6 +17,7 @@
 
 package org.plos.repo.service;
 
+import com.google.common.base.Optional;
 import org.apache.commons.io.IOUtils;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
@@ -67,13 +68,13 @@ public class InMemoryFileStoreService extends ObjectStore {
   }
 
   @Override
-  public boolean bucketExists(Bucket bucket) {
-    return (data.containsKey(bucket.getBucketName()));
+  public Optional<Boolean> bucketExists(Bucket bucket) {
+    return Optional.of(data.containsKey(bucket.getBucketName()));
   }
 
   @Override
-  public boolean createBucket(Bucket bucket) {
-    return (data.put(bucket.getBucketName(), new HashMap<String, byte[]>()) == null);
+  public Optional<Boolean> createBucket(Bucket bucket) {
+    return Optional.of(data.put(bucket.getBucketName(), new HashMap<String, byte[]>()) == null);
   }
 
   @Override
@@ -88,11 +89,11 @@ public class InMemoryFileStoreService extends ObjectStore {
   }
 
   @Override
-  public boolean deleteBucket(Bucket bucket) {
+  public Optional<Boolean> deleteBucket(Bucket bucket) {
 
     // TODO: what if it contains stuff?
 
-    return (data.remove(bucket.getBucketName()) != null);
+    return Optional.of(data.remove(bucket.getBucketName()) != null);
   }
 
   @Override

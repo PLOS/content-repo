@@ -17,6 +17,7 @@
 
 package org.plos.repo.service;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.guba.mogilefs.MogileFS;
 import com.guba.mogilefs.PooledMogileFSImpl;
@@ -109,20 +110,19 @@ public class MogileStoreService extends ObjectStore {
   }
 
   @Override
-  public boolean bucketExists(Bucket bucket) {
-    // Can write to any bucket name without creating it, so treat all bucket names as though they exist
-    return true;
+  public Optional<Boolean> bucketExists(Bucket bucket) {
+    return Optional.absent();
   }
 
   @Override
-  public boolean createBucket(Bucket bucket) {
+  public Optional<Boolean> createBucket(Bucket bucket) {
     // we use file paths instead of domains so this function does not need to do anything
-    return true;
+    return Optional.absent();
   }
 
   @Override
-  public boolean deleteBucket(Bucket bucket) {
-    return true;
+  public Optional<Boolean> deleteBucket(Bucket bucket) {
+    return Optional.absent();
   }
 
   @Override
