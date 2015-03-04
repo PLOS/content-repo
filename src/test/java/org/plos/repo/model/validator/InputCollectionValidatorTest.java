@@ -30,6 +30,8 @@ import org.plos.repo.service.RepoException;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.fail;
@@ -45,7 +47,12 @@ public class InputCollectionValidatorTest {
   private static final String VALID_BUCKET_NAME = "valid-bucket-name";
   private static final String VALID_TIMESTAMP = "2014-09-02 1:55:32";
   private static final String FAIL_MSG = "A repo exception was expected.";
-  private static final String VALID_USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\"}";
+  private static final Map<String, String> VALID_USER_METADATA = new HashMap<String, String>() {
+    {
+      put("key", "obj1");
+      put("versionChecksum", "dkasdny84923mkdnu914i21");
+    }
+  };
 
   @InjectMocks
   private InputCollectionValidator inputCollectionValidator;

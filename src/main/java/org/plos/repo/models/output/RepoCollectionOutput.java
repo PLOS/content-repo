@@ -17,17 +17,23 @@
 
 package org.plos.repo.models.output;
 
+import com.google.gson.Gson;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.plos.repo.models.MapAdapter;
 import org.plos.repo.models.RepoCollection;
 import org.plos.repo.models.Status;
 import org.plos.repo.util.TimestampFormatter;
 
+import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Collection to be return to the client
@@ -43,7 +49,9 @@ public class RepoCollectionOutput {
   private String versionChecksum;
   private Status status;
   private List<RepoObjectOutput> objects;
-  private String userMetadata;
+  @XmlAnyElement
+  @XmlJavaTypeAdapter(MapAdapter.class)
+  private Map<String, String> userMetadata;
 
   private RepoCollectionOutput() {
 
@@ -57,7 +65,9 @@ public class RepoCollectionOutput {
     this.creationDate = TimestampFormatter.getFormattedTimestamp(repoCollection.getCreationDate());
     this.versionChecksum = repoCollection.getVersionChecksum();
     this.status = repoCollection.getStatus();
-    this.userMetadata = repoCollection.getUserMetadata();
+    if(repoCollection.getUserMetadata() != null) {
+      this.userMetadata = new Gson().fromJson(repoCollection.getUserMetadata(), HashMap.class);
+    }
 
     if(repoCollection.getRepoObjects()!=null && repoCollection.getRepoObjects().size() >0){
       this.objects = Lists.newArrayList(Iterables.transform(repoCollection.getRepoObjects(), RepoObjectOutput.typeFunction()));
@@ -134,11 +144,11 @@ public class RepoCollectionOutput {
     this.versionChecksum = versionChecksum;
   }
 
-  public String getUserMetadata() {
+  public Map<String, String> getUserMetadata() {
     return userMetadata;
   }
 
-  public void setUserMetadata(String userMetadata) {
+  public void setUserMetadata(Map<String, String> userMetadata) {
     this.userMetadata = userMetadata;
   }
 

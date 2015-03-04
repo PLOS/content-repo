@@ -23,6 +23,8 @@ import com.google.gson.Gson;
 import org.plos.repo.service.RepoException;
 
 import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Json String validator.
@@ -45,4 +47,45 @@ public class JsonStringValidator {
     }
   }
 
+  /**
+   * Verifies if the <code>jsonString</code> is a valid json.
+   * @param jsonString a single String representing a json to be validated
+   * @param errorType RepoException.Type to be thrown if the String is not a valid json
+   * @throws org.plos.repo.service.RepoException
+   */
+  public void validate(Map<String, String> json, RepoException.Type errorType) throws RepoException {
+    try {
+      if(json != null) {
+        System.out.print("***** Map " + json);
+        String result = gson.toJson(json);
+        System.out.print("***** Result " + result);
+      }
+    } catch(com.google.gson.JsonSyntaxException ex) {
+      throw new RepoException(errorType);
+    }
+  }
+  
+  public String toJson(Map<String, String> userMetadata) throws RepoException {
+    String json = null;
+    try {
+      if(userMetadata != null){
+        json = gson.toJson(userMetadata);
+      }
+    } catch(com.google.gson.JsonSyntaxException ex) {
+      throw new RepoException(ex);
+    }
+    return json;
+  }
+
+  public Map<String, String> toMap(String json) throws RepoException {
+    Map<String, String> userMetadata = null;
+    try {
+      if(json != null){
+        userMetadata = gson.fromJson(json, HashMap.class);
+      }
+    } catch(com.google.gson.JsonSyntaxException ex) {
+      throw new RepoException(ex);
+    }
+    return userMetadata;
+  }
 }

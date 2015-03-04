@@ -17,8 +17,13 @@
 
 package org.plos.repo.models.input;
 
+import org.plos.repo.models.MapAdapter;
+
+import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Collection of objects.
@@ -33,7 +38,11 @@ public class InputCollection {
   private String tag;
   private List<InputObject> objects;
   private String creationDateTime;   // created time
-  private String userMetadata;
+  //@XmlElement(name = "userMetadata")
+  //@com.fasterxml.jackson.databind.annotation.JsonSerialize
+  @XmlAnyElement
+  @XmlJavaTypeAdapter(MapAdapter.class)
+  private Map<String, String> userMetadata;
 
   // empty constructor required for JAXB mapping
   public InputCollection() {
@@ -95,11 +104,11 @@ public class InputCollection {
     this.creationDateTime = creationDateTime;
   }
 
-  public String getUserMetadata() {
+  public Map<String, String> getUserMetadata() {
     return userMetadata;
   }
-
-  public void setUserMetadata(String userMetadata) {
+  
+  public void setUserMetadata(Map<String, String>  userMetadata) {
     this.userMetadata = userMetadata;
   }
 }

@@ -21,6 +21,7 @@ import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.service.RepoException;
 
 import javax.inject.Inject;
+import java.util.Map;
 
 /**
  * Input Collection Validator. It validates the required fields.
@@ -52,4 +53,7 @@ public class InputCollectionValidator {
 
   }
 
+  public String getJsonUserMetadata(Map<String, String> userMetadata) throws RepoException {
+    return jsonStringValidator.toJson(userMetadata);
+  }
 }

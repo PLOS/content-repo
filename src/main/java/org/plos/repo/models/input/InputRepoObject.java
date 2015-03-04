@@ -21,9 +21,13 @@ package org.plos.repo.models.input;
 
 import com.wordnik.swagger.annotations.ApiParam;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.plos.repo.models.MapAdapter;
 
+import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.io.InputStream;
+import java.util.Map;
 
 /**
  * Input Repo Object

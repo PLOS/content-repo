@@ -313,7 +313,10 @@ public class CollectionRepoService extends BaseRepoService {
       repoCollection.setTimestamp(timestamp);
       repoCollection.setTag(inputCollection.getTag());
       repoCollection.setCreationDate(creationDate);
-      repoCollection.setUserMetadata(inputCollection.getUserMetadata());
+      repoCollection.setUserMetadata(inputCollectionValidator.getJsonUserMetadata(inputCollection.getUserMetadata()));
+        
+
+
 
       return createCollection(repoCollection, inputCollection.getObjects());
 
@@ -339,7 +342,7 @@ public class CollectionRepoService extends BaseRepoService {
     repoCollection.setTimestamp(timestamp);
     repoCollection.setTag(inputCollection.getTag());
     repoCollection.setCreationDate(creationDate);
-    repoCollection.setUserMetadata(inputCollection.getUserMetadata());
+    repoCollection.setUserMetadata(inputCollectionValidator.getJsonUserMetadata(inputCollection.getUserMetadata()));
     try{
       return createCollection(repoCollection, inputCollection.getObjects());
     } catch(SQLIntegrityConstraintViolationException e){

@@ -35,6 +35,8 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.HashMap;
 
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
@@ -53,8 +55,19 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   private final String testData1 = "test data one goes\nhere.";
 
-  private String VALID_USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\"}";
-  private String NOT_VALID_USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\",}";
+  private Map<String, String> VALID_USER_METADATA = new HashMap<String, String>() {
+      { 
+          put("key", "obj1"); 
+          put("versionChecksum", "dkasdny84923mkdnu914i21");
+      }
+  };
+  private Map<String, String> NOT_VALID_USER_METADATA = new HashMap<String, String>() {
+      {
+          put("key", "obj1");
+          put("versionChecksum","dkasdny84923mkdnu914i21");
+          put(",",null);
+      }
+  };
 
 
   @Before

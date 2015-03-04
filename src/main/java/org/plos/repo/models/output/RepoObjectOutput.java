@@ -17,15 +17,21 @@
 
 package org.plos.repo.models.output;
 
+import com.google.gson.Gson;
 import com.google.common.base.Function;
+import org.plos.repo.models.MapAdapter;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.Status;
 import org.plos.repo.util.TimestampFormatter;
 
+import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Collection to be return to the client
@@ -45,7 +51,9 @@ public class RepoObjectOutput {
   private Status status;
   private String creationDate;
   private String versionChecksum;
-  private String userMetadata;
+  @XmlAnyElement
+  @XmlJavaTypeAdapter(MapAdapter.class)
+  private Map<String, String> userMetadata;
   private List<URL> reproxyURL;
 
 
@@ -66,7 +74,9 @@ public class RepoObjectOutput {
     this.status = repoObject.getStatus();
     this.creationDate = TimestampFormatter.getFormattedTimestamp(repoObject.getCreationDate());
     this.versionChecksum = repoObject.getVersionChecksum();
-    this.userMetadata = repoObject.getUserMetadata();
+    if(repoObject.getUserMetadata() != null) {
+      this.userMetadata = new Gson().fromJson(repoObject.getUserMetadata(), HashMap.class);
+    }
 
     URL[] urls = repoObject.getReproxyURL();
 
@@ -183,11 +193,11 @@ public class RepoObjectOutput {
     };
   }
 
-  public String getUserMetadata() {
+  public Map<String, String> getUserMetadata() {
     return userMetadata;
   }
 
-  public void setUserMetadata(String userMetadata) {
+  public void setUserMetadata(Map<String, String> userMetadata) {
     this.userMetadata = userMetadata;
   }
 }
