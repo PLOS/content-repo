@@ -362,7 +362,7 @@ public abstract class SqlService {
     try {
 
       p = connectionLocal.get().prepareStatement("SELECT " + OBJECT_COLUMNS + "b.BUCKETNAME  FROM objects obj, buckets b " +
-          "WHERE o.bucketId = b.bucketId AND b.bucketName=? AND objKey=? AND status=? ORDER BY o.creationDate " +
+          "WHERE obj.bucketId = b.bucketId AND b.bucketName=? AND obj.objKey=? AND status=? ORDER BY o.creationDate " +
           "DESC LIMIT 1");
 
       p.setString(1, bucketName);
