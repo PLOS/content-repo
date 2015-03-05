@@ -17,7 +17,8 @@
 
 package org.plos.repo.models.input;
 
-import org.plos.repo.models.MapAdapter;
+
+import org.plos.repo.models.adapter.UserMetadataAdapter;
 
 import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -38,10 +39,8 @@ public class InputCollection {
   private String tag;
   private List<InputObject> objects;
   private String creationDateTime;   // created time
-  //@XmlElement(name = "userMetadata")
-  //@com.fasterxml.jackson.databind.annotation.JsonSerialize
   @XmlAnyElement
-  @XmlJavaTypeAdapter(MapAdapter.class)
+  @XmlJavaTypeAdapter(UserMetadataAdapter.class)
   private Map<String, String> userMetadata;
 
   // empty constructor required for JAXB mapping

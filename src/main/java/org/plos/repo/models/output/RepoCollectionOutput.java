@@ -23,7 +23,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.plos.repo.models.MapAdapter;
+import org.plos.repo.models.adapter.UserMetadataAdapter;
 import org.plos.repo.models.RepoCollection;
 import org.plos.repo.models.Status;
 import org.plos.repo.util.TimestampFormatter;
@@ -50,7 +50,7 @@ public class RepoCollectionOutput {
   private Status status;
   private List<RepoObjectOutput> objects;
   @XmlAnyElement
-  @XmlJavaTypeAdapter(MapAdapter.class)
+  @XmlJavaTypeAdapter(UserMetadataAdapter.class)
   private Map<String, String> userMetadata;
 
   private RepoCollectionOutput() {
@@ -65,7 +65,7 @@ public class RepoCollectionOutput {
     this.creationDate = TimestampFormatter.getFormattedTimestamp(repoCollection.getCreationDate());
     this.versionChecksum = repoCollection.getVersionChecksum();
     this.status = repoCollection.getStatus();
-    if(repoCollection.getUserMetadata() != null) {
+    if(repoCollection.getUserMetadata() != null && !repoCollection.getUserMetadata().isEmpty()) {
       this.userMetadata = new Gson().fromJson(repoCollection.getUserMetadata(), HashMap.class);
     }
 

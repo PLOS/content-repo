@@ -32,7 +32,7 @@ import java.util.Map;
 public class JsonStringValidator {
 
   private Gson gson = new Gson();
-
+  
   /**
    * Verifies if the <code>jsonString</code> is a valid json.
    * @param jsonString a single String representing a json to be validated
@@ -48,28 +48,31 @@ public class JsonStringValidator {
   }
 
   /**
-   * Verifies if the <code>jsonString</code> is a valid json.
-   * @param jsonString a single String representing a json to be validated
+   * Verifies if the <code>jsonMap</code> is a valid json.
+   * @param jsonMap a Map representing a json to be validated
    * @param errorType RepoException.Type to be thrown if the String is not a valid json
    * @throws org.plos.repo.service.RepoException
    */
-  public void validate(Map<String, String> json, RepoException.Type errorType) throws RepoException {
+  public void validate(Map<String, String> jsonMap, RepoException.Type errorType) throws RepoException {
     try {
-      if(json != null) {
-        System.out.print("***** Map " + json);
-        String result = gson.toJson(json);
-        System.out.print("***** Result " + result);
+      if(jsonMap != null) {
+        gson.toJson(jsonMap);
       }
     } catch(com.google.gson.JsonSyntaxException ex) {
       throw new RepoException(errorType);
     }
   }
-  
-  public String toJson(Map<String, String> userMetadata) throws RepoException {
+
+  /**
+   * Converts the <code>jsonMap</code> in a json string.
+   * @param jsonMap a Map representing a json to be validated
+   * @throws org.plos.repo.service.RepoException
+   */
+  public String toJson(Map<String, String> jsonMap) throws RepoException {
     String json = null;
     try {
-      if(userMetadata != null){
-        json = gson.toJson(userMetadata);
+      if(jsonMap != null){
+        json = gson.toJson(jsonMap);
       }
     } catch(com.google.gson.JsonSyntaxException ex) {
       throw new RepoException(ex);
@@ -77,15 +80,4 @@ public class JsonStringValidator {
     return json;
   }
 
-  public Map<String, String> toMap(String json) throws RepoException {
-    Map<String, String> userMetadata = null;
-    try {
-      if(json != null){
-        userMetadata = gson.fromJson(json, HashMap.class);
-      }
-    } catch(com.google.gson.JsonSyntaxException ex) {
-      throw new RepoException(ex);
-    }
-    return userMetadata;
-  }
 }

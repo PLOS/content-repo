@@ -19,7 +19,7 @@ package org.plos.repo.models.output;
 
 import com.google.gson.Gson;
 import com.google.common.base.Function;
-import org.plos.repo.models.MapAdapter;
+import org.plos.repo.models.adapter.UserMetadataAdapter;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.Status;
 import org.plos.repo.util.TimestampFormatter;
@@ -52,7 +52,7 @@ public class RepoObjectOutput {
   private String creationDate;
   private String versionChecksum;
   @XmlAnyElement
-  @XmlJavaTypeAdapter(MapAdapter.class)
+  @XmlJavaTypeAdapter(UserMetadataAdapter.class)
   private Map<String, String> userMetadata;
   private List<URL> reproxyURL;
 
@@ -74,7 +74,7 @@ public class RepoObjectOutput {
     this.status = repoObject.getStatus();
     this.creationDate = TimestampFormatter.getFormattedTimestamp(repoObject.getCreationDate());
     this.versionChecksum = repoObject.getVersionChecksum();
-    if(repoObject.getUserMetadata() != null) {
+    if(repoObject.getUserMetadata() != null && !repoObject.getUserMetadata().isEmpty()) {
       this.userMetadata = new Gson().fromJson(repoObject.getUserMetadata(), HashMap.class);
     }
 

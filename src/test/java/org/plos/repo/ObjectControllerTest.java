@@ -58,9 +58,9 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
   private final String CREATION_DATE_TIME = new Timestamp(new Date().getTime()).toString();
 
-  private String VALID_USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\"}";
+  private String VALID_USER_METADATA = "{\"versionChecksum\":\"dkasdny84923mkdnu914i21\",\"key\":\"obj1\"}";
 
-  private String NOT_VALID_USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\",}";
+  private String NOT_VALID_USER_METADATA = "{\"versionChecksum\":\"dkasdny84923mkdnu914i21\",\"key\":\"obj1\",}";
 
   @Before
   public void setup() throws Exception {
@@ -316,7 +316,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
                 .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
             MediaType.MULTIPART_FORM_DATA
         ));
-
+    System.out.print("Response " + response);
     JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
     TestCase.assertNotNull(responseObj);
     String versionChecksum = responseObj.get("versionChecksum").getAsString();
@@ -760,7 +760,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
         .get();
     JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
     assertNotNull(responseObj);
-    assertEquals(VALID_USER_METADATA, responseObj.get("userMetadata").getAsString());
+    assertEquals(VALID_USER_METADATA, responseObj.get("userMetadata").toString());
 
   }
 

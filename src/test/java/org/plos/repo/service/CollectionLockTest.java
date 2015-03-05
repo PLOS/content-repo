@@ -136,7 +136,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
     execute(INSERT_THREADS, 0, DELETE_THREADS, READER_THREADS, inputObjects, callback);
     List<RepoCollection> repoCollections = collectionRepoService.listCollections(BUCKET_NAME, null, null, false, null);
     assertEquals(1, repoCollections.size()); // since all the collections where are trying to write are equals & they have
-
+    
     this.startGate = new CountDownLatch(1);
     this.endGate = new CountDownLatch(UPDATE_THREADS + DELETE_THREADS + READER_THREADS);
     execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, inputObjects, callback);
