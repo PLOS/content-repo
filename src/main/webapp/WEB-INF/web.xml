@@ -47,10 +47,6 @@
       <param-value>com.wordnik.swagger.jaxrs.json;com.wordnik.swagger.jaxrs.listing</param-value>
     </init-param>
     <init-param>
-      <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
-      <param-value>true</param-value>
-    </init-param>
-    <init-param>
       <param-name>jersey.config.servlet.filter.staticContentRegex</param-name>
       <param-value>/docs/.*</param-value>
     </init-param>
