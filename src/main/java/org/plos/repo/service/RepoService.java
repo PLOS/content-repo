@@ -18,6 +18,7 @@
 package org.plos.repo.service;
 
 import com.google.common.util.concurrent.Striped;
+import org.apache.commons.codec.binary.Hex;
 import org.hsqldb.lib.StringUtil;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;

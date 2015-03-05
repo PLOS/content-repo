@@ -31,6 +31,7 @@ import org.springframework.core.io.Resource;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
+import java.sql.Statement;
 
 public class TestSpringConfig {
 
@@ -98,6 +99,15 @@ public class TestSpringConfig {
 
     connection.setAutoCommit(false);
     service.setDataSource(ds);
+
+/*    Statement statement = connection.createStatement();
+    String functionHexStatement = "CREATE FUNCTION HEX(val VARCHAR(500)) " +
+        "RETURNS BINARY(16) " +
+        "LANGUAGE JAVA DETERMINISTIC " +
+        "NO SQL " +
+        "EXTERNAL NAME 'CLASSPATH:org.plos.repo.config.UUIDHsqlFunctions.hex';" ;
+
+    statement.execute(functionHexStatement);*/
 
     return service;
   }
