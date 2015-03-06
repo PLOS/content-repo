@@ -25,7 +25,6 @@ import org.plos.repo.models.Status;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputRepoObject;
 import org.plos.repo.models.validator.InputRepoObjectValidator;
-import org.plos.repo.models.validator.JsonStringValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +62,7 @@ public class RepoService extends BaseRepoService {
   private TimestampInputValidator timestampValidator;
 
   @Inject
-  private JournalService journalService;
+  private AuditService auditService;
 
   public List<Bucket> listBuckets() throws RepoException {
     try {
@@ -139,7 +138,7 @@ public class RepoService extends BaseRepoService {
 
     }
     if(!rollback){
-        journalService.createBucket(name);
+        auditService.createBucket(name);
       
     }
     return newBucket;
@@ -209,7 +208,7 @@ public class RepoService extends BaseRepoService {
     }
 
     if(!rollback) {
-      journalService.deleteBucket(name);
+      auditService.deleteBucket(name);
 
     }
   }
@@ -491,7 +490,7 @@ public class RepoService extends BaseRepoService {
     }
     if(!rollback && repoObject != null){
       repoObject.setStatus(status);
-      journalService.deletePurgeObject(repoObject);
+      auditService.deletePurgeObject(repoObject);
       
     }
   }
@@ -704,7 +703,7 @@ public class RepoService extends BaseRepoService {
     }
 
     if(!rollback && repoObject != null) {
-      journalService.createUpdateObject(repoObject);
+      auditService.createUpdateObject(repoObject);
     }
 
     return repoObject;
@@ -784,7 +783,7 @@ public class RepoService extends BaseRepoService {
 
     }
     if(!rollback && newRepoObject != null) {
-      journalService.createUpdateObject(newRepoObject);
+      auditService.createUpdateObject(newRepoObject);
 
     }
     return newRepoObject;

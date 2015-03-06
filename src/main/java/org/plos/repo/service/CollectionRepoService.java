@@ -29,7 +29,6 @@ import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.input.InputObject;
 import org.plos.repo.models.validator.InputCollectionValidator;
-import org.plos.repo.models.validator.JsonStringValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +50,7 @@ public class CollectionRepoService extends BaseRepoService {
   private InputCollectionValidator inputCollectionValidator;
 
   @Inject
-  private JournalService journalService;
+  private AuditService auditService;
 
   /**
    * Returns a list of collections meta data for the given bucket name <code>bucketName</code>. In case pagination
@@ -223,7 +222,7 @@ public class CollectionRepoService extends BaseRepoService {
 
     }
     if(!rollback) {
-      journalService.deleteCollection(bucketName, key, elementFilter);
+      auditService.deleteCollection(bucketName, key, elementFilter);
     }
   }
 
@@ -298,7 +297,7 @@ public class CollectionRepoService extends BaseRepoService {
       sqlReleaseConnection();
     }
     if(!rollback && newRepoCollection != null) {
-        journalService.createUpdateCollection(newRepoCollection);
+        auditService.createUpdateCollection(newRepoCollection);
     }
     return newRepoCollection;
   }

@@ -19,8 +19,10 @@ package org.plos.repo.models;
 
 import java.sql.Timestamp;
 
-
-public class Journal {
+/**
+ * Represents the values to audit every operation
+ */
+public class Audit {
   
   private Integer id;
   private String bucket;
@@ -30,14 +32,14 @@ public class Journal {
   private Timestamp timestamp;
 
 
-  public Journal(String bucket, String key, Operation operation, String versionChecksum) {
+  public Audit(String bucket, String key, Operation operation, String versionChecksum) {
     this.bucket = bucket;
     this.key = key;
     this.operation = operation;
     this.versionChecksum = versionChecksum;
   }
   
-  public Journal(String bucket, Operation operation) {
+  public Audit(String bucket, Operation operation) {
     this.bucket = bucket;
     this.operation = operation;
   }

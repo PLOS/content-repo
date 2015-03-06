@@ -17,7 +17,12 @@
 
 package org.plos.repo.service;
 
-import org.plos.repo.models.*;
+import org.plos.repo.models.Audit;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.models.Operation;
+import org.plos.repo.models.RepoCollection;
+import org.plos.repo.models.RepoObject;
+import org.plos.repo.models.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
@@ -72,13 +77,13 @@ public abstract class SqlService {
     return collection;
   }
 
-  private static Journal mapJournalRow(ResultSet rs) throws SQLException {
+  private static Audit mapJournalRow(ResultSet rs) throws SQLException {
 
-    Journal journal = new Journal(rs.getString("BUCKETNAME"), rs.getString("KEYVALUE"),
+    Audit audit = new Audit(rs.getString("BUCKETNAME"), rs.getString("KEYVALUE"),
             Operation.OPERATION_VALUES.get(rs.getString("OPERATION")), rs.getString("VERSIONCHECKSUM"));
-    journal.setId(rs.getInt("ID"));
-    journal.setTimestamp(rs.getTimestamp("TIMESTAMP"));
-    return journal;
+    audit.setId(rs.getInt("ID"));
+    audit.setTimestamp(rs.getTimestamp("TIMESTAMP"));
+    return audit;
   }
   
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
@@ -1315,20 +1320,26 @@ public abstract class SqlService {
 
   }
 
-  public boolean insertJournal(Journal journal) throws SQLException {
+  /**
+   * Insert a row into Audit table
+   * @param audit Contains the audit information
+   * @return TRUE if the audit was inserted and FALSE in otherwise
+   * @throws SQLException
+   */
+  public boolean insertAudit(Audit audit) throws SQLException {
 
     PreparedStatement p = null;
 
     try {
       
-      p = connectionLocal.get().prepareStatement("INSERT INTO journal (bucketName, keyValue, operation, versionChecksum) VALUES (?,?,?,?)");
+      p = connectionLocal.get().prepareStatement("INSERT INTO audit (bucketName, keyValue, operation, versionChecksum) VALUES (?,?,?,?)");
 
-      p.setString(1, journal.getBucket());
+      p.setString(1, audit.getBucket());
       //The object could be NULL if the operation is about bucket or collection
-      p.setString(2, journal.getKey() == null ? "" : journal.getKey());
-      p.setString(3, journal.getOperation().getValue());
+      p.setString(2, audit.getKey() == null ? "" : audit.getKey());
+      p.setString(3, audit.getOperation().getValue());
       //The versionChecksum could be NULL if the operation is about bucket
-      p.setString(4, journal.getVersionChecksum() == null ? "" : journal.getVersionChecksum());
+      p.setString(4, audit.getVersionChecksum() == null ? "" : audit.getVersionChecksum());
       
       return p.executeUpdate() > 0;
 
@@ -1339,41 +1350,63 @@ public abstract class SqlService {
   }
 
   /**
-   * List the journal, for testing only
+   * List the audit table, for testing only
    * @param bucket a single String representing the bucket name where the journal is stored
    * @param key a single String identifying the object key
    * @param operation a single String identifying the collection key
    * @param timestamp a timestamp used to filter the journal by date.
-   * @return {@link org.plos.repo.models.Journal List}
+   * @return {@link org.plos.repo.models.Audit List}
    * @throws SQLException
    */
-  public List<Journal> listJournal(String bucket, String key, Operation operation, Timestamp timestamp) throws SQLException {
+  public List<Audit> listAudit(String bucket, String key, String versionChecksum, Operation operation, Timestamp timestamp) throws SQLException {
 
-    List<Journal> repoJournal = new ArrayList<Journal>();
-
+    List<Audit> repoAudit = new ArrayList<Audit>();
     PreparedStatement p = null;
     ResultSet result = null;
-
+    boolean filter = false;
+    
     try {
-      StringBuilder query = new StringBuilder("SELECT * FROM journal WHERE bucketName = ?");
-
-      if(key  != null)
-        query.append(" and keyValue = ? ");
-      if(operation  != null)
-        query.append(" and operation = ? ");      
-      if(timestamp != null)
-        query.append(" and timestamp >= ? ");
+      StringBuilder query = new StringBuilder("SELECT * FROM audit ");
+      
+      if(bucket  != null) {
+        filter = true;
+        query.append(" WHERE bucketName = ? ");
+      }
+      if(key != null) {
+        filter = true;
+        query.append((filter ? " AND " : " WHERE "));
+        query.append(" keyValue = ? ");
+      }
+      if(operation != null) {
+        filter = true;
+        query.append((filter ? " AND " : " WHERE "));
+        query.append(" operation = ? ");
+      }
+      if(versionChecksum != null) {
+        filter = true;
+        query.append((filter ? " AND " : " WHERE "));
+        query.append(" versionChecksum = ? ");
+      }
+      if(timestamp != null) {
+        query.append((filter ? " AND " : " WHERE "));
+        query.append(" timestamp >= ? ");
+      }
       
       p = connectionLocal.get().prepareStatement(query.toString());
       
-      p.setString(1, bucket);
+      int i = 1;
       
-      int i = 2;
+      if (bucket != null){
+        p.setString(i++, bucket);
+      }
       if (key != null){
         p.setString(i++, key);
       }
       if (operation != null){
         p.setString(i++, operation.getValue());
+      }
+      if (versionChecksum != null){
+        p.setString(i++, versionChecksum);
       }
       if (timestamp != null){
         p.setTimestamp(i++, timestamp);
@@ -1382,34 +1415,13 @@ public abstract class SqlService {
       result = p.executeQuery();
 
       while (result.next()) {
-        repoJournal.add(mapJournalRow(result));
+        repoAudit.add(mapJournalRow(result));
       }
 
-      return repoJournal;
+      return repoAudit;
 
     } finally {
       closeDbStuff(result, p);
     }
-  }
-
-/**
- * Remove journal for testing only
- */
-  public int deleteJournal() throws SQLException {
-
-    PreparedStatement p = null;
-    final int result; 
-    try {
-
-      p = connectionLocal.get().prepareStatement("DELETE FROM journal");
-
-      result = p.executeUpdate();
-
-      transactionCommit();
-      
-    } finally {
-      closeDbStuff(null, p);
-    }
-    return result;
   }
 }

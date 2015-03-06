@@ -23,6 +23,9 @@ import com.google.common.collect.Maps;
 
 import java.util.EnumSet;
 
+/**
+ * Represents the operations in audit events
+ */
 public enum Operation {
 
   CREATE_BUCKET("create-bucket"), 
