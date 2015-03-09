@@ -263,7 +263,7 @@ public class CollectionRepoService extends BaseRepoService {
 
       } else if (CreateMethod.VERSION.equals(method)){
         if (existingRepoCollection == null){
-          log.debug("Error trying to version a collection that does not exists. Key: " + inputCollection.getKey() + " create method : version ");
+          log.debug(" ************ Error trying to version a collection that does not exists. Key: " + inputCollection.getKey() + " create method : version ");
           throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
         }
         newRepoCollection = updateCollection(inputCollection, timestamp, existingRepoCollection, creationDate);

@@ -382,7 +382,7 @@ public class RepoService extends BaseRepoService {
       log.error("Error retrieving content for object.  Key: {} , bucketName: {} , versionChecksum: {} . Error: {}",
           repoObject.getKey(),
           repoObject.getBucketName(),
-          repoObject.getVersionChecksum(),
+          repoObject.getUuid().toString(),
           e.getMessage());
       throw new RepoException(e);
     }
@@ -390,7 +390,7 @@ public class RepoService extends BaseRepoService {
       log.error("Error retrieving content for object. Content not found.  Key: {} , bucketName: {} , versionChecksum: {} ",
           repoObject.getKey(),
           repoObject.getBucketName(),
-          repoObject.getVersionChecksum());
+          repoObject.getUuid().toString());
       throw new RepoException(RepoException.Type.ObjectContentNotFound);
     }
     return content;

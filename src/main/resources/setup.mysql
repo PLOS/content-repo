@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS objects (
     versionChecksum VARCHAR (255) NOT NULL,
     userMetadata LONGTEXT,
     uuid BINARY(16) NOT NULL,
-    UNIQUE KEY keyUniversalID (bucketId, objkey, uuid),
+    UNIQUE KEY ObjkeyUniversalID (bucketId, objkey, uuid),
     UNIQUE KEY keyVersion (bucketId, objkey, versionNumber),
     PRIMARY KEY (id)
 );
@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS collections (
     userMetadata LONGTEXT,
     uuid BINARY(16) NOT NULL,
     UNIQUE KEY keyVersion (bucketId, collkey, versionNumber),
+    UNIQUE KEY CollkeyUniversalID (bucketId, collkey, uuid),
     PRIMARY KEY (id),
     FOREIGN KEY (bucketId) REFERENCES buckets(bucketId)
 );

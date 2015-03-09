@@ -105,7 +105,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
       inputRepoObject.setTimestamp(CREATION_DATE_TIME.toString());
       inputRepoObject.setCreationDateTime(CREATION_DATE_TIME.toString());
       RepoObject repoObject = repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
-      InputObject inputObject = new InputObject(key, repoObject.getVersionChecksum());
+      InputObject inputObject = new InputObject(key, repoObject.getUuid().toString());
       inputObjects.add(inputObject);
     }
 

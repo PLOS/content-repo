@@ -44,7 +44,7 @@ public class InputCollectionValidator {
     timestampValidator.validate(collection.getTimestamp(), RepoException.Type.CouldNotParseTimestamp);
     timestampValidator.validate(collection.getCreationDateTime(), RepoException.Type.CouldNotParseCreationDate);
 
-    jsonStringValidator.validate(collection.getUserMetadata(), RepoException.Type.InvalidUserMetadataFormat);
+    jsonStringValidator.validate((String)collection.getUserMetadata(), RepoException.Type.InvalidUserMetadataFormat);
 
     if (collection.getObjects() == null || collection.getObjects().size() == 0 ) {
       throw new RepoException(RepoException.Type.CantCreateCollectionWithNoObjects);

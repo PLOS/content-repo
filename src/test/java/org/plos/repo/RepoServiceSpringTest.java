@@ -694,7 +694,8 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
     // verify that at service level we can't get the meta info for object1. object1 has been purged
     try{
-      repoService.getObject(bucket1.getBucketName(), "key1", new ElementFilter(null, null, object1.getVersionChecksum()));
+      repoService.getObject(bucket1.getBucketName(), "key1",
+          new ElementFilter(null, null, object1.getUuid().toString()));
       Assert.fail("A repo exception was expected. ");
     } catch (RepoException e){
       Assert.assertEquals(e.getType(), RepoException.Type.ObjectNotFound);
@@ -858,12 +859,13 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     RepoObject repoObject = repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
 
     // get the latest object
-    RepoObject resultRepoObject = repoService.getObject(bucket1.getBucketName(), KEY, new ElementFilter(null, null, repoObject.getVersionChecksum()));
+    RepoObject resultRepoObject = repoService.getObject(bucket1.getBucketName(), KEY,
+        new ElementFilter(null, null, repoObject.getUuid().toString()));
 
     // object must match the one with the oldest creation time
     Assert.assertEquals(new Integer(1), resultRepoObject.getVersionNumber());
     Assert.assertEquals(creationDateTime2, resultRepoObject.getCreationDate());
-    Assert.assertEquals(repoObject.getVersionChecksum(), resultRepoObject.getVersionChecksum());
+    Assert.assertEquals(repoObject.getUuid(), resultRepoObject.getUuid());
 
   }
 

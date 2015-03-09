@@ -62,16 +62,17 @@ public abstract class SqlService {
   private static final String CONTENT_TYPE_COLUMN = "CONTENTTYPE";
   private static final String SIZE_COLUMN = "SIZE";
 
-  private static String OBJECT_COLUMNS = "obj." + OBJECT_KEY_COLUMN + ",obj." + BUCKET_ID_COLUMN
-      + ",obj." + STATUS_COLUMN + ",obj." + ID_COLUMN + ",obj." + CHECKSUM_COLUMN
-      + ",obj." + TIMESTAMP_COLUMN + ",obj." + DOWNLOAD_NAME_COLUMN + ",obj." + CONTENT_TYPE_COLUMN
-      + ",obj." + SIZE_COLUMN + ",obj." + TAG_COLUMN + ",obj." + VERSION_NUMBER_COLUMN + ",obj." + CREATION_DATE_COLUMN
-      + ",obj." + VERSION_CHECKSUM_COLUMN + ",obj." + USER_METADATA_COLUMN + ", HEX( " + UUID_COLUMN + ")";
+  private static String OBJECT_COLUMNS = "obj." + OBJECT_KEY_COLUMN + ", obj." + BUCKET_ID_COLUMN
+      + ", obj." + STATUS_COLUMN + ", obj." + ID_COLUMN + ", obj." + CHECKSUM_COLUMN
+      + ", obj." + TIMESTAMP_COLUMN + ", obj." + DOWNLOAD_NAME_COLUMN + ", obj." + CONTENT_TYPE_COLUMN
+      + ", obj." + SIZE_COLUMN + ", obj." + TAG_COLUMN + ", obj." + VERSION_NUMBER_COLUMN + ", obj." + CREATION_DATE_COLUMN
+      + ", obj." + VERSION_CHECKSUM_COLUMN + ", obj." + USER_METADATA_COLUMN + " , HEX( obj." + UUID_COLUMN + ") as " + HEX_UUID_COLUMN;
 
-  private static String COLLECTION_COLUMNS = "c." + COLLECTION_KEY_COLUMN + ",c." + BUCKET_ID_COLUMN
-      + ",c." + STATUS_COLUMN + ",c." + ID_COLUMN + ",c." + TIMESTAMP_COLUMN
-      + ",c." + TAG_COLUMN + ",c." + VERSION_NUMBER_COLUMN + ",c." + CREATION_DATE_COLUMN
-      + ",c." + VERSION_CHECKSUM_COLUMN + ",c." + USER_METADATA_COLUMN + ", HEX(c." + UUID_COLUMN + ")";
+  private static String COLLECTION_COLUMNS = "c." + COLLECTION_KEY_COLUMN + ", c." + BUCKET_ID_COLUMN
+      + ", c." + STATUS_COLUMN + ", c." + ID_COLUMN + ", c." + TIMESTAMP_COLUMN
+      + ", c." + TAG_COLUMN + ", c." + VERSION_NUMBER_COLUMN + ", c." + CREATION_DATE_COLUMN
+      + ", c." + VERSION_CHECKSUM_COLUMN + ", c." + USER_METADATA_COLUMN
+      + ", HEX(c." + UUID_COLUMN + ") as " + HEX_UUID_COLUMN;
 
   @Required
   public void setDataSource(DataSource dataSource) throws SQLException {
@@ -97,8 +98,6 @@ public abstract class SqlService {
     repoObject.setUserMetadata(rs.getString(USER_METADATA_COLUMN));
     repoObject.setUuid(UUIDFormatter.getUUIDNoDashes(rs.getString(HEX_UUID_COLUMN)));
 
-    Blob blob = rs.getBlob("dsadsa");
-
     return  repoObject;
   }
 
@@ -108,7 +107,7 @@ public abstract class SqlService {
         rs.getString(BUCKET_NAME_COLUMN), Status.STATUS_VALUES.get(rs.getInt(STATUS_COLUMN)));
     collection.setId(rs.getInt(ID_COLUMN));
     collection.setTimestamp(rs.getTimestamp(TIMESTAMP_COLUMN));
-    collection.setVersionNumber(rs.getInt(VERSION_CHECKSUM_COLUMN));
+    collection.setVersionNumber(rs.getInt(VERSION_NUMBER_COLUMN));
     collection.setTag(rs.getString(TAG_COLUMN));
     collection.setCreationDate(rs.getTimestamp(CREATION_DATE_COLUMN));
     collection.setVersionChecksum(rs.getString(VERSION_CHECKSUM_COLUMN));
@@ -361,8 +360,8 @@ public abstract class SqlService {
 
     try {
 
-      p = connectionLocal.get().prepareStatement("SELECT " + OBJECT_COLUMNS + "b.BUCKETNAME  FROM objects obj, buckets b " +
-          "WHERE obj.bucketId = b.bucketId AND b.bucketName=? AND obj.objKey=? AND status=? ORDER BY o.creationDate " +
+      p = connectionLocal.get().prepareStatement("SELECT " + OBJECT_COLUMNS + ", b.BUCKETNAME  FROM objects obj, buckets b " +
+          "WHERE obj.bucketId = b.bucketId AND b.bucketName=? AND obj.objKey=? AND status=? ORDER BY obj.creationDate " +
           "DESC LIMIT 1");
 
       p.setString(1, bucketName);
@@ -398,8 +397,8 @@ public abstract class SqlService {
     try {
 
       StringBuilder query = new StringBuilder();
-      query.append("SELECT " + OBJECT_COLUMNS + "b.BUCKETNAME FROM objects obj, buckets b " +
-          "WHERE o.bucketId = b.bucketId AND b.bucketName=? AND objKey=?");
+      query.append("SELECT " + OBJECT_COLUMNS + ", b.BUCKETNAME FROM objects obj, buckets b " +
+          "WHERE obj.bucketId = b.bucketId AND b.bucketName=? AND obj.objKey=?");
 
       if (version != null){
         query.append(" AND versionNumber=?");
@@ -411,7 +410,7 @@ public abstract class SqlService {
         query.append(" AND tag=?");
       }
 
-      query.append(" ORDER BY o.creationDate DESC LIMIT 1");
+      query.append(" ORDER BY obj.creationDate DESC LIMIT 1");
 
       p = connectionLocal.get().prepareStatement(query.toString());
 
@@ -457,8 +456,8 @@ public abstract class SqlService {
     ResultSet result = null;
 
     StringBuilder query = new StringBuilder();
-    query.append("SELECT " + OBJECT_COLUMNS + "b.BUCKETNAME FROM objects o, buckets b " +
-        "WHERE o.bucketId = b.bucketId AND b.bucketName=? AND objKey=?");
+    query.append("SELECT " + OBJECT_COLUMNS + ", b.BUCKETNAME FROM objects obj, buckets b " +
+        "WHERE obj.bucketId = b.bucketId AND b.bucketName=? AND obj.objKey=?");
 
     if (version != null){
       query.append(" AND versionNumber=?");
@@ -476,7 +475,7 @@ public abstract class SqlService {
       query.append(" AND status in (?,?)");
     }
 
-    query.append(" ORDER BY o.creationDate DESC LIMIT 1");
+    query.append(" ORDER BY obj.creationDate DESC LIMIT 1");
 
     try {
 
@@ -684,7 +683,7 @@ public abstract class SqlService {
     try {
 
       StringBuilder q = new StringBuilder();
-      q.append("SELECT " + OBJECT_COLUMNS + "b.BUCKETNAME FROM objects as obj, buckets b " +
+      q.append("SELECT " + OBJECT_COLUMNS + ", b.BUCKETNAME FROM objects as obj, buckets as b " +
           "WHERE obj.bucketId = b.bucketId");
 
       if (!includeDeleted && !includePurge)
@@ -783,7 +782,8 @@ public abstract class SqlService {
 
     try {
 
-      p = connectionLocal.get().prepareStatement(getCollectionMetadataQuery(bucketName, offset, limit, includeDeleted, tag));
+      p = connectionLocal.get().prepareStatement(
+          getCollectionMetadataQuery(bucketName, offset, limit, includeDeleted, tag));
 
       int i = 1;
       if (!includeDeleted)
@@ -859,7 +859,8 @@ public abstract class SqlService {
 
   private String getCollectionMetadataQuery(String bucketName, Integer offset, Integer limit, Boolean includeDeleted, String tag){
     StringBuilder q = new StringBuilder();
-    q.append("SELECT " + COLLECTION_COLUMNS + "b.BUCKETNAME FROM collections c, buckets b WHERE c.bucketId = b.bucketId");
+    q.append("SELECT " + COLLECTION_COLUMNS + ", b.BUCKETNAME " +
+        "FROM collections c, buckets b WHERE c.bucketId = b.bucketId");
 
     if (!includeDeleted)
       q.append(" AND status=?");
@@ -919,11 +920,11 @@ public abstract class SqlService {
     try {
 
       StringBuilder q = new StringBuilder();
-      q.append(" SELECT " + COLLECTION_COLUMNS + ", b.*\n" +
-          "FROM objects o, collectionObject co, buckets b\n" +
+      q.append(" SELECT " + OBJECT_COLUMNS + ", b.*\n" +
+          "FROM objects obj, collectionObject co, buckets b\n" +
           "WHERE co.collectionId = ?\n" +
-          "AND co.objectId = o.id\n" +
-          "AND o.bucketId = b.bucketId");
+          "AND co.objectId = obj.id\n" +
+          "AND obj.bucketId = b.bucketId");
 
       p = connectionLocal.get().prepareStatement(q.toString());
 
@@ -959,7 +960,7 @@ public abstract class SqlService {
     try {
 
       StringBuilder query = new StringBuilder();
-      query.append("SELECT " + COLLECTION_COLUMNS + "b.BUCKETNAME FROM collections c, buckets b " +
+      query.append("SELECT " + COLLECTION_COLUMNS + ", b.BUCKETNAME FROM collections c, buckets b " +
           "WHERE c.bucketId = b.bucketId AND b.bucketName=? " +
           "AND collKey=? AND status=? ORDER BY c.creationDate DESC LIMIT 1");
 
@@ -1011,7 +1012,7 @@ public abstract class SqlService {
     try {
 
       StringBuilder query = new StringBuilder();
-      query.append("SELECT " + COLLECTION_COLUMNS + "b.BUCKETNAME FROM collections c, buckets b " +
+      query.append("SELECT " + COLLECTION_COLUMNS + ", b.BUCKETNAME FROM collections c, buckets b " +
           "WHERE c.bucketId = b.bucketId AND b.bucketName=? AND collKey=? ");
 
       if (version != null){
@@ -1081,7 +1082,7 @@ public abstract class SqlService {
 
     try {
 
-      p = connectionLocal.get().prepareStatement("SELECT " + COLLECTION_COLUMNS + "b.BUCKETNAME FROM collections c, buckets b " +
+      p = connectionLocal.get().prepareStatement("SELECT " + COLLECTION_COLUMNS + ", b.BUCKETNAME FROM collections c, buckets b " +
           "WHERE c.bucketId = b.bucketId AND b.bucketName=? AND c.collKey=? AND c.status=? " +
           "ORDER BY versionNumber ASC");
 
@@ -1171,8 +1172,8 @@ public abstract class SqlService {
 
     try {
 
-      p = connectionLocal.get().prepareStatement("SELECT " + OBJECT_COLUMNS + "b.BUCKETNAME FROM objects o, buckets b " +
-          "WHERE a.bucketId = b.bucketId AND bucketName=? AND objKey=? AND status=? " +
+      p = connectionLocal.get().prepareStatement("SELECT " + OBJECT_COLUMNS + ", b.BUCKETNAME FROM objects obj, buckets b " +
+          "WHERE obj.bucketId = b.bucketId AND bucketName=? AND obj.objKey=? AND status=? " +
           "ORDER BY versionNumber ASC");
 
       p.setString(1, bucketName);
@@ -1211,7 +1212,7 @@ public abstract class SqlService {
       p.setString(6, repoCollection.getTag());
       p.setTimestamp(7, repoCollection.getCreationDate());
       p.setString(8, repoCollection.getVersionChecksum());
-      p.setString(9,repoCollection.getUserMetadata());
+      p.setString(9,(String)repoCollection.getUserMetadata());
       p.setString(10, repoCollection.getUuid().toString());
 
       p.executeUpdate();
@@ -1269,7 +1270,10 @@ public abstract class SqlService {
 
     try{
       p =
-          connectionLocal.get().prepareStatement("SELECT * FROM objects a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND objKey=? AND uuid=?");
+          connectionLocal.get().prepareStatement("SELECT * FROM objects obj, buckets b " +
+              "WHERE obj.bucketId = b.bucketId " +
+              "AND b.bucketName=? " +
+              "AND objKey=? AND uuid=" + UUID_SQL_FORMAT);
 
       p.setString(1, bucketName);
       p.setString(2, objectKey);

@@ -22,6 +22,7 @@ package org.plos.repo.config;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
+import javax.sql.rowset.serial.SerialBlob;
 import java.io.UnsupportedEncodingException;
 import java.sql.Blob;
 import java.sql.SQLException;
@@ -31,24 +32,22 @@ import java.sql.SQLException;
  */
 public class UUIDHsqlFunctions {
 
-  public static byte[] UNHEX(String uuid) {
-    uuid = uuid.replace("-", "");
-    char[] hexUuid = Hex.encodeHex(uuid.getBytes());
+  public static byte[] UNHEX(String uuid) throws SQLException {
+    // uuid = uuid.replace("-", "");
+//    char[] hexUuid = Hex.encodeHex(uuid.getBytes());
     try {
-      return Hex.decodeHex(hexUuid);
+      return Hex.decodeHex(uuid.toCharArray());
+/*      Blob blob = new SerialBlob(bytes);
+      return blob;*/
     } catch (DecoderException e) {
       e.printStackTrace();
     }
     return null;
   }
 
-  public static String HEX(Blob uuid) throws DecoderException, UnsupportedEncodingException, SQLException {
+  public static String HEX(byte[] uuid) throws DecoderException, UnsupportedEncodingException, SQLException {
 
-    String test1 = uuid.toString();
-    byte[] uuidBytes = uuid.getBytes(0, (int) uuid.length());
-    String test2 = new String(uuidBytes, "UTF-8");
-
-    return new String(uuidBytes, "UTF-8");
+    return String.valueOf(Hex.encodeHex(uuid));
 
   }
 
