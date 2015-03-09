@@ -17,6 +17,7 @@
 
 package org.plos.repo.service;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.guba.mogilefs.MogileFS;
 import com.guba.mogilefs.PooledMogileFSImpl;
@@ -60,7 +61,7 @@ public class MogileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean objectExists(RepoObject repoObject) {
+  public boolean objectExists(RepoObject repoObject) {
     try {
       InputStream in = mfs.getFileStream(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
 
@@ -76,7 +77,7 @@ public class MogileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean hasXReproxy() {
+  public boolean hasXReproxy() {
     return true;
   }
 
@@ -109,19 +110,19 @@ public class MogileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean bucketExists(Bucket bucket) {
-    return null;
+  public Optional<Boolean> bucketExists(Bucket bucket) {
+    return Optional.absent();
   }
 
   @Override
-  public Boolean createBucket(Bucket bucket) {
+  public Optional<Boolean> createBucket(Bucket bucket) {
     // we use file paths instead of domains so this function does not need to do anything
-    return null;
+    return Optional.absent();
   }
 
   @Override
-  public Boolean deleteBucket(Bucket bucket) {
-    return null;
+  public Optional<Boolean> deleteBucket(Bucket bucket) {
+    return Optional.absent();
   }
 
   @Override
@@ -168,7 +169,7 @@ public class MogileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
+  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
     try {
       mfs.rename(uploadInfo.getTempLocation(), getObjectLocationString(bucket.getBucketName(), uploadInfo.getChecksum()));
       return true;
@@ -178,7 +179,7 @@ public class MogileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean deleteTempUpload(UploadInfo uploadInfo) {
+  public boolean deleteTempUpload(UploadInfo uploadInfo) {
     try {
       mfs.delete(uploadInfo.getTempLocation());
       return true;
@@ -188,7 +189,7 @@ public class MogileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean deleteObject(RepoObject repoObject) {
+  public boolean deleteObject(RepoObject repoObject) {
     try {
       mfs.delete(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
       return true;

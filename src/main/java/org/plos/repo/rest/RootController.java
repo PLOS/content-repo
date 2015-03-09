@@ -54,7 +54,7 @@ public class RootController {
   @GET
   @Path("hasXReproxy")
   @ApiOperation("Show if the server supports reproxying")
-  public Boolean hasXReproxy() {
+  public boolean hasXReproxy() {
     // TODO: depcricate this function and point file-store to /config
     return objectStore.hasXReproxy();
   }

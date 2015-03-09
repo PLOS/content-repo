@@ -17,6 +17,7 @@
 
 package org.plos.repo.service;
 
+import com.google.common.base.Optional;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.Status;
@@ -96,7 +97,7 @@ public abstract class ObjectStore {
     
   }
 
-  abstract public Boolean hasXReproxy();
+  abstract public boolean hasXReproxy();
 
   /**
    * Retrieve the file paths of the given repo object <code>repoObject</code>.
@@ -108,22 +109,33 @@ public abstract class ObjectStore {
    */
   abstract public String[]  getFilePaths(RepoObject repoObject) throws RepoException;
 
-  abstract public Boolean objectExists(RepoObject repoObject);
+  abstract public boolean objectExists(RepoObject repoObject);
 
-  // we use Boolean here
-  abstract public Boolean bucketExists(Bucket bucket);
+  /**
+   * @return true if the bucket exists; false if it does not exist; absent if the implementation does not persist
+   * buckets
+   */
+  abstract public Optional<Boolean> bucketExists(Bucket bucket);
 
-  abstract public Boolean createBucket(Bucket bucket);
+  /**
+   * @return true if the bucket was created; false if it could not be created; absent if this was a no-op because the
+   * implementation does not persist buckets
+   */
+  abstract public Optional<Boolean> createBucket(Bucket bucket);
 
-  abstract public Boolean deleteBucket(Bucket bucket);
+  /**
+   * @return true if the bucket existed and was deleted; false if it did not exist or could not be deleted; absent if
+   * this was a no-op because the implementation does not persist buckets
+   */
+  abstract public Optional<Boolean> deleteBucket(Bucket bucket);
 
   abstract public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException;
 
-  abstract public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject);
+  abstract public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject);
 
-  abstract public Boolean deleteObject(RepoObject repoObject);
+  abstract public boolean deleteObject(RepoObject repoObject);
 
-  abstract public Boolean deleteTempUpload(UploadInfo uploadInfo);
+  abstract public boolean deleteTempUpload(UploadInfo uploadInfo);
 
   /**
    * Retrieve the data of the given repo object <code>repoObject</code>. Return null if the

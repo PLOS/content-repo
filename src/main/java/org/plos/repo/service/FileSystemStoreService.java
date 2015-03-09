@@ -17,6 +17,7 @@
 
 package org.plos.repo.service;
 
+import com.google.common.base.Optional;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.Status;
@@ -59,7 +60,7 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean objectExists(RepoObject repoObject) {
+  public boolean objectExists(RepoObject repoObject) {
     return new File(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum())).exists();
   }
 
@@ -78,12 +79,12 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean bucketExists(Bucket bucket) {
-    return (new File(getBucketLocationString(bucket.getBucketName())).isDirectory());
+  public Optional<Boolean> bucketExists(Bucket bucket) {
+    return Optional.of(new File(getBucketLocationString(bucket.getBucketName())).isDirectory());
   }
 
   @Override
-  public Boolean createBucket(Bucket bucket) {
+  public Optional<Boolean> createBucket(Bucket bucket) {
 
     File dir = new File(getBucketLocationString(bucket.getBucketName()));
     boolean result = dir.mkdir();
@@ -91,11 +92,11 @@ public class FileSystemStoreService extends ObjectStore {
     if (!result)
       log.error("Error while creating bucket. Directory was not able to be created : " + getBucketLocationString(bucket.getBucketName()));
 
-    return result;
+    return Optional.of(result);
   }
 
   @Override
-  public Boolean hasXReproxy() {
+  public boolean hasXReproxy() {
     return reproxyBaseUrl != null;
   }
 
@@ -120,13 +121,13 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean deleteBucket(Bucket bucket) {
+  public Optional<Boolean> deleteBucket(Bucket bucket) {
     File dir = new File(getBucketLocationString(bucket.getBucketName()));
-    return dir.delete();
+    return Optional.of(dir.delete());
   }
 
   @Override
-  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
+  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
     File tempFile = new File(uploadInfo.getTempLocation());
 
     File newFile = new File(getObjectLocationString(bucket.getBucketName(), uploadInfo.getChecksum()));
@@ -145,7 +146,7 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean deleteObject(RepoObject repoObject) {
+  public boolean deleteObject(RepoObject repoObject) {
 
     File file = new File(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
     File parentDir = new File(file.getParent());
@@ -161,7 +162,7 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean deleteTempUpload(UploadInfo uploadInfo) {
+  public boolean deleteTempUpload(UploadInfo uploadInfo) {
     return new File(uploadInfo.getTempLocation()).delete();
   }
 

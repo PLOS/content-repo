@@ -64,7 +64,7 @@ public class CollectionRepoService extends BaseRepoService {
    * @return a list of {@link org.plos.repo.models.RepoCollection}
    * @throws org.plos.repo.service.RepoException
    */
-  public List<RepoCollection> listCollections(String bucketName, Integer offset, Integer limit, Boolean includeDeleted, String tag) throws RepoException {
+  public List<RepoCollection> listCollections(String bucketName, Integer offset, Integer limit, boolean includeDeleted, String tag) throws RepoException {
 
     if (offset == null)
       offset = 0;
@@ -358,11 +358,11 @@ public class CollectionRepoService extends BaseRepoService {
 
   }
 
-  private Boolean areCollectionsSimilar(InputCollection inputCollection,
+  private boolean areCollectionsSimilar(InputCollection inputCollection,
                                         RepoCollection existingRepoCollection
   ){
 
-    Boolean similar = existingRepoCollection.getKey().equals(inputCollection.getKey()) &&
+    boolean similar = existingRepoCollection.getKey().equals(inputCollection.getKey()) &&
         existingRepoCollection.getBucketName().equals(inputCollection.getBucketName()) &&
         existingRepoCollection.getStatus().equals(Status.USED) &&
         inputCollection.getObjects().size() == existingRepoCollection.getRepoObjects().size();

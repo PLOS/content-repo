@@ -17,6 +17,7 @@
 
 package org.plos.repo.service;
 
+import com.google.common.base.Optional;
 import com.google.common.util.concurrent.Striped;
 import org.hsqldb.lib.StringUtil;
 import org.plos.repo.models.Bucket;
@@ -84,7 +85,7 @@ public class RepoService extends BaseRepoService {
     writeLock.lock();
 
     boolean rollback = false;
-    boolean bucketCreation = false;
+    Optional<Boolean> bucketCreation = Optional.absent();
 
     Bucket bucket = new Bucket(name);
     Bucket newBucket = null;
@@ -100,12 +101,13 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(RepoException.Type.BucketAlreadyExists);
 
 
-      if (Boolean.TRUE.equals(objectStore.bucketExists(bucket)))
+      Optional<Boolean> bucketExists = objectStore.bucketExists(bucket);
+      if (bucketExists.isPresent() && bucketExists.get())
         throw new RepoException("Bucket exists in object store but not in database: " + name);
 
       bucketCreation = objectStore.createBucket(bucket);
 
-      if (Boolean.FALSE.equals(bucketCreation))
+      if (bucketCreation.isPresent() && !bucketCreation.get())
         throw new RepoException("Unable to create bucket in object store: " + name);
 
       Timestamp creationDate = creationDateTimeString != null ?
@@ -127,7 +129,7 @@ public class RepoService extends BaseRepoService {
       if (rollback) {
         sqlRollback("bucket " + name);
 
-        if (bucketCreation) {
+        if (bucketCreation.isPresent() && bucketCreation.get()) {
           objectStore.deleteBucket(bucket);
           // TODO: check to make sure objectStore.deleteBucket didnt fail
         }
@@ -161,7 +163,7 @@ public class RepoService extends BaseRepoService {
     writeLock.lock();
 
     boolean rollback = false;
-    boolean bucketDeletion = false;
+    Optional<Boolean> bucketDeletion = Optional.absent();
 
     Bucket bucket = new Bucket(name);
 
@@ -172,7 +174,8 @@ public class RepoService extends BaseRepoService {
       if (sqlService.getBucket(name) == null)
         throw new RepoException(RepoException.Type.BucketNotFound);
 
-      if (Boolean.FALSE.equals(objectStore.bucketExists(bucket)))
+      Optional<Boolean> bucketExists = objectStore.bucketExists(bucket);
+      if (bucketExists.isPresent() && !bucketExists.get())
         throw new RepoException("Bucket exists in database but not in object store: " + name);
 
       if (sqlService.listObjects(name, 0, 1, true, false, null).size() != 0)
@@ -183,7 +186,7 @@ public class RepoService extends BaseRepoService {
         throw new RepoException("Unable to delete bucket in database: " + name);
 
       bucketDeletion = objectStore.deleteBucket(bucket);
-      if (!bucketDeletion){
+      if (bucketDeletion.isPresent() && !bucketDeletion.get()) {
         throw new RepoException("Unable to delete bucket in object store: " + name);
       }
 
@@ -197,7 +200,7 @@ public class RepoService extends BaseRepoService {
       if (rollback) {
         sqlRollback("bucket " + name);
 
-        if (bucketDeletion) {
+        if (bucketDeletion.isPresent() && bucketDeletion.get()) {
           objectStore.createBucket(bucket);
           // TODO: validate objectStore.createBucket return values
         }
@@ -410,7 +413,7 @@ public class RepoService extends BaseRepoService {
    *                      for the given <code>key</code> must be changed
    * @throws RepoException see {@link org.plos.repo.service.RepoService#deleteObject(String, String, org.plos.repo.models.input.ElementFilter, org.plos.repo.models.Status)}
    */
-  public void deleteObject(String bucketName, String key, Boolean purge, ElementFilter elementFilter) throws RepoException {
+  public void deleteObject(String bucketName, String key, boolean purge, ElementFilter elementFilter) throws RepoException {
     if (purge){
       deleteObject(bucketName, key, elementFilter, Status.PURGED);
     } else {
@@ -530,7 +533,7 @@ public class RepoService extends BaseRepoService {
       // verify if any other USED or DELETED objects has a reference to the same file. If it is the last reference to the object, remove it from the system,
       // if not, just mark the record in the DB as purge
       if (sqlService.countUsedAndDeletedObjectsReference(repoObject.getBucketName(), repoObject.getChecksum()) == 0 ){
-        Boolean removed = objectStore.deleteObject(repoObject);
+        boolean removed = objectStore.deleteObject(repoObject);
         if (!removed){
           throw new RepoException(RepoException.Type.ObjectNotFound);
         }
@@ -673,8 +676,8 @@ public class RepoService extends BaseRepoService {
         // dont bother storing the file since the data already exists in the system
 
       } else {
-        if (Boolean.FALSE.equals(objectStore.saveUploadedObject(new Bucket(inputRepoObject.getBucketName()),
-            uploadInfo, repoObject))) {
+        if (!objectStore.saveUploadedObject(new Bucket(inputRepoObject.getBucketName()),
+            uploadInfo, repoObject)) {
           throw new RepoException("Error saving content to object store");
         }
       }
@@ -744,8 +747,8 @@ public class RepoService extends BaseRepoService {
         uploadedInputStream.close();
         newRepoObject.setChecksum(uploadInfo.getChecksum());
         newRepoObject.setSize(uploadInfo.getSize());
-        if (Boolean.FALSE.equals(objectStore.objectExists(newRepoObject))) {
-          if (Boolean.FALSE.equals(objectStore.saveUploadedObject(new Bucket(inputRepoObject.getBucketName()), uploadInfo, newRepoObject))) {
+        if (!objectStore.objectExists(newRepoObject)) {
+          if (!objectStore.saveUploadedObject(new Bucket(inputRepoObject.getBucketName()), uploadInfo, newRepoObject)) {
             throw new RepoException("Error saving content to object store");
           }
         }

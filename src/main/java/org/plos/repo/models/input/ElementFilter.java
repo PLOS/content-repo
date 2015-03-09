@@ -48,7 +48,7 @@ public class ElementFilter {
     this.versionChecksum = versionChecksum;
   }
 
-  public Boolean isEmpty(){
+  public boolean isEmpty(){
     return version == null && tag == null && versionChecksum == null;
   }
 
