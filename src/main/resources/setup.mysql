@@ -69,6 +69,17 @@ CREATE TABLE IF NOT EXISTS collectionObject (
     FOREIGN KEY (objectId) REFERENCES objects(id)
 );
 
+CREATE TABLE IF NOT EXISTS journal (
+    id INTEGER NOT NULL AUTO_INCREMENT,
+    bucketName VARCHAR (255) NOT NULL,
+    keyValue VARCHAR (255),
+    operation VARCHAR (20) NOT NULL,
+    versionChecksum VARCHAR (255),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+);
+
+
 #
 # IMPORTANT: This must be set to the proper version.
 # 

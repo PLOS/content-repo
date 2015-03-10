@@ -58,8 +58,9 @@ public class RepoException extends Exception {
     BucketAlreadyExists(33, "Bucket already exists"),
     CantCreateNewCollectionWithUsedKey(34, "Can not create a collection with a key that already exists"),
     CantCreateCollectionVersionWithNoOrig(35, "Can not version a collection that does not exist"),
-    CantCreateCollectionWithNoObjects(36, "Can not create a collection that does not have objects");
-
+    CantCreateCollectionWithNoObjects(36, "Can not create a collection that does not have objects"),
+    ObjectFilePathMissing(5, "The file path object is missing");
+    
     private final int value;
     private final String message;
 
@@ -78,7 +79,7 @@ public class RepoException extends Exception {
   }
 
 
-  private Type repoExceptionType;
+  private final Type repoExceptionType;
 
   public Type getType() {
     return repoExceptionType;
@@ -92,7 +93,7 @@ public class RepoException extends Exception {
 
   public RepoException(Exception e) {  // server errors only
     super(e);
-    repoExceptionType = Type.ServerError;
+    repoExceptionType = (e instanceof RepoException) ? ((RepoException) e).getType() : Type.ServerError;
   }
 
   public RepoException(String message) {  // server errors only

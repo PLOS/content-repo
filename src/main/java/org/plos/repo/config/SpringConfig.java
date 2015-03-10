@@ -53,6 +53,9 @@ public class SpringConfig {
   public ChecksumGenerator versionChecksumGenerator(){ return new ChecksumGenerator(); }
 
   @Bean
+  public JournalService journalService(){ return new JournalService(); }
+
+  @Bean
   public ObjectStore objectStore() throws Exception {
 
     Context initContext = new InitialContext();
