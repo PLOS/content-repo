@@ -23,7 +23,6 @@ import com.google.gson.JsonObject;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.Assert;
 import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.input.InputObject;
 import org.plos.repo.service.RepoException;
@@ -36,8 +35,6 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.HashMap;
 
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
@@ -56,19 +53,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   private final String testData1 = "test data one goes\nhere.";
 
-  private Map<String, String> VALID_USER_METADATA = new HashMap<String, String>() {
-      { 
-          put("key", "obj1"); 
-          put("versionChecksum", "dkasdny84923mkdnu914i21");
-      }
-  };
-  private Map<String, String> NOT_VALID_USER_METADATA = new HashMap<String, String>() {
-      {
-          put("key", "obj1");
-          put("versionChecksum","dkasdny84923mkdnu914i21");
-          put("","emptyKey");
-      }
-  };
+  private String USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\", \"version\":1.1 }";
 
 
   @Before
@@ -1194,7 +1179,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   }
 
   @Test
-  public void createCollectionInvalidUserMetadata(){
+  public void createCollectionWithUserMetadata(){
 
     generateBuckets(bucketName);
     String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
@@ -1210,36 +1195,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setCreate("new");
     inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
     inputCollection.setTag("AOP");
-    inputCollection.setUserMetadata(NOT_VALID_USER_METADATA);
-    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
-    try {
-        Response response = target("/collections").request()
-            .accept(MediaType.APPLICATION_JSON_TYPE)
-                .post(collectionEntity);
-        Assert.fail();
-    } catch(Exception e) {
-        System.out.println("Error: " + e.getMessage());
-  }
-  }
-
-  @Test
-  public void createCollectionValidUserMetadata(){
-
-    generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
-    String versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
-
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
-    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
-
-    // create collection 1
-    InputCollection inputCollection = new InputCollection();
-    inputCollection.setBucketName(bucketName);
-    inputCollection.setKey("collection1");
-    inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
-    inputCollection.setTag("AOP");
-    inputCollection.setUserMetadata(VALID_USER_METADATA);
+    inputCollection.setUserMetadata(USER_METADATA);
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     Response response = target("/collections").request()
@@ -1261,7 +1217,8 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
     JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
     assertNotNull(responseObj);
-    assertEquals(VALID_USER_METADATA, gson.fromJson(responseObj.get("userMetadata"), Map.class));
+    assertEquals(USER_METADATA, responseObj.get("userMetadata").getAsString());
+
   }
 
 }

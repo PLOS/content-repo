@@ -23,7 +23,6 @@ import org.plos.repo.models.input.InputRepoObject;
 import org.plos.repo.service.RepoException;
 
 import javax.inject.Inject;
-import java.util.Map;
 
 /**
  * Input Collection Validator. It validates the required fields.
@@ -33,8 +32,6 @@ public class InputRepoObjectValidator {
   @Inject
   private TimestampInputValidator timestampValidator;
 
-  @Inject
-  private JsonStringValidator jsonStringValidator;
 
   public void validate(InputRepoObject repoObject) throws RepoException {
 
@@ -47,11 +44,6 @@ public class InputRepoObjectValidator {
     timestampValidator.validate(repoObject.getTimestamp(), RepoException.Type.CouldNotParseTimestamp);
     timestampValidator.validate(repoObject.getCreationDateTime(), RepoException.Type.CouldNotParseCreationDate);
 
-    jsonStringValidator.validate(repoObject.getUserMetadata(), RepoException.Type.InvalidUserMetadataFormat);
-
   }
 
-  public String getJsonUserMetadata(Map<String, String> userMetadata) throws RepoException {
-    return jsonStringValidator.toJson(userMetadata);
-  }
 }

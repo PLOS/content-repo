@@ -25,7 +25,6 @@ import org.plos.repo.models.Status;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputRepoObject;
 import org.plos.repo.models.validator.InputRepoObjectValidator;
-import org.plos.repo.models.validator.JsonStringValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
