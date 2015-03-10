@@ -12,22 +12,18 @@ CREATE TABLE IF NOT EXISTS CREPO_SCHEMA_INFO (
 );
 
 #
-# Objects are being update with UUID information
+# Drop version checksum column from objects table
 #
 
-ALTER TABLE objects
-ADD COLUMN uuid BINARY(16);
-
+ALTER TABLE objects DROP COLUMN versionChecksum;
 
 #
-# Collections are being update with UUID information
+# Drop version checksum column from collections table
 #
 
-ALTER TABLE collections
-ADD COLUMN uuid BINARY(16);
-
+ALTER TABLE collections DROP COLUMN versionChecksum;
 
 # INSERT the version string. This should happen last.
 # The temporal order will indicate which scripts have been
 # run to update this database.
-INSERT CREPO_SCHEMA_INFO SET schema_ver = '05-add-uuid-column';
+INSERT CREPO_SCHEMA_INFO SET schema_ver = '07-drop-versionChecksum-column';
