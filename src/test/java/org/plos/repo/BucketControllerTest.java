@@ -157,11 +157,11 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
 
     JsonObject responseObj = gson.fromJson(createObjResponse.readEntity(String.class), JsonElement.class).getAsJsonObject();
     TestCase.assertNotNull(responseObj);
-    String versionChecksum = responseObj.get("versionChecksum").getAsString();
+    String uuid = responseObj.get("uuid").getAsString();
 
     Response deleteObjectResponse = target("/objects/" + bucketName)
         .queryParam("key", "object3")
-        .queryParam("versionChecksum", versionChecksum)
+        .queryParam("uuid", uuid)
         .request()
         .accept(MediaType.APPLICATION_JSON_TYPE)
         .delete();

@@ -18,7 +18,6 @@
 package org.plos.repo.service;
 
 import org.apache.commons.lang.StringUtils;
-import org.plos.repo.util.ChecksumGenerator;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -41,9 +40,6 @@ public abstract class BaseRepoService {
 
   @Inject
   protected SqlService sqlService;
-
-  @Inject
-  protected ChecksumGenerator checksumGenerator;
 
   protected void sqlReleaseConnection() throws RepoException {
 

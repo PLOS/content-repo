@@ -39,7 +39,6 @@ public class RepoObject {
   private Integer versionNumber;
   private Status status;
   private Timestamp creationDate;
-  private String versionChecksum;
   private URL[] reproxyURL;
   private String userMetadata;
   private UUID uuid;
@@ -130,10 +129,6 @@ public class RepoObject {
     return creationDate;
   }
 
-  public String getVersionChecksum() {
-    return versionChecksum;
-  }
-
   public URL[] getReproxyURL() {
     return reproxyURL;
   }
@@ -188,10 +183,6 @@ public class RepoObject {
 
   public void setCreationDate(Timestamp creationDate) {
     this.creationDate = creationDate;
-  }
-
-  public void setVersionChecksum(String versionChecksum) {
-    this.versionChecksum = versionChecksum;
   }
 
   public void setReproxyURL(URL[] reproxyURL) {

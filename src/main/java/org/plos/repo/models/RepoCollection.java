@@ -38,7 +38,6 @@ public class RepoCollection {
   private Status status;
   private String tag;
   private Timestamp creationDate;
-  private String versionChecksum;
   private List<RepoObject> repoObjects;
   private String userMetadata;
   private UUID uuid;
@@ -138,14 +137,6 @@ public class RepoCollection {
 
   public void setCreationDate(Timestamp creationDate) {
     this.creationDate = creationDate;
-  }
-
-  public String getVersionChecksum() {
-    return versionChecksum;
-  }
-
-  public void setVersionChecksum(String versionChecksum) {
-    this.versionChecksum = versionChecksum;
   }
 
   public boolean equals(RepoObject o) {

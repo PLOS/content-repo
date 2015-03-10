@@ -235,7 +235,6 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
     repoObject.setSize(Long.valueOf(1));
     repoObject.setVersionNumber(Integer.valueOf(0));
     repoObject.setCreationDate(new Timestamp(datetime.toDate().getTime()));
-    repoObject.setVersionChecksum("123456");
     return repoObject;
   }
 }

@@ -406,9 +406,6 @@ public class CollectionRepoService extends BaseRepoService {
     Integer versionNumber = sqlService.getCollectionNextAvailableVersion(repoCollection.getBucketName(), repoCollection.getKey());   // change to support collections
     repoCollection.setVersionNumber(versionNumber);
 
-    // TODO : remove when dropping versionChecksum column from collections table
-    repoCollection.setVersionChecksum(checksumGenerator.generateVersionChecksum(repoCollection, new ArrayList<String>()));
-
     repoCollection.setUuid(UUID.randomUUID());
 
     // add a record to the DB

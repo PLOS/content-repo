@@ -45,7 +45,7 @@ public class InputCollectionValidatorTest {
   private static final String VALID_BUCKET_NAME = "valid-bucket-name";
   private static final String VALID_TIMESTAMP = "2014-09-02 1:55:32";
   private static final String FAIL_MSG = "A repo exception was expected.";
-  private static final String VALID_USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\"}";
+  private static final String VALID_USER_METADATA = "{ \"key\": \"obj1\", \"test\":\"blabla\"}";
 
   @InjectMocks
   private InputCollectionValidator inputCollectionValidator;

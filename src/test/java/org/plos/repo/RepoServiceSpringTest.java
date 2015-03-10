@@ -834,7 +834,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
   }
 
   @Test
-  public void getObjectUsingVersionChecksum() throws RepoException {
+  public void getObjectUsingUuid() throws RepoException {
 
     repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
 

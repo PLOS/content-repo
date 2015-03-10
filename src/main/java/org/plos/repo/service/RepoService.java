@@ -379,7 +379,7 @@ public class RepoService extends BaseRepoService {
     try {
       content = objectStore.getInputStream(repoObject);
     } catch (Exception e) {
-      log.error("Error retrieving content for object.  Key: {} , bucketName: {} , versionChecksum: {} . Error: {}",
+      log.error("Error retrieving content for object.  Key: {} , bucketName: {} , uuid: {} . Error: {}",
           repoObject.getKey(),
           repoObject.getBucketName(),
           repoObject.getUuid().toString(),
@@ -387,7 +387,7 @@ public class RepoService extends BaseRepoService {
       throw new RepoException(e);
     }
     if (content == null){
-      log.error("Error retrieving content for object. Content not found.  Key: {} , bucketName: {} , versionChecksum: {} ",
+      log.error("Error retrieving content for object. Content not found.  Key: {} , bucketName: {} , uuid: {} ",
           repoObject.getKey(),
           repoObject.getBucketName(),
           repoObject.getUuid().toString());
@@ -650,9 +650,6 @@ public class RepoService extends BaseRepoService {
       repoObject.setVersionNumber(versionNumber);
       repoObject.setCreationDate(cretationDateTime);
 
-      // TODO : remove when dropping versionChecksum column from objects table
-      repoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(repoObject));
-
       repoObject.setUuid(UUID.randomUUID());
 
       // determine if the object should be added to the store or not
@@ -715,7 +712,6 @@ public class RepoService extends BaseRepoService {
     try {
 
       newRepoObject = createNewRepoObjectForUpate(inputRepoObject, repoObject, timestamp, cretationDateTime);
-      /*newRepoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(newRepoObject));*/
 
       sqlService.getConnection();
       rollback = true;
@@ -742,8 +738,6 @@ public class RepoService extends BaseRepoService {
         }
       }
 
-      // TODO : remove when dropping versionChecksum column from objects table
-      newRepoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(newRepoObject));
       newRepoObject.setUuid(UUID.randomUUID());
 
       // if the new object and the last version of the object are similar, we just return the last version of the object

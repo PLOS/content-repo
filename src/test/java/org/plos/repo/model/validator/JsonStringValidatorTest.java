@@ -32,7 +32,7 @@ import static org.junit.Assert.fail;
  */
 public class JsonStringValidatorTest {
 
-  private String VALID_JSON_STRING = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\"}";
+  private String VALID_JSON_STRING = "{ \"key\": \"obj1\", \"test\":\"blabla\"}";
 
   private String NOT_VALID_JSON_STRING = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\",}";
 

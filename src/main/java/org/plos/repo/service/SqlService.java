@@ -54,7 +54,6 @@ public abstract class SqlService {
   private static final String TAG_COLUMN = "TAG";
   private static final String  VERSION_NUMBER_COLUMN = "VERSIONNUMBER";
   private static final String  CREATION_DATE_COLUMN = "CREATIONDATE";
-  private static final String  VERSION_CHECKSUM_COLUMN = "VERSIONCHECKSUM";
   private static final String USER_METADATA_COLUMN = "USERMETADATA";
   private static final String UUID_COLUMN = "UUID";
   private static final String HEX_UUID_COLUMN = "HEX_UUID";
@@ -66,13 +65,12 @@ public abstract class SqlService {
       + ", obj." + STATUS_COLUMN + ", obj." + ID_COLUMN + ", obj." + CHECKSUM_COLUMN
       + ", obj." + TIMESTAMP_COLUMN + ", obj." + DOWNLOAD_NAME_COLUMN + ", obj." + CONTENT_TYPE_COLUMN
       + ", obj." + SIZE_COLUMN + ", obj." + TAG_COLUMN + ", obj." + VERSION_NUMBER_COLUMN + ", obj." + CREATION_DATE_COLUMN
-      + ", obj." + VERSION_CHECKSUM_COLUMN + ", obj." + USER_METADATA_COLUMN + " , HEX( obj." + UUID_COLUMN + ") as " + HEX_UUID_COLUMN;
+      + ", obj." + USER_METADATA_COLUMN + " , HEX( obj." + UUID_COLUMN + ") as " + HEX_UUID_COLUMN;
 
   private static String COLLECTION_COLUMNS = "c." + COLLECTION_KEY_COLUMN + ", c." + BUCKET_ID_COLUMN
       + ", c." + STATUS_COLUMN + ", c." + ID_COLUMN + ", c." + TIMESTAMP_COLUMN
       + ", c." + TAG_COLUMN + ", c." + VERSION_NUMBER_COLUMN + ", c." + CREATION_DATE_COLUMN
-      + ", c." + VERSION_CHECKSUM_COLUMN + ", c." + USER_METADATA_COLUMN
-      + ", HEX(c." + UUID_COLUMN + ") as " + HEX_UUID_COLUMN;
+      + ", c." + USER_METADATA_COLUMN + ", HEX(c." + UUID_COLUMN + ") as " + HEX_UUID_COLUMN;
 
   @Required
   public void setDataSource(DataSource dataSource) throws SQLException {
@@ -94,7 +92,6 @@ public abstract class SqlService {
     repoObject.setTag(rs.getString(TAG_COLUMN));
     repoObject.setVersionNumber(rs.getInt(VERSION_NUMBER_COLUMN));
     repoObject.setCreationDate(rs.getTimestamp(CREATION_DATE_COLUMN));
-    repoObject.setVersionChecksum(rs.getString(VERSION_CHECKSUM_COLUMN));
     repoObject.setUserMetadata(rs.getString(USER_METADATA_COLUMN));
     repoObject.setUuid(UUIDFormatter.getUUIDNoDashes(rs.getString(HEX_UUID_COLUMN)));
 
@@ -110,7 +107,6 @@ public abstract class SqlService {
     collection.setVersionNumber(rs.getInt(VERSION_NUMBER_COLUMN));
     collection.setTag(rs.getString(TAG_COLUMN));
     collection.setCreationDate(rs.getTimestamp(CREATION_DATE_COLUMN));
-    collection.setVersionChecksum(rs.getString(VERSION_CHECKSUM_COLUMN));
     collection.setUserMetadata(rs.getString(USER_METADATA_COLUMN));
     collection.setUuid(UUIDFormatter.getUUIDNoDashes(rs.getString(HEX_UUID_COLUMN)));
     return collection;
@@ -530,8 +526,8 @@ public abstract class SqlService {
     try {
 
       p = connectionLocal.get().prepareStatement("INSERT INTO objects (objKey, checksum, timestamp, bucketId, contentType, downloadName, size, " +
-          "tag, versionNumber, status, creationDate, versionChecksum, userMetadata, uuid) " +
-          "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?, "+ UUID_SQL_FORMAT + " )");
+          "tag, versionNumber, status, creationDate, userMetadata, uuid) " +
+          "VALUES (?,?,?,?,?,?,?,?,?,?,?,?, "+ UUID_SQL_FORMAT + " )");
 
 
       p.setString(1, repoObject.getKey());
@@ -545,9 +541,8 @@ public abstract class SqlService {
       p.setInt(9, repoObject.getVersionNumber());
       p.setInt(10, repoObject.getStatus().getValue());
       p.setTimestamp(11, repoObject.getTimestamp());
-      p.setString(12, repoObject.getVersionChecksum());
-      p.setString(13,repoObject.getUserMetadata());
-      p.setString(14, repoObject.getUuid().toString());
+      p.setString(12,repoObject.getUserMetadata());
+      p.setString(13, repoObject.getUuid().toString());
 
       return p.executeUpdate();
 
@@ -1201,7 +1196,7 @@ public abstract class SqlService {
     try {
       p =
           connectionLocal.get().prepareStatement("INSERT INTO collections (bucketId, collkey, timestamp, status, versionNumber, " +
-                  "tag, creationDate, versionChecksum, userMetadata, uuid) VALUES (?,?,?,?,?,?,?,?,?,"+ UUID_SQL_FORMAT + ")",
+                  "tag, creationDate, userMetadata, uuid) VALUES (?,?,?,?,?,?,?,?,"+ UUID_SQL_FORMAT + ")",
               Statement.RETURN_GENERATED_KEYS);
 
       p.setInt(1, repoCollection.getBucketId());
@@ -1211,9 +1206,8 @@ public abstract class SqlService {
       p.setInt(5, repoCollection.getVersionNumber());
       p.setString(6, repoCollection.getTag());
       p.setTimestamp(7, repoCollection.getCreationDate());
-      p.setString(8, repoCollection.getVersionChecksum());
-      p.setString(9,(String)repoCollection.getUserMetadata());
-      p.setString(10, repoCollection.getUuid().toString());
+      p.setString(8,(String)repoCollection.getUserMetadata());
+      p.setString(9, repoCollection.getUuid().toString());
 
       p.executeUpdate();
       keys = p.getGeneratedKeys();

@@ -40,7 +40,6 @@ public class RepoCollectionOutput {
   private Integer versionNumber;
   private String tag;
   private String creationDate;
-  private String versionChecksum;
   private Status status;
   private List<RepoObjectOutput> objects;
   private String userMetadata;
@@ -56,7 +55,6 @@ public class RepoCollectionOutput {
     this.versionNumber = repoCollection.getVersionNumber();
     this.tag = repoCollection.getTag();
     this.creationDate = TimestampFormatter.getFormattedTimestamp(repoCollection.getCreationDate());
-    this.versionChecksum = repoCollection.getVersionChecksum();
     this.status = repoCollection.getStatus();
     this.userMetadata = repoCollection.getUserMetadata();
 
@@ -123,20 +121,12 @@ public class RepoCollectionOutput {
     this.creationDate = creationDate;
   }
 
-  public String getVersionChecksum() {
-    return versionChecksum;
-  }
-
   public Status getStatus() {
     return status;
   }
 
   public void setStatus(Status status) {
     this.status = status;
-  }
-
-  public void setVersionChecksum(String versionChecksum) {
-    this.versionChecksum = versionChecksum;
   }
 
   public String getUserMetadata() {

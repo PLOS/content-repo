@@ -46,7 +46,6 @@ public class UUIDFormatterTest {
   private static final String TAG_COLUMN = "TAG";
   private static final String  VERSION_NUMBER_COLUMN = "VERSIONNUMBER";
   private static final String  CREATION_DATE_COLUMN = "CREATIONDATE";
-  private static final String  VERSION_CHECKSUM_COLUMN = "VERSIONCHECKSUM";
   private static final String USER_METADATA_COLUMN = "USERMETADATA";
   private static final String UUID_COLUMN = "UUID";
   private static final String HEX_UUID_COLUMN = "HEX_UUID";
@@ -58,7 +57,7 @@ public class UUIDFormatterTest {
       + ",obj." + STATUS_COLUMN + ",obj." + ID_COLUMN + ",obj." + CHECKSUM_COLUMN
       + ",obj." + TIMESTAMP_COLUMN + ",obj." + DOWNLOAD_NAME_COLUMN + ",obj." + CONTENT_TYPE_COLUMN
       + ",obj." + SIZE_COLUMN + ",obj." + TAG_COLUMN + ",obj." + VERSION_NUMBER_COLUMN + ",obj." + CREATION_DATE_COLUMN
-      + ",obj." + VERSION_CHECKSUM_COLUMN + ",obj." + USER_METADATA_COLUMN + ", HEX(obj.uuid )";
+      + ",obj." + USER_METADATA_COLUMN + ", HEX(obj.uuid )";
 
   @Test
   public void test() throws DecoderException, UnsupportedEncodingException {
