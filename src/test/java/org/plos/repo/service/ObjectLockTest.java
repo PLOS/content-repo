@@ -72,6 +72,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     String getKeyname(int i);
 
     String getTag(int i);
+
+    String getData(int i);
   }
 
   @Before
@@ -111,6 +113,10 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
       public String getTag(int i) {
         return null;
+      }
+
+      public String getData(int i) {
+        return OBJECT_DATA;
       }
     };
 
@@ -156,6 +162,10 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
       public String getTag(int i) {
         return "TAG" + i;
+      }
+
+      public String getData(int i){
+        return OBJECT_DATA + i;
       }
 
     };
@@ -204,6 +214,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
       public String getTag(int i) { return null; }
 
+      public String getData(int i) { return OBJECT_DATA + 1; }
+
     };
 
     this.endGate = new CountDownLatch(INSERT_THREADS + READER_THREADS);
@@ -216,6 +228,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       public String getKeyname(int i) { return BASE_KEY_NAME; }
 
       public String getTag(int i) { return "TAG" + i; }
+
+      public String getData(int i) { return OBJECT_DATA + i; }
 
     };
 
@@ -266,6 +280,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       }
 
       public String getTag(int i) { return "TAG" + i; }
+
+      public String getData(int i) { return OBJECT_DATA + i; }
 
     };
 
@@ -356,7 +372,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
           try {
             startGate.await();  // don't start until startGate is 0
             try {
-              RepoObject versionedRepoObject = repoService.createObject(RepoService.CreateMethod.VERSION, createInputRepoObject(cb, j));
+              RepoObject versionedRepoObject = repoService.createObject(RepoService.CreateMethod.AUTO, createInputRepoObject(cb, j));
 
               if (!versionedRepoObject.getKey().equals(cb.getKeyname(j))) {
                 synchronized (lock) {
@@ -374,8 +390,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
-                        "Can not version object:%s , tag:%s , Reason:%s", cb.getKeyname(j),
-                        cb.getTag(j),
+                            "Can not version object:%s , tag:%s , data:%s , Reason:%s", cb.getKeyname(j),
+                            cb.getTag(j), cb.getData(j),
                             e.getMessage()));
                   }
                 }
@@ -461,11 +477,11 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                 }
               }
 
-              if (!outputData.equals(OBJECT_DATA)) {
+              if (!outputData.equals(cb.getData(j))) {
                 synchronized (lock) {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
-                        "Expected:%s Actual:%s Reason:%s", OBJECT_DATA, outputData,
+                            "Expected:%s Actual:%s Reason:%s", cb.getData(j), outputData,
                             "data read mismatch"));
                   }
                 }
@@ -507,12 +523,13 @@ public class ObjectLockTest extends RepoBaseSpringTest {
   }
 
   private InputRepoObject createInputRepoObject(Callback cb, int threadNumber) {
+
     Timestamp creationDateTime = new Timestamp(new Date().getTime());
     InputRepoObject inputRepoObject = new InputRepoObject();
     inputRepoObject.setKey(cb.getKeyname(threadNumber));
     inputRepoObject.setBucketName(BUCKET_NAME);
     inputRepoObject.setTimestamp(creationDateTime.toString());
-    inputRepoObject.setUploadedInputStream(IOUtils.toInputStream(OBJECT_DATA));
+    inputRepoObject.setUploadedInputStream(IOUtils.toInputStream(cb.getData(threadNumber)));
     inputRepoObject.setCreationDateTime(creationDateTime.toString());
     inputRepoObject.setTag(cb.getTag(threadNumber));
     return inputRepoObject;
