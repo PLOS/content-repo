@@ -23,12 +23,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.input.InputObject;
 import org.plos.repo.models.input.InputRepoObject;
-import org.plos.repo.models.validator.InputCollectionValidator;
 import org.plos.repo.models.validator.InputRepoObjectValidator;
-import org.plos.repo.models.validator.JsonStringValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
 import org.plos.repo.service.RepoException;
 
@@ -49,7 +46,6 @@ public class InputRepoObjectValidatorTest {
   private static final String VALID_BUCKET_NAME = "valid-bucket-name";
   private static final String VALID_TIMESTAMP = "2014-09-02 1:55:32";
   private static final String FAIL_MSG = "A repo exception was expected.";
-  private static final String VALID_USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\"}";
 
   @InjectMocks
   private InputRepoObjectValidator inputRepoObjectValidator;
@@ -59,9 +55,6 @@ public class InputRepoObjectValidatorTest {
 
   @Mock
   private InputRepoObject inputRepoObject;
-
-  @Mock
-  private JsonStringValidator jsonStringValidator;
 
   private List<InputObject> inputObjects = Arrays.asList(new InputObject[]{new InputObject("key", "sads123dsadas456")});
 
@@ -114,11 +107,9 @@ public class InputRepoObjectValidatorTest {
     when(inputRepoObject.getBucketName()).thenReturn(VALID_BUCKET_NAME);
     when(inputRepoObject.getTimestamp()).thenReturn(VALID_TIMESTAMP);
     when(inputRepoObject.getCreationDateTime()).thenReturn(VALID_TIMESTAMP);
-    when(inputRepoObject.getUserMetadata()).thenReturn(VALID_USER_METADATA);
 
     doNothing().when(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseTimestamp);
     doNothing().when(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseCreationDate);
-    doNothing().when(jsonStringValidator).validate(VALID_USER_METADATA, RepoException.Type.InvalidUserMetadataFormat);
 
   }
 
@@ -128,12 +119,10 @@ public class InputRepoObjectValidatorTest {
     verify(inputRepoObject).getBucketName();
     verify(inputRepoObject).getTimestamp();
     verify(inputRepoObject).getCreationDateTime();
-    verify(inputRepoObject).getUserMetadata();
 
     verify(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseTimestamp);
     verify(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseCreationDate);
 
-    verify(jsonStringValidator).validate(VALID_USER_METADATA, RepoException.Type.InvalidUserMetadataFormat);
   }
 
 

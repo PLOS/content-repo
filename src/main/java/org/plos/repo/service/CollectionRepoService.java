@@ -29,7 +29,6 @@ import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.input.InputObject;
 import org.plos.repo.models.validator.InputCollectionValidator;
-import org.plos.repo.models.validator.JsonStringValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -320,7 +319,7 @@ public class CollectionRepoService extends BaseRepoService {
       repoCollection.setTag(inputCollection.getTag());
       repoCollection.setCreationDate(creationDate);
       repoCollection.setUserMetadata(inputCollection.getUserMetadata());
-
+        
       return createCollection(repoCollection, inputCollection.getObjects());
 
     } catch(SQLIntegrityConstraintViolationException e){
