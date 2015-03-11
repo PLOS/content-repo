@@ -40,9 +40,6 @@ public abstract class SqlService {
 
   private static final ThreadLocal<Connection> connectionLocal = new ThreadLocal<>();
 
-  private static final String UUID_SQL_FORMAT = "(UNHEX(REPLACE(?,\'-\',\'\')))";
-
-
   private static final String OBJECT_KEY_COLUMN = "OBJKEY";
   private static final String COLLECTION_KEY_COLUMN = "COLLKEY";
   private static final String  BUCKET_ID_COLUMN = "BUCKETID";
@@ -65,12 +62,12 @@ public abstract class SqlService {
       + ", obj." + STATUS_COLUMN + ", obj." + ID_COLUMN + ", obj." + CHECKSUM_COLUMN
       + ", obj." + TIMESTAMP_COLUMN + ", obj." + DOWNLOAD_NAME_COLUMN + ", obj." + CONTENT_TYPE_COLUMN
       + ", obj." + SIZE_COLUMN + ", obj." + TAG_COLUMN + ", obj." + VERSION_NUMBER_COLUMN + ", obj." + CREATION_DATE_COLUMN
-      + ", obj." + USER_METADATA_COLUMN + " , HEX( obj." + UUID_COLUMN + ") as " + HEX_UUID_COLUMN;
+      + ", obj." + USER_METADATA_COLUMN + " , obj." + UUID_COLUMN;
 
   private static String COLLECTION_COLUMNS = "c." + COLLECTION_KEY_COLUMN + ", c." + BUCKET_ID_COLUMN
       + ", c." + STATUS_COLUMN + ", c." + ID_COLUMN + ", c." + TIMESTAMP_COLUMN
       + ", c." + TAG_COLUMN + ", c." + VERSION_NUMBER_COLUMN + ", c." + CREATION_DATE_COLUMN
-      + ", c." + USER_METADATA_COLUMN + ", HEX(c." + UUID_COLUMN + ") as " + HEX_UUID_COLUMN;
+      + ", c." + USER_METADATA_COLUMN + ", c." + UUID_COLUMN;
 
   @Required
   public void setDataSource(DataSource dataSource) throws SQLException {
@@ -93,7 +90,7 @@ public abstract class SqlService {
     repoObject.setVersionNumber(rs.getInt(VERSION_NUMBER_COLUMN));
     repoObject.setCreationDate(rs.getTimestamp(CREATION_DATE_COLUMN));
     repoObject.setUserMetadata(rs.getString(USER_METADATA_COLUMN));
-    repoObject.setUuid(UUIDFormatter.getUUIDNoDashes(rs.getString(HEX_UUID_COLUMN)));
+    repoObject.setUuid(UUIDFormatter.getUuidWithDashes(rs.getString(UUID_COLUMN)));
 
     return  repoObject;
   }
@@ -108,12 +105,15 @@ public abstract class SqlService {
     collection.setTag(rs.getString(TAG_COLUMN));
     collection.setCreationDate(rs.getTimestamp(CREATION_DATE_COLUMN));
     collection.setUserMetadata(rs.getString(USER_METADATA_COLUMN));
-    collection.setUuid(UUIDFormatter.getUUIDNoDashes(rs.getString(HEX_UUID_COLUMN)));
+    collection.setUuid(UUIDFormatter.getUuidWithDashes(rs.getString(UUID_COLUMN)));
     return collection;
   }
 
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
-    return new Bucket(rs.getInt("BUCKETID"), rs.getString("BUCKETNAME"), rs.getTimestamp("TIMESTAMP"), rs.getTimestamp("CREATIONDATE"));
+    return new Bucket(rs.getInt(BUCKET_ID_COLUMN),
+                      rs.getString(BUCKET_NAME_COLUMN),
+                      rs.getTimestamp(TIMESTAMP_COLUMN),
+                      rs.getTimestamp(CREATION_DATE_COLUMN));
   }
 
   private static void closeDbStuff(ResultSet result, PreparedStatement p) throws SQLException {
@@ -278,7 +278,7 @@ public abstract class SqlService {
         query.append(" AND versionNumber=?");
       }
       if (uuid != null){
-        query.append(" AND uuid=" + UUID_SQL_FORMAT);
+        query.append(" AND uuid = ?");
       }
       if (tag != null){
         query.append(" AND tag=?");
@@ -400,7 +400,7 @@ public abstract class SqlService {
         query.append(" AND versionNumber=?");
       }
       if (uuid != null){
-        query.append(" AND uuid = "+ UUID_SQL_FORMAT);
+        query.append(" AND uuid = ?");
       }
       if (tag != null){
         query.append(" AND tag=?");
@@ -459,7 +459,7 @@ public abstract class SqlService {
       query.append(" AND versionNumber=?");
     }
     if (uuid != null){
-      query.append(" AND uuid=" + UUID_SQL_FORMAT);
+      query.append(" AND uuid = ?");
     }
     if (tag != null){
       query.append(" AND tag=?");
@@ -527,7 +527,7 @@ public abstract class SqlService {
 
       p = connectionLocal.get().prepareStatement("INSERT INTO objects (objKey, checksum, timestamp, bucketId, contentType, downloadName, size, " +
           "tag, versionNumber, status, creationDate, userMetadata, uuid) " +
-          "VALUES (?,?,?,?,?,?,?,?,?,?,?,?, "+ UUID_SQL_FORMAT + " )");
+          "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
 
       p.setString(1, repoObject.getKey());
@@ -1014,7 +1014,7 @@ public abstract class SqlService {
         query.append(" AND versionNumber=?");
       }
       if (uuid != null){
-        query.append(" AND uuid=" + UUID_SQL_FORMAT);
+        query.append(" AND uuid= ?");
       }
       if (tag != null){
         query.append(" AND tag=?");
@@ -1127,7 +1127,7 @@ public abstract class SqlService {
         query.append(" AND versionNumber=?");
       }
       if (uuid != null){
-        query.append(" AND uuid=" + UUID_SQL_FORMAT);
+        query.append(" AND uuid= ?");
       }
       if (tag != null){
         query.append(" AND tag=?");
@@ -1196,7 +1196,7 @@ public abstract class SqlService {
     try {
       p =
           connectionLocal.get().prepareStatement("INSERT INTO collections (bucketId, collkey, timestamp, status, versionNumber, " +
-                  "tag, creationDate, userMetadata, uuid) VALUES (?,?,?,?,?,?,?,?,"+ UUID_SQL_FORMAT + ")",
+                  "tag, creationDate, userMetadata, uuid) VALUES (?,?,?,?,?,?,?,?,?)",
               Statement.RETURN_GENERATED_KEYS);
 
       p.setInt(1, repoCollection.getBucketId());
@@ -1267,7 +1267,7 @@ public abstract class SqlService {
           connectionLocal.get().prepareStatement("SELECT * FROM objects obj, buckets b " +
               "WHERE obj.bucketId = b.bucketId " +
               "AND b.bucketName=? " +
-              "AND objKey=? AND uuid=" + UUID_SQL_FORMAT);
+              "AND objKey=? AND uuid= ?");
 
       p.setString(1, bucketName);
       p.setString(2, objectKey);

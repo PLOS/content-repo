@@ -36,7 +36,7 @@ CREATE CACHED TABLE IF NOT EXISTS objects (
    versionNumber INTEGER NOT NULL,
    creationDate TIMESTAMP NOT NULL,
    userMetadata LONGTEXT,
-   uuid BINARY(16) NOT NULL,
+   uuid CHAR(36) NOT NULL,
    CONSTRAINT ObjkeyUniversalID UNIQUE (bucketId, objkey, uuid),
    CONSTRAINT keyVersion UNIQUE (bucketId, objkey, versionNumber)
 );
@@ -51,7 +51,7 @@ CREATE CACHED TABLE IF NOT EXISTS collections (
    tag VARCHAR (200),
    creationDate TIMESTAMP NOT NULL,
    userMetadata LONGTEXT,
-   uuid BINARY(16) NOT NULL,
+   uuid CHAR(36) NOT NULL,
    CONSTRAINT CollkeyUniversalID UNIQUE (bucketId, collkey, uuid),
    CONSTRAINT keyVersionColl UNIQUE (bucketId, collkey, versionNumber),
    FOREIGN KEY (bucketId) REFERENCES buckets(bucketId)
@@ -70,21 +70,3 @@ CREATE CACHED TABLE IF NOT EXISTS collectionObject (
 -- 
 INSERT INTO CREPO_SCHEMA_INFO  (schema_ver) VALUES ('01-add-collections');
 
-DROP FUNCTION IF EXISTS HEX;
-
-CREATE FUNCTION HEX(BINARY(16))
-RETURNS VARCHAR(500)
-LANGUAGE JAVA DETERMINISTIC
-NO SQL
-EXTERNAL NAME 'CLASSPATH:org.plos.repo.config.UUIDHsqlFunctions.HEX';
-
-DROP FUNCTION IF EXISTS UNHEX;
-
-CREATE FUNCTION UNHEX(VARCHAR(500))
-RETURNS BINARY(16)
-LANGUAGE JAVA DETERMINISTIC
-NO SQL
-EXTERNAL NAME 'CLASSPATH:org.plos.repo.config.UUIDHsqlFunctions.UNHEX';
-
-
-GRANT SELECT, UPDATE ON OBJECTS TO PUBLIC;

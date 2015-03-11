@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS CREPO_SCHEMA_INFO (
 #
 
 ALTER TABLE objects
-ADD COLUMN uuid BINARY(16);
+ADD COLUMN uuid CHAR(36);
 
 
 #
@@ -24,7 +24,7 @@ ADD COLUMN uuid BINARY(16);
 #
 
 ALTER TABLE collections
-ADD COLUMN uuid BINARY(16);
+ADD COLUMN uuid CHAR(36);
 
 
 # INSERT the version string. This should happen last.

@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS CREPO_SCHEMA_INFO (
 # add unique contraint for bucketId, objkey and uuid
 #
 
-ALTER TABLE objects MODIFY uuid BINARY(16) NOT NULL;
+ALTER TABLE objects MODIFY uuid CHAR(36) NOT NULL;
 ALTER TABLE objects 
 ADD CONSTRAINT ObjkeyUniversalID UNIQUE (bucketId, objkey, uuid);
 
@@ -29,7 +29,7 @@ ADD CONSTRAINT ObjkeyUniversalID UNIQUE (bucketId, objkey, uuid);
 # add unique contraint for bucketId, collKey and uuid
 #
 
-ALTER TABLE collections MODIFY uuid BINARY(16) NOT NULL;
+ALTER TABLE collections MODIFY uuid CHAR(36) NOT NULL;
 ALTER TABLE collections 
 ADD CONSTRAINT CollkeyUniversalID UNIQUE (bucketId, collkey, uuid);
 
