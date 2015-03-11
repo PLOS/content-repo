@@ -297,7 +297,11 @@ public class CollectionRepoService extends BaseRepoService {
       sqlReleaseConnection();
     }
     if(!rollback && newRepoCollection != null) {
-        auditService.createUpdateCollection(newRepoCollection);
+      if (existingRepoCollection == null) {
+        auditService.createCollection(newRepoCollection);
+      } else {
+        auditService.updateCollection(newRepoCollection);
+      }
     }
     return newRepoCollection;
   }

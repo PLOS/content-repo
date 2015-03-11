@@ -703,7 +703,7 @@ public class RepoService extends BaseRepoService {
     }
 
     if(!rollback && repoObject != null) {
-      auditService.createUpdateObject(repoObject);
+      auditService.createObject(repoObject);
     }
 
     return repoObject;
@@ -783,7 +783,7 @@ public class RepoService extends BaseRepoService {
 
     }
     if(!rollback && newRepoObject != null) {
-      auditService.createUpdateObject(newRepoObject);
+      auditService.updateObject(newRepoObject);
 
     }
     return newRepoObject;

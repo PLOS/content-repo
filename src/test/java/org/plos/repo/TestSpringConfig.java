@@ -63,7 +63,7 @@ public class TestSpringConfig {
   public ChecksumGenerator versionChecksumGenerator(){ return new ChecksumGenerator(); }
 
   @Bean
-  public AuditService journalService(){ return new AuditService(); }
+  public AuditService auditService(){ return new AuditService(); }
 
   @Bean
   public ObjectStore objectStore() throws Exception {
