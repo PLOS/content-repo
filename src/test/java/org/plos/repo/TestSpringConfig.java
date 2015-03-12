@@ -66,23 +66,10 @@ public class TestSpringConfig {
   @Bean
   public ObjectStore objectStore() throws Exception {
     return new InMemoryFileStoreService();
-//    return new FileSystemStoreService("/tmp/repo_unittest");
-//    return new MogileStoreService("toast", new String[]{"localhost:7001"}, 1, 1, 100);
   }
 
   @Bean
   public SqlService sqlService() throws Exception {
-
-//    MysqlDataSource ds = new MysqlDataSource();
-//    ds.setUrl("jdbc:mysql://localhost:3306/plosrepo_unittest");
-//    ds.setUser("root");
-//    ds.setPassword("");
-//
-//    Connection connection = ds.getConnection();
-//
-//    SqlService service = new MysqlService();
-//    Resource sqlFile = new ClassPathResource("setup.mysql");
-
 
     JDBCDataSource ds = new JDBCDataSource();
     ds.setUrl("jdbc:hsqldb:mem:plosrepo-unittest-hsqldb;shutdown=true;sql.syntax_mys=true");
@@ -99,15 +86,6 @@ public class TestSpringConfig {
 
     connection.setAutoCommit(false);
     service.setDataSource(ds);
-
-/*    Statement statement = connection.createStatement();
-    String functionHexStatement = "CREATE FUNCTION HEX(val VARCHAR(500)) " +
-        "RETURNS BINARY(16) " +
-        "LANGUAGE JAVA DETERMINISTIC " +
-        "NO SQL " +
-        "EXTERNAL NAME 'CLASSPATH:org.plos.repo.config.UUIDHsqlFunctions.hex';" ;
-
-    statement.execute(functionHexStatement);*/
 
     return service;
   }

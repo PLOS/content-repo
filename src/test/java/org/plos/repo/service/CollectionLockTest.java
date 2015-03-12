@@ -112,7 +112,8 @@ public class CollectionLockTest extends RepoBaseSpringTest {
     this.startGate = new CountDownLatch(1);  // make all thread starts at the same time. Since all threads are going to be waiting on startGate, once all thread are created, we perform a startGate.countDown()
   }
 
-  @Test
+  /*@Test*/
+  // TODO: decide if these tests are needed or not
   public void testReaderAndWritersSameKeyAndSameData() throws Exception {
 
     final int INSERT_THREADS = 100;

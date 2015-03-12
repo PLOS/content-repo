@@ -32,27 +32,6 @@ public class UUIDFormatter {
 
   /**
    * Return a UUID from the given <code>uuidNoDashes</code>. It is intend to be used when the string representing the
-   * UUID has no dashes.
-   * @param uuidNoDashes a single String representing the UUID. The string must have no dashes.
-   * @return a UUID
-   * @throws RepoException
-   */
-  public static UUID getUUIDNoDashes(String uuidNoDashes) throws RepoException {
-
-    if (!StringUtil.isEmpty(uuidNoDashes)) {
-
-      uuidNoDashes = uuidNoDashes.replaceAll(UUID_MATCHING_FORMAT, UUID_OUTPUT_FORMAT);
-
-      return uuid(uuidNoDashes);
-
-    }
-
-    return null;
-
-  }
-
-  /**
-   * Return a UUID from the given <code>uuidNoDashes</code>. It is intend to be used when the string representing the
    * UUID matches the standard representation as described in the {@link java.util.UUID#toString()} method
    * @param uuidWithDashes a single String representing the UUID.
    * @return a UUID
