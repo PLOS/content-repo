@@ -38,6 +38,7 @@ import java.util.Iterator;
 
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 public class CollectionControllerTest extends RepoBaseJerseyTest {
 
@@ -158,7 +159,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName("invalidBucket");
     inputCollection.setKey("invalidBucket");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("obj1","213i3b21312")}));
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("obj1", "213i3b21312")}));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertRepoError(target("/collections").request()
@@ -1248,7 +1249,62 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     assertNotNull(responseObj);
     assertEquals(VALID_USER_METADATA, responseObj.get("userMetadata").getAsString());
 
+  }
+
+  @Test
+  public void createConsecutiveSimilarCollections(){
+
+    generateBuckets(bucketName);
+    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
+
+    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
+
+    // create collection 1
+    InputCollection inputCollection = new InputCollection();
+    inputCollection.setBucketName(bucketName);
+    inputCollection.setKey("collection1");
+    inputCollection.setCreate("new");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
+    inputCollection.setTag("AOP");
+    inputCollection.setUserMetadata(VALID_USER_METADATA);
+    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
+
+    Response responseColl1 = target("/collections").request()
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .post(collectionEntity);
+
+    assertEquals(responseColl1.getStatus(),
+        Response.Status.CREATED.getStatusCode()
+    );
+
+    // create version collection1, same data as previous one
+    inputCollection.setCreate("version");
+    collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
+
+    Response responseColl2 = target("/collections").request()
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .post(collectionEntity);
+
+    assertEquals(responseColl2.getStatus(),
+        Response.Status.CREATED.getStatusCode()
+    );
+
+    // verify that we created two different collections, for that end, we query the number versions for collKey = collection1
+    Response versionsResponse = target("/collections/versions/" + bucketName)
+        .queryParam("key", "collection1")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+    assertEquals(versionsResponse.getStatus(), Response.Status.OK.getStatusCode());
+    assertEquals(versionsResponse.getHeaderString("Content-Type"), "application/json");
+
+    JsonArray responseObj = gson.fromJson(versionsResponse.readEntity(String.class), JsonElement.class).getAsJsonArray();
+    assertNotNull(responseObj);
+    assertEquals(2, responseObj.size());
+
 
   }
+
+
 
 }
