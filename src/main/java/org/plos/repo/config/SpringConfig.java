@@ -2,7 +2,6 @@ package org.plos.repo.config;
 
 import org.plos.repo.models.validator.InputCollectionValidator;
 import org.plos.repo.models.validator.InputRepoObjectValidator;
-import org.plos.repo.models.validator.JsonStringValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
 import org.plos.repo.service.*;
 import org.plos.repo.util.ChecksumGenerator;
@@ -52,10 +51,10 @@ public class SpringConfig {
   public TimestampInputValidator timestampInputValidator(){ return new TimestampInputValidator(); }
 
   @Bean
-  public JsonStringValidator jsonStringValidator(){ return new JsonStringValidator(); }
+  public ChecksumGenerator versionChecksumGenerator(){ return new ChecksumGenerator(); }
 
   @Bean
-  public ChecksumGenerator versionChecksumGenerator(){ return new ChecksumGenerator(); }
+  public JournalService journalService(){ return new JournalService(); }
 
   @Bean
   public ObjectStore objectStore() throws Exception {

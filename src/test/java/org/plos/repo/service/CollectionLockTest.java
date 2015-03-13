@@ -41,6 +41,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.*;
 
 public class CollectionLockTest extends RepoBaseSpringTest {
@@ -138,7 +139,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
     execute(INSERT_THREADS, 0, DELETE_THREADS, READER_THREADS, inputObjects, callback);
     List<RepoCollection> repoCollections = collectionRepoService.listCollections(BUCKET_NAME, null, null, false, null);
     assertEquals(1, repoCollections.size()); // since all the collections where are trying to write are equals & they have
-
+    
     this.startGate = new CountDownLatch(1);
     this.endGate = new CountDownLatch(UPDATE_THREADS + DELETE_THREADS + READER_THREADS);
     execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, inputObjects, callback);
@@ -201,7 +202,8 @@ public class CollectionLockTest extends RepoBaseSpringTest {
     assertEquals(INSERT_THREADS + UPDATE_THREADS, repoCollections.size());
 
     verify(spySqlService, times(INSERT_THREADS + READER_THREADS + UPDATE_THREADS)).getCollection(anyString(), anyString()); // create new collection + list objects, when tag is null + update collection (when looking for exisiting ones)
-    verify(spySqlService, times(READER_THREADS)).getCollection(anyString(), anyString(), anyInt(), anyString(), any(UUID.class)); // reading collections with tags
+    verify(spySqlService, times(READER_THREADS)).getCollection(anyString(), anyString(), anyInt(), anyString(), any(UUID.class), false); // reading collections with tags
+
     verify(spySqlService, times(INSERT_THREADS + UPDATE_THREADS)).getCollectionNextAvailableVersion(anyString(), anyString()); // when creating and versioning a collection
     verify(spySqlService, times(INSERT_THREADS + UPDATE_THREADS)).insertCollection(any(RepoCollection.class)); // when creating and versioning a collection
     verify(spySqlService, times((INSERT_THREADS + UPDATE_THREADS)*inputObjects.size())).insertCollectionObjects(anyInt(), anyString(), anyString(), any(UUID.class));

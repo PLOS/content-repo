@@ -23,35 +23,34 @@ import com.google.common.collect.Maps;
 
 import java.util.EnumSet;
 
-/**
- * Represents the status of an model object.
- * The MISSING_DATA status is about not having the actual data that goes with the content repo row/record,
- * The MISSING_DATA status is merely to inform is not saved in the DB
- */
-public enum Status {
-  
-  MISSING_DATA(-1),
-  USED(0),
-  DELETED(1),
-  PURGED(2);
-  
+public enum Operation {
 
-  private final int value;
+  CREATE_BUCKET("create-bucket"), 
+  CREATE_OBJECT("create-object"), 
+  CREATE_COLLECTION("create-collection"),
+  UPDATE_OBJECT("update-object"),
+  UPDATE_COLLECTION("update-collection"),
+  DELETE_BUCKET("delete-bucket"), 
+  DELETE_OBJECT("delete-object"), 
+  DELETE_COLLECTION("delete-collection") ,
+  PURGE_OBJECT("purge-object");
+  
+  private final String value;
 
-  private Status(int value) {
+  private Operation(String value) {
     this.value = value;
   }
 
-  public int getValue() {
+  public String getValue() {
     return value;
   }
 
-  public static final ImmutableMap<Integer, Status> STATUS_VALUES = Maps.uniqueIndex(EnumSet.allOf(Status.class),
-      new Function<Status, Integer>() {
-        @Override
-        public Integer apply(Status status) {
-          return status.getValue();
-        }
-      });
+  public static final ImmutableMap<String, Operation> OPERATION_VALUES = Maps.uniqueIndex(EnumSet.allOf(Operation.class),
+          new Function<Operation, String>() {
+            @Override
+            public String apply(Operation operation) {
+              return operation.getValue();
+            }
+          });
 
 }

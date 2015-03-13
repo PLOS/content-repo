@@ -52,9 +52,8 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   private final String CREATION_DATE_TIME_STRING = CREATION_DATE_TIME.toString();
 
   private final String testData1 = "test data one goes\nhere.";
+  private String USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\", \"version\":1.1 }";
 
-  private String VALID_USER_METADATA = "{ \"key\": \"obj1\", \"test\":\"blabla\"}";
-  private String NOT_VALID_USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\",}";
 
 
   @Before
@@ -1209,7 +1208,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   }
 
   @Test
-  public void createCollectionInvalidUserMetadata(){
+  public void createCollectionWithUserMetadata(){
 
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
@@ -1225,7 +1224,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setCreate("new");
     inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
     inputCollection.setTag("AOP");
-    inputCollection.setUserMetadata(NOT_VALID_USER_METADATA);
+
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertRepoError(target("/collections").request()
@@ -1253,7 +1252,8 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setCreate("new");
     inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
     inputCollection.setTag("AOP");
-    inputCollection.setUserMetadata(VALID_USER_METADATA);
+    inputCollection.setUserMetadata(USER_METADATA);
+
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     Response response = target("/collections").request()
@@ -1275,8 +1275,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
     JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
     assertNotNull(responseObj);
-    assertEquals(VALID_USER_METADATA, responseObj.get("userMetadata").getAsString());
-
+    assertEquals(USER_METADATA, responseObj.get("userMetadata").getAsString());
 
   }
 

@@ -30,9 +30,6 @@ public class InputCollectionValidator {
   @Inject
   private TimestampInputValidator timestampValidator;
 
-  @Inject
-  private JsonStringValidator jsonStringValidator;
-
   public void validate(InputCollection collection) throws RepoException {
 
     if (collection.getKey() == null)
@@ -43,8 +40,6 @@ public class InputCollectionValidator {
 
     timestampValidator.validate(collection.getTimestamp(), RepoException.Type.CouldNotParseTimestamp);
     timestampValidator.validate(collection.getCreationDateTime(), RepoException.Type.CouldNotParseCreationDate);
-
-    jsonStringValidator.validate((String)collection.getUserMetadata(), RepoException.Type.InvalidUserMetadataFormat);
 
     if (collection.getObjects() == null || collection.getObjects().size() == 0 ) {
       throw new RepoException(RepoException.Type.CantCreateCollectionWithNoObjects);

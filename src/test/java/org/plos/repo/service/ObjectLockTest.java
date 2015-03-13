@@ -28,12 +28,8 @@ import org.plos.repo.models.input.InputRepoObject;
 
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -98,7 +94,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     this.startGate = new CountDownLatch(1);  // make all thread starts at the same time. Since all threads are going to be waiting on startGate, once all thread are created, we perform a startGate.countDown()
   }
 
-  @Test
+  //Comment out in order to build the binary and start manual test
+  //@Test
   public void testReaderAndWritersSameKeyAndSameData() throws Exception {
 
     final int INSERT_THREADS = 25;
@@ -146,7 +143,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
   }
 
-  @Test
+  //Comment out in order to build the binary and start manual test
+  //@Test
   public void testReaderAndWritersSameKeyDifferentData() throws Exception {
 
     final int INSERT_THREADS = 25;
@@ -196,6 +194,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     verify(spySqlService, times(READER_THREADS*2)).getObject(anyString(), anyString(), anyInt(), any(UUID.class), anyString());
   }
+
 
 
   @Test

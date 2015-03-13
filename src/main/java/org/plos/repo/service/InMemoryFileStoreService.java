@@ -17,6 +17,7 @@
 
 package org.plos.repo.service;
 
+import com.google.common.base.Optional;
 import org.apache.commons.io.IOUtils;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
@@ -45,7 +46,7 @@ public class InMemoryFileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean objectExists(RepoObject repoObject) {
+  public boolean objectExists(RepoObject repoObject) {
     return (data.get(repoObject.getBucketName()) != null && data.get(repoObject.getBucketName()).get(repoObject.getChecksum()) != null);
   }
 
@@ -67,35 +68,36 @@ public class InMemoryFileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean bucketExists(Bucket bucket) {
-    return (data.containsKey(bucket.getBucketName()));
+  public Optional<Boolean> bucketExists(Bucket bucket) {
+    return Optional.of(data.containsKey(bucket.getBucketName()));
   }
 
   @Override
-  public Boolean createBucket(Bucket bucket) {
-    return (data.put(bucket.getBucketName(), new HashMap<String, byte[]>()) == null);
+  public Optional<Boolean> createBucket(Bucket bucket) {
+    return Optional.of(data.put(bucket.getBucketName(), new HashMap<String, byte[]>()) == null);
   }
 
   @Override
-  public Boolean hasXReproxy() {
+  public boolean hasXReproxy() {
     return false;
   }
 
+
   @Override
-  public URL[] getRedirectURLs(RepoObject repoObject) {
-    return new URL[]{}; // since the filesystem is not reproxyable
+  public String[] getFilePaths(RepoObject repoObject) throws RepoException {
+    return new String[0]; // since the filesystem is not reproxyable
   }
 
   @Override
-  public Boolean deleteBucket(Bucket bucket) {
+  public Optional<Boolean> deleteBucket(Bucket bucket) {
 
     // TODO: what if it contains stuff?
 
-    return (data.remove(bucket.getBucketName()) != null);
+    return Optional.of(data.remove(bucket.getBucketName()) != null);
   }
 
   @Override
-  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
+  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
 
     byte[] tempContent = tempdata.get(uploadInfo.getTempLocation());
     data.get(bucket.getBucketName()).put(uploadInfo.getChecksum(), tempContent);
@@ -104,7 +106,7 @@ public class InMemoryFileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean deleteObject(RepoObject repoObject) {
+  public boolean deleteObject(RepoObject repoObject) {
 
     if (!objectExists(repoObject))
       return false;
@@ -114,7 +116,7 @@ public class InMemoryFileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean deleteTempUpload(UploadInfo uploadInfo) {
+  public boolean deleteTempUpload(UploadInfo uploadInfo) {
     tempdata.remove(uploadInfo.getTempLocation());
 
     return true;

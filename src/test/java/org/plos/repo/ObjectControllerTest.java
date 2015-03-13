@@ -58,9 +58,8 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
   private final String CREATION_DATE_TIME = new Timestamp(new Date().getTime()).toString();
 
-  private String VALID_USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\"}";
+  private String USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\", \"version\":1.1}";
 
-  private String NOT_VALID_USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\",}";
 
   @Before
   public void setup() throws Exception {
@@ -214,22 +213,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
                     .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA)),
         Response.Status.BAD_REQUEST, RepoException.Type.InvalidCreationMethod);
-  }
-
-  @Test
-  public void createInvalidUserMetadata() {
-
-    createBucket(bucketName, CREATION_DATE_TIME);
-
-    assertRepoError(target("/objects").request()
-            .accept(MediaType.APPLICATION_JSON_TYPE)
-            .post(Entity.entity(new FormDataMultiPart()
-                    .field("bucketName", bucketName).field("create", "new")
-                    .field("key", "object2").field("contentType", "text/something")
-                    .field("downloadName", "object2.text").field("userMetadata", NOT_VALID_USER_METADATA)
-                    .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA)),
-        Response.Status.BAD_REQUEST, RepoException.Type.InvalidUserMetadataFormat);
   }
 
   @Test
@@ -746,7 +729,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
                     .field("bucketName", bucketName).field("create", "new")
                     .field("key", "object1").field("contentType", "text/plain")
                     .field("timestamp", "2012-09-08 11:00:00")
-                    .field("userMetadata", VALID_USER_METADATA)
+                    .field("userMetadata", USER_METADATA)
                     .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA
             ));
@@ -760,7 +743,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
         .get();
     JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
     assertNotNull(responseObj);
-    assertEquals(VALID_USER_METADATA, responseObj.get("userMetadata").getAsString());
+    assertEquals(USER_METADATA, responseObj.get("userMetadata").getAsString());
 
   }
 

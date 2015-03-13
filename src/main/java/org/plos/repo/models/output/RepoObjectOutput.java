@@ -73,7 +73,7 @@ public class RepoObjectOutput {
 
     URL[] urls = repoObject.getReproxyURL();
 
-    if (urls != null && urls.length > 0) {
+    if (urls != null) {
       reproxyURL = Arrays.asList(urls);
     }
 
