@@ -90,7 +90,7 @@ public abstract class SqlService {
     repoObject.setVersionNumber(rs.getInt(VERSION_NUMBER_COLUMN));
     repoObject.setCreationDate(rs.getTimestamp(CREATION_DATE_COLUMN));
     repoObject.setUserMetadata(rs.getString(USER_METADATA_COLUMN));
-    repoObject.setUuid(UUIDFormatter.getUuidWithDashes(rs.getString(UUID_COLUMN)));
+    repoObject.setUuid(UUIDFormatter.getUuid(rs.getString(UUID_COLUMN)));
 
     return  repoObject;
   }
@@ -105,7 +105,7 @@ public abstract class SqlService {
     collection.setTag(rs.getString(TAG_COLUMN));
     collection.setCreationDate(rs.getTimestamp(CREATION_DATE_COLUMN));
     collection.setUserMetadata(rs.getString(USER_METADATA_COLUMN));
-    collection.setUuid(UUIDFormatter.getUuidWithDashes(rs.getString(UUID_COLUMN)));
+    collection.setUuid(UUIDFormatter.getUuid(rs.getString(UUID_COLUMN)));
     return collection;
   }
 

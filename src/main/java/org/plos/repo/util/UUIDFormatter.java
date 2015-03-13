@@ -27,21 +27,22 @@ import java.util.UUID;
 
 public class UUIDFormatter {
 
-  private static final String UUID_MATCHING_FORMAT = "(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})";
-  private static final String UUID_OUTPUT_FORMAT = "$1-$2-$3-$4-$5";
-
   /**
-   * Return a UUID from the given <code>uuidNoDashes</code>. It is intend to be used when the string representing the
+   * Return a UUID from the given <code>uuid</code>. It is intend to be used when the string representing the
    * UUID matches the standard representation as described in the {@link java.util.UUID#toString()} method
-   * @param uuidWithDashes a single String representing the UUID.
+   * @param uuid a single String representing the UUID.
    * @return a UUID
    * @throws RepoException
    */
-  public static UUID getUuidWithDashes(String uuidWithDashes) throws RepoException {
+  public static UUID getUuid(String uuid) throws RepoException {
 
-    if (!StringUtil.isEmpty(uuidWithDashes)) {
+    if (!StringUtil.isEmpty(uuid)) {
 
-      return uuid(uuidWithDashes);
+      try {
+        return UUID.fromString(uuid);
+      } catch (IllegalArgumentException e) {
+        throw new RepoException(RepoException.Type.InvalidUuid);
+      }
 
     }
 
@@ -49,12 +50,5 @@ public class UUIDFormatter {
 
   }
 
-  private static final UUID uuid(String uuid) throws RepoException {
-    try {
-      return UUID.fromString(uuid);
-    } catch (IllegalArgumentException e) {
-      throw new RepoException(RepoException.Type.InvalidUuid);
-    }
-  }
 
 }

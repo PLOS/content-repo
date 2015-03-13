@@ -17,9 +17,6 @@
 
 package org.plos.repo.service;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import org.hsqldb.lib.StringUtil;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoCollection;
@@ -37,7 +34,6 @@ import javax.inject.Inject;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -117,7 +113,7 @@ public class CollectionRepoService extends BaseRepoService {
       if (elementFilter == null || elementFilter.isEmpty()) // no filters defined
         repoCollection = sqlService.getCollection(bucketName, key);
       else{
-        UUID uuid = UUIDFormatter.getUuidWithDashes(elementFilter.getUuid());
+        UUID uuid = UUIDFormatter.getUuid(elementFilter.getUuid());
         repoCollection = sqlService.getCollection(bucketName, key, elementFilter.getVersion(), elementFilter.getTag(), uuid);
       }
 
@@ -201,7 +197,7 @@ public class CollectionRepoService extends BaseRepoService {
         }
       }
 
-      UUID uuid = UUIDFormatter.getUuidWithDashes(elementFilter.getUuid());
+      UUID uuid = UUIDFormatter.getUuid(elementFilter.getUuid());
       if (sqlService.markCollectionDeleted(key, bucketName, elementFilter.getVersion(), elementFilter.getTag(), uuid) == 0)
         throw new RepoException(RepoException.Type.CollectionNotFound);
 
@@ -416,7 +412,7 @@ public class CollectionRepoService extends BaseRepoService {
 
     for (InputObject inputObject : inputObjects){
 
-      UUID objectUUID = UUIDFormatter.getUuidWithDashes(inputObject.getUuid());
+      UUID objectUUID = UUIDFormatter.getUuid(inputObject.getUuid());
       if (sqlService.insertCollectionObjects(collId, inputObject.getKey(), repoCollection.getBucketName(), objectUUID) == 0){
         throw new RepoException(RepoException.Type.ObjectCollectionNotFound);
       }

@@ -18,7 +18,6 @@
 package org.plos.repo.service;
 
 import com.google.common.util.concurrent.Striped;
-import org.apache.commons.codec.binary.Hex;
 import org.hsqldb.lib.StringUtil;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
@@ -300,7 +299,7 @@ public class RepoService extends BaseRepoService {
         repoObject = sqlService.getObject(bucketName, key);
       }
       else{
-        UUID uuid = UUIDFormatter.getUuidWithDashes(elementFilter.getUuid());
+        UUID uuid = UUIDFormatter.getUuid(elementFilter.getUuid());
         repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), uuid, elementFilter.getTag());
       }
 
@@ -454,7 +453,7 @@ public class RepoService extends BaseRepoService {
         }
       }
 
-      UUID uuid = UUIDFormatter.getUuidWithDashes(elementFilter.getUuid());
+      UUID uuid = UUIDFormatter.getUuid(elementFilter.getUuid());
       RepoObject repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), uuid, elementFilter.getTag(), true, false);
       if (repoObject == null) {
         throw new RepoException(RepoException.Type.ObjectNotFound);
@@ -512,7 +511,7 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(e);
       }
 
-      UUID uuid = UUIDFormatter.getUuidWithDashes(elementFilter.getUuid());
+      UUID uuid = UUIDFormatter.getUuid(elementFilter.getUuid());
       int objectPurged = sqlService.markObjectPurged(repoObject.getKey(), repoObject.getBucketName(),
                             elementFilter.getVersion(), uuid, elementFilter.getTag());
 
