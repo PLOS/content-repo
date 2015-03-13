@@ -336,9 +336,6 @@ public class CollectionRepoService extends BaseRepoService {
   private RepoCollection updateCollection(InputCollection inputCollection, Timestamp timestamp,
                                       RepoCollection existingRepoCollection, Timestamp creationDate) throws RepoException {
 
-    if (areCollectionsSimilar(inputCollection, existingRepoCollection)){
-      return existingRepoCollection;
-    }
     RepoCollection repoCollection = new RepoCollection(inputCollection.getKey(),
         existingRepoCollection.getBucketId(), inputCollection.getBucketName(), Status.USED);
     repoCollection.setTimestamp(timestamp);
@@ -354,55 +351,6 @@ public class CollectionRepoService extends BaseRepoService {
       log.debug("SQLException:  " + e.getMessage());
       throw new RepoException(e);
     }
-
-  }
-
-  private boolean areCollectionsSimilar(InputCollection inputCollection,
-                                        RepoCollection existingRepoCollection
-  ){
-
-    boolean similar = existingRepoCollection.getKey().equals(inputCollection.getKey()) &&
-        existingRepoCollection.getBucketName().equals(inputCollection.getBucketName()) &&
-        existingRepoCollection.getStatus().equals(Status.USED) &&
-        inputCollection.getObjects().size() == existingRepoCollection.getRepoObjects().size();
-
-    if ( similar &&  ( existingRepoCollection.getTag() != null && inputCollection.getTag() != null) ) {
-      similar = existingRepoCollection.getTag().equals(inputCollection.getTag());
-    } else {
-      similar = similar && !( (existingRepoCollection.getTag() != null && inputCollection.getTag() == null)
-          || (existingRepoCollection.getTag() == null && inputCollection.getTag() !=null)) ;
-    }
-
-    if ( similar &&  ( existingRepoCollection.getUserMetadata() != null && inputCollection.getUserMetadata() != null) ) {
-      similar = existingRepoCollection.getUserMetadata().equals(inputCollection.getUserMetadata());
-    } else {
-      similar = similar && !( (existingRepoCollection.getUserMetadata() != null && inputCollection.getUserMetadata() == null)
-          || (existingRepoCollection.getUserMetadata() == null && inputCollection.getUserMetadata() !=null)) ;
-    }
-
-    int i = 0;
-
-    for ( ; i <  inputCollection.getObjects().size() & similar; i++){
-
-      InputObject inputObject = inputCollection.getObjects().get(i);
-
-      int y = 0;
-      for( ; y < existingRepoCollection.getRepoObjects().size(); y++ ){
-        RepoObject repoObject = existingRepoCollection.getRepoObjects().get(y);
-        if (repoObject.getKey().equals(inputObject.getKey()) &&
-            repoObject.getVersionChecksum().equals(inputObject.getVersionChecksum())){
-          break;
-
-        }
-      }
-
-      if ( y == existingRepoCollection.getRepoObjects().size()){
-        similar = false;
-      }
-    }
-
-
-    return similar;
 
   }
 
