@@ -20,61 +20,102 @@ package org.plos.repo.models;
 import java.sql.Timestamp;
 
 /**
- * Represents the values to audit every operation
+ * Represents the operation's values to audit
  */
 public class Audit {
+  // All final attributes
+  private final Integer id;
+  private final String bucket;
+  private final String key;
+  private final Operation operation;
+  private final String versionChecksum;
+  private final Timestamp timestamp;
   
-  private Integer id;
-  private String bucket;
-  private String key;
-  private Operation operation;
-  private String versionChecksum;
-  private Timestamp timestamp;
-
-
-  public Audit(String bucket, String key, Operation operation, String versionChecksum) {
-    this.bucket = bucket;
-    this.key = key;
-    this.operation = operation;
-    this.versionChecksum = versionChecksum;
+  private Audit(AuditBuilder auditBuilder){
+    this.id = auditBuilder.id;
+    this.bucket = auditBuilder.bucket;
+    this.key = auditBuilder.key;
+    this.operation = auditBuilder.operation;
+    this.versionChecksum = auditBuilder.versionChecksum;
+    this.timestamp = auditBuilder.timestamp;
   }
-  
-  public Audit(String bucket, Operation operation) {
-    this.bucket = bucket;
-    this.operation = operation;
-  }
-
-  public Integer getId() {
+  // All getter, and NO setter to provide immutability
+  public Integer getId () {
     return id;
   }
 
-  public String getBucket() {
+  public String getBucket () {
     return bucket;
   }
 
-  public String getKey() {
+  public String getKey () {
     return key;
   }
 
-  public Timestamp getTimestamp() {
+  public Operation getOperation () {
+    return operation;
+  }
+
+  public String getVersionChecksum () {
+    return versionChecksum;
+  }
+
+  public Timestamp getTimestamp () {
     return timestamp;
   }
 
-  public Operation getOperation() {
-    return operation; 
-  }
+  /**
+   * Builder pattern implementation for Audit objects
+   */
+  public static class AuditBuilder {
+    private final String bucket; // required
+    private final Operation operation; // required
+    private Integer id;
+    private String key;
+    private String versionChecksum;
+    private Timestamp timestamp;
+    
+    public AuditBuilder(String bucket, Operation operation) {
+      this.bucket = bucket;
+      this.operation = operation;
+    }
 
-  public String getVersionChecksum() { 
-    return versionChecksum; 
-  }
+    public AuditBuilder setId(Integer id) {
+      this.id = id;
+      return this;
+    }
+    
+    public AuditBuilder setKey(String key) {
+      this.key = key;
+      return this;
+    }
+    
+    public AuditBuilder setVersionChecksum(String versionChecksum) {
+      this.versionChecksum = versionChecksum;
+      return this;
+    }
+     
+    public AuditBuilder setTimestamp(Timestamp timestamp) {
+      this.timestamp = timestamp;
+      return this;
+    }
 
-  public void setId(Integer id) {
-    this.id = id;
+    /**
+     * Return the finally constructed Audit object
+     * @return Audit object
+     */
+    public Audit build(){
+      return new Audit(this);
+    }
   }
-
-  public void setTimestamp(Timestamp timestamp) {
-    this.timestamp = timestamp;
+  
+  @Override
+  public String toString () {
+    StringBuilder result = new StringBuilder(" Audit { ");
+    result.append(" BucketName: ").append(this.bucket).append(",");
+    result.append(" Key: ").append(this.key).append(",");
+    result.append(" Operation: ").append(this.operation.getValue()).append(",");
+    result.append(" VersionChecksum: ").append(this.versionChecksum).append(" } ");
+    return result.toString();
   }
-
-  public void setOperation(Operation operation) { this.operation = operation; }
 }

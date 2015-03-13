@@ -77,13 +77,14 @@ public abstract class SqlService {
     return collection;
   }
 
-  private static Audit mapJournalRow(ResultSet rs) throws SQLException {
+  private static Audit mapAuditRow(ResultSet rs) throws SQLException {
 
-    Audit audit = new Audit(rs.getString("BUCKETNAME"), rs.getString("KEYVALUE"),
-            Operation.OPERATION_VALUES.get(rs.getString("OPERATION")), rs.getString("VERSIONCHECKSUM"));
-    audit.setId(rs.getInt("ID"));
-    audit.setTimestamp(rs.getTimestamp("TIMESTAMP"));
-    return audit;
+    return new Audit.AuditBuilder(rs.getString("BUCKETNAME"), Operation.OPERATION_VALUES.get(rs.getString("OPERATION")))
+                      .setKey(rs.getString("KEYVALUE"))
+                      .setVersionChecksum(rs.getString("VERSIONCHECKSUM"))
+                      .setId(rs.getInt("ID")) 
+                      .setTimestamp(rs.getTimestamp("TIMESTAMP"))
+                      .build();
   }
   
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
@@ -961,7 +962,7 @@ public abstract class SqlService {
    * @return {@link org.plos.repo.models.RepoCollection}
    * @throws SQLException
    */
-  public RepoCollection getCollection(String bucketName, String key, Integer version, String tag, String versionChecksum, Boolean includeDeleted) throws SQLException {
+  public RepoCollection getCollection(String bucketName, String key, Integer version, String tag, String versionChecksum) throws SQLException {
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -1004,7 +1005,7 @@ public abstract class SqlService {
       if (result.next()) {
         RepoCollection repoCollection = mapCollectionRow(result);
 
-        if (!includeDeleted && repoCollection.getStatus() == Status.DELETED) {
+        if (repoCollection.getStatus() == Status.DELETED) {
           log.info("searched for collection which has been deleted. id: " + repoCollection.getId());
           return null;
         }
@@ -1335,7 +1336,7 @@ public abstract class SqlService {
       p = connectionLocal.get().prepareStatement("INSERT INTO audit (bucketName, keyValue, operation, versionChecksum) VALUES (?,?,?,?)");
 
       p.setString(1, audit.getBucket());
-      //The object could be NULL if the operation is about bucket or collection
+      //The key could be NULL if the operation is about bucket
       p.setString(2, audit.getKey() == null ? "" : audit.getKey());
       p.setString(3, audit.getOperation().getValue());
       //The versionChecksum could be NULL if the operation is about bucket
@@ -1350,11 +1351,11 @@ public abstract class SqlService {
   }
 
   /**
-   * List the audit table, for testing only
-   * @param bucket a single String representing the bucket name where the journal is stored
+   * List the audit table
+   * @param bucket a single String representing the bucket name
    * @param key a single String identifying the object key
-   * @param operation a single String identifying the collection key
-   * @param timestamp a timestamp used to filter the journal by date.
+   * @param operation represents the operation type
+   * @param timestamp represents the creation date time of audit row.
    * @return {@link org.plos.repo.models.Audit List}
    * @throws SQLException
    */
@@ -1415,7 +1416,7 @@ public abstract class SqlService {
       result = p.executeQuery();
 
       while (result.next()) {
-        repoAudit.add(mapJournalRow(result));
+        repoAudit.add(mapAuditRow(result));
       }
 
       return repoAudit;
