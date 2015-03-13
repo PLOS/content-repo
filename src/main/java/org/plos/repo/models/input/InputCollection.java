@@ -98,7 +98,7 @@ public class InputCollection {
   public String getUserMetadata() {
     return userMetadata;
   }
-
+  
   public void setUserMetadata(String userMetadata) {
     this.userMetadata = userMetadata;
   }

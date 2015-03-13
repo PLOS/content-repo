@@ -54,8 +54,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   private final String testData1 = "test data one goes\nhere.";
 
-  private String VALID_USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\"}";
-  private String NOT_VALID_USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\",}";
+  private String USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\", \"version\":1.1 }";
 
 
   @Before
@@ -1181,7 +1180,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   }
 
   @Test
-  public void createCollectionInvalidUserMetadata(){
+  public void createCollectionWithUserMetadata(){
 
     generateBuckets(bucketName);
     String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
@@ -1197,35 +1196,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setCreate("new");
     inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
     inputCollection.setTag("AOP");
-    inputCollection.setUserMetadata(NOT_VALID_USER_METADATA);
-    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
-
-    assertRepoError(target("/collections").request()
-            .accept(MediaType.APPLICATION_JSON_TYPE)
-            .post(collectionEntity),
-        Response.Status.BAD_REQUEST, RepoException.Type.InvalidUserMetadataFormat
-    );
-
-  }
-
-  @Test
-  public void createCollectionValidUserMetadata(){
-
-    generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
-    String versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
-
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
-    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
-
-    // create collection 1
-    InputCollection inputCollection = new InputCollection();
-    inputCollection.setBucketName(bucketName);
-    inputCollection.setKey("collection1");
-    inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
-    inputCollection.setTag("AOP");
-    inputCollection.setUserMetadata(VALID_USER_METADATA);
+    inputCollection.setUserMetadata(USER_METADATA);
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     Response response = target("/collections").request()
@@ -1247,12 +1218,13 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
     JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
     assertNotNull(responseObj);
-    assertEquals(VALID_USER_METADATA, responseObj.get("userMetadata").getAsString());
+
+    assertEquals(USER_METADATA, responseObj.get("userMetadata").getAsString());
 
   }
 
   /*@Test*/
-  /* TODO : uncommment test. It's is failling due to the KEYSUMCOLL. The test will work when removing
+  /* TODO : uncommment test. It's failing due to the KEYSUMCOLL. The test will work when removing
    versionCheksum column and adding uuid */
   public void createConsecutiveSimilarCollections(){
 
@@ -1268,7 +1240,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setCreate("new");
     inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
     inputCollection.setTag("AOP");
-    inputCollection.setUserMetadata(VALID_USER_METADATA);
+    inputCollection.setUserMetadata(USER_METADATA);
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     Response responseColl1 = target("/collections").request()
@@ -1303,7 +1275,6 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     JsonArray responseObj = gson.fromJson(versionsResponse.readEntity(String.class), JsonElement.class).getAsJsonArray();
     assertNotNull(responseObj);
     assertEquals(2, responseObj.size());
-
 
   }
 
