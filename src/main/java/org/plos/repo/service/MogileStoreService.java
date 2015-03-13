@@ -17,12 +17,14 @@
 
 package org.plos.repo.service;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.guba.mogilefs.MogileFS;
 import com.guba.mogilefs.PooledMogileFSImpl;
 import org.apache.commons.io.IOUtils;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
+import org.plos.repo.models.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +61,7 @@ public class MogileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean objectExists(RepoObject repoObject) {
+  public boolean objectExists(RepoObject repoObject) {
     try {
       InputStream in = mfs.getFileStream(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
 
@@ -75,35 +77,29 @@ public class MogileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean hasXReproxy() {
+  public boolean hasXReproxy() {
     return true;
   }
 
   @Override
-  public URL[] getRedirectURLs(RepoObject repoObject) throws RepoException {
+  public String[] getFilePaths(RepoObject repoObject) throws RepoException {
+    String[] paths = null;
+    try{
+      
+      paths = mfs.getPaths(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()), true);
 
-    try {
-      String[] paths = mfs.getPaths(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()), true);
-      int pathCount = paths.length;
-      URL[] urls = new URL[pathCount];
-
-      for (int i = 0; i < pathCount; i++) {
-        urls[i] = new URL(paths[i]);
+      if (paths == null) {
+        throw new RepoException(RepoException.Type.ObjectFilePathMissing);
       }
-      return urls;
-
-    } catch (Exception e) {
-      log.error("Exception: {} when trying to fetch reproxy url, key: {} , bucket name: {} , content checksum: {} , version number: {} ",
-          e.getMessage(),
-          repoObject.getKey(),
-          repoObject.getBucketName(),
-          repoObject.getChecksum(),
-          repoObject.getVersionNumber());
+      
+    } catch(Exception e){
       throw new RepoException(e);
+      
     }
-
+    
+    return paths;
   }
-
+  
   @Override
   public InputStream getInputStream(RepoObject repoObject) throws RepoException {
     try {
@@ -114,19 +110,19 @@ public class MogileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean bucketExists(Bucket bucket) {
-    return null;
+  public Optional<Boolean> bucketExists(Bucket bucket) {
+    return Optional.absent();
   }
 
   @Override
-  public Boolean createBucket(Bucket bucket) {
+  public Optional<Boolean> createBucket(Bucket bucket) {
     // we use file paths instead of domains so this function does not need to do anything
-    return null;
+    return Optional.absent();
   }
 
   @Override
-  public Boolean deleteBucket(Bucket bucket) {
-    return null;
+  public Optional<Boolean> deleteBucket(Bucket bucket) {
+    return Optional.absent();
   }
 
   @Override
@@ -173,7 +169,7 @@ public class MogileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
+  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
     try {
       mfs.rename(uploadInfo.getTempLocation(), getObjectLocationString(bucket.getBucketName(), uploadInfo.getChecksum()));
       return true;
@@ -183,7 +179,7 @@ public class MogileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean deleteTempUpload(UploadInfo uploadInfo) {
+  public boolean deleteTempUpload(UploadInfo uploadInfo) {
     try {
       mfs.delete(uploadInfo.getTempLocation());
       return true;
@@ -193,7 +189,7 @@ public class MogileStoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean deleteObject(RepoObject repoObject) {
+  public boolean deleteObject(RepoObject repoObject) {
     try {
       mfs.delete(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
       return true;

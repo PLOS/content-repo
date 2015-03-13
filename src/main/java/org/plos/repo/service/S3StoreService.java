@@ -23,6 +23,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
 import org.slf4j.Logger;
@@ -58,7 +59,7 @@ public class S3StoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean objectExists(RepoObject repoObject) {
+  public boolean objectExists(RepoObject repoObject) {
     try {
       S3Object obj = s3Client.getObject(repoObject.getBucketName(), repoObject.getChecksum());
 
@@ -74,17 +75,20 @@ public class S3StoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean hasXReproxy() {
+  public boolean hasXReproxy() {
     return true;
   }
 
   @Override
-  public URL[] getRedirectURLs(RepoObject repoObject) throws RepoException {
-    try {
-      return new URL[]{new URL(s3Client.getResourceUrl(repoObject.getBucketName(), repoObject.getChecksum()))};
-    } catch (MalformedURLException e) {
-      throw new RepoException(e);
+  public String[] getFilePaths(RepoObject repoObject) throws RepoException {
+    
+    String s3Url = s3Client.getResourceUrl(repoObject.getBucketName(), repoObject.getChecksum());
+    
+    if (s3Url == null) {
+      throw new RepoException(RepoException.Type.ObjectFilePathMissing);
     }
+
+    return new String[]{s3Url};
   }
 
   @Override
@@ -98,35 +102,38 @@ public class S3StoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean bucketExists(Bucket bucket) {
-    return s3Client.doesBucketExist(bucket.getBucketName());
+  public Optional<Boolean> bucketExists(Bucket bucket) {
+    return Optional.of(s3Client.doesBucketExist(bucket.getBucketName()));
   }
 
+  private static final Optional<Boolean> TRUE = Optional.of(true);
+  private static final Optional<Boolean> FALSE = Optional.of(false);
+
   @Override
-  public Boolean createBucket(Bucket bucket) {
+  public Optional<Boolean> createBucket(Bucket bucket) {
 
     try {
       CreateBucketRequest bucketRequest = new CreateBucketRequest(bucket.getBucketName(), Region.US_West);
       bucketRequest.withCannedAcl(CannedAccessControlList.PublicRead);
       s3Client.createBucket(bucketRequest);
 
-      return true;
+      return TRUE;
     } catch (Exception e) {
       log.error("Error creating bucket", e);
-      return false;
+      return FALSE;
     }
 
   }
 
   @Override
-  public Boolean deleteBucket(Bucket bucket) {
+  public Optional<Boolean> deleteBucket(Bucket bucket) {
 
     try {
       s3Client.deleteBucket(bucket.getBucketName());
-      return true;
+      return TRUE;
     } catch (Exception e) {
       log.error("Error deleting bucket", e);
-      return false;
+      return FALSE;
     }
   }
 
@@ -187,7 +194,7 @@ public class S3StoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
+  public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
 
     int retries = 5;
     int tryCount = 0;
@@ -243,12 +250,12 @@ public class S3StoreService extends ObjectStore {
   }
 
   @Override
-  public Boolean deleteTempUpload(UploadInfo uploadInfo) {
+  public boolean deleteTempUpload(UploadInfo uploadInfo) {
     return new File(uploadInfo.getTempLocation()).delete();
   }
 
   @Override
-  public Boolean deleteObject(RepoObject repoObject) {
+  public boolean deleteObject(RepoObject repoObject) {
     try {
       s3Client.deleteObject(repoObject.getBucketName(), repoObject.getChecksum());
       return true;

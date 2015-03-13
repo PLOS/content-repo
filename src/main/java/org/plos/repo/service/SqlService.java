@@ -729,12 +729,12 @@ public abstract class SqlService {
    * @param bucketName a single String representing the bucket name where the collection is stored
    * @param offset an Integer used to determine the offset of the response
    * @param limit an Integer used to determine the limit of the response
-   * @param includeDeleted a Boolean used to define is the response will include delete collections or not
+   * @param includeDeleted a boolean used to define is the response will include delete collections or not
    * @param tag a single String used to filter the collections regarding the tag property
    * @return a list of {@link org.plos.repo.models.RepoCollection}
    * @throws SQLException
    */
-  public List<RepoCollection> listCollections(String bucketName, Integer offset, Integer limit, Boolean includeDeleted, String tag) throws SQLException {
+  public List<RepoCollection> listCollections(String bucketName, Integer offset, Integer limit, boolean includeDeleted, String tag) throws SQLException {
 
     List<RepoCollection> repoCollections = new ArrayList<>();
 
@@ -776,12 +776,12 @@ public abstract class SqlService {
    * @param bucketName a single String representing the bucket name where the collection is stored
    * @param offset an Integer used to determine the offset of the response
    * @param limit an Integer used to determine the limit of the response
-   * @param includeDeleted a Boolean used to define is the response will include delete collections or not
+   * @param includeDeleted a boolean used to define is the response will include delete collections or not
    * @param tag a single String used to filter the collections regarding the tag property
    * @return a list of {@link org.plos.repo.models.RepoCollection}
    * @throws SQLException
    */
-  public List<RepoCollection> listCollectionsMetaData(String bucketName, Integer offset, Integer limit, Boolean includeDeleted, String tag) throws SQLException {
+  public List<RepoCollection> listCollectionsMetaData(String bucketName, Integer offset, Integer limit, boolean includeDeleted, String tag) throws SQLException {
 
     List<RepoCollection> repoCollections = new ArrayList<>();
 
@@ -817,7 +817,7 @@ public abstract class SqlService {
 
   }
 
-  private String getCollectionMetadataQuery(String bucketName, Integer offset, Integer limit, Boolean includeDeleted, String tag){
+  private String getCollectionMetadataQuery(String bucketName, Integer offset, Integer limit, boolean includeDeleted, String tag){
     StringBuilder q = new StringBuilder();
     q.append("SELECT * FROM collections c, buckets b WHERE c.bucketId = b.bucketId");
 
@@ -1181,7 +1181,7 @@ public abstract class SqlService {
 
   }
 
-  public Boolean existsActiveCollectionForObject(String objKey, String bucketName, Integer version, String versionChecksum, String tag) throws SQLException {
+  public boolean existsActiveCollectionForObject(String objKey, String bucketName, Integer version, String versionChecksum, String tag) throws SQLException {
 
     RepoObject repoObject = this.getObject(bucketName, objKey, version, versionChecksum, tag);
 

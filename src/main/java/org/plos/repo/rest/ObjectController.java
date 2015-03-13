@@ -161,7 +161,7 @@ public class ObjectController {
   public Response read(@ApiParam(required = true) @PathParam("bucketName") String bucketName,
                        @ApiParam(required = true) @QueryParam("key") String key,
                        @ApiParam("elementFilter") @BeanParam ElementFilter elementFilter,
-                       @QueryParam("fetchMetadata") Boolean fetchMetadata,  // TODO: deprecate this somehow
+                       @QueryParam("fetchMetadata") boolean fetchMetadata,  // TODO: deprecate this somehow
                        @ApiParam(value = "If set to 'reproxy-file' then it will attempt to return a header representing a redirected object URL")
                        @HeaderParam("X-Proxy-Capabilities") String requestXProxy,
                        @HeaderParam("If-Modified-Since") String ifModifiedSinceStr
@@ -190,7 +190,7 @@ public class ObjectController {
 
     // if they want the metadata
 
-    if (fetchMetadata != null && fetchMetadata) {
+    if (fetchMetadata) {
         RepoObjectOutput outputObject = new RepoObjectOutput(repoObject);
         return Response.status(Response.Status.OK)
             .lastModified(repoObject.getTimestamp())
@@ -276,7 +276,7 @@ public class ObjectController {
   public Response delete(
       @ApiParam(required = true) @PathParam("bucketName") String bucketName,
       @ApiParam(required = true) @QueryParam("key") String key,
-      @ApiParam(required = false) @DefaultValue("false") @QueryParam("purge") Boolean purge,
+      @ApiParam(required = false) @DefaultValue("false") @QueryParam("purge") boolean purge,
       @ApiParam("elementFilter") @BeanParam ElementFilter elementFilter
   ) {
 
