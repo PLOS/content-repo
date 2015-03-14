@@ -1207,43 +1207,14 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   }
 
-  @Test
-  public void createCollectionWithUserMetadata(){
-
-    generateBuckets(bucketName);
-    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
-    String uuidObj2 = createObject(bucketName, objectName2, contentType2);
-
-    InputObject object1 = new InputObject(objectName1,uuidObj1);
-    InputObject object2 = new InputObject(objectName2,uuidObj2);
-
-    // create collection 1
-    InputCollection inputCollection = new InputCollection();
-    inputCollection.setBucketName(bucketName);
-    inputCollection.setKey("collection1");
-    inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
-    inputCollection.setTag("AOP");
-
-    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
-
-    assertRepoError(target("/collections").request()
-            .accept(MediaType.APPLICATION_JSON_TYPE)
-            .post(collectionEntity),
-        Response.Status.BAD_REQUEST, RepoException.Type.InvalidUserMetadataFormat
-    );
-
-  }
 
   @Test
   public void createCollectionValidUserMetadata(){
 
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
-    String uuidObj2 = createObject(bucketName, objectName2, contentType2);
 
     InputObject object1 = new InputObject(objectName1,uuidObj1);
-    InputObject object2 = new InputObject(objectName2,uuidObj2);
 
     // create collection 1
     InputCollection inputCollection = new InputCollection();

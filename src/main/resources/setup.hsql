@@ -70,7 +70,7 @@ CREATE CACHED TABLE IF NOT EXISTS journal (
     bucketName VARCHAR (255) NOT NULL,
     keyValue VARCHAR (255),
     operation VARCHAR (20) NOT NULL,
-    versionChecksum VARCHAR (255),
+    uuid CHAR(36),
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

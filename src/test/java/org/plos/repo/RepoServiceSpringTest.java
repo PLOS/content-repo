@@ -671,17 +671,8 @@ package org.plos.repo;
     sqlService.getReadOnlyConnection();
 
     // verify that the purge object does not exists the file system
-<<<<<<< HEAD
     Assert.assertNull(sqlService.getObject(bucket1.getBucketName(), "key1", null, object2.getUuid(), null));
 
-=======
-    Assert.assertNull(sqlService.getObject(bucket1.getBucketName(), "key1", null, object2.getVersionChecksum(), null));
-    List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), "key1", null, null);
-    Assert.assertTrue(journalList.size() == 3);
-    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE_OBJECT));
-    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.UPDATE_OBJECT));
-    Assert.assertTrue(journalList.get(2).getOperation().equals(Operation.PURGE_OBJECT));
->>>>>>> master
     sqlService.releaseConnection();
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 1);

@@ -50,10 +50,11 @@ public abstract class SqlService {
   private static final String  CREATION_DATE_COLUMN = "CREATIONDATE";
   private static final String USER_METADATA_COLUMN = "USERMETADATA";
   private static final String UUID_COLUMN = "UUID";
-  private static final String HEX_UUID_COLUMN = "HEX_UUID";
   private static final String DOWNLOAD_NAME_COLUMN = "DOWNLOADNAME";
   private static final String CONTENT_TYPE_COLUMN = "CONTENTTYPE";
   private static final String SIZE_COLUMN = "SIZE";
+  private static final String KEY_VALUE_COLUMN = "KEYVALUE";
+  private static final String OPERATION_COLUMN = "OPERATION";
 
   private static String OBJECT_COLUMNS = "obj." + OBJECT_KEY_COLUMN + ", obj." + BUCKET_ID_COLUMN
       + ", obj." + STATUS_COLUMN + ", obj." + ID_COLUMN + ", obj." + CHECKSUM_COLUMN
@@ -106,12 +107,14 @@ public abstract class SqlService {
     return collection;
   }
 
-  private static Journal mapJournalRow(ResultSet rs) throws SQLException {
+  private static Journal mapJournalRow(ResultSet rs) throws SQLException, RepoException {
 
-    Journal journal = new Journal(rs.getString("BUCKETNAME"), rs.getString("KEYVALUE"),
-            Operation.OPERATION_VALUES.get(rs.getString("OPERATION")), rs.getString("VERSIONCHECKSUM"));
-    journal.setId(rs.getInt("ID"));
-    journal.setTimestamp(rs.getTimestamp("TIMESTAMP"));
+    Journal journal = new Journal(rs.getString(BUCKET_NAME_COLUMN),
+        rs.getString(KEY_VALUE_COLUMN),
+        Operation.OPERATION_VALUES.get(rs.getString(OPERATION_COLUMN)),
+        UUIDFormatter.getUuid(rs.getString(UUID_COLUMN)));
+    journal.setId(rs.getInt(ID_COLUMN));
+    journal.setTimestamp(rs.getTimestamp(TIMESTAMP_COLUMN));
     return journal;
   }
   
@@ -1382,14 +1385,14 @@ public abstract class SqlService {
 
     try {
       
-      p = connectionLocal.get().prepareStatement("INSERT INTO journal (bucketName, keyValue, operation, versionChecksum) VALUES (?,?,?,?)");
+      p = connectionLocal.get().prepareStatement("INSERT INTO journal (bucketName, keyValue, operation, uuid) VALUES (?,?,?,?)");
 
       p.setString(1, journal.getBucket());
       //The object could be NULL if the operation is about bucket or collection
       p.setString(2, journal.getKey() == null ? "" : journal.getKey());
       p.setString(3, journal.getOperation().getValue());
-      //The versionChecksum could be NULL if the operation is about bucket
-      p.setString(4, journal.getUuid() == null ? "" : journal.getUuid());
+      //The uuid could be NULL if the operation is about bucket
+      p.setString(4, journal.getUuid() == null ? "" : journal.getUuid().toString());
       
       return p.executeUpdate() > 0;
 
@@ -1408,7 +1411,7 @@ public abstract class SqlService {
    * @return {@link org.plos.repo.models.Journal List}
    * @throws SQLException
    */
-  public List<Journal> listJournal(String bucket, String key, Operation operation, Timestamp timestamp) throws SQLException {
+  public List<Journal> listJournal(String bucket, String key, Operation operation, Timestamp timestamp) throws SQLException, RepoException {
 
     List<Journal> repoJournal = new ArrayList<Journal>();
 
