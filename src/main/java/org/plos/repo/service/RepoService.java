@@ -152,9 +152,9 @@ public class RepoService extends BaseRepoService {
    * When deleting the bucket, it also deletes all purge objects and collections (no matter the status)
    * contained in it.
    * @param name a string representing the bucket to be deleted.
-   * @throws RepoException if the given bucket is not found in the DB
-   *                       if bucket is found in the DB, but it does not exists in the object store
-   *                       if the bucket can't be deleted because active or deleted objects exist in it
+   * @throws RepoException if the given bucket is not found in the DB;
+   *                       if bucket is found in the DB, but it does not exists in the object store;
+   *                       if the bucket can't be deleted because active or deleted objects exist in it;
    *                       if there's an error when attempting to delete the bucket from the DB or the object store
    */
   public void deleteBucket(String name) throws RepoException {
@@ -229,8 +229,8 @@ public class RepoService extends BaseRepoService {
    * @param tag a single integer used to filter the objects matching the given tag. If the label is null,
    *            no filter is applied on such property
    * @return a list of objects {@link org.plos.repo.models.RepoObject}
-   * @throws RepoException if bucket name has not been entered
-   *                       if the given bucket is not found in the DB
+   * @throws RepoException if bucket name has not been entered;
+   *                       if the given bucket is not found in the DB;
    *                       if there's an error when attempting to query the DB
    */
   public List<RepoObject> listObjects(String bucketName, Integer offset, Integer limit, boolean includeDeleted,
@@ -433,8 +433,8 @@ public class RepoService extends BaseRepoService {
    *                      for the given <code>key</code> must be changed
    * @param status a {@link org.plos.repo.models.input.ElementFilter} is used to identify which object
    *                      for the given <code>key</code> must be changed
-   * @throws RepoException if bucket name has not been entered
-   *                       if the elementFilter is null or empty
+   * @throws RepoException if bucket name has not been entered;
+   *                       if the elementFilter is null or empty;
    *                       if the object does not exists
    */
   public void deleteObject(String bucketName, String key, ElementFilter elementFilter, Status status ) throws RepoException {
@@ -515,7 +515,7 @@ public class RepoService extends BaseRepoService {
    * @param repoObject object to be purged
    * @param elementFilter a {@link org.plos.repo.models.input.ElementFilter} is used to identify which object
    *                      for the given <code>key</code> must be changed
-   * @throws RepoException if the content of the object is not found
+   * @throws RepoException if the content of the object is not found;
    *                       if the metadata of the object is not found in the DB
    */
   private void purgeObjectContentAndDb(RepoObject repoObject, ElementFilter elementFilter)  throws RepoException {
