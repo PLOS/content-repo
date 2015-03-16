@@ -20,13 +20,14 @@ package org.plos.repo.service;
 import com.google.common.base.Optional;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
-import org.plos.repo.models.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -65,7 +66,7 @@ public class FileSystemStoreService extends ObjectStore {
   }
 
   @Override
-  public InputStream getInputStream(RepoObject repoObject){
+  public InputStream getInputStream(RepoObject repoObject) {
     try {
       return new FileInputStream(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
     } catch (FileNotFoundException e) {
@@ -89,8 +90,9 @@ public class FileSystemStoreService extends ObjectStore {
     File dir = new File(getBucketLocationString(bucket.getBucketName()));
     boolean result = dir.mkdir();
 
-    if (!result)
+    if (!result) {
       log.error("Error while creating bucket. Directory was not able to be created : " + getBucketLocationString(bucket.getBucketName()));
+    }
 
     return Optional.of(result);
   }
@@ -104,17 +106,18 @@ public class FileSystemStoreService extends ObjectStore {
   public String[] getFilePaths(RepoObject repoObject) throws RepoException {
     String path = null;
     try {
-      
-      if (!hasXReproxy())
+
+      if (!hasXReproxy()) {
         return new String[0]; // since the filesystem is not reproxyable
+      }
 
       path = reproxyBaseUrl + "/" + repoObject.getBucketName() + "/" + repoObject.getChecksum().substring(0, 2) + "/" + repoObject.getChecksum();
 
       if (path == null) {
         throw new RepoException(RepoException.Type.ObjectFilePathMissing);
       }
-      
-    }catch (Exception e){
+
+    } catch (Exception e) {
       throw new RepoException(e);
     }
     return new String[]{path};
@@ -155,8 +158,9 @@ public class FileSystemStoreService extends ObjectStore {
 
     // delete the parent subdirectory if it is empty
 
-    if (parentDir.isDirectory() && parentDir.list().length == 0)
+    if (parentDir.isDirectory() && parentDir.list().length == 0) {
       parentDir.delete(); // TODO: log an error if this fails
+    }
 
     return result;
   }

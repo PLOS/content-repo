@@ -35,11 +35,13 @@ public class InputRepoObjectValidator {
 
   public void validate(InputRepoObject repoObject) throws RepoException {
 
-    if (repoObject.getKey() == null)
+    if (repoObject.getKey() == null) {
       throw new RepoException(RepoException.Type.NoKeyEntered);
+    }
 
-    if (repoObject.getBucketName() == null)
+    if (repoObject.getBucketName() == null) {
       throw new RepoException(RepoException.Type.NoBucketEntered);
+    }
 
     timestampValidator.validate(repoObject.getTimestamp(), RepoException.Type.CouldNotParseTimestamp);
     timestampValidator.validate(repoObject.getCreationDateTime(), RepoException.Type.CouldNotParseCreationDate);

@@ -68,7 +68,7 @@ public class ObjectControllerMockDependenciesTest {
   private Gson gson = new Gson();
 
   @Before
-  public void setUp(){
+  public void setUp() {
 
     objectController = new ObjectController();
     initMocks(this);

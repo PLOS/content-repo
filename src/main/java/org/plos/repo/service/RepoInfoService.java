@@ -27,7 +27,6 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.io.InputStream;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -119,8 +118,9 @@ public class RepoInfoService {
 
       Bucket bucket = sqlService.getBucket(bucketName);
 
-      if (bucket == null)
+      if (bucket == null) {
         throw new RepoException(RepoException.Type.BucketNotFound);
+      }
 
       bucket.setTotalObjects(sqlService.objectCount(true, bucketName));
       bucket.setActiveObjects(sqlService.objectCount(false, bucketName));

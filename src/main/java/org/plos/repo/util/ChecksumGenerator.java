@@ -33,7 +33,7 @@ public class ChecksumGenerator {
 
   private static final String DIGEST_ALGORITHM = "SHA-1";
 
-  public ChecksumGenerator(){
+  public ChecksumGenerator() {
   }
 
   public String generateVersionChecksum(RepoCollection repoCollection, List<String> objectsChecksum) throws RepoException {
@@ -42,13 +42,13 @@ public class ChecksumGenerator {
 
     StringBuilder sb = new StringBuilder();
 
-    for (String checksum : objectsChecksum){
+    for (String checksum : objectsChecksum) {
       sb.append(checksum);
     }
 
     sb.append(repoCollection.getKey());
     sb.append(TimestampFormatter.getFormattedTimestamp(repoCollection.getCreationDate()));
-    if (repoCollection.getTag() != null){
+    if (repoCollection.getTag() != null) {
       sb.append(repoCollection.getTag());
     }
 
@@ -61,16 +61,16 @@ public class ChecksumGenerator {
 
     sb.append(repoObject.getKey());
     sb.append(TimestampFormatter.getFormattedTimestamp(repoObject.getCreationDate()));
-    if (repoObject.getTag() != null){
+    if (repoObject.getTag() != null) {
       sb.append(repoObject.getTag());
     }
-    if (repoObject.getContentType() != null){
+    if (repoObject.getContentType() != null) {
       sb.append(repoObject.getContentType());
     }
-    if (repoObject.getDownloadName() != null ){
+    if (repoObject.getDownloadName() != null) {
       sb.append(repoObject.getDownloadName());
     }
-    if (repoObject.getUserMetadata() != null ){
+    if (repoObject.getUserMetadata() != null) {
       sb.append(repoObject.getUserMetadata());
     }
 
@@ -96,17 +96,18 @@ public class ChecksumGenerator {
 
     StringBuilder sb = new StringBuilder();
 
-    for (byte b : checksum)
-      sb.append(Integer.toHexString((b & 0xFF) | 0x100).substring(1,3));
+    for (byte b : checksum) {
+      sb.append(Integer.toHexString((b & 0xFF) | 0x100).substring(1, 3));
+    }
 
     return sb.toString();
   }
 
   private byte[] digest(String message) throws RepoException {
 
-      MessageDigest messageDigest = getDigestMessage();
-      messageDigest.update(message.getBytes());
-      return messageDigest.digest();
+    MessageDigest messageDigest = getDigestMessage();
+    messageDigest.update(message.getBytes());
+    return messageDigest.digest();
 
   }
 

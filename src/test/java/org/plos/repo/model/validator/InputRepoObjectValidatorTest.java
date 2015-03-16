@@ -34,7 +34,9 @@ import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 /**
@@ -59,7 +61,7 @@ public class InputRepoObjectValidatorTest {
   private List<InputObject> inputObjects = Arrays.asList(new InputObject[]{new InputObject("key", "sads123dsadas456")});
 
   @Before
-  public void setUp(){
+  public void setUp() {
     inputRepoObjectValidator = new InputRepoObjectValidator();
     initMocks(this);
   }
@@ -78,10 +80,10 @@ public class InputRepoObjectValidatorTest {
   @Test
   public void validateNoKeyTest() throws RepoException {
 
-    try{
+    try {
       inputRepoObjectValidator.validate(inputRepoObject);
       fail(FAIL_MSG);
-    } catch(RepoException re){
+    } catch (RepoException re) {
       assertEquals(re.getType(), RepoException.Type.NoKeyEntered);
       verify(inputRepoObject).getKey();
     }
@@ -92,10 +94,10 @@ public class InputRepoObjectValidatorTest {
   public void validateNoBucketNameTest() throws RepoException {
 
     when(inputRepoObject.getKey()).thenReturn(VALID_KEY);
-    try{
+    try {
       inputRepoObjectValidator.validate(inputRepoObject);
       fail(FAIL_MSG);
-    } catch(RepoException re){
+    } catch (RepoException re) {
       assertEquals(re.getType(), RepoException.Type.NoBucketEntered);
       verify(inputRepoObject).getKey();
     }
@@ -113,7 +115,7 @@ public class InputRepoObjectValidatorTest {
 
   }
 
-  private void verifyInputCollectionCalls(Integer getObjectsCalls) throws RepoException{
+  private void verifyInputCollectionCalls(Integer getObjectsCalls) throws RepoException {
     verify(inputRepoObject).getKey();
     verify(inputRepoObject).getKey();
     verify(inputRepoObject).getBucketName();

@@ -17,8 +17,6 @@
 
 package org.plos.repo.models;
 
-import org.plos.repo.models.input.InputRepoObject;
-
 import java.net.URL;
 import java.sql.Timestamp;
 import java.util.UUID;
@@ -53,23 +51,23 @@ public class RepoObject {
     this.status = status;
   }
 
-  public boolean areSimilar(RepoObject repoObject){
+  public boolean areSimilar(RepoObject repoObject) {
 
-      return this.key.equals(repoObject.key) &&
-             this.bucketName.equals(repoObject.bucketName) &&
-             this.status.equals(repoObject.status) &&
-             compareNullableElements(this.contentType, repoObject.contentType) &&
-             compareNullableElements(this.downloadName, repoObject.downloadName) &&
-             compareNullableElements(this.tag, repoObject.tag) &&
-             compareNullableElements(this.checksum, repoObject.checksum) &&
-             compareNullableElements(this.userMetadata, repoObject.getUserMetadata());
+    return this.key.equals(repoObject.key) &&
+        this.bucketName.equals(repoObject.bucketName) &&
+        this.status.equals(repoObject.status) &&
+        compareNullableElements(this.contentType, repoObject.contentType) &&
+        compareNullableElements(this.downloadName, repoObject.downloadName) &&
+        compareNullableElements(this.tag, repoObject.tag) &&
+        compareNullableElements(this.checksum, repoObject.checksum) &&
+        compareNullableElements(this.userMetadata, repoObject.getUserMetadata());
 
   }
 
-  private boolean compareNullableElements(String string1, String string2){
+  private boolean compareNullableElements(String string1, String string2) {
     if (string1 != null && string2 != null) {
       return string1.equals(string2);
-    } else if(string1 == null && string2 == null) {
+    } else if (string1 == null && string2 == null) {
       return true;
     } else {
       return false;
@@ -193,7 +191,7 @@ public class RepoObject {
   }
 
   public void setUserMetadata(String userMetadata) {
-    if (userMetadata != null){
+    if (userMetadata != null) {
       this.userMetadata = userMetadata.trim();
     }
   }

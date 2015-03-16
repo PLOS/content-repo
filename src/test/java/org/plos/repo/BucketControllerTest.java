@@ -27,7 +27,6 @@ import org.junit.Test;
 import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.input.InputObject;
 import org.plos.repo.service.RepoException;
-import org.springframework.http.HttpStatus;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Form;
@@ -55,13 +54,13 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
     target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
         .post(Entity.form(new Form()
             .param("name", bucketName)
-            .param("creationDateTime",CREATION_DATE_TIME_STRING)));
+            .param("creationDateTime", CREATION_DATE_TIME_STRING)));
 
     assertRepoError(
         target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
             .post(Entity.form(new Form()
                 .param("name", bucketName)
-                .param("creationDateTime",CREATION_DATE_TIME_STRING))),
+                .param("creationDateTime", CREATION_DATE_TIME_STRING))),
         Response.Status.BAD_REQUEST, RepoException.Type.BucketAlreadyExists);
   }
 
@@ -72,7 +71,7 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
         target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
             .post(Entity.form(new Form()
                 .param("name", "plos-bucketunittest-bad?&name")
-                .param("creationDateTime",CREATION_DATE_TIME_STRING))),
+                .param("creationDateTime", CREATION_DATE_TIME_STRING))),
         Response.Status.BAD_REQUEST, RepoException.Type.IllegalBucketName);
   }
 
@@ -82,7 +81,7 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
     target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
         .post(Entity.form(new Form()
             .param("name", bucketName)
-            .param("creationDateTime",CREATION_DATE_TIME_STRING)));
+            .param("creationDateTime", CREATION_DATE_TIME_STRING)));
 
     target("/objects").request().post(Entity.entity(new FormDataMultiPart().field("bucketName", bucketName).field("create", "new").field("key", "object1").field("file", "test", MediaType.TEXT_PLAIN_TYPE), MediaType.MULTIPART_FORM_DATA));
 
@@ -110,14 +109,14 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
     assertEquals(responseString, "[]");
 
     Response response = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
-        .post(Entity.form(new Form().param("name", bucketName).param("creationDateTime",CREATION_DATE_TIME_STRING)));
+        .post(Entity.form(new Form().param("name", bucketName).param("creationDateTime", CREATION_DATE_TIME_STRING)));
 
     assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
 
     response = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
         .post(Entity.form(new Form()
             .param("name", "plos-bucketunittest-bucket2")
-            .param("creationDateTime",CREATION_DATE_TIME_STRING)));
+            .param("creationDateTime", CREATION_DATE_TIME_STRING)));
 
     assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
 
@@ -136,11 +135,11 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
   }
 
   @Test
-  public void deleteBucketWithDeletedContent(){
+  public void deleteBucketWithDeletedContent() {
 
     // create bucket
     Response createBucketResponse = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
-        .post(Entity.form(new Form().param("name", bucketName).param("creationDateTime",CREATION_DATE_TIME_STRING)));
+        .post(Entity.form(new Form().param("name", bucketName).param("creationDateTime", CREATION_DATE_TIME_STRING)));
 
     assertEquals(createBucketResponse.getStatus(), Response.Status.CREATED.getStatusCode());
 
@@ -173,10 +172,10 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
   }
 
   @Test
-  public void deleteBucketWithPurgeContent(){
+  public void deleteBucketWithPurgeContent() {
 
     Response createBucketResponse = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
-        .post(Entity.form(new Form().param("name", bucketName).param("creationDateTime",CREATION_DATE_TIME_STRING)));
+        .post(Entity.form(new Form().param("name", bucketName).param("creationDateTime", CREATION_DATE_TIME_STRING)));
 
     assertEquals(createBucketResponse.getStatus(), Response.Status.CREATED.getStatusCode());
 

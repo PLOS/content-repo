@@ -34,13 +34,15 @@ import java.util.regex.Pattern;
 public abstract class ObjectStore {
 
   private static final Logger log = LoggerFactory.getLogger(ObjectStore.class);
-  
+
   @Inject
   protected ChecksumGenerator checksumGenerator;
 
   public static interface UploadInfo {
     Long getSize();
+
     String getTempLocation();
+
     String getChecksum();
   }
 
@@ -51,24 +53,24 @@ public abstract class ObjectStore {
 //  public static boolean isValidBucketName(String bucketName) {
 //    return BucketNameUtils.isValidV2BucketName(bucketName);
 //  }
+
   /**
-   * Retrieve the URLs of the given repo object <code>repoObject</code>. 
-   * Set the status MISSING_DATA to object if the file paths are null or occurs an error trying to get them,
-   * throw a {@link org.plos.repo.service.RepoException} if an error occurs.
+   * Retrieve the URLs of the given repo object <code>repoObject</code>. Set the status MISSING_DATA to object if the
+   * file paths are null or occurs an error trying to get them, throw a {@link org.plos.repo.service.RepoException} if
+   * an error occurs.
    *
-   * @param repoObject a single {@link org.plos.repo.models.RepoObject} that represents the
-   *                   object to be searched.
+   * @param repoObject a single {@link org.plos.repo.models.RepoObject} that represents the object to be searched.
    * @return an URL array  wih the url of data of the given repoObject
    * @throws RepoException
    */
-  protected URL[] getRedirectURLs(RepoObject repoObject) throws RepoException{
+  protected URL[] getRedirectURLs(RepoObject repoObject) throws RepoException {
 
     URL[] urls = new URL[0];
     try {
 
       String[] paths = getFilePaths(repoObject);
-      
-      if(paths.length > 0) {
+
+      if (paths.length > 0) {
         int pathCount = paths.length;
         urls = new URL[pathCount];
 
@@ -76,15 +78,15 @@ public abstract class ObjectStore {
           urls[i] = new URL(paths[i]);
         }
       }
-      
-    } catch (RepoException e){
-      if(RepoException.Type.ObjectFilePathMissing.equals(e.getType()) ) {
+
+    } catch (RepoException e) {
+      if (RepoException.Type.ObjectFilePathMissing.equals(e.getType())) {
         repoObject.setStatus(Status.MISSING_DATA);
         log.error(" Missing Data when trying to fetch reproxy url, key: {} , bucket name: {} , content checksum: {} , version number: {} ",
-                repoObject.getKey(),
-                repoObject.getBucketName(),
-                repoObject.getChecksum(),
-                repoObject.getVersionNumber());
+            repoObject.getKey(),
+            repoObject.getBucketName(),
+            repoObject.getChecksum(),
+            repoObject.getVersionNumber());
       } else {
         throw e;
       }
@@ -94,20 +96,20 @@ public abstract class ObjectStore {
       throw new RepoException(e);
     }
     return urls;
-    
+
   }
 
   abstract public boolean hasXReproxy();
 
   /**
-   * Retrieve the file paths of the given repo object <code>repoObject</code>.
-   * Throw a {@link org.plos.repo.service.RepoException} if the path is null or an error occurs.
-   * @param repoObject a single {@link org.plos.repo.models.RepoObject} that represents the
-   *                   object to be searched.
+   * Retrieve the file paths of the given repo object <code>repoObject</code>. Throw a {@link
+   * org.plos.repo.service.RepoException} if the path is null or an error occurs.
+   *
+   * @param repoObject a single {@link org.plos.repo.models.RepoObject} that represents the object to be searched.
    * @return an String array wih the file paths of the given repoObject
    * @throws RepoException
    */
-  abstract public String[]  getFilePaths(RepoObject repoObject) throws RepoException;
+  abstract public String[] getFilePaths(RepoObject repoObject) throws RepoException;
 
   abstract public boolean objectExists(RepoObject repoObject);
 
@@ -138,12 +140,10 @@ public abstract class ObjectStore {
   abstract public boolean deleteTempUpload(UploadInfo uploadInfo);
 
   /**
-   * Retrieve the data of the given repo object <code>repoObject</code>. Return null if the
-   * data does not exist, or throw a {@link org.plos.repo.service.RepoException} if an error
-   * occurs.
+   * Retrieve the data of the given repo object <code>repoObject</code>. Return null if the data does not exist, or
+   * throw a {@link org.plos.repo.service.RepoException} if an error occurs.
    *
-   * @param repoObject a single {@link org.plos.repo.models.RepoObject} that represents the
-   *                   object to be searched.
+   * @param repoObject a single {@link org.plos.repo.models.RepoObject} that represents the object to be searched.
    * @return an inputStream object wih the data of the given repoObject
    * @throws RepoException
    */

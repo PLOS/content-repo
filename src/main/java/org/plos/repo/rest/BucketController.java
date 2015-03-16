@@ -17,7 +17,11 @@
 
 package org.plos.repo.rest;
 
-import com.wordnik.swagger.annotations.*;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiParam;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 import org.apache.http.HttpStatus;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.service.RepoException;
@@ -25,14 +29,20 @@ import org.plos.repo.service.RepoInfoService;
 import org.plos.repo.service.RepoService;
 
 import javax.inject.Inject;
-import javax.ws.rs.*;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
 @Path("/buckets")
-@Api(value="/buckets")
+@Api(value = "/buckets")
 public class BucketController {
 
   @Inject
@@ -56,7 +66,8 @@ public class BucketController {
 
   }
 
-  @GET @Path("/{bucketName}")
+  @GET
+  @Path("/{bucketName}")
   @ApiOperation(value = "Info about the bucket", response = Bucket.class)
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response info(@PathParam("bucketName") String bucketName) {
@@ -74,8 +85,8 @@ public class BucketController {
   @POST
   @ApiOperation(value = "Create a bucket")
   @ApiResponses(value = {
-    @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The bucket was unable to be created (see response text for more details)"),
-    @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
+      @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The bucket was unable to be created (see response text for more details)"),
+      @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
   })
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response create(@ApiParam(required = true) @FormParam("name") String name,
@@ -95,9 +106,9 @@ public class BucketController {
   @Path("/{name}")
   @ApiOperation(value = "Delete a bucket")
   @ApiResponses(value = {
-    @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "The bucket was not found"),
-    @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The bucket was unable to be deleted (see response text for more details)"),
-    @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
+      @ApiResponse(code = HttpStatus.SC_NOT_FOUND, message = "The bucket was not found"),
+      @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The bucket was unable to be deleted (see response text for more details)"),
+      @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
   })
   public Response delete(@PathParam("name") String name) {
 

@@ -29,7 +29,7 @@ public class Bucket {
   public Bucket() {
   }
 
-  public Bucket(String bucketName, Long size){
+  public Bucket(String bucketName, Long size) {
     this.bucketName = bucketName;
     this.bytes = size;
   }

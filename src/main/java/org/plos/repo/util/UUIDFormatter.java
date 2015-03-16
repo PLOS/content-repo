@@ -28,8 +28,9 @@ import java.util.UUID;
 public class UUIDFormatter {
 
   /**
-   * Return a UUID from the given <code>uuid</code>. It is intend to be used when the string representing the
-   * UUID matches the standard representation as described in the {@link java.util.UUID#toString()} method
+   * Return a UUID from the given <code>uuid</code>. It is intend to be used when the string representing the UUID
+   * matches the standard representation as described in the {@link java.util.UUID#toString()} method
+   *
    * @param uuid a single String representing the UUID.
    * @return a UUID
    * @throws RepoException

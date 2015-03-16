@@ -28,16 +28,16 @@ import java.util.EnumSet;
  */
 public enum Operation {
 
-  CREATE_BUCKET("create-bucket"), 
-  CREATE_OBJECT("create-object"), 
+  CREATE_BUCKET("create-bucket"),
+  CREATE_OBJECT("create-object"),
   CREATE_COLLECTION("create-collection"),
   UPDATE_OBJECT("update-object"),
   UPDATE_COLLECTION("update-collection"),
-  DELETE_BUCKET("delete-bucket"), 
-  DELETE_OBJECT("delete-object"), 
-  DELETE_COLLECTION("delete-collection") ,
+  DELETE_BUCKET("delete-bucket"),
+  DELETE_OBJECT("delete-object"),
+  DELETE_COLLECTION("delete-collection"),
   PURGE_OBJECT("purge-object");
-  
+
   private final String value;
 
   private Operation(String value) {
@@ -49,11 +49,11 @@ public enum Operation {
   }
 
   public static final ImmutableMap<String, Operation> OPERATION_VALUES = Maps.uniqueIndex(EnumSet.allOf(Operation.class),
-          new Function<Operation, String>() {
-            @Override
-            public String apply(Operation operation) {
-              return operation.getValue();
-            }
-          });
+      new Function<Operation, String>() {
+        @Override
+        public String apply(Operation operation) {
+          return operation.getValue();
+        }
+      });
 
 }

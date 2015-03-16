@@ -29,7 +29,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
 
 import javax.sql.DataSource;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -44,15 +49,15 @@ public abstract class SqlService {
 
   private static final String OBJECT_KEY_COLUMN = "OBJKEY";
   private static final String COLLECTION_KEY_COLUMN = "COLLKEY";
-  private static final String  BUCKET_ID_COLUMN = "BUCKETID";
-  private static final String  BUCKET_NAME_COLUMN = "BUCKETNAME";
-  private static final String  STATUS_COLUMN = "STATUS";
+  private static final String BUCKET_ID_COLUMN = "BUCKETID";
+  private static final String BUCKET_NAME_COLUMN = "BUCKETNAME";
+  private static final String STATUS_COLUMN = "STATUS";
   private static final String ID_COLUMN = "ID";
   private static final String CHECKSUM_COLUMN = "CHECKSUM";
   private static final String TIMESTAMP_COLUMN = "TIMESTAMP";
   private static final String TAG_COLUMN = "TAG";
-  private static final String  VERSION_NUMBER_COLUMN = "VERSIONNUMBER";
-  private static final String  CREATION_DATE_COLUMN = "CREATIONDATE";
+  private static final String VERSION_NUMBER_COLUMN = "VERSIONNUMBER";
+  private static final String CREATION_DATE_COLUMN = "CREATIONDATE";
   private static final String USER_METADATA_COLUMN = "USERMETADATA";
   private static final String UUID_COLUMN = "UUID";
   private static final String DOWNLOAD_NAME_COLUMN = "DOWNLOADNAME";
@@ -95,7 +100,7 @@ public abstract class SqlService {
     repoObject.setUserMetadata(rs.getString(USER_METADATA_COLUMN));
     repoObject.setUuid(UUIDFormatter.getUuid(rs.getString(UUID_COLUMN)));
 
-    return  repoObject;
+    return repoObject;
   }
 
   private static RepoCollection mapCollectionRow(ResultSet rs) throws SQLException, RepoException {
@@ -115,33 +120,36 @@ public abstract class SqlService {
   private static Audit mapAuditRow(ResultSet rs) throws SQLException, RepoException {
 
     return new Audit.AuditBuilder(rs.getString("BUCKETNAME"), Operation.OPERATION_VALUES.get(rs.getString("OPERATION")))
-                      .setKey(rs.getString("KEYVALUE"))
-                      .setUuid(UUIDFormatter.getUuid(rs.getString(UUID_COLUMN)))
-                      .setId(rs.getInt("ID")) 
-                      .setTimestamp(rs.getTimestamp("TIMESTAMP"))
-                      .build();
+        .setKey(rs.getString("KEYVALUE"))
+        .setUuid(UUIDFormatter.getUuid(rs.getString(UUID_COLUMN)))
+        .setId(rs.getInt("ID"))
+        .setTimestamp(rs.getTimestamp("TIMESTAMP"))
+        .build();
   }
-  
+
   public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
     return new Bucket(rs.getInt(BUCKET_ID_COLUMN),
-                      rs.getString(BUCKET_NAME_COLUMN),
-                      rs.getTimestamp(TIMESTAMP_COLUMN),
-                      rs.getTimestamp(CREATION_DATE_COLUMN));
+        rs.getString(BUCKET_NAME_COLUMN),
+        rs.getTimestamp(TIMESTAMP_COLUMN),
+        rs.getTimestamp(CREATION_DATE_COLUMN));
   }
 
   private static void closeDbStuff(ResultSet result, PreparedStatement p) throws SQLException {
 
-    if (result != null)
+    if (result != null) {
       result.close();
+    }
 
-    if (p != null)
+    if (p != null) {
       p.close();
+    }
 
   }
 
   /**
-   * Set a connection in the ThreadLocal. The autocommit for the connection is disable, meaning that when using this method,
-   * there's a need to commit or rollback the transaction.
+   * Set a connection in the ThreadLocal. The autocommit for the connection is disable, meaning that when using this
+   * method, there's a need to commit or rollback the transaction.
+   *
    * @throws SQLException
    */
   public void getConnection() throws SQLException {
@@ -151,8 +159,9 @@ public abstract class SqlService {
   }
 
   /**
-   * Set a connection in the ThreadLocal. The autocommit for the connection is set to true, meaning that when using this method,
-   * there's no need to perform commit. This method is intended to be used for read operations.
+   * Set a connection in the ThreadLocal. The autocommit for the connection is set to true, meaning that when using this
+   * method, there's no need to perform commit. This method is intended to be used for read operations.
+   *
    * @throws SQLException
    */
   public void getReadOnlyConnection() throws SQLException {
@@ -193,10 +202,11 @@ public abstract class SqlService {
 
       result = p.executeQuery();
 
-      if (result.next())
+      if (result.next()) {
         return mapBucketRow(result);
-      else
+      } else {
         return null;
+      }
 
     } finally {
       closeDbStuff(result, p);
@@ -266,7 +276,7 @@ public abstract class SqlService {
   }
 
   public int markObjectPurged(String key, String bucketName, Integer version, UUID uuid, String tag) throws SQLException {
-   return markObject(key, bucketName, version, uuid, tag, Status.PURGED);
+    return markObject(key, bucketName, version, uuid, tag, Status.PURGED);
   }
 
   public int markObjectDeleted(String key, String bucketName, Integer version, UUID uuid, String tag) throws SQLException {
@@ -279,21 +289,22 @@ public abstract class SqlService {
 
     Bucket bucket = getBucket(bucketName);
 
-    if (bucket == null)
+    if (bucket == null) {
       return 0;
+    }
 
     try {
 
       StringBuilder query = new StringBuilder();
       query.append("UPDATE objects SET status=? WHERE objKey=? AND bucketId=?");
 
-      if (version != null){
+      if (version != null) {
         query.append(" AND versionNumber=?");
       }
-      if (uuid != null){
+      if (uuid != null) {
         query.append(" AND uuid = ?");
       }
-      if (tag != null){
+      if (tag != null) {
         query.append(" AND tag=?");
       }
 
@@ -304,13 +315,13 @@ public abstract class SqlService {
       p.setInt(3, bucket.getBucketId());
 
       int i = 4;
-      if (version != null){
+      if (version != null) {
         p.setInt(i++, version);
       }
-      if (uuid != null){
+      if (uuid != null) {
         p.setString(i++, uuid.toString());
       }
-      if (tag != null){
+      if (tag != null) {
         p.setString(i++, tag);
       }
 
@@ -343,10 +354,11 @@ public abstract class SqlService {
 
       result = p.executeQuery();
 
-      if (result.next())
+      if (result.next()) {
         return result.getInt("versionNumber") + 1;
-      else
+      } else {
         return 0;
+      }
 
     } finally {
       closeDbStuff(result, p);
@@ -354,11 +366,11 @@ public abstract class SqlService {
 
   }
 
-  public Integer getCollectionNextAvailableVersion(String bucketName, String key) throws SQLException{
+  public Integer getCollectionNextAvailableVersion(String bucketName, String key) throws SQLException {
     return getNextAvailableVersionNumber(bucketName, key, "collections", "collKey");
   }
 
-  public Integer getObjectNextAvailableVersion(String bucketName, String key) throws SQLException{
+  public Integer getObjectNextAvailableVersion(String bucketName, String key) throws SQLException {
     return getNextAvailableVersionNumber(bucketName, key, "objects", "objKey");
   }
 
@@ -388,9 +400,9 @@ public abstract class SqlService {
         }
 
         return repoObject;
-      }
-      else
+      } else {
         return null;
+      }
 
     } finally {
       closeDbStuff(result, p);
@@ -409,13 +421,13 @@ public abstract class SqlService {
       query.append("SELECT " + OBJECT_COLUMNS + ", b.BUCKETNAME FROM objects obj, buckets b " +
           "WHERE obj.bucketId = b.bucketId AND b.bucketName=? AND obj.objKey=?");
 
-      if (version != null){
+      if (version != null) {
         query.append(" AND versionNumber=?");
       }
-      if (uuid != null){
+      if (uuid != null) {
         query.append(" AND uuid = ?");
       }
-      if (tag != null){
+      if (tag != null) {
         query.append(" AND tag=?");
       }
 
@@ -427,13 +439,13 @@ public abstract class SqlService {
       p.setString(2, key);
 
       int i = 3;
-      if (version != null){
+      if (version != null) {
         p.setInt(i++, version);
       }
-      if (uuid != null){
+      if (uuid != null) {
         p.setString(i++, uuid.toString());
       }
-      if (tag != null){
+      if (tag != null) {
         p.setString(i++, tag);
       }
 
@@ -448,9 +460,9 @@ public abstract class SqlService {
         }
 
         return repoObject;
-      }
-      else
+      } else {
         return null;
+      }
 
     } finally {
       closeDbStuff(result, p);
@@ -468,19 +480,19 @@ public abstract class SqlService {
     query.append("SELECT " + OBJECT_COLUMNS + ", b.BUCKETNAME FROM objects obj, buckets b " +
         "WHERE obj.bucketId = b.bucketId AND b.bucketName=? AND obj.objKey=?");
 
-    if (version != null){
+    if (version != null) {
       query.append(" AND versionNumber=?");
     }
-    if (uuid != null){
+    if (uuid != null) {
       query.append(" AND uuid = ?");
     }
-    if (tag != null){
+    if (tag != null) {
       query.append(" AND tag=?");
     }
-    if (!searchInDeleted && !searchInPurged){
+    if (!searchInDeleted && !searchInPurged) {
       query.append(" AND status=?");
     }
-    if ((!searchInDeleted && searchInPurged) || (searchInDeleted && !searchInPurged)){
+    if ((!searchInDeleted && searchInPurged) || (searchInDeleted && !searchInPurged)) {
       query.append(" AND status in (?,?)");
     }
 
@@ -494,22 +506,22 @@ public abstract class SqlService {
       p.setString(2, key);
 
       int i = 3;
-      if (version != null){
+      if (version != null) {
         p.setInt(i++, version);
       }
-      if (uuid != null){
+      if (uuid != null) {
         p.setString(i++, uuid.toString());
       }
-      if (tag != null){
+      if (tag != null) {
         p.setString(i++, tag);
       }
 
       if ((!searchInDeleted && !searchInPurged) ||
           (!searchInDeleted && searchInPurged) || (searchInDeleted && !searchInPurged)) {
         p.setInt(i++, Status.USED.getValue());
-        if (searchInDeleted){
+        if (searchInDeleted) {
           p.setInt(i++, Status.DELETED.getValue());
-        } else if (searchInPurged){
+        } else if (searchInPurged) {
           p.setInt(i++, Status.PURGED.getValue());
         }
       }
@@ -520,9 +532,9 @@ public abstract class SqlService {
         RepoObject repoObject = mapObjectRow(result);
 
         return repoObject;
-      }
-      else
+      } else {
         return null;
+      }
 
     } finally {
       closeDbStuff(result, p);
@@ -554,7 +566,7 @@ public abstract class SqlService {
       p.setInt(9, repoObject.getVersionNumber());
       p.setInt(10, repoObject.getStatus().getValue());
       p.setTimestamp(11, repoObject.getTimestamp());
-      p.setString(12,repoObject.getUserMetadata());
+      p.setString(12, repoObject.getUserMetadata());
       p.setString(13, repoObject.getUuid().toString());
 
       return p.executeUpdate();
@@ -573,25 +585,30 @@ public abstract class SqlService {
     try {
 
       StringBuilder q = new StringBuilder("SELECT COUNT(*) FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
-      if (!includeDeleted)
+      if (!includeDeleted) {
         q.append(" AND a.status=?");
-      if (bucketName != null)
+      }
+      if (bucketName != null) {
         q.append(" AND bucketName=?");
+      }
 
       p = connectionLocal.get().prepareStatement(q.toString());
 
       int index = 0;
-      if (!includeDeleted)
+      if (!includeDeleted) {
         p.setInt(++index, Status.USED.getValue());
-      if (bucketName != null)
+      }
+      if (bucketName != null) {
         p.setString(++index, bucketName);
+      }
 
       result = p.executeQuery();
 
-      if (result.next())
+      if (result.next()) {
         return result.getInt(1);
-      else
+      } else {
         return null;
+      }
 
     } finally {
       closeDbStuff(result, p);
@@ -624,7 +641,7 @@ public abstract class SqlService {
 
   public List<Bucket> listBuckets(Timestamp timestamp) throws SQLException {
 
-   // TODO : add timestamp to buckets
+    // TODO : add timestamp to buckets
     return null;
 
   }
@@ -694,39 +711,48 @@ public abstract class SqlService {
       q.append("SELECT " + OBJECT_COLUMNS + ", b.BUCKETNAME FROM objects as obj, buckets as b " +
           "WHERE obj.bucketId = b.bucketId");
 
-      if (!includeDeleted && !includePurge)
+      if (!includeDeleted && !includePurge) {
         q.append(" AND status=?");
-      if ((includeDeleted && !includePurge) || (!includeDeleted && includePurge))
+      }
+      if ((includeDeleted && !includePurge) || (!includeDeleted && includePurge)) {
         q.append(" AND status in(?,?)");
-      if (bucketName != null)
+      }
+      if (bucketName != null) {
         q.append(" AND bucketName=?");
-      if (tag != null)
+      }
+      if (tag != null) {
         q.append(" AND TAG=?");
-      if (limit != null)
+      }
+      if (limit != null) {
         q.append(" LIMIT " + limit);
-      if (offset != null)
+      }
+      if (offset != null) {
         q.append(" OFFSET " + offset);
+      }
       p = connectionLocal.get().prepareStatement(q.toString());
 
 
       int i = 1;
 
-      if (!includeDeleted && !includePurge)
+      if (!includeDeleted && !includePurge) {
         p.setInt(i++, Status.USED.getValue());
-      if (includeDeleted && !includePurge){
+      }
+      if (includeDeleted && !includePurge) {
         p.setInt(i++, Status.USED.getValue());
         p.setInt(i++, Status.DELETED.getValue());
       }
-      if (!includeDeleted && includePurge){
+      if (!includeDeleted && includePurge) {
         p.setInt(i++, Status.USED.getValue());
         p.setInt(i++, Status.PURGED.getValue());
       }
 
-      if (bucketName != null)
+      if (bucketName != null) {
         p.setString(i++, bucketName);
+      }
 
-      if (tag != null)
+      if (tag != null) {
         p.setString(i++, tag);
+      }
 
       result = p.executeQuery();
 
@@ -771,13 +797,14 @@ public abstract class SqlService {
   }
 
   /**
-   * Returns a list of collections for the given bucket name <code>bucketName</code>. For each collection, it will return the
-   * meta data and the list of object contain in the collection.
-   * @param bucketName a single String representing the bucket name where the collection is stored
-   * @param offset an Integer used to determine the offset of the response
-   * @param limit an Integer used to determine the limit of the response
+   * Returns a list of collections for the given bucket name <code>bucketName</code>. For each collection, it will
+   * return the meta data and the list of object contain in the collection.
+   *
+   * @param bucketName     a single String representing the bucket name where the collection is stored
+   * @param offset         an Integer used to determine the offset of the response
+   * @param limit          an Integer used to determine the limit of the response
    * @param includeDeleted a boolean used to define is the response will include delete collections or not
-   * @param tag a single String used to filter the collections regarding the tag property
+   * @param tag            a single String used to filter the collections regarding the tag property
    * @return a list of {@link org.plos.repo.models.RepoCollection}
    * @throws SQLException
    */
@@ -794,14 +821,17 @@ public abstract class SqlService {
           getCollectionMetadataQuery(bucketName, offset, limit, includeDeleted, tag));
 
       int i = 1;
-      if (!includeDeleted)
+      if (!includeDeleted) {
         p.setInt(i++, Status.USED.getValue());
+      }
 
-      if (bucketName != null)
+      if (bucketName != null) {
         p.setString(i++, bucketName);
+      }
 
-      if (tag != null)
+      if (tag != null) {
         p.setString(i++, tag);
+      }
 
       result = p.executeQuery();
 
@@ -821,11 +851,12 @@ public abstract class SqlService {
 
   /**
    * Returns a list of collections meta data for the given bucket name <code>bucketName</code>
-   * @param bucketName a single String representing the bucket name where the collection is stored
-   * @param offset an Integer used to determine the offset of the response
-   * @param limit an Integer used to determine the limit of the response
+   *
+   * @param bucketName     a single String representing the bucket name where the collection is stored
+   * @param offset         an Integer used to determine the offset of the response
+   * @param limit          an Integer used to determine the limit of the response
    * @param includeDeleted a boolean used to define is the response will include delete collections or not
-   * @param tag a single String used to filter the collections regarding the tag property
+   * @param tag            a single String used to filter the collections regarding the tag property
    * @return a list of {@link org.plos.repo.models.RepoCollection}
    * @throws SQLException
    */
@@ -841,14 +872,17 @@ public abstract class SqlService {
       p = connectionLocal.get().prepareStatement(getCollectionMetadataQuery(bucketName, offset, limit, includeDeleted, tag));
 
       int i = 1;
-      if (!includeDeleted)
+      if (!includeDeleted) {
         p.setInt(i++, Status.USED.getValue());
+      }
 
-      if (bucketName != null)
+      if (bucketName != null) {
         p.setString(i++, bucketName);
+      }
 
-      if (tag != null)
+      if (tag != null) {
         p.setString(i++, tag);
+      }
 
       result = p.executeQuery();
 
@@ -865,21 +899,26 @@ public abstract class SqlService {
 
   }
 
-  private String getCollectionMetadataQuery(String bucketName, Integer offset, Integer limit, boolean includeDeleted, String tag){
+  private String getCollectionMetadataQuery(String bucketName, Integer offset, Integer limit, boolean includeDeleted, String tag) {
     StringBuilder q = new StringBuilder();
     q.append("SELECT " + COLLECTION_COLUMNS + ", b.BUCKETNAME " +
         "FROM collections c, buckets b WHERE c.bucketId = b.bucketId");
 
-    if (!includeDeleted)
+    if (!includeDeleted) {
       q.append(" AND status=?");
-    if (bucketName != null)
+    }
+    if (bucketName != null) {
       q.append(" AND bucketName=?");
-    if (tag != null)
+    }
+    if (tag != null) {
       q.append(" AND TAG=?");
-    if (limit != null)
+    }
+    if (limit != null) {
       q.append(" LIMIT " + limit);
-    if (offset != null)
+    }
+    if (offset != null) {
       q.append(" OFFSET " + offset);
+    }
 
     return q.toString();
   }
@@ -914,6 +953,7 @@ public abstract class SqlService {
 
   /**
    * Returns the list of objects contains in the given collection <code>id</code>
+   *
    * @param id an integer representing the collection id
    * @return a list of {@link org.plos.repo.models.RepoObject }
    * @throws SQLException
@@ -953,10 +993,11 @@ public abstract class SqlService {
   }
 
   /**
-   * Fetch the latest version in used of the collection defined by <code>bucketName</code> & <code>key</code>. The latest
-   * version is defined as the latest created collection with status = USED.
+   * Fetch the latest version in used of the collection defined by <code>bucketName</code> & <code>key</code>. The
+   * latest version is defined as the latest created collection with status = USED.
+   *
    * @param bucketName a single String representing the bucket name where the collection is stored
-   * @param key a single String identifying the collection key
+   * @param key        a single String identifying the collection key
    * @return {@link org.plos.repo.models.RepoCollection}
    * @throws SQLException
    */
@@ -991,9 +1032,9 @@ public abstract class SqlService {
         repoCollection.addObjects(listCollectionObjects(repoCollection.getId()));
 
         return repoCollection;
-      }
-      else
+      } else {
         return null;
+      }
 
     } finally {
       closeDbStuff(result, p);
@@ -1004,11 +1045,13 @@ public abstract class SqlService {
 
   /**
    * Fetch the collection defined by <code>bucketName</code> , <code>key</code> & <code>version</code>
+   *
    * @param bucketName a single String representing the bucket name where the collection is stored
-   * @param key a single String identifying the collection key
-   * @param version an integer used to filter the collection regarding the version property
-   * @param tag a single String used to filter the collections regarding the tag property. if tag = null, no filter is needed.
-   * @param uuid a single UUID used to filter the collection regarding the universal id property
+   * @param key        a single String identifying the collection key
+   * @param version    an integer used to filter the collection regarding the version property
+   * @param tag        a single String used to filter the collections regarding the tag property. if tag = null, no
+   *                   filter is needed.
+   * @param uuid       a single UUID used to filter the collection regarding the universal id property
    * @return {@link org.plos.repo.models.RepoCollection}
    * @throws SQLException
    */
@@ -1023,13 +1066,13 @@ public abstract class SqlService {
       query.append("SELECT " + COLLECTION_COLUMNS + ", b.BUCKETNAME FROM collections c, buckets b " +
           "WHERE c.bucketId = b.bucketId AND b.bucketName=? AND collKey=? ");
 
-      if (version != null){
+      if (version != null) {
         query.append(" AND versionNumber=?");
       }
-      if (uuid != null){
+      if (uuid != null) {
         query.append(" AND uuid= ?");
       }
-      if (tag != null){
+      if (tag != null) {
         query.append(" AND tag=?");
       }
 
@@ -1041,13 +1084,13 @@ public abstract class SqlService {
       p.setString(2, key);
 
       int i = 3;
-      if (version != null){
+      if (version != null) {
         p.setInt(i++, version);
       }
-      if (uuid != null){
+      if (uuid != null) {
         p.setString(i++, uuid.toString());
       }
-      if (tag != null){
+      if (tag != null) {
         p.setString(i++, tag);
       }
 
@@ -1064,9 +1107,9 @@ public abstract class SqlService {
         repoCollection.addObjects(listCollectionObjects(repoCollection.getId()));
 
         return repoCollection;
-      }
-      else
+      } else {
         return null;
+      }
 
     } finally {
       closeDbStuff(result, p);
@@ -1076,8 +1119,9 @@ public abstract class SqlService {
 
   /**
    * List all versions for the given <code>collection</code>
+   *
    * @param bucketName a single String identifying the bucket name where the collection is.
-   * @param key a single String identifying the collection key
+   * @param key        a single String identifying the collection key
    * @return a list of {@link org.plos.repo.models.RepoCollection}
    * @throws SQLException
    */
@@ -1115,10 +1159,12 @@ public abstract class SqlService {
 
 
   /**
-   * Marks the collection defined by <code>key</code> , <code>bucketName</code> & <code>versionNumber</code> as deleted.
-   * @param key a single String identifying the collection key
+   * Marks the collection defined by <code>key</code> , <code>bucketName</code> & <code>versionNumber</code> as
+   * deleted.
+   *
+   * @param key        a single String identifying the collection key
    * @param bucketName a single String identifying the bucket name where the collection is.
-   * @param uuid a single UUID used to filter the collection regarding the universal id property
+   * @param uuid       a single UUID used to filter the collection regarding the universal id property
    * @return an int value indicating the number of updated rows
    * @throws SQLException
    */
@@ -1128,21 +1174,22 @@ public abstract class SqlService {
 
     Bucket bucket = getBucket(bucketName);
 
-    if (bucket == null)
+    if (bucket == null) {
       return 0;
+    }
 
     try {
 
       StringBuilder query = new StringBuilder();
       query.append("UPDATE collections SET status=? WHERE collKey=? AND bucketId=?");
 
-      if (versionNumber != null){
+      if (versionNumber != null) {
         query.append(" AND versionNumber=?");
       }
-      if (uuid != null){
+      if (uuid != null) {
         query.append(" AND uuid= ?");
       }
-      if (tag != null){
+      if (tag != null) {
         query.append(" AND tag=?");
       }
 
@@ -1153,13 +1200,13 @@ public abstract class SqlService {
       p.setInt(3, bucket.getBucketId());
 
       int i = 4;
-      if (versionNumber != null){
+      if (versionNumber != null) {
         p.setInt(i++, versionNumber);
       }
-      if (uuid != null){
+      if (uuid != null) {
         p.setString(i++, uuid.toString());
       }
-      if (tag != null){
+      if (tag != null) {
         p.setString(i++, tag);
       }
 
@@ -1219,13 +1266,13 @@ public abstract class SqlService {
       p.setInt(5, repoCollection.getVersionNumber());
       p.setString(6, repoCollection.getTag());
       p.setTimestamp(7, repoCollection.getCreationDate());
-      p.setString(8,(String)repoCollection.getUserMetadata());
+      p.setString(8, (String) repoCollection.getUserMetadata());
       p.setString(9, repoCollection.getUuid().toString());
 
       p.executeUpdate();
       keys = p.getGeneratedKeys();
 
-      if (keys.next()){
+      if (keys.next()) {
         return keys.getInt(1);
       }
 
@@ -1241,14 +1288,14 @@ public abstract class SqlService {
 
     RepoObject repoObject = this.getObject(bucketName, objKey, version, uuid, tag);
 
-    if (repoObject == null){
+    if (repoObject == null) {
       return false;
     }
 
     PreparedStatement p = null;
     ResultSet result = null;
 
-    try{
+    try {
       p =
           connectionLocal.get().prepareStatement("SELECT * FROM collectionObject co, collections c " +
               "WHERE c.id = co.collectionId AND co.objectId =? AND c.status = 0");
@@ -1258,7 +1305,7 @@ public abstract class SqlService {
       result = p.executeQuery();
 
       if (result.next()) {
-       return true;
+        return true;
 
       }
 
@@ -1275,7 +1322,7 @@ public abstract class SqlService {
     PreparedStatement p = null;
     ResultSet result = null;
 
-    try{
+    try {
       p =
           connectionLocal.get().prepareStatement("SELECT * FROM objects obj, buckets b " +
               "WHERE obj.bucketId = b.bucketId " +
@@ -1329,10 +1376,11 @@ public abstract class SqlService {
 
       result = p.executeQuery();
 
-      if (result.next())
+      if (result.next()) {
         return result.getInt(1);
-      else
+      } else {
         return 0;
+      }
 
     } finally {
       closeDbStuff(result, p);
@@ -1351,10 +1399,11 @@ public abstract class SqlService {
       ResultSet result = p.executeQuery();
       int bucketId = 0;
 
-      if (result.next())
+      if (result.next()) {
         bucketId = result.getInt(1);
-      else
+      } else {
         return 0;
+      }
 
       p = connectionLocal.get().prepareStatement("DELETE FROM collectionObject " +
           "WHERE collectionid IN " +
@@ -1384,6 +1433,7 @@ public abstract class SqlService {
 
   /**
    * Insert a row into Audit table
+   *
    * @param audit Contains the audit information
    * @return TRUE if the audit was inserted and FALSE in otherwise
    * @throws SQLException
@@ -1396,7 +1446,7 @@ public abstract class SqlService {
     PreparedStatement p = null;
 
     try {
-      
+
       p = connectionLocal.get().prepareStatement("INSERT INTO audit (bucketName, keyValue, operation, uuid) VALUES (?,?,?,?)");
 
       p.setString(1, audit.getBucket());
@@ -1416,8 +1466,9 @@ public abstract class SqlService {
 
   /**
    * List the audit table
-   * @param bucket a single String representing the bucket name
-   * @param key a single String identifying the object key
+   *
+   * @param bucket    a single String representing the bucket name
+   * @param key       a single String identifying the object key
    * @param operation represents the operation type
    * @param timestamp represents the creation date time of audit row.
    * @return {@link org.plos.repo.models.Audit List}
@@ -1432,54 +1483,54 @@ public abstract class SqlService {
     PreparedStatement p = null;
     ResultSet result = null;
     boolean filter = false;
-    
+
     try {
       StringBuilder query = new StringBuilder("SELECT * FROM audit ");
-      
-      if(bucket  != null) {
+
+      if (bucket != null) {
         filter = true;
         query.append(" WHERE bucketName = ? ");
       }
-      if(key != null) {
+      if (key != null) {
         filter = true;
         query.append((filter ? " AND " : " WHERE "));
         query.append(" keyValue = ? ");
       }
-      if(operation != null) {
+      if (operation != null) {
         filter = true;
         query.append((filter ? " AND " : " WHERE "));
         query.append(" operation = ? ");
       }
-      if(uuid != null) {
+      if (uuid != null) {
         filter = true;
         query.append((filter ? " AND " : " WHERE "));
         query.append(" uuid = ? ");
       }
-      if(timestamp != null) {
+      if (timestamp != null) {
         query.append((filter ? " AND " : " WHERE "));
         query.append(" timestamp >= ? ");
       }
-      
+
       p = connectionLocal.get().prepareStatement(query.toString());
-      
+
       int i = 1;
-      
-      if (bucket != null){
+
+      if (bucket != null) {
         p.setString(i++, bucket);
       }
-      if (key != null){
+      if (key != null) {
         p.setString(i++, key);
       }
-      if (operation != null){
+      if (operation != null) {
         p.setString(i++, operation.getValue());
       }
-      if (uuid != null){
+      if (uuid != null) {
         p.setString(i++, uuid);
       }
-      if (timestamp != null){
+      if (timestamp != null) {
         p.setTimestamp(i++, timestamp);
       }
-      
+
       result = p.executeQuery();
 
       while (result.next()) {

@@ -23,7 +23,6 @@ package org.plos.repo.util;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Test;
-import org.plos.repo.service.RepoException;
 
 import java.io.UnsupportedEncodingException;
 import java.util.UUID;
@@ -37,15 +36,15 @@ public class UUIDFormatterTest {
 
   private static final String OBJECT_KEY_COLUMN = "OBJKEY";
   private static final String COLLECTION_KEY_COLUMN = "COLLKEY";
-  private static final String  BUCKET_ID_COLUMN = "BUCKETID";
-  private static final String  BUCKET_NAME_COLUMN = "BUCKETNAME";
-  private static final String  STATUS_COLUMN = "STATUS";
+  private static final String BUCKET_ID_COLUMN = "BUCKETID";
+  private static final String BUCKET_NAME_COLUMN = "BUCKETNAME";
+  private static final String STATUS_COLUMN = "STATUS";
   private static final String ID_COLUMN = "ID";
   private static final String CHECKSUM_COLUMN = "CHECKSUM";
   private static final String TIMESTAMP_COLUMN = "TIMESTAMP";
   private static final String TAG_COLUMN = "TAG";
-  private static final String  VERSION_NUMBER_COLUMN = "VERSIONNUMBER";
-  private static final String  CREATION_DATE_COLUMN = "CREATIONDATE";
+  private static final String VERSION_NUMBER_COLUMN = "VERSIONNUMBER";
+  private static final String CREATION_DATE_COLUMN = "CREATIONDATE";
   private static final String USER_METADATA_COLUMN = "USERMETADATA";
   private static final String UUID_COLUMN = "UUID";
   private static final String HEX_UUID_COLUMN = "HEX_UUID";
@@ -69,7 +68,7 @@ public class UUIDFormatterTest {
     assertTrue(str.contains("-"));
 
     String myString = UUID.randomUUID().toString();
-    myString = myString.replace("-","");
+    myString = myString.replace("-", "");
     char[] hexString = Hex.encodeHex(myString.getBytes());
     assertNotNull(hexString);
     byte[] uuid = Hex.decodeHex(hexString);
@@ -81,7 +80,7 @@ public class UUIDFormatterTest {
   }
 
   @Test
-  public void test1(){
+  public void test1() {
 
     StringBuilder q = new StringBuilder();
     q.append("SELECT " + OBJECT_COLUMNS + "  FROM objects as obj, buckets b " +

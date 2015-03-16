@@ -37,7 +37,6 @@ import org.springframework.core.io.Resource;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
-import java.sql.Statement;
 
 public class TestSpringConfig {
 
@@ -52,19 +51,29 @@ public class TestSpringConfig {
   }
 
   @Bean
-  public CollectionRepoService collectionRepoService() { return new CollectionRepoService();}
+  public CollectionRepoService collectionRepoService() {
+    return new CollectionRepoService();
+  }
 
   @Bean
-  public InputCollectionValidator inputCollectionValidator(){ return new InputCollectionValidator(); }
+  public InputCollectionValidator inputCollectionValidator() {
+    return new InputCollectionValidator();
+  }
 
   @Bean
-  public InputRepoObjectValidator inputRepoObjectValidator(){ return new InputRepoObjectValidator(); }
+  public InputRepoObjectValidator inputRepoObjectValidator() {
+    return new InputRepoObjectValidator();
+  }
 
   @Bean
-  public TimestampInputValidator timestampInputValidator(){ return new TimestampInputValidator(); }
+  public TimestampInputValidator timestampInputValidator() {
+    return new TimestampInputValidator();
+  }
 
   @Bean
-  public ChecksumGenerator versionChecksumGenerator(){ return new ChecksumGenerator(); }
+  public ChecksumGenerator versionChecksumGenerator() {
+    return new ChecksumGenerator();
+  }
 
   @Bean
   public ObjectStore objectStore() throws Exception {

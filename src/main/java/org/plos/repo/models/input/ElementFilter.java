@@ -14,11 +14,11 @@ public class ElementFilter {
   @QueryParam("uuid")
   private String uuid;
 
-  public ElementFilter(){
+  public ElementFilter() {
 
   }
 
-  public ElementFilter(Integer version, String tag, String uuid){
+  public ElementFilter(Integer version, String tag, String uuid) {
     this.version = version;
     this.tag = tag;
     this.uuid = uuid;
@@ -48,7 +48,7 @@ public class ElementFilter {
     this.uuid = uuid;
   }
 
-  public Boolean isEmpty(){
+  public Boolean isEmpty() {
     return version == null && tag == null && uuid == null;
   }
 

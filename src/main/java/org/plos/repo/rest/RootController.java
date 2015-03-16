@@ -34,7 +34,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 @Path("/")
-@Api(value="info")
+@Api(value = "info")
 public class RootController {
 
   @Inject

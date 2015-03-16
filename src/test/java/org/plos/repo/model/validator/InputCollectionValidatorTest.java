@@ -32,7 +32,10 @@ import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 /**
@@ -57,7 +60,7 @@ public class InputCollectionValidatorTest {
   private List<InputObject> inputObjects = Arrays.asList(new InputObject[]{new InputObject("key", "sads123dsadas456")});
 
   @Before
-  public void setUp(){
+  public void setUp() {
     inputCollectionValidator = new InputCollectionValidator();
     initMocks(this);
   }
@@ -76,10 +79,10 @@ public class InputCollectionValidatorTest {
   @Test
   public void validateNoKeyTest() throws RepoException {
 
-    try{
+    try {
       inputCollectionValidator.validate(inputCollection);
       fail(FAIL_MSG);
-    } catch(RepoException re){
+    } catch (RepoException re) {
       assertEquals(re.getType(), RepoException.Type.NoCollectionKeyEntered);
       verify(inputCollection).getKey();
     }
@@ -90,10 +93,10 @@ public class InputCollectionValidatorTest {
   public void validateNoBucketNameTest() throws RepoException {
 
     when(inputCollection.getKey()).thenReturn(VALID_KEY);
-    try{
+    try {
       inputCollectionValidator.validate(inputCollection);
       fail(FAIL_MSG);
-    } catch(RepoException re){
+    } catch (RepoException re) {
       assertEquals(re.getType(), RepoException.Type.NoBucketEntered);
       verify(inputCollection).getKey();
     }
@@ -103,10 +106,10 @@ public class InputCollectionValidatorTest {
   @Test
   public void validateNoObjectsTest() throws RepoException {
     mockInputCollectionCalls(null);
-    try{
+    try {
       inputCollectionValidator.validate(inputCollection);
       fail(FAIL_MSG);
-    } catch(RepoException re){
+    } catch (RepoException re) {
       assertEquals(re.getType(), RepoException.Type.CantCreateCollectionWithNoObjects);
       verifyInputCollectionCalls(1);
     }
@@ -125,7 +128,7 @@ public class InputCollectionValidatorTest {
     when(inputCollection.getObjects()).thenReturn(objects);
   }
 
-  private void verifyInputCollectionCalls(Integer getObjectsCalls) throws RepoException{
+  private void verifyInputCollectionCalls(Integer getObjectsCalls) throws RepoException {
     verify(inputCollection).getKey();
     verify(inputCollection).getKey();
     verify(inputCollection).getBucketName();

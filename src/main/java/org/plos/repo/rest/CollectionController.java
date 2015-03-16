@@ -19,7 +19,11 @@ package org.plos.repo.rest;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.wordnik.swagger.annotations.*;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiParam;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 import org.apache.http.HttpStatus;
 import org.plos.repo.models.RepoCollection;
 import org.plos.repo.models.input.ElementFilter;
@@ -33,7 +37,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.ws.rs.*;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -41,7 +53,7 @@ import java.util.List;
 
 
 @Path("/collections")
-@Api(value="/collections")
+@Api(value = "/collections")
 public class CollectionController {
 
   private static final Logger log = LoggerFactory.getLogger(CollectionController.class);
@@ -75,7 +87,8 @@ public class CollectionController {
       List<RepoCollectionOutput> outputCollections = Lists.newArrayList(Iterables.transform(repoCollections, RepoCollectionOutput.typeFunction()));
 
       return Response.status(Response.Status.OK)
-          .entity(new GenericEntity<List<RepoCollectionOutput>>(outputCollections){})
+          .entity(new GenericEntity<List<RepoCollectionOutput>>(outputCollections) {
+          })
           .build();
 
     } catch (RepoException e) {
@@ -133,10 +146,11 @@ public class CollectionController {
 
       List<RepoCollection> repoCollections = collectionRepoService.getCollectionVersions(bucketName, key);
 
-      List<RepoCollectionOutput> outputCollections =  Lists.newArrayList(Iterables.transform(repoCollections, RepoCollectionOutput.typeFunction()));
+      List<RepoCollectionOutput> outputCollections = Lists.newArrayList(Iterables.transform(repoCollections, RepoCollectionOutput.typeFunction()));
 
       return Response.status(Response.Status.OK)
-          .entity(new GenericEntity<List<RepoCollectionOutput>>(outputCollections){})
+          .entity(new GenericEntity<List<RepoCollectionOutput>>(outputCollections) {
+          })
           .build();
     } catch (RepoException e) {
       return ObjectController.handleError(e);
@@ -178,14 +192,15 @@ public class CollectionController {
       @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The collection was unable to be created (see response text for more details)"),
       @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
   })
-  public Response createOrUpdateCollection(@ApiParam("collection") InputCollection inputCollection){
+  public Response createOrUpdateCollection(@ApiParam("collection") InputCollection inputCollection) {
 
     try {
 
       RepoService.CreateMethod method;
 
-      if (inputCollection.getCreate() == null)
+      if (inputCollection.getCreate() == null) {
         throw new RepoException(RepoException.Type.NoCreationMethodEntered);
+      }
 
       try {
         method = RepoService.CreateMethod.valueOf(inputCollection.getCreate().toUpperCase());

@@ -20,9 +20,12 @@ package org.plos.repo.rest;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.wordnik.swagger.annotations.*;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiParam;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 import org.apache.http.HttpStatus;
-import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.plos.repo.models.RepoError;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.input.ElementFilter;
@@ -35,7 +38,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.ws.rs.*;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -49,7 +62,7 @@ import java.util.List;
 
 
 @Path("/objects")
-@Api(value="/objects")
+@Api(value = "/objects")
 public class ObjectController {
 
   private static final Logger log = LoggerFactory.getLogger(ObjectController.class);
@@ -67,7 +80,7 @@ public class ObjectController {
 
   private static final String REPROXY_HEADER_FILE = "reproxy-file";
 
-  private static final String RFC1123_DATE_TIME_FORMAT =  "EEE, dd MMM yyyy HH:mm:ss z";
+  private static final String RFC1123_DATE_TIME_FORMAT = "EEE, dd MMM yyyy HH:mm:ss z";
 
   @Inject
   private RepoService repoService;
@@ -125,14 +138,16 @@ public class ObjectController {
       return Response.status(Response.Status.OK).entity(
           new GenericEntity<List<RepoObjectOutput>>(
               outputObjects
-          ) {}).build();
+          ) {
+          }).build();
     } catch (RepoException e) {
       return handleError(e);
     }
 
   }
 
-  @GET @Path("/meta/{bucketName}")
+  @GET
+  @Path("/meta/{bucketName}")
   @ApiOperation(value = "Fetch info about an object and its versions", response = RepoObjectOutput.class)
   @Produces({MediaType.APPLICATION_JSON})
   public Response readMetadata(
@@ -155,7 +170,8 @@ public class ObjectController {
 
   }
 
-  @GET @Path("/{bucketName}")
+  @GET
+  @Path("/{bucketName}")
   @ApiOperation(value = "Fetch an object or its metadata", response = RepoObjectOutput.class)
   @Produces({MediaType.APPLICATION_JSON})
   public Response read(@ApiParam(required = true) @PathParam("bucketName") String bucketName,
@@ -191,10 +207,10 @@ public class ObjectController {
     // if they want the metadata
 
     if (fetchMetadata) {
-        RepoObjectOutput outputObject = new RepoObjectOutput(repoObject);
-        return Response.status(Response.Status.OK)
-            .lastModified(repoObject.getTimestamp())
-            .entity(outputObject).build();
+      RepoObjectOutput outputObject = new RepoObjectOutput(repoObject);
+      return Response.status(Response.Status.OK)
+          .lastModified(repoObject.getTimestamp())
+          .entity(outputObject).build();
     }
 
 
@@ -205,8 +221,9 @@ public class ObjectController {
       try {
         Response.Status status = Response.Status.OK;
 
-        if (notModifiedSince)
+        if (notModifiedSince) {
           status = Response.Status.NOT_MODIFIED;
+        }
 
         return Response.status(status)
             .lastModified(repoObject.getTimestamp())
@@ -223,8 +240,9 @@ public class ObjectController {
 
     try {
 
-      if (notModifiedSince)
+      if (notModifiedSince) {
         return Response.notModified().lastModified(repoObject.getTimestamp()).build();
+      }
 
       String exportFileName = repoService.getObjectExportFileName(repoObject);
       String contentType = repoService.getObjectContentType(repoObject);
@@ -242,11 +260,12 @@ public class ObjectController {
 
   }
 
-  @GET @Path("/versions/{bucketName}")
+  @GET
+  @Path("/versions/{bucketName}")
   @ApiOperation(value = "Fetch all the object versions", response = RepoObjectOutput.class, responseContainer = "List")
   @Produces({MediaType.APPLICATION_JSON})
   public Response getVersions(@ApiParam(required = true) @PathParam("bucketName") String bucketName,
-                       @ApiParam(required = true) @QueryParam("key") String key) {
+                              @ApiParam(required = true) @QueryParam("key") String key) {
 
     try {
 
@@ -257,7 +276,8 @@ public class ObjectController {
       return Response.status(Response.Status.OK).entity(
           new GenericEntity<List<RepoObjectOutput>>(
               outputObjects
-          ) {}).build();
+          ) {
+          }).build();
     } catch (RepoException e) {
       return handleError(e);
     }
@@ -289,7 +309,7 @@ public class ObjectController {
 
   }
 
-    @POST
+  @POST
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @ApiOperation(value = "Create a new object or a new version of an existing object",
       notes = "Set the create field to 'new' object if the object you are inserting is not already in the repo. If you want to create a " +
@@ -310,8 +330,9 @@ public class ObjectController {
 
       RepoService.CreateMethod method;
 
-      if (inputRepoObject.getCreate() == null)
+      if (inputRepoObject.getCreate() == null) {
         throw new RepoException(RepoException.Type.NoCreationMethodEntered);
+      }
 
       try {
         method = RepoService.CreateMethod.valueOf(inputRepoObject.getCreate().toUpperCase());
@@ -333,7 +354,7 @@ public class ObjectController {
 
   }
 
-  private Timestamp getValidateTimestamp(String timestampString, RepoException.Type errorType, Timestamp defaultTimestamp) throws RepoException{
+  private Timestamp getValidateTimestamp(String timestampString, RepoException.Type errorType, Timestamp defaultTimestamp) throws RepoException {
     if (timestampString != null) {
       try {
         return Timestamp.valueOf(timestampString);

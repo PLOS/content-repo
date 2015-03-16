@@ -18,10 +18,14 @@
 package org.plos.repo.service;
 
 import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.*;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.CreateBucketRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.Region;
+import com.amazonaws.services.s3.model.S3Object;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import org.plos.repo.models.Bucket;
@@ -32,8 +36,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -63,8 +65,9 @@ public class S3StoreService extends ObjectStore {
     try {
       S3Object obj = s3Client.getObject(repoObject.getBucketName(), repoObject.getChecksum());
 
-      if (obj == null)
+      if (obj == null) {
         return false;
+      }
 
       obj.close();
       return true;
@@ -81,9 +84,9 @@ public class S3StoreService extends ObjectStore {
 
   @Override
   public String[] getFilePaths(RepoObject repoObject) throws RepoException {
-    
+
     String s3Url = s3Client.getResourceUrl(repoObject.getBucketName(), repoObject.getChecksum());
-    
+
     if (s3Url == null) {
       throw new RepoException(RepoException.Type.ObjectFilePathMissing);
     }
@@ -93,7 +96,7 @@ public class S3StoreService extends ObjectStore {
 
   @Override
   public InputStream getInputStream(RepoObject repoObject) throws RepoException {
-    try{
+    try {
       return s3Client.getObject(repoObject.getBucketName(), repoObject.getChecksum()).getObjectContent();
     } catch (AmazonClientException e) {
       throw new RepoException(e);
@@ -207,11 +210,12 @@ public class S3StoreService extends ObjectStore {
 
     for (Map.Entry<String, java.lang.Object> entry : propsObj.entrySet()) {
       try {
-        if (entry.getValue() == null)
+        if (entry.getValue() == null) {
           propsStr.put(entry.getKey(), "");
-        else
+        } else {
           propsStr.put(entry.getKey(), entry.getValue().toString());
-      } catch (ClassCastException cce){
+        }
+      } catch (ClassCastException cce) {
         log.error("Problem converting object to metadata", cce);
       }
     }
@@ -241,7 +245,8 @@ public class S3StoreService extends ObjectStore {
 
         try {
           Thread.sleep(waitSecond * 1000);
-        } catch (Exception e2) {  }
+        } catch (Exception e2) {
+        }
 
       }
     }

@@ -48,12 +48,13 @@ public abstract class RepoBaseSpringTest {
     sqlService.getConnection();
 
     // remove collections from DB
-    List<RepoCollection> repoCollectionList = sqlService.listCollections(null,null,null,true,null);
+    List<RepoCollection> repoCollectionList = sqlService.listCollections(null, null, null, true, null);
 
     for (RepoCollection repoCollection : repoCollectionList) {
 
-      if (sqlService.deleteCollection(repoCollection) == 0)
+      if (sqlService.deleteCollection(repoCollection) == 0) {
         throw new Exception("Collection not deleted in DB");
+      }
 
     }
 
@@ -63,8 +64,9 @@ public abstract class RepoBaseSpringTest {
 
     for (RepoObject repoObject : repoObjectList) {
 
-      if (sqlService.deleteObject(repoObject) == 0)
+      if (sqlService.deleteObject(repoObject) == 0) {
         throw new Exception("Object not deleted in DB");
+      }
 
       objectStore.deleteObject(repoObject);
     }
@@ -77,7 +79,7 @@ public abstract class RepoBaseSpringTest {
       sqlService.deleteBucket(bucket.getBucketName());
       objectStore.deleteBucket(bucket);
     }
-    
+
     // TODO: assert both refs are empty
 
     sqlService.transactionCommit();

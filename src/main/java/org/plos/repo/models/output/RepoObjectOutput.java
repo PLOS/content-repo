@@ -67,7 +67,7 @@ public class RepoObjectOutput {
     this.creationDate = TimestampFormatter.getFormattedTimestamp(repoObject.getCreationDate());
     this.userMetadata = repoObject.getUserMetadata();
 
-    if (repoObject.getUuid() != null){
+    if (repoObject.getUuid() != null) {
       this.uuid = repoObject.getUuid().toString();
     }
 

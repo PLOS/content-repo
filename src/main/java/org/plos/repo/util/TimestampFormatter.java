@@ -20,13 +20,12 @@ package org.plos.repo.util;
 
 import java.sql.Timestamp;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 
 public class TimestampFormatter {
 
   private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
-  public static String getFormattedTimestamp(Timestamp timestamp){
+  public static String getFormattedTimestamp(Timestamp timestamp) {
 
     DateFormat df = new SimpleDateFormatThreadSafe(TIMESTAMP_FORMAT);
     return df.format(timestamp);

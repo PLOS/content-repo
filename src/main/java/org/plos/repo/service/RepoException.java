@@ -63,7 +63,7 @@ public class RepoException extends Exception {
     CantCreateCollectionVersionWithNoOrig(35, "Can not version a collection that does not exist"),
     CantCreateCollectionWithNoObjects(36, "Can not create a collection that does not have objects"),
     ObjectFilePathMissing(37, "The file path object is missing");
-    
+
     private final int value;
     private final String message;
 

@@ -29,8 +29,12 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 /**
@@ -65,7 +69,7 @@ public class ChecksumGeneratorTest {
   private List<String> objects2Checksum = Arrays.asList(new String[]{OBJ2_VERSION_CHECKSUM, OBJ1_VERSION_CHECKSUM});
 
   @Before
-  public void setUp(){
+  public void setUp() {
     checksumGenerator = new ChecksumGenerator();
     repoObject1 = new RepoObject();
     repoObject1.setId(0);
@@ -141,11 +145,11 @@ public class ChecksumGeneratorTest {
     assertNotNull(checksumObj2);
     assertNotEquals(checksumObj1, checksumObj2);
 
-    verifyObjectCalls(repoObject1, 2, 2 ,2);
+    verifyObjectCalls(repoObject1, 2, 2, 2);
     verifyObjectCalls(repoObject2, 2, 2, 1);
 
   }
-  
+
   private void mockObjectCalls(RepoObject repoObject, String key, Timestamp timestamp, String tag, String contentType, String downloadName, String checksum) {
     when(repoObject.getKey()).thenReturn(key);
     when(repoObject.getCreationDate()).thenReturn(timestamp);
@@ -170,7 +174,7 @@ public class ChecksumGeneratorTest {
     when(repoCollection.getTag()).thenReturn(tag);
   }
 
-  private void verifyCollectionCalls(RepoCollection repoCollection, int tagTimes){
+  private void verifyCollectionCalls(RepoCollection repoCollection, int tagTimes) {
     verify(repoCollection).getKey();
     verify(repoCollection).getCreationDate();
     verify(repoCollection, times(tagTimes)).getTag();

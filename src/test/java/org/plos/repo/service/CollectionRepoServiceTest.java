@@ -32,8 +32,15 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 public class CollectionRepoServiceTest {
@@ -71,7 +78,7 @@ public class CollectionRepoServiceTest {
 
 
   @Before
-  public void setUp(){
+  public void setUp() {
 
     collectionRepoService = new CollectionRepoService();
     initMocks(this);
@@ -81,7 +88,8 @@ public class CollectionRepoServiceTest {
   @Test
   public void testListCollectionsHappyPath() throws RepoException, SQLException {
 
-    doNothing().when(sqlService).getReadOnlyConnection();;
+    doNothing().when(sqlService).getReadOnlyConnection();
+    ;
     when(sqlService.getBucket(VALID_BUCKET)).thenReturn(bucket);
 
     when(sqlService.listCollectionsMetaData(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG)).thenReturn(repoCollections);
@@ -104,10 +112,10 @@ public class CollectionRepoServiceTest {
     when(sqlService.getBucket(INVALID_BUCKET)).thenReturn(null);
 
     List<RepoCollection> response = null;
-    try{
+    try {
       response = collectionRepoService.listCollections(INVALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
       fail(FAIL_MSG);
-    } catch(RepoException re){
+    } catch (RepoException re) {
       assertNull(response);
       assertEquals(re.getType(), RepoException.Type.BucketNotFound);
       verify(sqlService).getReadOnlyConnection();
@@ -126,10 +134,10 @@ public class CollectionRepoServiceTest {
 
     List<RepoCollection> response = null;
 
-    try{
+    try {
       response = collectionRepoService.listCollections(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG);
       fail(FAIL_MSG);
-    } catch(RepoException re){
+    } catch (RepoException re) {
       assertNull(response);
       assertEquals(re.getCause(), SQL_EXCEP);
       verify(sqlService).getReadOnlyConnection();
@@ -185,10 +193,10 @@ public class CollectionRepoServiceTest {
     doNothing().when(sqlService).getReadOnlyConnection();
 
     List<RepoCollection> collectionsResp = null;
-    try{
+    try {
       collectionsResp = collectionRepoService.getCollectionVersions(VALID_BUCKET, "");
       fail("A repo exception was expected");
-    }catch(RepoException e){
+    } catch (RepoException e) {
       assertEquals(RepoException.Type.NoCollectionKeyEntered, e.getType());
       assertNull(collectionsResp);
       verify(sqlService).getReadOnlyConnection();
@@ -202,10 +210,10 @@ public class CollectionRepoServiceTest {
     doNothing().when(sqlService).getReadOnlyConnection();
 
     List<RepoCollection> collectionsResp = null;
-    try{
+    try {
       collectionsResp = collectionRepoService.getCollectionVersions("", "");
       fail("A repo exception was expected");
-    }catch(RepoException e){
+    } catch (RepoException e) {
       assertEquals(RepoException.Type.NoBucketEntered, e.getType());
       assertNull(collectionsResp);
       verify(sqlService).getReadOnlyConnection();

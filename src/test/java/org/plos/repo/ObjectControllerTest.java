@@ -25,8 +25,6 @@ import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.junit.Before;
 import org.junit.Test;
-import org.plos.repo.models.input.InputCollection;
-import org.plos.repo.models.input.InputObject;
 import org.plos.repo.service.RepoException;
 
 import javax.ws.rs.client.Entity;
@@ -38,15 +36,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * ObjectController test. Real implementations of dependencies (services, daos, validatores)
- * are being used. The only mocked dependency is the DB, it uses HSQL instead.
+ * ObjectController test. Real implementations of dependencies (services, daos, validatores) are being used. The only
+ * mocked dependency is the DB, it uses HSQL instead.
  */
 public class ObjectControllerTest extends RepoBaseJerseyTest {
 
@@ -77,7 +74,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
                 MediaType.MULTIPART_FORM_DATA
             )),
         Response.Status.BAD_REQUEST, RepoException.Type.CouldNotParseTimestamp
-        );
+    );
   }
 
   @Test
@@ -221,10 +218,10 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     createBucket(bucketName, CREATION_DATE_TIME);
 
     assertRepoError(target("/objects").queryParam("bucketName", bucketName)
-                                      .queryParam("offset", "-1")
-                                      .request()
-                                      .accept(MediaType.APPLICATION_JSON_TYPE)
-                                      .get(),
+            .queryParam("offset", "-1")
+            .request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .get(),
         Response.Status.BAD_REQUEST,
         RepoException.Type.InvalidOffset);
 
@@ -262,9 +259,9 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     );
 
     assertRepoError(target("/objects/" + bucketName)
-        .queryParam("key", "object5")
-        .queryParam("tag", "DRAFT")
-        .request().accept(MediaType.APPLICATION_JSON_TYPE).delete(),
+            .queryParam("key", "object5")
+            .queryParam("tag", "DRAFT")
+            .request().accept(MediaType.APPLICATION_JSON_TYPE).delete(),
         Response.Status.BAD_REQUEST, RepoException.Type.MoreThanOneTaggedObject);
 
   }
@@ -313,7 +310,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
         .delete();
 
     assertNotNull(purgeResponse);
-    assertEquals( Response.Status.OK.getStatusCode(), purgeResponse.getStatus());
+    assertEquals(Response.Status.OK.getStatusCode(), purgeResponse.getStatus());
 
     assertRepoError(target("/objects/meta/" + bucketName).queryParam("key", "object1").request().accept(MediaType.APPLICATION_JSON_TYPE).get(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
     assertRepoError(target("/objects/" + bucketName).queryParam("key", "object1").queryParam("fetchMetadata", "false").request().accept(MediaType.APPLICATION_JSON_TYPE).get(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
@@ -358,31 +355,31 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
         .delete();
 
     assertNotNull(purgeResponse);
-    assertEquals( Response.Status.OK.getStatusCode(), purgeResponse.getStatus());
+    assertEquals(Response.Status.OK.getStatusCode(), purgeResponse.getStatus());
 
     assertRepoError(target("/objects/meta/" + bucketName).queryParam("key", "object1").request().accept(MediaType.APPLICATION_JSON_TYPE).get(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
     assertRepoError(target("/objects/" + bucketName).queryParam("key", "object1").queryParam("fetchMetadata", "false").request().accept(MediaType.APPLICATION_JSON_TYPE).get(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
 
 
     Response object2MetaResp = target("/objects/meta/" + bucketName)
-                        .queryParam("key", "object2")
-                        .request().accept(MediaType.APPLICATION_JSON_TYPE)
-                        .get();
+        .queryParam("key", "object2")
+        .request().accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
     assertNotNull(object2MetaResp);
-    assertEquals( Response.Status.OK.getStatusCode(), object2MetaResp.getStatus());
+    assertEquals(Response.Status.OK.getStatusCode(), object2MetaResp.getStatus());
 
     Response object2ContentResp = target("/objects/" + bucketName)
-                      .queryParam("key", "object2")
-                      .queryParam("fetchMetadata", "false")
-                      .request().accept(MediaType.APPLICATION_JSON_TYPE).get();
+        .queryParam("key", "object2")
+        .queryParam("fetchMetadata", "false")
+        .request().accept(MediaType.APPLICATION_JSON_TYPE).get();
     assertNotNull(object2MetaResp);
-    assertEquals( Response.Status.OK.getStatusCode(), object2MetaResp.getStatus());
+    assertEquals(Response.Status.OK.getStatusCode(), object2MetaResp.getStatus());
 
   }
 
   @Test
   public void listNoBucket() {
-    assertRepoError(target("/objects/" + bucketName ).queryParam("key", "object5").queryParam("version", "0").request().accept(MediaType.APPLICATION_JSON_TYPE).delete(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
+    assertRepoError(target("/objects/" + bucketName).queryParam("key", "object5").queryParam("version", "0").request().accept(MediaType.APPLICATION_JSON_TYPE).delete(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
   }
 
   @Test
@@ -395,7 +392,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
             JsonElement.class).getAsJsonObject().get("activeObjects").toString());
 
     int count = 100;
-    for (int i=0; i<count; ++i) {
+    for (int i = 0; i < count; ++i) {
       assertEquals(target("/objects").request()
               .accept(MediaType.APPLICATION_JSON_TYPE)
               .post(Entity.entity(new FormDataMultiPart()
@@ -410,7 +407,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     }
 
     // delete all even keys
-    for (int i=0; i<count; i += 2) {
+    for (int i = 0; i < count; i += 2) {
       Response response = target("/objects/" + bucketName).queryParam("key", "count" + (i < 10 ? "0" : "") + i).queryParam("version", "0").request().delete();
       assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
     }
@@ -419,17 +416,17 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
         .get(String.class), JsonElement.class).getAsJsonObject();
 
     int endCountTotal = Integer.valueOf(bucketResponse.get("totalObjects").toString());
-    assertEquals(endCountTotal-startCount, count); // check the number of total objects in the bucket
+    assertEquals(endCountTotal - startCount, count); // check the number of total objects in the bucket
 
     int endCountActive = Integer.valueOf(bucketResponse.get("activeObjects").toString());
-    assertEquals(endCountActive-startCount, count/2); // half of them are deleted, and not counted
+    assertEquals(endCountActive - startCount, count / 2); // half of them are deleted, and not counted
 
     int subset = 10;
     String responseString = target("/objects").queryParam("bucketName", bucketName + "").queryParam("limit", "" + subset)
         .queryParam("offset", startCount + "").queryParam("includeDeleted", "true").request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
     JsonArray jsonArray = gson.fromJson(responseString, JsonElement.class).getAsJsonArray();
     assertEquals(jsonArray.size(), subset);
-    for (int i=0; i<subset; ++i) {
+    for (int i = 0; i < subset; ++i) {
       assertEquals(jsonArray.get(i).getAsJsonObject().get("key").getAsString(), "count" + (i < 10 ? "0" : "") + i);
     }
 
@@ -442,7 +439,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     jsonArray = gson.fromJson(responseString, JsonElement.class).getAsJsonArray();
     // response is alphabetical by key, so countNN is before any other
     assertEquals(jsonArray.size(), subset);
-    for (int i=0, j=21; i<subset; ++i, j+=2) {
+    for (int i = 0, j = 21; i < subset; ++i, j += 2) {
       assertEquals(jsonArray.get(i).getAsJsonObject().get("key").getAsString(), "count" + (j < 10 ? "0" : "") + j);
     }
 
@@ -457,7 +454,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
         .request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 
     assertEquals(responseString, "[]");
-
 
 
     // create objects
@@ -506,8 +502,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     // TODO: create with empty file, update with empty file
 
     // TODO: create the same object in two buckets, and make sure deleting one does not delete the other
-
-
 
 
     // list all objects in the bucket
@@ -630,8 +624,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     assertEquals(1, versionsResponse.size());
 
 
-
-
     // DELETE
     response = target("/objects/" + bucketName).queryParam("key", "object1").queryParam("version", "0").request().delete();
     assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
@@ -665,30 +657,30 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     createBucket(bucketName, CREATION_DATE_TIME);
 
     Response response = target("/objects").request()
-            .accept(MediaType.APPLICATION_JSON_TYPE)
-            .post(Entity.entity(new FormDataMultiPart()
-                    .field("bucketName", bucketName).field("create", "new")
-                    .field("key", "object3").field("contentType", "text/something")
-                    .field("downloadName", "object3.text")
-                    .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA
-                ));
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .post(Entity.entity(new FormDataMultiPart()
+                .field("bucketName", bucketName).field("create", "new")
+                .field("key", "object3").field("contentType", "text/something")
+                .field("downloadName", "object3.text")
+                .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
+            MediaType.MULTIPART_FORM_DATA
+        ));
 
     assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
 
     response = target("/objects").request()
         .accept(MediaType.APPLICATION_JSON_TYPE)
         .post(Entity.entity(new FormDataMultiPart()
-            .field("bucketName", bucketName).field("create", "version")
-            .field("key", "object3").field("contentType", "text/something")
-            .field("downloadName", "object3.textV2")
-            .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
+                .field("bucketName", bucketName).field("create", "version")
+                .field("key", "object3").field("contentType", "text/something")
+                .field("downloadName", "object3.textV2")
+                .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
             MediaType.MULTIPART_FORM_DATA
         ));
 
     assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
 
-    response = target("/objects/versions/"+ bucketName).queryParam("key", "object3")
+    response = target("/objects/versions/" + bucketName).queryParam("key", "object3")
         .request(MediaType.APPLICATION_JSON_TYPE)
         .accept(MediaType.APPLICATION_JSON_TYPE)
         .get();
@@ -701,7 +693,7 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     assertEquals(2, responseObj.size());
   }
 
-  private void createBucket(String bucketName, String creationDateTime){
+  private void createBucket(String bucketName, String creationDateTime) {
     target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
         .post(Entity.form(new Form()
             .param("name", bucketName)
@@ -725,20 +717,20 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
     // CREATE
     response = target("/objects").request()
-            .post(Entity.entity(new FormDataMultiPart()
-                    .field("bucketName", bucketName).field("create", "new")
-                    .field("key", "object1").field("contentType", "text/plain")
-                    .field("timestamp", "2012-09-08 11:00:00")
-                    .field("userMetadata", USER_METADATA)
-                    .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
-                MediaType.MULTIPART_FORM_DATA
-            ));
+        .post(Entity.entity(new FormDataMultiPart()
+                .field("bucketName", bucketName).field("create", "new")
+                .field("key", "object1").field("contentType", "text/plain")
+                .field("timestamp", "2012-09-08 11:00:00")
+                .field("userMetadata", USER_METADATA)
+                .field("file", testData1, MediaType.TEXT_PLAIN_TYPE),
+            MediaType.MULTIPART_FORM_DATA
+        ));
 
     assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
 
     // READ
     response = target("/objects/meta/" + bucketName).queryParam("key", "object1")
-    .request(MediaType.APPLICATION_JSON_TYPE)
+        .request(MediaType.APPLICATION_JSON_TYPE)
         .accept(MediaType.APPLICATION_JSON_TYPE)
         .get();
     JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();

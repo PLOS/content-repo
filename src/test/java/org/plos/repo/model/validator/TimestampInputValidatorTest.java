@@ -42,12 +42,12 @@ public class TimestampInputValidatorTest {
   }
 
   @Test
-  public void invalidTimestampTest(){
+  public void invalidTimestampTest() {
 
-    try{
+    try {
       timestampInputValidator.validate(INVALID_TIMESTAMP, RepoException.Type.CouldNotParseTimestamp);
       fail("A repo exception was expected. ");
-    } catch (RepoException re){
+    } catch (RepoException re) {
       assertEquals(re.getType(), RepoException.Type.CouldNotParseTimestamp);
     }
 

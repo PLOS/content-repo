@@ -54,11 +54,11 @@ public class RepoCollection {
     this.status = status;
   }
 
-  public Integer getId(){
+  public Integer getId() {
     return id;
   }
 
-  public void addObjects(List<RepoObject> repoObjects){
+  public void addObjects(List<RepoObject> repoObjects) {
 
     this.repoObjects = repoObjects;
   }
@@ -153,7 +153,7 @@ public class RepoCollection {
   }
 
   public void setUserMetadata(String userMetadata) {
-    if (userMetadata != null){
+    if (userMetadata != null) {
       this.userMetadata = userMetadata.trim();
     }
   }

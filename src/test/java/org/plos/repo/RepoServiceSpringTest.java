@@ -1,52 +1,52 @@
- /* Copyright (c) 2006-2014 by Public Library of Science
- * http://plos.org
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/* Copyright (c) 2006-2014 by Public Library of Science
+* http://plos.org
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 
 
 package org.plos.repo;
 
- import com.google.common.base.Optional;
- import org.apache.commons.io.IOUtils;
- import org.junit.Assert;
- import org.junit.Before;
- import org.junit.Test;
- import org.mockito.BDDMockito;
- import org.mockito.Mockito;
- import org.plos.repo.models.Bucket;
- import org.plos.repo.models.Audit;
- import org.plos.repo.models.Operation;
- import org.plos.repo.models.RepoObject;
- import org.plos.repo.models.Status;
- import org.plos.repo.models.input.ElementFilter;
- import org.plos.repo.models.input.InputRepoObject;
- import org.plos.repo.service.RepoException;
- import org.plos.repo.service.RepoService;
- import org.plos.repo.service.SqlService;
- import org.plos.repo.service.BaseRepoService;
- import org.plos.repo.service.ObjectStore;
+import com.google.common.base.Optional;
+import org.apache.commons.io.IOUtils;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
+import org.plos.repo.models.Audit;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.models.Operation;
+import org.plos.repo.models.RepoObject;
+import org.plos.repo.models.Status;
+import org.plos.repo.models.input.ElementFilter;
+import org.plos.repo.models.input.InputRepoObject;
+import org.plos.repo.service.BaseRepoService;
+import org.plos.repo.service.ObjectStore;
+import org.plos.repo.service.RepoException;
+import org.plos.repo.service.RepoService;
+import org.plos.repo.service.SqlService;
 
- import java.io.InputStream;
- import java.lang.reflect.Field;
- import java.sql.Timestamp;
- import java.util.Calendar;
- import java.util.Date;
- import java.util.List;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 
- import static org.plos.repo.service.BaseRepoService.AUDITING_ENABLED;
+import static org.plos.repo.service.BaseRepoService.AUDITING_ENABLED;
 
- public class RepoServiceSpringTest extends RepoBaseSpringTest {
+public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
   private static final String KEY = "key1";
   private static final Bucket bucket1 = new Bucket("bucket1");
@@ -111,7 +111,7 @@ package org.plos.repo;
     } catch (RepoException e) {
       Assert.fail(e.getMessage());
     }
-    
+
     sqlService.getReadOnlyConnection();
     Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) != null);
     if (AUDITING_ENABLED) {
@@ -255,7 +255,7 @@ package org.plos.repo;
   public void createNewObject() throws Exception {
 
     repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
-      
+
     try {
       repoService.createObject(RepoService.CreateMethod.NEW, createInputRepoObject());
     } catch (RepoException e) {
@@ -297,7 +297,7 @@ package org.plos.repo;
     Field objStoreField = RepoService.class.getDeclaredField("objectStore");
     objStoreField.setAccessible(true);
     objStoreField.set(repoService, spyObjectStore);
-    
+
     try {
       repoService.createObject(RepoService.CreateMethod.NEW, createInputRepoObject());
       Assert.fail();
@@ -329,7 +329,7 @@ package org.plos.repo;
 
     Field sqlServiceField = BaseRepoService.class.getDeclaredField("sqlService");
     sqlServiceField.setAccessible(true);
-      sqlServiceField.set(repoService, spySqlService);
+    sqlServiceField.set(repoService, spySqlService);
 
     try {
       repoService.createObject(RepoService.CreateMethod.NEW, createInputRepoObject());
@@ -343,7 +343,7 @@ package org.plos.repo;
     sqlService.getReadOnlyConnection();
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
 
-      Assert.assertTrue(objFromDb == null);
+    Assert.assertTrue(objFromDb == null);
     sqlService.releaseConnection();
     RepoObject repoObject = new RepoObject();
     repoObject.setChecksum("cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151");
@@ -397,7 +397,7 @@ package org.plos.repo;
     );
 
     Assert.assertTrue(IOUtils.toString(repoService.getObjectInputStream(
-      repoService.getObject(bucket1.getBucketName(), KEY, new ElementFilter(1, null, null)))).equals("data2")
+            repoService.getObject(bucket1.getBucketName(), KEY, new ElementFilter(1, null, null)))).equals("data2")
     );
 
     Assert.assertTrue(repoService.getObjectContentType(objFromDb).equals("new content type"));
@@ -520,14 +520,14 @@ package org.plos.repo;
     // check external state
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 2);
-    Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, false,false, null).size() == 2);
+    Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, false, false, null).size() == 2);
 
     Assert.assertTrue(IOUtils.toString(repoService.getObjectInputStream(
-        repoService.getObject(bucket1.getBucketName(), KEY, new ElementFilter(0, null, null)))).equals("data1")
+            repoService.getObject(bucket1.getBucketName(), KEY, new ElementFilter(0, null, null)))).equals("data1")
     );
 
     Assert.assertTrue(IOUtils.toString(repoService.getObjectInputStream(
-        repoService.getObject(bucket1.getBucketName(), KEY, new ElementFilter(1, null, null)))).equals("")
+            repoService.getObject(bucket1.getBucketName(), KEY, new ElementFilter(1, null, null)))).equals("")
     );
 
     Assert.assertTrue(repoService.getObjectContentType(objFromDb).equals("new content type"));
@@ -543,9 +543,9 @@ package org.plos.repo;
     try {
 
       InputRepoObject inputRepoObject = createInputRepoObject();
-        inputRepoObject.setContentType(null);
+      inputRepoObject.setContentType(null);
       inputRepoObject.setDownloadName(null);
-        repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
+      repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
 
       Timestamp creationDateObj2 = new Timestamp(new Date().getTime());
       inputRepoObject.setUploadedInputStream(IOUtils.toInputStream("data2"));
@@ -572,7 +572,7 @@ package org.plos.repo;
     }
     sqlService.releaseConnection();
 
-      Assert.assertTrue(objectStore.objectExists(objFromDb));
+    Assert.assertTrue(objectStore.objectExists(objFromDb));
     Assert.assertTrue(IOUtils.toString(objectStore.getInputStream(objFromDb)).equals("data1"));
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 1);
@@ -590,7 +590,7 @@ package org.plos.repo;
     try {
 
       InputRepoObject inputRepoObject = createInputRepoObject();
-        repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
+      repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
 
       inputRepoObject.setUploadedInputStream(IOUtils.toInputStream("data2"));
       repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
@@ -598,7 +598,7 @@ package org.plos.repo;
       repoService.deleteObject(bucket1.getBucketName(), KEY, false, new ElementFilter(5, null, null));
 
     } catch (RepoException e) {
-        Assert.assertTrue(e.getMessage().startsWith("Object not found"));
+      Assert.assertTrue(e.getMessage().startsWith("Object not found"));
     }
 
     // check state
@@ -609,7 +609,7 @@ package org.plos.repo;
 
     Assert.assertTrue(objectStore.objectExists(objFromDb));
     Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 2);
-      Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, false, false, null).size() == 2);
+    Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, false, false, null).size() == 2);
   }
 
   @Test
@@ -624,16 +624,16 @@ package org.plos.repo;
     } catch (RepoException e) {
       Assert.assertTrue(e.getMessage().startsWith("Object not found"));
     }
-      
+
     // check state
-      sqlService.getReadOnlyConnection();
+    sqlService.getReadOnlyConnection();
     if (AUDITING_ENABLED) {
       List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), KEY, repoObject.getUuid().toString(), Operation.PURGE_OBJECT, null);
       Assert.assertTrue(auditList.size() > 0);
       Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.PURGE_OBJECT));
     }
-    sqlService.releaseConnection();      
-      
+    sqlService.releaseConnection();
+
   }
 
   @Test
@@ -693,7 +693,7 @@ package org.plos.repo;
     // verify that the purge object does not exists the file system
     Assert.assertNull(sqlService.getObject(bucket1.getBucketName(), "key1", null, object2.getUuid(), null));
     if (AUDITING_ENABLED) {
-      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), "key1",  object2.getUuid().toString(), Operation.PURGE_OBJECT, null);
+      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), "key1", object2.getUuid().toString(), Operation.PURGE_OBJECT, null);
       Assert.assertTrue(auditList.size() > 0);
       Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.PURGE_OBJECT));
     }
@@ -747,18 +747,18 @@ package org.plos.repo;
     RepoObject obj1FromDb = sqlService.getObject(bucket1.getBucketName(), "key1", null, object1.getUuid(), null);
     Assert.assertNull(obj1FromDb);
 
-      sqlService.releaseConnection();
+    sqlService.releaseConnection();
 
     Assert.assertTrue(obj2FromDb.getKey().equals("key1"));
     Assert.assertTrue(objectStore.objectExists(obj2FromDb));
     Assert.assertTrue(IOUtils.toString(objectStore.getInputStream(obj2FromDb)).equals(dataContent));
 
     // verify that at service level we can't get the meta info for object1. object1 has been purged
-    try{
+    try {
       repoService.getObject(bucket1.getBucketName(), "key1",
           new ElementFilter(null, null, object1.getUuid().toString()));
       Assert.fail("A repo exception was expected. ");
-    } catch (RepoException e){
+    } catch (RepoException e) {
       Assert.assertEquals(e.getType(), RepoException.Type.ObjectNotFound);
     }
 
@@ -766,7 +766,7 @@ package org.plos.repo;
     // using the keys bucketName & checksum
     InputStream contentObj1 = repoService.getObjectInputStream(object1);
     InputStream contentObj2 = repoService.getObjectInputStream(object2);
-      Assert.assertTrue(IOUtils.toString(contentObj1).equals(IOUtils.toString(contentObj2)));
+    Assert.assertTrue(IOUtils.toString(contentObj1).equals(IOUtils.toString(contentObj2)));
 
     Assert.assertTrue(repoService.getObjectVersions(obj2FromDb.getBucketName(), obj2FromDb.getKey()).size() == 1);
     Assert.assertTrue(repoService.listObjects(bucket1.getBucketName(), null, null, false, false, null).size() == 1);
@@ -840,8 +840,8 @@ package org.plos.repo;
     // create object with creation date time
     InputRepoObject inputRepoObject = createInputRepoObject();
     inputRepoObject.setCreationDateTime(creationDateTime1.toString());
-      inputRepoObject.setTimestamp(creationDateTime1.toString());
-      inputRepoObject.setTag("DRAFT");
+    inputRepoObject.setTimestamp(creationDateTime1.toString());
+    inputRepoObject.setTag("DRAFT");
     repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
 
     cal.set(2014, 10, 20, 1, 1, 1);
@@ -849,7 +849,7 @@ package org.plos.repo;
     // create object with creation date time before object 1 creation date time
     inputRepoObject.setCreationDateTime(creationDateTime2.toString());
     inputRepoObject.setTimestamp(creationDateTime2.toString());
-      inputRepoObject.setTag("FINAL");
+    inputRepoObject.setTag("FINAL");
     repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
 
     // get the latest object
@@ -874,15 +874,15 @@ package org.plos.repo;
     // create object with creation date time
     InputRepoObject inputRepoObject = createInputRepoObject();
     inputRepoObject.setCreationDateTime(creationDateTime1.toString());
-      inputRepoObject.setTimestamp(creationDateTime1.toString());
-      inputRepoObject.setTag("FINAL");
-      repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
+    inputRepoObject.setTimestamp(creationDateTime1.toString());
+    inputRepoObject.setTag("FINAL");
+    repoService.createObject(RepoService.CreateMethod.NEW, inputRepoObject);
 
-      cal.set(2014, 10, 20, 1, 1, 1);
+    cal.set(2014, 10, 20, 1, 1, 1);
     Timestamp creationDateTime2 = new Timestamp(cal.getTime().getTime());
     // create object with creation date time before object 1 creation date time
-      inputRepoObject.setCreationDateTime(creationDateTime2.toString());
-      inputRepoObject.setTimestamp(creationDateTime2.toString());
+    inputRepoObject.setCreationDateTime(creationDateTime2.toString());
+    inputRepoObject.setTimestamp(creationDateTime2.toString());
     repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
 
     // get the latest object
@@ -930,7 +930,7 @@ package org.plos.repo;
 
   }
 
-  private InputRepoObject createInputRepoObject(){
+  private InputRepoObject createInputRepoObject() {
     InputRepoObject inputRepoObject = new InputRepoObject();
     inputRepoObject.setKey(KEY);
     inputRepoObject.setBucketName(bucket1.getBucketName());

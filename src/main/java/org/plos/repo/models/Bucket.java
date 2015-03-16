@@ -42,7 +42,7 @@ public class Bucket {
     this.bucketName = bucketName;
   }
 
-  public Bucket(Integer bucketId, String bucketName,  Timestamp timestamp, Timestamp creationDate) {
+  public Bucket(Integer bucketId, String bucketName, Timestamp timestamp, Timestamp creationDate) {
     this.bucketName = bucketName;
     this.bucketId = bucketId;
     this.timestamp = timestamp;

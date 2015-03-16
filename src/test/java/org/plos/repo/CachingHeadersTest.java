@@ -33,29 +33,33 @@ import javax.ws.rs.core.Response.Status;
 import java.net.URL;
 import java.sql.Timestamp;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.when;
 
-public class CachingHeadersTest extends RepoBaseJerseyTest  {
+public class CachingHeadersTest extends RepoBaseJerseyTest {
 
-  private final static String REPO_SVC_BEAN_NAME  = "repoService";
-  private final static String BUCKET_NAME         = "plos-objstoreunittest-bucket1";
-  private final static String KEY_NAME            = "keyname";
+  private final static String REPO_SVC_BEAN_NAME = "repoService";
+  private final static String BUCKET_NAME = "plos-objstoreunittest-bucket1";
+  private final static String KEY_NAME = "keyname";
   private final static String REPROXY_HEADER_FILE = "reproxy-file";
 
   private static final DateTimeFormatter RFC1123_DATE_TIME_FORMATTER =
-    DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'")
-    .withZoneUTC();
+      DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'")
+          .withZoneUTC();
 
   RepoService mockRepoService;
-  DateTime    modifiedSinceDateTime;
+  DateTime modifiedSinceDateTime;
 
   @Before
   public void setup() throws Exception {
     RepoBaseSpringTest.clearData(objectStore, sqlService);
 
-    modifiedSinceDateTime = new DateTime(2014, 6, 25, 0, 0 ,0);
+    modifiedSinceDateTime = new DateTime(2014, 6, 25, 0, 0, 0);
     mockRepoService = Mockito.mock(RepoService.class);
   }
 
@@ -65,8 +69,8 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
     registerObjectInSpring(mockRepoService);
 
     Response response = target("/objects/" + BUCKET_NAME)
-                          .queryParam("key", KEY_NAME).queryParam("version", "0")
-                          .request().get();
+        .queryParam("key", KEY_NAME).queryParam("version", "0")
+        .request().get();
 
     assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
   }
@@ -75,15 +79,15 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
   public void testReadWithObjectModifiedBeforeIfModifiedSinceHeaderNoRepoxyHeaders() throws Exception {
 
     when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
-      .thenReturn(getObject(modifiedSinceDateTime.minusSeconds(1)));
+        .thenReturn(getObject(modifiedSinceDateTime.minusSeconds(1)));
 
     registerObjectInSpring(mockRepoService);
 
     Response response = target("/objects/" + BUCKET_NAME)
-                          .queryParam("key", KEY_NAME).queryParam("version", "0")
-                          .request()
-                          .header("If-Modified-Since", RFC1123_DATE_TIME_FORMATTER.print(modifiedSinceDateTime))
-                          .get();
+        .queryParam("key", KEY_NAME).queryParam("version", "0")
+        .request()
+        .header("If-Modified-Since", RFC1123_DATE_TIME_FORMATTER.print(modifiedSinceDateTime))
+        .get();
 
     assertEquals(Status.NOT_MODIFIED.getStatusCode(), response.getStatus());
   }
@@ -92,15 +96,15 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
   public void testReadWithObjectModifiedEqualToIfModifiedSinceHeaderNoRepoxyHeaders() throws Exception {
 
     when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
-      .thenReturn(getObject(modifiedSinceDateTime));
+        .thenReturn(getObject(modifiedSinceDateTime));
 
     registerObjectInSpring(mockRepoService);
 
     Response response = target("/objects/" + BUCKET_NAME)
-                          .queryParam("key", KEY_NAME).queryParam("version", "0")
-                          .request()
-                          .header("If-Modified-Since", RFC1123_DATE_TIME_FORMATTER.print(modifiedSinceDateTime))
-                          .get();
+        .queryParam("key", KEY_NAME).queryParam("version", "0")
+        .request()
+        .header("If-Modified-Since", RFC1123_DATE_TIME_FORMATTER.print(modifiedSinceDateTime))
+        .get();
 
     assertEquals(Status.NOT_MODIFIED.getStatusCode(), response.getStatus());
   }
@@ -109,14 +113,14 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
   public void testReadNoIfModifiedSinceHeaderNoRepoxyHeaders() throws Exception {
 
     when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
-      .thenReturn(getObject(modifiedSinceDateTime));
+        .thenReturn(getObject(modifiedSinceDateTime));
 
     registerObjectInSpring(mockRepoService);
 
     Response response = target("/objects/" + BUCKET_NAME)
-                          .queryParam("key", KEY_NAME).queryParam("version", "0")
-                          .request()
-                          .get();
+        .queryParam("key", KEY_NAME).queryParam("version", "0")
+        .request()
+        .get();
 
     assertEquals(Status.OK.getStatusCode(), response.getStatus());
   }
@@ -125,45 +129,45 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
   public void testReadWithObjectModifiedAfterIfModifiedSinceHeaderNoRepoxyHeaders() throws Exception {
 
     when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
-      .thenReturn(getObject(modifiedSinceDateTime.plusSeconds(1)));
+        .thenReturn(getObject(modifiedSinceDateTime.plusSeconds(1)));
 
     registerObjectInSpring(mockRepoService);
 
     Response response = target("/objects/" + BUCKET_NAME)
-                          .queryParam("key", KEY_NAME).queryParam("version", "0")
-                          .request()
-                          .header("If-Modified-Since", RFC1123_DATE_TIME_FORMATTER.print(modifiedSinceDateTime))
-                          .get();
+        .queryParam("key", KEY_NAME).queryParam("version", "0")
+        .request()
+        .header("If-Modified-Since", RFC1123_DATE_TIME_FORMATTER.print(modifiedSinceDateTime))
+        .get();
 
     assertEquals(Status.OK.getStatusCode(), response.getStatus());
   }
-  
+
   @Test
   public void testReadWithObjectModifiedBeforeIfModifiedSinceHeaderWithRepoxyHeaders() throws Exception {
 
     when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
-      .thenReturn(getObject(modifiedSinceDateTime.minusSeconds(1)));
+        .thenReturn(getObject(modifiedSinceDateTime.minusSeconds(1)));
 
     when(mockRepoService.serverSupportsReproxy())
-      .thenReturn(true);
+        .thenReturn(true);
 
-    URL[] urls = new URL[] {
-      new URL("http", "192.168.1.1", "/dev1/123456.fid"),
-      new URL("http", "192.168.1.1", "/dev5/123666.fid"),
-      new URL("http", "192.168.1.3", "/dev5/789012.fid")
+    URL[] urls = new URL[]{
+        new URL("http", "192.168.1.1", "/dev1/123456.fid"),
+        new URL("http", "192.168.1.1", "/dev5/123666.fid"),
+        new URL("http", "192.168.1.3", "/dev5/789012.fid")
     };
 
     when(mockRepoService.getObjectReproxy(isA(RepoObject.class)))
-      .thenReturn(urls);
+        .thenReturn(urls);
 
     registerObjectInSpring(mockRepoService);
 
     Response response = target("/objects/" + BUCKET_NAME)
-                          .queryParam("key", KEY_NAME).queryParam("version", "0")
-                          .request()
-                          .header("If-Modified-Since", RFC1123_DATE_TIME_FORMATTER.print(modifiedSinceDateTime))
-                          .header("X-Proxy-Capabilities", REPROXY_HEADER_FILE)
-                          .get();
+        .queryParam("key", KEY_NAME).queryParam("version", "0")
+        .request()
+        .header("If-Modified-Since", RFC1123_DATE_TIME_FORMATTER.print(modifiedSinceDateTime))
+        .header("X-Proxy-Capabilities", REPROXY_HEADER_FILE)
+        .get();
 
     assertEquals(Status.NOT_MODIFIED.getStatusCode(), response.getStatus());
 
@@ -174,7 +178,7 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
 
     // do sanity check on urls
     for (String url : reproxyUrls) {
-      assertTrue( url.matches("^http://192.*fid$") );
+      assertTrue(url.matches("^http://192.*fid$"));
     }
   }
 
@@ -182,28 +186,28 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
   public void testReadWithObjectModifiedAfterIfModifiedSinceHeaderWithRepoxyHeaders() throws Exception {
 
     when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
-      .thenReturn(getObject(modifiedSinceDateTime.plusSeconds(1)));
+        .thenReturn(getObject(modifiedSinceDateTime.plusSeconds(1)));
 
     when(mockRepoService.serverSupportsReproxy())
-      .thenReturn(true);
+        .thenReturn(true);
 
-    URL[] urls = new URL[] {
-      new URL("http", "192.168.1.1", "/dev1/123456.fid"),
-      new URL("http", "192.168.1.1", "/dev5/123666.fid"),
-      new URL("http", "192.168.1.3", "/dev5/789012.fid")
+    URL[] urls = new URL[]{
+        new URL("http", "192.168.1.1", "/dev1/123456.fid"),
+        new URL("http", "192.168.1.1", "/dev5/123666.fid"),
+        new URL("http", "192.168.1.3", "/dev5/789012.fid")
     };
 
     when(mockRepoService.getObjectReproxy(isA(RepoObject.class)))
-      .thenReturn(urls);
+        .thenReturn(urls);
 
     registerObjectInSpring(mockRepoService);
 
     Response response = target("/objects/" + BUCKET_NAME)
-                          .queryParam("key", KEY_NAME).queryParam("version", "0")
-                          .request()
-                          .header("If-Modified-Since", RFC1123_DATE_TIME_FORMATTER.print(modifiedSinceDateTime))
-                          .header("X-Proxy-Capabilities", REPROXY_HEADER_FILE)
-                          .get();
+        .queryParam("key", KEY_NAME).queryParam("version", "0")
+        .request()
+        .header("If-Modified-Since", RFC1123_DATE_TIME_FORMATTER.print(modifiedSinceDateTime))
+        .header("X-Proxy-Capabilities", REPROXY_HEADER_FILE)
+        .get();
 
     assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
@@ -214,14 +218,14 @@ public class CachingHeadersTest extends RepoBaseJerseyTest  {
 
     // do sanity check on urls
     for (String url : reproxyUrls) {
-      assertTrue( url.matches("^http://192.*fid$") );
+      assertTrue(url.matches("^http://192.*fid$"));
     }
   }
 
   private void registerObjectInSpring(RepoService mock) {
     // do some magic to replace registered repoService singleton with mocked version.
     SingletonBeanRegistry beanRegistry = context.getBeanFactory();
-    ((org.springframework.beans.factory.support.DefaultSingletonBeanRegistry)beanRegistry).destroySingleton(REPO_SVC_BEAN_NAME);
+    ((org.springframework.beans.factory.support.DefaultSingletonBeanRegistry) beanRegistry).destroySingleton(REPO_SVC_BEAN_NAME);
     beanRegistry.registerSingleton(REPO_SVC_BEAN_NAME, mock);
   }
 
