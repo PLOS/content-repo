@@ -55,7 +55,6 @@ public class BucketController {
   @ApiOperation(value = "List buckets", response = Bucket.class, responseContainer = "List")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response list() {
-
     try {
       return Response.status(Response.Status.OK).entity(
           new GenericEntity<List<Bucket>>(repoService.listBuckets()) {
@@ -63,7 +62,6 @@ public class BucketController {
     } catch (RepoException e) {
       return ObjectController.handleError(e);
     }
-
   }
 
   @GET
@@ -71,7 +69,6 @@ public class BucketController {
   @ApiOperation(value = "Info about the bucket", response = Bucket.class)
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response info(@PathParam("bucketName") String bucketName) {
-
     try {
       return Response.status(Response.Status.OK).entity(
           repoInfoService.bucketInfo(bucketName)
@@ -79,7 +76,6 @@ public class BucketController {
     } catch (RepoException e) {
       return ObjectController.handleError(e);
     }
-
   }
 
   @POST
@@ -91,7 +87,6 @@ public class BucketController {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public Response create(@ApiParam(required = true) @FormParam("name") String name,
                          @ApiParam(value = "creation time", required = false) @FormParam("creationDateTime") String creationDateTimeString) {
-
     try {
       return Response.status(Response.Status.CREATED).entity(
           repoService.createBucket(name, creationDateTimeString)
@@ -99,7 +94,6 @@ public class BucketController {
     } catch (RepoException e) {
       return ObjectController.handleError(e);
     }
-
   }
 
   @DELETE
@@ -111,14 +105,12 @@ public class BucketController {
       @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
   })
   public Response delete(@PathParam("name") String name) {
-
     try {
       repoService.deleteBucket(name);
       return Response.status(Response.Status.OK).build();
     } catch (RepoException e) {
       return ObjectController.handleError(e);
     }
-
   }
 
 }

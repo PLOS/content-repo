@@ -79,7 +79,6 @@ public class RepoService extends BaseRepoService {
   }
 
   public Bucket createBucket(String name, String creationDateTimeString) throws RepoException {
-
     timestampValidator.validate(creationDateTimeString, RepoException.Type.CouldNotParseCreationDate);
 
     Lock writeLock = this.rwLocks.get(name).writeLock();
@@ -91,7 +90,6 @@ public class RepoService extends BaseRepoService {
     Bucket bucket = new Bucket(name);
     Bucket newBucket = null;
     try {
-
       if (!ObjectStore.isValidFileName(name)) {
         throw new RepoException(RepoException.Type.IllegalBucketName);
       }
@@ -128,11 +126,9 @@ public class RepoService extends BaseRepoService {
 
       sqlService.transactionCommit();
       rollback = false;
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
-
       if (rollback) {
         sqlRollback("bucket " + name);
 
@@ -140,12 +136,10 @@ public class RepoService extends BaseRepoService {
           objectStore.deleteBucket(bucket);
           // TODO: check to make sure objectStore.deleteBucket didnt fail
         }
-
       }
 
       sqlReleaseConnection();
       writeLock.unlock();
-
     }
 
     return newBucket;
@@ -162,7 +156,6 @@ public class RepoService extends BaseRepoService {
    *                       object store
    */
   public void deleteBucket(String name) throws RepoException {
-
     Lock writeLock = this.rwLocks.get(name).writeLock();
     writeLock.lock();
 
@@ -202,11 +195,9 @@ public class RepoService extends BaseRepoService {
 
       sqlService.transactionCommit();
       rollback = false;
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
-
       if (rollback) {
         sqlRollback("bucket " + name);
 
@@ -214,13 +205,11 @@ public class RepoService extends BaseRepoService {
           objectStore.createBucket(bucket);
           // TODO: validate objectStore.createBucket return values
         }
-
       }
 
       sqlReleaseConnection();
       writeLock.unlock();
     }
-
   }
 
   public boolean serverSupportsReproxy() {
@@ -243,7 +232,6 @@ public class RepoService extends BaseRepoService {
    */
   public List<RepoObject> listObjects(String bucketName, Integer offset, Integer limit, boolean includeDeleted,
                                       boolean includePurged, String tag) throws RepoException {
-
     // TODO: should this function return a list of objects and their nested versions instead of one flat last?
 
     if (StringUtil.isEmpty(bucketName)) {
@@ -260,7 +248,6 @@ public class RepoService extends BaseRepoService {
     }
 
     try {
-
       validatePagination(offset, limit);
 
       sqlService.getReadOnlyConnection();
@@ -270,7 +257,6 @@ public class RepoService extends BaseRepoService {
       }
 
       repoObjects = sqlService.listObjects(bucketName, offset, limit, includeDeleted, includePurged, tag);
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
@@ -278,35 +264,27 @@ public class RepoService extends BaseRepoService {
     }
 
     return this.addProxyData(repoObjects);
-
   }
 
   private List<RepoObject> addProxyData(List<RepoObject> repoObjects) throws RepoException {
-
     if (repoObjects != null && repoObjects.size() > 0 && this.serverSupportsReproxy()) {
-
       for (RepoObject repoObject : repoObjects) {
         repoObject.setReproxyURL(this.getObjectReproxy(repoObject));
       }
-
     }
 
     return repoObjects;
-
   }
 
   private RepoObject addProxyData(RepoObject repoObject) throws RepoException {
-
     if (repoObject != null && this.serverSupportsReproxy()) {
       repoObject.setReproxyURL(this.getObjectReproxy(repoObject));
     }
 
     return repoObject;
-
   }
 
   public RepoObject getObject(String bucketName, String key, ElementFilter elementFilter) throws RepoException {
-
     Lock readLock = this.rwLocks.get(bucketName + key).readLock();
     readLock.lock();
 
@@ -326,7 +304,6 @@ public class RepoService extends BaseRepoService {
       if (repoObject == null) {
         throw new RepoException(RepoException.Type.ObjectNotFound);
       }
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
@@ -335,11 +312,9 @@ public class RepoService extends BaseRepoService {
     }
 
     return this.addProxyData(repoObject);
-
   }
 
   public List<RepoObject> getObjectVersions(String bucketName, String objectKey) throws RepoException {
-
     if (objectKey == null) {
       throw new RepoException(RepoException.Type.NoKeyEntered);
     }
@@ -359,7 +334,6 @@ public class RepoService extends BaseRepoService {
     }
 
     return this.addProxyData(repoObjects);
-
   }
 
   public URL[] getObjectReproxy(RepoObject repoObject) throws RepoException {
@@ -381,7 +355,6 @@ public class RepoService extends BaseRepoService {
   }
 
   public String getObjectExportFileName(RepoObject repoObject) throws RepoException {
-
     String exportFileName = repoObject.getKey();
 
     if (repoObject.getDownloadName() != null) {
@@ -393,7 +366,6 @@ public class RepoService extends BaseRepoService {
     } catch (UnsupportedEncodingException e) {
       throw new RepoException(e);
     }
-
   }
 
   public InputStream getObjectInputStream(RepoObject repoObject) throws RepoException {
@@ -436,7 +408,6 @@ public class RepoService extends BaseRepoService {
     } else {
       deleteObject(bucketName, key, elementFilter, Status.DELETED);
     }
-
   }
 
   /**
@@ -454,14 +425,12 @@ public class RepoService extends BaseRepoService {
    *                       does not exists
    */
   public void deleteObject(String bucketName, String key, ElementFilter elementFilter, Status status) throws RepoException {
-
     Lock writeLock = this.rwLocks.get(bucketName + key).writeLock();
     writeLock.lock();
 
     boolean rollback = false;
     RepoObject repoObject = null;
     try {
-
       if (key == null) {
         throw new RepoException(RepoException.Type.NoKeyEntered);
       }
@@ -487,7 +456,6 @@ public class RepoService extends BaseRepoService {
       }
 
       if (Status.DELETED.equals(status)) {
-
         if (Status.DELETED.equals(repoObject.getStatus())) {
           throw new RepoException(RepoException.Type.ObjectNotFound);
         }
@@ -501,18 +469,15 @@ public class RepoService extends BaseRepoService {
               .setUuid(repoObject.getUuid())
               .build());
         }
-
       } else if (Status.PURGED.equals(status)) {
         purgeObjectContentAndDb(repoObject, elementFilter);
       }
 
       sqlService.transactionCommit();
       rollback = false;
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
-
       if (rollback) {
         sqlRollback("object " + bucketName + ", " + key + ", " + elementFilter);
       }
@@ -520,7 +485,6 @@ public class RepoService extends BaseRepoService {
       sqlReleaseConnection();
       writeLock.unlock();
     }
-
   }
 
   /**
@@ -535,9 +499,7 @@ public class RepoService extends BaseRepoService {
    *                       DB
    */
   private void purgeObjectContentAndDb(RepoObject repoObject, ElementFilter elementFilter) throws RepoException {
-
     try {
-
       try (InputStream content = getObjectInputStream(repoObject)) {
         if (content == null) {
           throw new RepoException(RepoException.Type.ObjectNotFound);
@@ -567,24 +529,19 @@ public class RepoService extends BaseRepoService {
           throw new RepoException(RepoException.Type.ObjectNotFound);
         }
       }
-
     } catch (SQLException e) {
       throw new RepoException(e);
     }
-
   }
 
   public RepoObject createObject(CreateMethod method,
                                  InputRepoObject inputRepoObject) throws RepoException {
-
-
     Lock writeLock = this.rwLocks.get(inputRepoObject.getBucketName() + inputRepoObject.getKey()).writeLock();
     writeLock.lock();
 
     RepoObject existingRepoObject;
 
     try {
-
       inputRepoObjectValidator.validate(inputRepoObject);
 
       try {
@@ -605,7 +562,6 @@ public class RepoService extends BaseRepoService {
           Timestamp.valueOf(inputRepoObject.getTimestamp()) : creationDate;
 
       switch (method) {
-
         case NEW:
           if (existingRepoObject != null) {
             throw new RepoException(RepoException.Type.CantCreateNewObjectWithUsedKey);
@@ -631,13 +587,11 @@ public class RepoService extends BaseRepoService {
     } finally {
       writeLock.unlock();
     }
-
   }
 
   private RepoObject createNewObject(InputRepoObject inputRepoObject,
                                      Timestamp timestamp,
                                      Timestamp cretationDateTime) throws RepoException {
-
     ObjectStore.UploadInfo uploadInfo = null;
     Integer versionNumber;
     Bucket bucket;
@@ -647,13 +601,11 @@ public class RepoService extends BaseRepoService {
     boolean rollback = false;
 
     try {
-
       try {
         sqlService.getConnection();
         rollback = true;
 
         bucket = sqlService.getBucket(inputRepoObject.getBucketName());
-
       } catch (SQLException e) {
         throw new RepoException(e);
       }
@@ -698,7 +650,6 @@ public class RepoService extends BaseRepoService {
 
       // determine if the object should be added to the store or not
       if (objectStore.objectExists(repoObject)) {
-
 //      if (FileUtils.contentEquals(tempFile, new File(objectStore.getObjectLocationString(bucketName, checksum)))) {
 //        log.info("not adding object to store since content exists");
 //      } else {
@@ -707,7 +658,6 @@ public class RepoService extends BaseRepoService {
 //      }
 
         // dont bother storing the file since the data already exists in the system
-
       } else {
         if (!objectStore.saveUploadedObject(new Bucket(inputRepoObject.getBucketName()),
             uploadInfo, repoObject)) {
@@ -728,11 +678,9 @@ public class RepoService extends BaseRepoService {
 
       sqlService.transactionCommit();
       rollback = false;
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
-
       if (uploadInfo != null) {
         objectStore.deleteTempUpload(uploadInfo);
       }
@@ -753,14 +701,12 @@ public class RepoService extends BaseRepoService {
       Timestamp timestamp,
       RepoObject repoObject,
       Timestamp cretationDateTime) throws RepoException {
-
     ObjectStore.UploadInfo uploadInfo = null;
     boolean rollback = false;
 
     RepoObject newRepoObject = null;
 
     try {
-
       newRepoObject = createNewRepoObjectForUpate(inputRepoObject, repoObject, timestamp, cretationDateTime);
 
       sqlService.getConnection();
@@ -805,11 +751,9 @@ public class RepoService extends BaseRepoService {
 
       sqlService.transactionCommit();
       rollback = false;
-
     } catch (SQLException | IOException e) {
       throw new RepoException(e);
     } finally {
-
       if (uploadInfo != null) {
         objectStore.deleteTempUpload(uploadInfo);
       }
@@ -820,7 +764,6 @@ public class RepoService extends BaseRepoService {
       }
 
       sqlReleaseConnection();
-
     }
 
     return newRepoObject;
@@ -873,7 +816,6 @@ public class RepoService extends BaseRepoService {
     }
 
     return newRepoObject;
-
   }
 
   @Override

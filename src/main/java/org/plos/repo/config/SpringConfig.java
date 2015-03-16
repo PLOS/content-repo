@@ -71,7 +71,6 @@ public class SpringConfig {
 
   @Bean
   public ObjectStore objectStore() throws Exception {
-
     Context initContext = new InitialContext();
     Context envContext = (Context) initContext.lookup("java:/comp/env");
     ObjectStore objStore = (ObjectStore) envContext.lookup("repo/objectStore");
@@ -83,7 +82,6 @@ public class SpringConfig {
 
   @Bean
   public SqlService sqlService() throws Exception {
-
     Context initContext = new InitialContext();
     Context envContext = (Context) initContext.lookup("java:/comp/env");
     DataSource ds = (DataSource) envContext.lookup("jdbc/repoDB");
@@ -101,15 +99,11 @@ public class SpringConfig {
     Resource sqlFile;
 
     if (dbBackend.equalsIgnoreCase("MySQL")) {
-
       service = new MysqlService();
       sqlFile = new ClassPathResource("setup.mysql");
-
     } else if (dbBackend.equalsIgnoreCase("HSQL Database Engine")) {
-
       service = new HsqlService();
       sqlFile = new ClassPathResource("setup.hsql");
-
     } else {
       throw new Exception("Database type not supported: " + dbBackend);
     }

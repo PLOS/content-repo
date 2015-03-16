@@ -36,20 +36,15 @@ public class UUIDFormatter {
    * @throws RepoException
    */
   public static UUID getUuid(String uuid) throws RepoException {
-
     if (!StringUtil.isEmpty(uuid)) {
-
       try {
         return UUID.fromString(uuid);
       } catch (IllegalArgumentException e) {
         throw new RepoException(RepoException.Type.InvalidUuid);
       }
-
     }
 
     return null;
-
   }
-
 
 }

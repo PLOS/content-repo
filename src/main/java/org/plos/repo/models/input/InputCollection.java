@@ -102,4 +102,5 @@ public class InputCollection {
   public void setUserMetadata(String userMetadata) {
     this.userMetadata = userMetadata;
   }
+
 }

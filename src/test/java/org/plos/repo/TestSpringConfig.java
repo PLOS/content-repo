@@ -82,7 +82,6 @@ public class TestSpringConfig {
 
   @Bean
   public SqlService sqlService() throws Exception {
-
     JDBCDataSource ds = new JDBCDataSource();
     ds.setUrl("jdbc:hsqldb:mem:plosrepo-unittest-hsqldb;shutdown=true;sql.syntax_mys=true");
     ds.setUser("");
@@ -101,4 +100,5 @@ public class TestSpringConfig {
 
     return service;
   }
+
 }

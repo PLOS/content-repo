@@ -77,7 +77,6 @@ public class CachingHeadersTest extends RepoBaseJerseyTest {
 
   @Test
   public void testReadWithObjectModifiedBeforeIfModifiedSinceHeaderNoRepoxyHeaders() throws Exception {
-
     when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
         .thenReturn(getObject(modifiedSinceDateTime.minusSeconds(1)));
 
@@ -94,7 +93,6 @@ public class CachingHeadersTest extends RepoBaseJerseyTest {
 
   @Test
   public void testReadWithObjectModifiedEqualToIfModifiedSinceHeaderNoRepoxyHeaders() throws Exception {
-
     when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
         .thenReturn(getObject(modifiedSinceDateTime));
 
@@ -111,7 +109,6 @@ public class CachingHeadersTest extends RepoBaseJerseyTest {
 
   @Test
   public void testReadNoIfModifiedSinceHeaderNoRepoxyHeaders() throws Exception {
-
     when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
         .thenReturn(getObject(modifiedSinceDateTime));
 
@@ -127,7 +124,6 @@ public class CachingHeadersTest extends RepoBaseJerseyTest {
 
   @Test
   public void testReadWithObjectModifiedAfterIfModifiedSinceHeaderNoRepoxyHeaders() throws Exception {
-
     when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
         .thenReturn(getObject(modifiedSinceDateTime.plusSeconds(1)));
 
@@ -144,7 +140,6 @@ public class CachingHeadersTest extends RepoBaseJerseyTest {
 
   @Test
   public void testReadWithObjectModifiedBeforeIfModifiedSinceHeaderWithRepoxyHeaders() throws Exception {
-
     when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
         .thenReturn(getObject(modifiedSinceDateTime.minusSeconds(1)));
 
@@ -184,7 +179,6 @@ public class CachingHeadersTest extends RepoBaseJerseyTest {
 
   @Test
   public void testReadWithObjectModifiedAfterIfModifiedSinceHeaderWithRepoxyHeaders() throws Exception {
-
     when(mockRepoService.getObject(anyString(), anyString(), any(ElementFilter.class)))
         .thenReturn(getObject(modifiedSinceDateTime.plusSeconds(1)));
 
@@ -241,4 +235,5 @@ public class CachingHeadersTest extends RepoBaseJerseyTest {
     repoObject.setCreationDate(new Timestamp(datetime.toDate().getTime()));
     return repoObject;
   }
+
 }

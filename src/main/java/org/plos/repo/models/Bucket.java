@@ -96,4 +96,5 @@ public class Bucket {
   public void setTotalObjects(Integer totalObjects) {
     this.totalObjects = totalObjects;
   }
+
 }

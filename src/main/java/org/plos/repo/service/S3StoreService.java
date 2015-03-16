@@ -71,7 +71,6 @@ public class S3StoreService extends ObjectStore {
 
       obj.close();
       return true;
-
     } catch (Exception e) {
       return false;
     }
@@ -84,7 +83,6 @@ public class S3StoreService extends ObjectStore {
 
   @Override
   public String[] getFilePaths(RepoObject repoObject) throws RepoException {
-
     String s3Url = s3Client.getResourceUrl(repoObject.getBucketName(), repoObject.getChecksum());
 
     if (s3Url == null) {
@@ -101,7 +99,6 @@ public class S3StoreService extends ObjectStore {
     } catch (AmazonClientException e) {
       throw new RepoException(e);
     }
-
   }
 
   @Override
@@ -114,7 +111,6 @@ public class S3StoreService extends ObjectStore {
 
   @Override
   public Optional<Boolean> createBucket(Bucket bucket) {
-
     try {
       CreateBucketRequest bucketRequest = new CreateBucketRequest(bucket.getBucketName(), Region.US_West);
       bucketRequest.withCannedAcl(CannedAccessControlList.PublicRead);
@@ -125,12 +121,10 @@ public class S3StoreService extends ObjectStore {
       log.error("Error creating bucket", e);
       return FALSE;
     }
-
   }
 
   @Override
   public Optional<Boolean> deleteBucket(Bucket bucket) {
-
     try {
       s3Client.deleteBucket(bucket.getBucketName());
       return TRUE;
@@ -149,7 +143,6 @@ public class S3StoreService extends ObjectStore {
    */
   @Override
   public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException {
-
     final String tempFileLocation = temp_upload_dir + "/" + UUID.randomUUID().toString() + ".tmp";
 
     try {
@@ -190,7 +183,6 @@ public class S3StoreService extends ObjectStore {
           return checksum;
         }
       };
-
     } catch (Exception e) {
       throw new RepoException(e);
     }
@@ -198,7 +190,6 @@ public class S3StoreService extends ObjectStore {
 
   @Override
   public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
-
     int retries = 5;
     int tryCount = 0;
     int waitSecond = 4;
@@ -231,14 +222,11 @@ public class S3StoreService extends ObjectStore {
     putObjectRequest.setMetadata(objectMetadata);
 
     while (tryCount < retries) {
-
       try {
         s3Client.putObject(putObjectRequest); // TODO: check result and do something about it
         tempFile.delete();
         return true;
-
       } catch (Exception e) {
-
         tryCount++;
 
         log.error("Error during putObject", e);
@@ -247,7 +235,6 @@ public class S3StoreService extends ObjectStore {
           Thread.sleep(waitSecond * 1000);
         } catch (Exception e2) {
         }
-
       }
     }
 
@@ -269,4 +256,5 @@ public class S3StoreService extends ObjectStore {
       return false;
     }
   }
+
 }

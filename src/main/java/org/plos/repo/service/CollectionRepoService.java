@@ -63,7 +63,6 @@ public class CollectionRepoService extends BaseRepoService {
    * @throws org.plos.repo.service.RepoException
    */
   public List<RepoCollection> listCollections(String bucketName, Integer offset, Integer limit, boolean includeDeleted, String tag) throws RepoException {
-
     if (offset == null) {
       offset = 0;
     }
@@ -72,7 +71,6 @@ public class CollectionRepoService extends BaseRepoService {
     }
 
     try {
-
       validatePagination(offset, limit);
 
       sqlService.getReadOnlyConnection();
@@ -86,13 +84,11 @@ public class CollectionRepoService extends BaseRepoService {
       }
 
       return sqlService.listCollectionsMetaData(bucketName, offset, limit, includeDeleted, tag);
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
       sqlReleaseConnection();
     }
-
   }
 
   /**
@@ -107,7 +103,6 @@ public class CollectionRepoService extends BaseRepoService {
    * @throws RepoException
    */
   public RepoCollection getCollection(String bucketName, String key, ElementFilter elementFilter) throws RepoException {
-
     RepoCollection repoCollection;
 
     try {
@@ -128,7 +123,6 @@ public class CollectionRepoService extends BaseRepoService {
       if (repoCollection == null) {
         throw new RepoException(RepoException.Type.CollectionNotFound);
       }
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
@@ -136,7 +130,6 @@ public class CollectionRepoService extends BaseRepoService {
     }
 
     return repoCollection;
-
   }
 
   /**
@@ -148,7 +141,6 @@ public class CollectionRepoService extends BaseRepoService {
    * @throws org.plos.repo.service.RepoException
    */
   public List<RepoCollection> getCollectionVersions(String bucketName, String key) throws RepoException {
-
     try {
       sqlService.getReadOnlyConnection();
 
@@ -167,7 +159,6 @@ public class CollectionRepoService extends BaseRepoService {
       }
 
       return repoCollections;
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
@@ -186,11 +177,9 @@ public class CollectionRepoService extends BaseRepoService {
    * @throws org.plos.repo.service.RepoException
    */
   public void deleteCollection(String bucketName, String key, ElementFilter elementFilter) throws RepoException {
-
     boolean rollback = false;
 
     try {
-
       if (StringUtil.isEmpty(key)) {
         throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
       }
@@ -224,19 +213,15 @@ public class CollectionRepoService extends BaseRepoService {
 
       sqlService.transactionCommit();
       rollback = false;
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
-
       if (rollback) {
         sqlRollback("object " + bucketName + ", " + key + ", " + elementFilter.toString());
       }
 
       sqlReleaseConnection();
-
     }
-
   }
 
   /**
@@ -250,7 +235,6 @@ public class CollectionRepoService extends BaseRepoService {
    * @throws RepoException
    */
   public RepoCollection createCollection(CreateMethod method, InputCollection inputCollection) throws RepoException {
-
     inputCollectionValidator.validate(inputCollection);
 
     RepoCollection existingRepoCollection = null;
@@ -258,7 +242,6 @@ public class CollectionRepoService extends BaseRepoService {
     RepoCollection newRepoCollection = null;
 
     try {
-
       // get connection
       sqlService.getConnection();
       rollback = true;
@@ -273,20 +256,17 @@ public class CollectionRepoService extends BaseRepoService {
           Timestamp.valueOf(inputCollection.getTimestamp()) : creationDate;
 
       if (CreateMethod.NEW.equals(method)) {
-
         if (existingRepoCollection != null) {
           log.debug("Error trying to create a collection that already exists. Key: " + inputCollection.getKey() + " create method : new ");
           throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
         }
         newRepoCollection = createNewCollection(inputCollection, timestamp, creationDate);
-
       } else if (CreateMethod.VERSION.equals(method)) {
         if (existingRepoCollection == null) {
           log.debug(" ************ Error trying to version a collection that does not exists. Key: " + inputCollection.getKey() + " create method : version ");
           throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
         }
         newRepoCollection = updateCollection(inputCollection, timestamp, existingRepoCollection, creationDate);
-
       } else if (CreateMethod.AUTO.equals(method)) {
         log.debug("Creation Method: auto. Key: " + inputCollection.getKey());
         if (existingRepoCollection == null) {
@@ -294,18 +274,15 @@ public class CollectionRepoService extends BaseRepoService {
         } else {
           newRepoCollection = updateCollection(inputCollection, timestamp, existingRepoCollection, creationDate);
         }
-
       } else {
         throw new RepoException(RepoException.Type.InvalidCreationMethod);
       }
 
       sqlService.transactionCommit();
       rollback = false;
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
-
       if (rollback) {
         sqlRollback("collection " + inputCollection.getBucketName() + ", " + inputCollection.getKey());
       }
@@ -334,7 +311,6 @@ public class CollectionRepoService extends BaseRepoService {
       repoCollection.setUserMetadata(inputCollection.getUserMetadata());
 
       return createCollection(repoCollection, inputCollection.getObjects(), Operation.CREATE_COLLECTION);
-
     } catch (SQLIntegrityConstraintViolationException e) {
       log.debug("Error trying to create a collection, key: " + inputCollection.getKey() + " . SQLIntegrityConstraintViolationException:  " + e.getMessage());
       throw new RepoException(RepoException.Type.CantCreateNewCollectionWithUsedKey);
@@ -342,13 +318,10 @@ public class CollectionRepoService extends BaseRepoService {
       log.debug("SQLException:  " + e.getMessage());
       throw new RepoException(e);
     }
-
-
   }
 
   private RepoCollection updateCollection(InputCollection inputCollection, Timestamp timestamp,
                                           RepoCollection existingRepoCollection, Timestamp creationDate) throws RepoException {
-
     RepoCollection repoCollection = new RepoCollection(inputCollection.getKey(),
         existingRepoCollection.getBucketId(), inputCollection.getBucketName(), Status.USED);
     repoCollection.setTimestamp(timestamp);
@@ -364,12 +337,10 @@ public class CollectionRepoService extends BaseRepoService {
       log.debug("SQLException:  " + e.getMessage());
       throw new RepoException(e);
     }
-
   }
 
   private RepoCollection createCollection(RepoCollection repoCollection,
                                           List<InputObject> inputObjects, Operation operation) throws SQLException, RepoException {
-
     Integer versionNumber = sqlService.getCollectionNextAvailableVersion(repoCollection.getBucketName(), repoCollection.getKey());   // change to support collections
     repoCollection.setVersionNumber(versionNumber);
 
@@ -382,12 +353,10 @@ public class CollectionRepoService extends BaseRepoService {
     }
 
     for (InputObject inputObject : inputObjects) {
-
       UUID objectUUID = UUIDFormatter.getUuid(inputObject.getUuid());
       if (sqlService.insertCollectionObjects(collId, inputObject.getKey(), repoCollection.getBucketName(), objectUUID) == 0) {
         throw new RepoException(RepoException.Type.ObjectCollectionNotFound);
       }
-
     }
 
     auditOperation(new Audit.AuditBuilder(repoCollection.getBucketName(), operation)
@@ -396,12 +365,11 @@ public class CollectionRepoService extends BaseRepoService {
         .build());
 
     return repoCollection;
-
-
   }
 
   @Override
   public Logger getLog() {
     return log;
   }
+
 }

@@ -49,4 +49,5 @@ public class Bucket {
   public void setBytes(Long bytes) {
     this.bytes = bytes;
   }
+
 }

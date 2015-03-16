@@ -80,9 +80,7 @@ public class CollectionController {
       @ApiParam(required = false) @QueryParam("limit") Integer limit,
       @ApiParam(required = false) @DefaultValue("false") @QueryParam("includeDeleted") boolean includeDeleted,
       @ApiParam(required = false) @QueryParam("tag") String tag) {
-
     try {
-
       List<RepoCollection> repoCollections = collectionRepoService.listCollections(bucketName, offset, limit, includeDeleted, tag);
       List<RepoCollectionOutput> outputCollections = Lists.newArrayList(Iterables.transform(repoCollections, RepoCollectionOutput.typeFunction()));
 
@@ -90,12 +88,9 @@ public class CollectionController {
           .entity(new GenericEntity<List<RepoCollectionOutput>>(outputCollections) {
           })
           .build();
-
     } catch (RepoException e) {
-
       return ObjectController.handleError(e);
     }
-
   }
 
   @GET
@@ -112,9 +107,7 @@ public class CollectionController {
       @ApiParam(required = true) @PathParam("bucketName") String bucketName,
       @ApiParam(required = true) @QueryParam("key") String key,
       @ApiParam("collectionFilter") @BeanParam ElementFilter elementFilter) {
-
     try {
-
       RepoCollection repoCollection = collectionRepoService.getCollection(bucketName, key, elementFilter);
 
       RepoCollectionOutput outputCollection = new RepoCollectionOutput(repoCollection);
@@ -125,7 +118,6 @@ public class CollectionController {
     } catch (RepoException e) {
       return ObjectController.handleError(e);
     }
-
   }
 
   @GET
@@ -141,9 +133,7 @@ public class CollectionController {
   public Response getCollectionVersions(
       @ApiParam(required = true) @PathParam("bucketName") String bucketName,
       @ApiParam(required = true) @QueryParam("key") String key) {
-
     try {
-
       List<RepoCollection> repoCollections = collectionRepoService.getCollectionVersions(bucketName, key);
 
       List<RepoCollectionOutput> outputCollections = Lists.newArrayList(Iterables.transform(repoCollections, RepoCollectionOutput.typeFunction()));
@@ -155,7 +145,6 @@ public class CollectionController {
     } catch (RepoException e) {
       return ObjectController.handleError(e);
     }
-
   }
 
   @DELETE
@@ -171,14 +160,12 @@ public class CollectionController {
       @ApiParam(required = true) @PathParam("bucketName") String bucketName,
       @ApiParam(required = true) @QueryParam("key") String key,
       @ApiParam("collectionFilter") @BeanParam ElementFilter elementFilter) {
-
     try {
       collectionRepoService.deleteCollection(bucketName, key, elementFilter);
       return Response.status(Response.Status.OK).build();
     } catch (RepoException e) {
       return ObjectController.handleError(e);
     }
-
   }
 
 
@@ -193,9 +180,7 @@ public class CollectionController {
       @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
   })
   public Response createOrUpdateCollection(@ApiParam("collection") InputCollection inputCollection) {
-
     try {
-
       RepoService.CreateMethod method;
 
       if (inputCollection.getCreate() == null) {
@@ -215,12 +200,9 @@ public class CollectionController {
       RepoCollectionOutput outputCollection = new RepoCollectionOutput(repoCollection);
 
       return Response.status(Response.Status.CREATED).entity(outputCollection).build();
-
     } catch (RepoException e) {
       return ObjectController.handleError(e);
     }
-
   }
-
 
 }

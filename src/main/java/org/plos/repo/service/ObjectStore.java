@@ -64,10 +64,8 @@ public abstract class ObjectStore {
    * @throws RepoException
    */
   protected URL[] getRedirectURLs(RepoObject repoObject) throws RepoException {
-
     URL[] urls = new URL[0];
     try {
-
       String[] paths = getFilePaths(repoObject);
 
       if (paths.length > 0) {
@@ -78,7 +76,6 @@ public abstract class ObjectStore {
           urls[i] = new URL(paths[i]);
         }
       }
-
     } catch (RepoException e) {
       if (RepoException.Type.ObjectFilePathMissing.equals(e.getType())) {
         repoObject.setStatus(Status.MISSING_DATA);
@@ -96,7 +93,6 @@ public abstract class ObjectStore {
       throw new RepoException(e);
     }
     return urls;
-
   }
 
   abstract public boolean hasXReproxy();

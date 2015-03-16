@@ -32,7 +32,6 @@ public class HsqlService extends SqlService {
 
   @PreDestroy
   public void destroy() throws Exception {
-
     // kludge for dealing with HSQLDB pooling and unit tests since shutdown=true does not fire
 
     Connection connection = dataSource.getConnection();
@@ -44,7 +43,6 @@ public class HsqlService extends SqlService {
   }
 
   public void postDbInit() throws SQLException {
-
     // kludges for dealing with HSQLDB
 
     Connection connection = dataSource.getConnection();
@@ -65,7 +63,6 @@ public class HsqlService extends SqlService {
     p.close();
     pc.close();
     connection.close();
-
   }
 
 }

@@ -52,7 +52,6 @@ public class BucketLockTest extends RepoBaseSpringTest {
 
   @Before
   public void setup() throws Exception {
-
     clearData(objectStore, sqlService);
 
     spyObjectStore = spy(this.objectStore);
@@ -74,7 +73,6 @@ public class BucketLockTest extends RepoBaseSpringTest {
 
   @Test
   public void testManyInserts() throws Exception {
-
     final int INSERT_THREADS = 10;
     final int DELETE_THREADS = 0;
     final int READER_THREADS = 0;
@@ -94,7 +92,6 @@ public class BucketLockTest extends RepoBaseSpringTest {
 
   @Test
   public void testManyDeletesForExistingBucket() throws Exception {
-
     Bucket bucket = repoService.createBucket(BUCKET_NAME, CREATION_DATE_TIME_STRING);
 
     final int INSERT_THREADS = 0;
@@ -113,7 +110,6 @@ public class BucketLockTest extends RepoBaseSpringTest {
 
   @Test
   public void testInsertsAndDeletes() throws Exception {
-
     final int INSERT_THREADS = 10;
     final int DELETE_THREADS = 10;
     final int READER_THREADS = 0;
@@ -135,7 +131,6 @@ public class BucketLockTest extends RepoBaseSpringTest {
 
   private void execute(final int insertThreads, final int deleteThreads, final int readerThreads)
       throws Exception {
-
     /* ------------------------------------------------------------------ */
     /*  INSERT                                                            */
     /* ------------------------------------------------------------------ */
@@ -192,4 +187,5 @@ public class BucketLockTest extends RepoBaseSpringTest {
     startGate.countDown(); /* start all client threads                    */
     endGate.await();       /* wait until all threads have finished (L=0)  */
   }
+
 }

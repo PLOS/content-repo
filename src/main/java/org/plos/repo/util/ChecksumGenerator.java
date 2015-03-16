@@ -37,7 +37,6 @@ public class ChecksumGenerator {
   }
 
   public String generateVersionChecksum(RepoCollection repoCollection, List<String> objectsChecksum) throws RepoException {
-
     Collections.sort(objectsChecksum);
 
     StringBuilder sb = new StringBuilder();
@@ -56,7 +55,6 @@ public class ChecksumGenerator {
   }
 
   public String generateVersionChecksum(RepoObject repoObject) throws RepoException {
-
     StringBuilder sb = new StringBuilder();
 
     sb.append(repoObject.getKey());
@@ -80,7 +78,6 @@ public class ChecksumGenerator {
   }
 
   public MessageDigest getDigestMessage() throws RepoException {
-
     try {
       MessageDigest messageDigest = MessageDigest.getInstance(DIGEST_ALGORITHM);
       messageDigest.reset();
@@ -88,12 +85,9 @@ public class ChecksumGenerator {
     } catch (NoSuchAlgorithmException e) {
       throw new RepoException(e);
     }
-
-
   }
 
   public String checksumToString(byte[] checksum) {
-
     StringBuilder sb = new StringBuilder();
 
     for (byte b : checksum) {
@@ -104,11 +98,9 @@ public class ChecksumGenerator {
   }
 
   private byte[] digest(String message) throws RepoException {
-
     MessageDigest messageDigest = getDigestMessage();
     messageDigest.update(message.getBytes());
     return messageDigest.digest();
-
   }
 
 }

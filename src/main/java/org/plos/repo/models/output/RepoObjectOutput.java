@@ -50,11 +50,9 @@ public class RepoObjectOutput {
 
 
   private RepoObjectOutput() {
-
   }
 
   public RepoObjectOutput(RepoObject repoObject) {
-
     this.key = repoObject.getKey();
     this.checksum = repoObject.getChecksum();
     this.timestamp = TimestampFormatter.getFormattedTimestamp(repoObject.getTimestamp());
@@ -76,7 +74,6 @@ public class RepoObjectOutput {
     if (urls != null) {
       reproxyURL = Arrays.asList(urls);
     }
-
   }
 
   public String getKey() {
@@ -185,12 +182,10 @@ public class RepoObjectOutput {
 
   public static Function<RepoObject, RepoObjectOutput> typeFunction() {
     return new Function<RepoObject, RepoObjectOutput>() {
-
       @Override
       public RepoObjectOutput apply(RepoObject repoObject) {
         return new RepoObjectOutput(repoObject);
       }
-
     };
   }
 

@@ -49,4 +49,5 @@ public class InputObject {
   public void setUuid(String uuid) {
     this.uuid = uuid;
   }
+
 }

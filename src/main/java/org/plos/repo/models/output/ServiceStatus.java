@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @XmlRootElement
 public class ServiceStatus {
+
   public int bucketCount;
   public String serviceStarted;
 
@@ -42,4 +43,5 @@ public class ServiceStatus {
   public Long getWritesSinceStart() {
     return writesSinceStart.get();
   }
+
 }

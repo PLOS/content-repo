@@ -82,7 +82,6 @@ public class ChecksumGeneratorTest {
 
   @Test
   public void generateChecksumForSameCollection() throws RepoException {
-
     mockCollectionCalls(repoCollection1, COLLECTION_KEY, TIMESTAMP, TAG);
     mockCollectionCalls(repoCollection2, COLLECTION_KEY, TIMESTAMP, TAG);
 
@@ -95,13 +94,11 @@ public class ChecksumGeneratorTest {
 
     verifyCollectionCalls(repoCollection1, 2);
     verifyCollectionCalls(repoCollection2, 2);
-
   }
 
 
   @Test
   public void generateChecksumForDifObjsCollection() throws RepoException {
-
     mockCollectionCalls(repoCollection1, COLLECTION_KEY, TIMESTAMP, TAG);
     mockCollectionCalls(repoCollection2, COLLECTION_KEY, TIMESTAMP, null);
 
@@ -114,12 +111,10 @@ public class ChecksumGeneratorTest {
 
     verifyCollectionCalls(repoCollection1, 2);
     verifyCollectionCalls(repoCollection2, 1);
-
   }
 
   @Test
   public void generateChecksumForSameObject() throws RepoException {
-
     mockObjectCalls(repoObject1, OBJECT_KEY1, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
     mockObjectCalls(repoObject2, OBJECT_KEY1, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
 
@@ -129,12 +124,10 @@ public class ChecksumGeneratorTest {
     assertNotNull(checksumObj1);
     assertNotNull(checksumObj2);
     assertEquals(checksumObj1, checksumObj2);
-
   }
 
   @Test
   public void generateChecksumForDifObject() throws RepoException {
-
     mockObjectCalls(repoObject1, OBJECT_KEY1, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
     mockObjectCalls(repoObject2, OBJECT_KEY1, TIMESTAMP, TAG, CONTENT_TYPE1, null, OBJ1_CHECKSUM);
 
@@ -147,7 +140,6 @@ public class ChecksumGeneratorTest {
 
     verifyObjectCalls(repoObject1, 2, 2, 2);
     verifyObjectCalls(repoObject2, 2, 2, 1);
-
   }
 
   private void mockObjectCalls(RepoObject repoObject, String key, Timestamp timestamp, String tag, String contentType, String downloadName, String checksum) {

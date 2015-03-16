@@ -24,6 +24,7 @@ import java.util.UUID;
  * Represents the operation's values to audit
  */
 public class Audit {
+
   // All final attributes
   private final Integer id;
   private final String bucket;
@@ -121,4 +122,5 @@ public class Audit {
     result.append(" Uuid: ").append(this.uuid).append(" } ");
     return result.toString();
   }
+
 }

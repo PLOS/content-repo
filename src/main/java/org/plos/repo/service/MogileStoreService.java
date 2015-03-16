@@ -69,7 +69,6 @@ public class MogileStoreService extends ObjectStore {
 
       in.close();
       return true;
-
     } catch (Exception e) {
       return false;
     }
@@ -84,16 +83,13 @@ public class MogileStoreService extends ObjectStore {
   public String[] getFilePaths(RepoObject repoObject) throws RepoException {
     String[] paths = null;
     try {
-
       paths = mfs.getPaths(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()), true);
 
       if (paths == null) {
         throw new RepoException(RepoException.Type.ObjectFilePathMissing);
       }
-
     } catch (Exception e) {
       throw new RepoException(e);
-
     }
 
     return paths;
@@ -126,7 +122,6 @@ public class MogileStoreService extends ObjectStore {
 
   @Override
   public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException {
-
     final String tempFileLocation = UUID.randomUUID().toString() + ".tmp";
 
     // NOTE: in the future we can avoid having to read to memory by using a
@@ -161,7 +156,6 @@ public class MogileStoreService extends ObjectStore {
           return checksum;
         }
       };
-
     } catch (Exception e) {
       throw new RepoException(e);
     }

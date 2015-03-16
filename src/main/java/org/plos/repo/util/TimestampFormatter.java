@@ -26,10 +26,8 @@ public class TimestampFormatter {
   private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
   public static String getFormattedTimestamp(Timestamp timestamp) {
-
     DateFormat df = new SimpleDateFormatThreadSafe(TIMESTAMP_FORMAT);
     return df.format(timestamp);
-
   }
 
 }

@@ -69,15 +69,12 @@ public class RepoServiceTest {
 
   @Before
   public void setUp() {
-
     repoService = new RepoService();
     initMocks(this);
-
   }
 
   @Test
   public void testListObjectsHappyPath() throws RepoException, SQLException, MalformedURLException {
-
     doNothing().when(sqlService).getReadOnlyConnection();
     ;
     when(sqlService.getBucket(VALID_BUCKET)).thenReturn(bucket);
@@ -111,7 +108,6 @@ public class RepoServiceTest {
     verify(objectStore).hasXReproxy();
     verify(objectStore).getRedirectURLs(ob);
     verify(sqlService).releaseConnection();
-
   }
 
 }

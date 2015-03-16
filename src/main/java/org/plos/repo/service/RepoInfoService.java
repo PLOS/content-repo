@@ -56,18 +56,15 @@ public class RepoInfoService {
 
 
   private void sqlReleaseConnection() throws RepoException {
-
     try {
       sqlService.releaseConnection();
     } catch (SQLException e) {
       throw new RepoException(e);
     }
-
   }
 
   @PostConstruct
   public void init() {
-
     startTime = new Date();
 
     try (InputStream is = getClass().getResourceAsStream("/version.properties")) {
@@ -88,7 +85,6 @@ public class RepoInfoService {
   }
 
   public ServiceConfigInfo getConfig() {
-
     ServiceConfigInfo config = new ServiceConfigInfo();
     config.version = projectVersion;
     config.objectStoreBackend = objectStore.getClass().toString();
@@ -98,7 +94,6 @@ public class RepoInfoService {
   }
 
   public ServiceStatus getStatus() throws RepoException {
-
     ServiceStatus status = new ServiceStatus();
 
     List<Bucket> bucketList = repoService.listBuckets();
@@ -112,7 +107,6 @@ public class RepoInfoService {
   }
 
   public Bucket bucketInfo(String bucketName) throws RepoException {
-
     try {
       sqlService.getReadOnlyConnection();
 
@@ -126,7 +120,6 @@ public class RepoInfoService {
       bucket.setActiveObjects(sqlService.objectCount(false, bucketName));
 
       return bucket;
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {

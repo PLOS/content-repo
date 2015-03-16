@@ -31,7 +31,6 @@ public class InputCollectionValidator {
   private TimestampInputValidator timestampValidator;
 
   public void validate(InputCollection collection) throws RepoException {
-
     if (collection.getKey() == null) {
       throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
     }
@@ -46,7 +45,6 @@ public class InputCollectionValidator {
     if (collection.getObjects() == null || collection.getObjects().size() == 0) {
       throw new RepoException(RepoException.Type.CantCreateCollectionWithNoObjects);
     }
-
   }
 
 }

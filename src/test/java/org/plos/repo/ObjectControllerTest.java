@@ -135,7 +135,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void createWithExistingKey() {
-
     createBucket(bucketName, CREATION_DATE_TIME);
 
     assertEquals(target("/objects").request()
@@ -164,7 +163,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void createWithEmptyData() {
-
     createBucket(bucketName, CREATION_DATE_TIME);
 
     assertRepoError(target("/objects").request()
@@ -181,7 +179,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void createVersionWithoutOrig() {
-
     createBucket(bucketName, CREATION_DATE_TIME);
 
     assertRepoError(target("/objects").request()
@@ -193,12 +190,10 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
                     .field("file", testData2, MediaType.TEXT_PLAIN_TYPE),
                 MediaType.MULTIPART_FORM_DATA)),
         Response.Status.BAD_REQUEST, RepoException.Type.CantCreateVersionWithNoOrig);
-
   }
 
   @Test
   public void createWithInvalidCreateMethod() {
-
     createBucket(bucketName, CREATION_DATE_TIME);
 
     assertRepoError(target("/objects").request()
@@ -214,7 +209,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void invalidOffset() {
-
     createBucket(bucketName, CREATION_DATE_TIME);
 
     assertRepoError(target("/objects").queryParam("bucketName", bucketName)
@@ -224,12 +218,10 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
             .get(),
         Response.Status.BAD_REQUEST,
         RepoException.Type.InvalidOffset);
-
   }
 
   @Test
   public void deleteObjectUsingNotUniqueTag() {
-
     createBucket(bucketName, CREATION_DATE_TIME);
 
     assertEquals(Response.Status.CREATED.getStatusCode(),
@@ -263,13 +255,11 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
             .queryParam("tag", "DRAFT")
             .request().accept(MediaType.APPLICATION_JSON_TYPE).delete(),
         Response.Status.BAD_REQUEST, RepoException.Type.MoreThanOneTaggedObject);
-
   }
 
 
   @Test
   public void deleteWithErrors() {
-
     assertRepoError(target("/objects/" + bucketName).queryParam("version", "0").request().accept(MediaType.APPLICATION_JSON_TYPE).delete(), Response.Status.BAD_REQUEST, RepoException.Type.NoKeyEntered);
 
     assertRepoError(target("/objects/" + bucketName).queryParam("key", "object1").request().accept(MediaType.APPLICATION_JSON_TYPE).delete(), Response.Status.BAD_REQUEST, RepoException.Type.NoFilterEntered);
@@ -284,7 +274,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void purgeObject() {
-
     createBucket(bucketName, CREATION_DATE_TIME);
 
     Response response = target("/objects").request(MediaType.APPLICATION_JSON_TYPE)
@@ -314,12 +303,10 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
     assertRepoError(target("/objects/meta/" + bucketName).queryParam("key", "object1").request().accept(MediaType.APPLICATION_JSON_TYPE).get(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
     assertRepoError(target("/objects/" + bucketName).queryParam("key", "object1").queryParam("fetchMetadata", "false").request().accept(MediaType.APPLICATION_JSON_TYPE).get(), Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
-
   }
 
   @Test
   public void purgeObjectMoreThanOneObjectWithSameContent() {
-
     createBucket(bucketName, CREATION_DATE_TIME);
 
     Response responseObj1 = target("/objects").request(MediaType.APPLICATION_JSON_TYPE)
@@ -374,7 +361,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
         .request().accept(MediaType.APPLICATION_JSON_TYPE).get();
     assertNotNull(object2MetaResp);
     assertEquals(Response.Status.OK.getStatusCode(), object2MetaResp.getStatus());
-
   }
 
   @Test
@@ -384,7 +370,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void offsetAndCount() {
-
     createBucket(bucketName, CREATION_DATE_TIME);
 
     int startCount = Integer.valueOf(
@@ -442,13 +427,11 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     for (int i = 0, j = 21; i < subset; ++i, j += 2) {
       assertEquals(jsonArray.get(i).getAsJsonObject().get("key").getAsString(), "count" + (j < 10 ? "0" : "") + j);
     }
-
   }
 
   @Test
   // TODO : rewrite test to include the new changes
   public void crudHappyPath() throws Exception {
-
     createBucket(bucketName, CREATION_DATE_TIME);
     String responseString = target("/objects").queryParam("bucketName", bucketName + "")
         .request().accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
@@ -637,12 +620,10 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     // TODO: tests to add
     //   object deduplication
     //   check url redirect resolve order (db vs filestore)
-
   }
 
   @Test
   public void getVersionsNoKey() {
-
     Response response = target("/objects/versions/bucket1")
         .request(MediaType.APPLICATION_JSON_TYPE)
         .accept(MediaType.APPLICATION_JSON_TYPE)
@@ -653,7 +634,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void getObjectVersions() {
-
     createBucket(bucketName, CREATION_DATE_TIME);
 
     Response response = target("/objects").request()
@@ -710,7 +690,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void createObjectWithUserMetadata() throws Exception {
-
     Form form = new Form().param("name", bucketName);
     Response response = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.form(form));
     assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
@@ -736,8 +715,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
     JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
     assertNotNull(responseObj);
     assertEquals(USER_METADATA, responseObj.get("userMetadata").getAsString());
-
   }
-
 
 }

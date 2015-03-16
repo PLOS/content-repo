@@ -67,18 +67,15 @@ public class InputCollectionValidatorTest {
 
   @Test
   public void validateHappyPathTest() throws RepoException {
-
     mockInputCollectionCalls(inputObjects);
 
     inputCollectionValidator.validate(inputCollection);
 
     verifyInputCollectionCalls(2);
-
   }
 
   @Test
   public void validateNoKeyTest() throws RepoException {
-
     try {
       inputCollectionValidator.validate(inputCollection);
       fail(FAIL_MSG);
@@ -86,12 +83,10 @@ public class InputCollectionValidatorTest {
       assertEquals(re.getType(), RepoException.Type.NoCollectionKeyEntered);
       verify(inputCollection).getKey();
     }
-
   }
 
   @Test
   public void validateNoBucketNameTest() throws RepoException {
-
     when(inputCollection.getKey()).thenReturn(VALID_KEY);
     try {
       inputCollectionValidator.validate(inputCollection);
@@ -100,7 +95,6 @@ public class InputCollectionValidatorTest {
       assertEquals(re.getType(), RepoException.Type.NoBucketEntered);
       verify(inputCollection).getKey();
     }
-
   }
 
   @Test
@@ -113,7 +107,6 @@ public class InputCollectionValidatorTest {
       assertEquals(re.getType(), RepoException.Type.CantCreateCollectionWithNoObjects);
       verifyInputCollectionCalls(1);
     }
-
   }
 
   private void mockInputCollectionCalls(List<InputObject> objects) throws RepoException {
@@ -139,8 +132,6 @@ public class InputCollectionValidatorTest {
     verify(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseCreationDate);
 
     verify(inputCollection, times(getObjectsCalls)).getObjects();
-
   }
-
 
 }

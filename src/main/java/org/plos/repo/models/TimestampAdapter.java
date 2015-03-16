@@ -22,6 +22,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 
 public class TimestampAdapter extends XmlAdapter<Date, Timestamp> {
+
   public Date marshal(Timestamp v) {
     return new Date(v.getTime());
   }
@@ -29,4 +30,5 @@ public class TimestampAdapter extends XmlAdapter<Date, Timestamp> {
   public Timestamp unmarshal(Date v) {
     return new Timestamp(v.getTime());
   }
+
 }

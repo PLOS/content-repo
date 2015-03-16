@@ -33,7 +33,6 @@ import static org.junit.Assert.assertTrue;
 
 public class UUIDFormatterTest {
 
-
   private static final String OBJECT_KEY_COLUMN = "OBJKEY";
   private static final String COLLECTION_KEY_COLUMN = "COLLKEY";
   private static final String BUCKET_ID_COLUMN = "BUCKETID";
@@ -60,7 +59,6 @@ public class UUIDFormatterTest {
 
   @Test
   public void test() throws DecoderException, UnsupportedEncodingException {
-
     String str = "406699C2D5EF4941882D854B817E882C";
 
     str = str.replaceAll("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5");
@@ -75,13 +73,10 @@ public class UUIDFormatterTest {
 
     String decoded = new String(uuid, "UTF-8");
     assertEquals(decoded, myString);
-
-
   }
 
   @Test
   public void test1() {
-
     StringBuilder q = new StringBuilder();
     q.append("SELECT " + OBJECT_COLUMNS + "  FROM objects as obj, buckets b " +
         "WHERE obj.bucketId = b.bucketId");
@@ -89,7 +84,6 @@ public class UUIDFormatterTest {
     String p = q.toString();
 
     assertNotNull(p);
-
   }
 
 }

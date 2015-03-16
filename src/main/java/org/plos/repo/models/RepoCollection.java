@@ -59,7 +59,6 @@ public class RepoCollection {
   }
 
   public void addObjects(List<RepoObject> repoObjects) {
-
     this.repoObjects = repoObjects;
   }
 
@@ -165,4 +164,5 @@ public class RepoCollection {
   public void setUuid(UUID uuid) {
     this.uuid = uuid;
   }
+
 }

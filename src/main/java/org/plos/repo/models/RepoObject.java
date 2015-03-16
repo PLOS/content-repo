@@ -52,7 +52,6 @@ public class RepoObject {
   }
 
   public boolean areSimilar(RepoObject repoObject) {
-
     return this.key.equals(repoObject.key) &&
         this.bucketName.equals(repoObject.bucketName) &&
         this.status.equals(repoObject.status) &&
@@ -61,7 +60,6 @@ public class RepoObject {
         compareNullableElements(this.tag, repoObject.tag) &&
         compareNullableElements(this.checksum, repoObject.checksum) &&
         compareNullableElements(this.userMetadata, repoObject.getUserMetadata());
-
   }
 
   private boolean compareNullableElements(String string1, String string2) {
@@ -203,4 +201,5 @@ public class RepoObject {
   public void setUuid(UUID uuid) {
     this.uuid = uuid;
   }
+
 }

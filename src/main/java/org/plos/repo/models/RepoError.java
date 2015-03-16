@@ -34,4 +34,5 @@ public class RepoError {
     repoErrorCode = e.getType().getValue();
     message = e.getType().getMessage();
   }
+
 }

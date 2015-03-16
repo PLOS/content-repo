@@ -15,7 +15,6 @@ public class ElementFilter {
   private String uuid;
 
   public ElementFilter() {
-
   }
 
   public ElementFilter(Integer version, String tag, String uuid) {
@@ -60,4 +59,5 @@ public class ElementFilter {
         ", uuid='" + uuid + '\'' +
         '}';
   }
+
 }

@@ -25,7 +25,6 @@ public class RepoException extends Exception {
   private static final long serialVersionUID = 4654104578364892572L;
 
   public enum Type {
-
     ServerError(0, "Server error"), // this message is not used
     ObjectNotFound(1, "Object not found"),
     BucketNotFound(2, "Bucket not found"),

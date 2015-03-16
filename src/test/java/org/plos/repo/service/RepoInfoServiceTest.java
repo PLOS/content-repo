@@ -61,7 +61,6 @@ public class RepoInfoServiceTest {
 
   @Test
   public void getStatusHappyPathTest() throws RepoException {
-
     List<org.plos.repo.models.Bucket> buckets = new ArrayList<>();
     buckets.add(mock(org.plos.repo.models.Bucket.class));
     buckets.add(mock(org.plos.repo.models.Bucket.class));
@@ -75,7 +74,6 @@ public class RepoInfoServiceTest {
     assertNotNull(status.writesSinceStart);
 
     verify(repoService).listBuckets();
-
   }
 
 }

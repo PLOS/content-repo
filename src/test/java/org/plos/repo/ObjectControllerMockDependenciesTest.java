@@ -69,16 +69,13 @@ public class ObjectControllerMockDependenciesTest {
 
   @Before
   public void setUp() {
-
     objectController = new ObjectController();
     initMocks(this);
-
   }
 
 
   @Test
   public void reproxyUrlGenerationTest() throws MalformedURLException, RepoException {
-
     RepoObject object1 = mock(RepoObject.class);
     URL url1 = new URL("http", "localhost", 8080, "contentRepo1");
     URL url2 = new URL("http", "localhost", 8080, "contentRepo2");
@@ -113,7 +110,6 @@ public class ObjectControllerMockDependenciesTest {
 
     assertNotNull(objectsResponse);
     assertEquals(objectsResponse.getStatus(), Response.Status.OK.getStatusCode());
-
   }
 
 }

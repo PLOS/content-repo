@@ -86,7 +86,6 @@ public class FileSystemStoreService extends ObjectStore {
 
   @Override
   public Optional<Boolean> createBucket(Bucket bucket) {
-
     File dir = new File(getBucketLocationString(bucket.getBucketName()));
     boolean result = dir.mkdir();
 
@@ -106,7 +105,6 @@ public class FileSystemStoreService extends ObjectStore {
   public String[] getFilePaths(RepoObject repoObject) throws RepoException {
     String path = null;
     try {
-
       if (!hasXReproxy()) {
         return new String[0]; // since the filesystem is not reproxyable
       }
@@ -116,7 +114,6 @@ public class FileSystemStoreService extends ObjectStore {
       if (path == null) {
         throw new RepoException(RepoException.Type.ObjectFilePathMissing);
       }
-
     } catch (Exception e) {
       throw new RepoException(e);
     }
@@ -150,7 +147,6 @@ public class FileSystemStoreService extends ObjectStore {
 
   @Override
   public boolean deleteObject(RepoObject repoObject) {
-
     File file = new File(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
     File parentDir = new File(file.getParent());
 
@@ -214,7 +210,6 @@ public class FileSystemStoreService extends ObjectStore {
           return checksum;
         }
       };
-
     } catch (Exception e) {
       throw new RepoException(e);
     }

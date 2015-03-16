@@ -68,18 +68,15 @@ public class InputRepoObjectValidatorTest {
 
   @Test
   public void validateHappyPathTest() throws RepoException {
-
     mockInputCollectionCalls(inputObjects);
 
     inputRepoObjectValidator.validate(inputRepoObject);
 
     verifyInputCollectionCalls(2);
-
   }
 
   @Test
   public void validateNoKeyTest() throws RepoException {
-
     try {
       inputRepoObjectValidator.validate(inputRepoObject);
       fail(FAIL_MSG);
@@ -87,12 +84,10 @@ public class InputRepoObjectValidatorTest {
       assertEquals(re.getType(), RepoException.Type.NoKeyEntered);
       verify(inputRepoObject).getKey();
     }
-
   }
 
   @Test
   public void validateNoBucketNameTest() throws RepoException {
-
     when(inputRepoObject.getKey()).thenReturn(VALID_KEY);
     try {
       inputRepoObjectValidator.validate(inputRepoObject);
@@ -101,7 +96,6 @@ public class InputRepoObjectValidatorTest {
       assertEquals(re.getType(), RepoException.Type.NoBucketEntered);
       verify(inputRepoObject).getKey();
     }
-
   }
 
   private void mockInputCollectionCalls(List<InputObject> objects) throws RepoException {
@@ -112,7 +106,6 @@ public class InputRepoObjectValidatorTest {
 
     doNothing().when(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseTimestamp);
     doNothing().when(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseCreationDate);
-
   }
 
   private void verifyInputCollectionCalls(Integer getObjectsCalls) throws RepoException {
@@ -124,8 +117,6 @@ public class InputRepoObjectValidatorTest {
 
     verify(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseTimestamp);
     verify(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseCreationDate);
-
   }
-
 
 }

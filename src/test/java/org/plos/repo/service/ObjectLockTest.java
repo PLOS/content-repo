@@ -80,7 +80,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
   @Before
   public void setup() throws Exception {
-
     clearData(objectStore, sqlService);
 
     repoService.createBucket(BUCKET_NAME, CREATION_DATE_TIME.toString());
@@ -102,7 +101,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
   //Comment out in order to build the binary and start manual test
   //@Test
   public void testReaderAndWritersSameKeyAndSameData() throws Exception {
-
     final int INSERT_THREADS = 25;
     final int UPDATE_THREADS = 100;
     final int DELETE_THREADS = 0;
@@ -145,13 +143,11 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     // create new objects + list objects + update objects + list objects ----> all operations calls getObject underneath
     verify(spySqlService, times(READER_THREADS * 3 + INSERT_THREADS)).getObject(anyString(), anyString());
-
   }
 
   //Comment out in order to build the binary and start manual test
   //@Test
   public void testReaderAndWritersSameKeyDifferentData() throws Exception {
-
     final int INSERT_THREADS = 25;
     final int UPDATE_THREADS = 100;
     final int DELETE_THREADS = 0;
@@ -169,7 +165,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       public String getData(int i) {
         return OBJECT_DATA + i;
       }
-
     };
 
     this.endGate = new CountDownLatch(INSERT_THREADS + DELETE_THREADS + READER_THREADS);
@@ -205,7 +200,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
   // TODO : rewrite test to include the new changes
   public void testReaderAndWritersSameKeyWithDeletions() throws Exception {
-
     final int INSERT_THREADS = 25;
     final int UPDATE_THREADS = 100;
     final int DELETE_THREADS = 10;
@@ -223,7 +217,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       public String getData(int i) {
         return OBJECT_DATA + 1;
       }
-
     };
 
     this.endGate = new CountDownLatch(INSERT_THREADS + READER_THREADS);
@@ -244,7 +237,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       public String getData(int i) {
         return OBJECT_DATA + i;
       }
-
     };
 
     this.startGate = new CountDownLatch(1);
@@ -268,7 +260,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
       assertEquals(BASE_KEY_NAME, obj.getKey());
       assertTrue(this.objectStore.objectExists(obj));
-
     }
 
     verify(spySqlService, times(INSERT_THREADS + UPDATE_THREADS + READER_THREADS)).getObject(anyString(), anyString()); // insert object + list objects + update objets
@@ -280,7 +271,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
   // TODO : rewrite test to include the new changes
   public void testReaderAndWritersDifferentKeys() throws Exception {
-
     final int INSERT_THREADS = 100;
     final int UPDATE_THREADS = 0;
     final int DELETE_THREADS = 20;
@@ -300,7 +290,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       public String getData(int i) {
         return OBJECT_DATA + i;
       }
-
     };
 
     execute(INSERT_THREADS, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, callback);
@@ -325,7 +314,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                        final int deleteThreads,
                        final int readerThreads, final Callback cb)
       throws InterruptedException {
-
 /* ------------------------------------------------------------------
 
    INSERT
@@ -352,7 +340,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                 }
               }
             } catch (RepoException e) {
-
               if (e.getType() == RepoException.Type.ServerError) {
                 synchronized (lock) {
                   if (assertionFailure == null) {
@@ -362,7 +349,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                   }
                 }
               }
-
             } finally {
               endGate.countDown();
             }
@@ -399,9 +385,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                   }
                 }
               }
-
             } catch (RepoException e) {
-
               if (e.getType() == RepoException.Type.ServerError) {
                 synchronized (lock) {
                   if (assertionFailure == null) {
@@ -412,7 +396,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                   }
                 }
               }
-
             } finally {
               endGate.countDown();
             }
@@ -443,9 +426,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
               endGate.countDown();
             }
           } catch (RepoException e) {
-
             if (e.getType() != RepoException.Type.ObjectNotFound) {
-
               synchronized (lock) {
                 if (assertionFailure == null) {
                   assertionFailure = new AssertionError(String.format(
@@ -453,7 +434,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                 }
               }
             }
-
           } catch (Exception e) {
             throw new RuntimeException(e);
           }
@@ -476,7 +456,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
           try {
             startGate.await();  // don't start until startGate is 0
             try {
-
               RepoObject repoObject = repoService.getObject(BUCKET_NAME, cb.getKeyname(j), new ElementFilter(null, cb.getTag(j), null));
 
               String outputData = IOUtils.toString(repoService.getObjectInputStream(repoObject));
@@ -500,14 +479,11 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                   }
                 }
               }
-
             } finally {
               endGate.countDown();
             }
           } catch (RepoException e) {
-
             if (e.getType() != RepoException.Type.ObjectNotFound) {
-
               synchronized (lock) {
                 if (assertionFailure == null) {
                   assertionFailure = new AssertionError(String.format(
@@ -515,7 +491,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                 }
               }
             }
-
           } catch (Exception e) {
             throw new RuntimeException(e);
           }
@@ -537,7 +512,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
   }
 
   private InputRepoObject createInputRepoObject(Callback cb, int threadNumber) {
-
     Timestamp creationDateTime = new Timestamp(new Date().getTime());
     InputRepoObject inputRepoObject = new InputRepoObject();
     inputRepoObject.setKey(cb.getKeyname(threadNumber));
@@ -552,8 +526,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 }
 
 class ObjectComparator implements Comparator<RepoObject> {
-  public int compare(RepoObject o1, RepoObject o2) {
 
+  public int compare(RepoObject o1, RepoObject o2) {
     if (o1.getBucketName().compareTo(o2.getBucketName()) < 0) {
       return -1;
     } else if (o1.getBucketName().compareTo(o2.getBucketName()) > 0) {
@@ -577,4 +551,5 @@ class ObjectComparator implements Comparator<RepoObject> {
 
     return 0;
   }
+
 }

@@ -62,7 +62,6 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void createWithEmptyCreationType() {
-
     InputCollection inputCollection = new InputCollection();
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
@@ -75,7 +74,6 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void createWithInvalidCreationType() {
-
     InputCollection inputCollection = new InputCollection();
     inputCollection.setCreate("invalidCreationMethod");
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
@@ -89,7 +87,6 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void createWithNoKey() {
-
     InputCollection inputCollection = new InputCollection();
     inputCollection.setCreate("new");
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
@@ -103,7 +100,6 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void createWithEmptyBucketName() {
-
     InputCollection inputCollection = new InputCollection();
     inputCollection.setCreate("new");
     inputCollection.setKey("emptyBucketName");
@@ -118,7 +114,6 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void createWithInvalidTimestamp() {
-
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("invalidTimeStamp");
@@ -135,7 +130,6 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void createWithNoObjects() {
-
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("emptyObjects");
@@ -151,7 +145,6 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void createWithInvalidBucket() {
-
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName("invalidBucket");
     inputCollection.setKey("invalidBucket");
@@ -168,7 +161,6 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void createWithExistingKey() {
-
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
 
@@ -193,12 +185,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
         Response.Status.BAD_REQUEST,
         RepoException.Type.CantCreateNewCollectionWithUsedKey
     );
-
   }
 
   @Test
   public void versionNonExistingCollection() {
-
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
     String uuidObj2 = createObject(bucketName, objectName2, contentType2);
@@ -219,12 +209,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
         Response.Status.BAD_REQUEST,
         RepoException.Type.CantCreateCollectionVersionWithNoOrig
     );
-
   }
 
   @Test
   public void autoCreateCollection() {
-
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
     String uuidObj2 = createObject(bucketName, objectName2, contentType1);
@@ -244,12 +232,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
             .post(collectionEntity).getStatus(),
         Response.Status.CREATED.getStatusCode()
     );
-
   }
 
   @Test
   public void autoVersionExistingKeyCollection() {
-
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
     String uuidObj2 = createObject(bucketName, objectName2, contentType2);
@@ -276,12 +262,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
         Response.Status.BAD_REQUEST,
         RepoException.Type.CantCreateNewCollectionWithUsedKey
     );
-
   }
 
   @Test
   public void createColletionInvalidObjectUuid() {
-
     generateBuckets(bucketName);
 
     InputCollection inputCollection = new InputCollection();
@@ -305,12 +289,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
         .accept(MediaType.APPLICATION_JSON_TYPE)
         .get();
     assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
-
   }
 
   @Test
   public void createColletionNonexistingObject() {
-
     generateBuckets(bucketName);
 
     InputCollection inputCollection = new InputCollection();
@@ -334,12 +316,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
         .accept(MediaType.APPLICATION_JSON_TYPE)
         .get();
     assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
-
   }
 
   @Test
   public void getAllCollections() {
-
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
     String uuidObj2 = createObject(bucketName, objectName2, contentType2);
@@ -381,12 +361,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     assertEquals("collection1", next.get("key").getAsString());
     next = iterator.next().getAsJsonObject();
     assertEquals("collection2", next.get("key").getAsString());
-
   }
 
   @Test
   public void getCollectionsWithPagination() {
-
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
     String uuidObj2 = createObject(bucketName, objectName2, contentType2);
@@ -431,12 +409,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     Iterator<JsonElement> iterator = responseObj.iterator();
     JsonObject next = iterator.next().getAsJsonObject();
     assertEquals("collection2", next.get("key").getAsString());
-
   }
 
   @Test
   public void getCollectionsInvalidPagination() {
-
     assertRepoError(target("/collections")
             .queryParam("bucketName", bucketName)
             .queryParam("offset", "-1")
@@ -466,12 +442,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
             .get(),
         Response.Status.BAD_REQUEST, RepoException.Type.InvalidLimit
     );
-
   }
 
   @Test
   public void getCollectionsUsingTag() {
-
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
     String uuidObj2 = createObject(bucketName, objectName2, contentType2);
@@ -517,12 +491,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     Iterator<JsonElement> iterator = responseObj.iterator();
     JsonObject next = iterator.next().getAsJsonObject();
     assertEquals("collection2", next.get("key").getAsString());
-
   }
 
   @Test
   public void getCollectionsUsingBucket() {
-
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
     String uuidObj2 = createObject(bucketName, objectName2, contentType2);
@@ -575,12 +547,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     Iterator<JsonElement> iterator = responseObj.iterator();
     JsonObject next = iterator.next().getAsJsonObject();
     assertEquals("collection2", next.get("key").getAsString());
-
   }
 
   @Test
   public void getCollectionUsingVersion() {
-
     generateCollectionData();
 
     Response response = target("/collections/" + bucketName)
@@ -597,20 +567,17 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     assertEquals("collection1", responseObj.get("key").getAsString());
     assertEquals(0, responseObj.get("versionNumber").getAsInt());
     assertEquals(1, responseObj.get("objects").getAsJsonArray().size());
-
   }
 
 
   @Test
   public void getCollectionNoKey() {
-
     assertRepoError(target("/collections/" + bucketName)
             .request(MediaType.APPLICATION_JSON_TYPE)
             .accept(MediaType.APPLICATION_JSON_TYPE)
             .get(),
         Response.Status.BAD_REQUEST, RepoException.Type.NoCollectionKeyEntered
     );
-
   }
 
   @Test
@@ -619,7 +586,6 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
    * it should get the latest one.
    */
   public void getCollectionMoreThanOneWithSameTag() {
-
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
     String uuidObj2 = createObject(bucketName, objectName2, contentType2);
@@ -669,7 +635,6 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     assertNotNull(responseObj);
     assertEquals("collection1", responseObj.get("key").getAsString());
     assertEquals(0, responseObj.get("versionNumber").getAsInt());
-
   }
 
 
@@ -678,7 +643,6 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
    * Test get latest collection. The first created collection has later creation date than the second one
    */
   public void getLatestCollection() {
-
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
     String uuidObj2 = createObject(bucketName, objectName2, contentType2);
@@ -727,21 +691,17 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     assertNotNull(responseObj);
     assertEquals("collection1", responseObj.get("key").getAsString());
     assertEquals(0, responseObj.get("versionNumber").getAsInt());
-
   }
 
   private void generateBuckets(String bucketName) {
-
     // create needed data
     target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
         .post(Entity.form(new Form()
             .param("name", bucketName)
             .param("creationDateTime", CREATION_DATE_TIME_STRING)));
-
   }
 
   private String createObject(String bucketName, String objectName1, String contentType) {
-
     Response response = target("/objects").request(MediaType.APPLICATION_JSON_TYPE)
         .post(Entity.entity(new FormDataMultiPart()
                     .field("bucketName", bucketName).field("create", "new")
@@ -754,11 +714,9 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
     assertNotNull(responseObj);
     return responseObj.get("uuid").getAsString();
-
   }
 
   private void generateCollectionData() {
-
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
     String uuidObj2 = createObject(bucketName, objectName2, contentType2);
@@ -793,12 +751,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
             .post(collectionEntity).getStatus(),
         Response.Status.CREATED.getStatusCode()
     );
-
   }
 
   @Test
   public void getCollectionByTag() {
-
     generateCollectionData();
 
     Response response = target("/collections/" + bucketName)
@@ -815,12 +771,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     assertEquals("collection1", responseObj.get("key").getAsString());
     assertEquals(0, responseObj.get("versionNumber").getAsInt());
     assertEquals(1, responseObj.get("objects").getAsJsonArray().size());
-
   }
 
   @Test
   public void getCollectionByTagAndVersion() {
-
     generateCollectionData();
 
     Response response = target("/collections/" + bucketName)
@@ -848,12 +802,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
             .get(),
         Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound
     );
-
   }
 
   @Test
   public void getCollectionByUuid() {
-
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
 
@@ -891,13 +843,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     assertEquals(0, responseObjGET.get("versionNumber").getAsInt());
     assertEquals(1, responseObjGET.get("objects").getAsJsonArray().size());
     assertEquals(uuid, responseObjGET.get("uuid").getAsString());
-
-
   }
 
   @Test
   public void deleteCollectionWithVersion() {
-
     generateCollectionData();
 
     assertEquals(target("/collections/" + bucketName)
@@ -918,12 +867,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
             .get(),
         Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound
     );
-
   }
 
   @Test
   public void deleteCollectionWithUuid() {
-
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
 
@@ -973,12 +920,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
             .get(),
         Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound
     );
-
   }
 
   @Test
   public void deleteCollectionWithTag() {
-
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
 
@@ -1023,12 +968,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
             .get(),
         Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound
     );
-
   }
 
   @Test
   public void deleteCollectionBadRequest() {
-
     assertRepoError(target("/collections/" + bucketName)
             .request()
             .accept(MediaType.APPLICATION_JSON_TYPE)
@@ -1043,12 +986,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
             .delete(),
         Response.Status.BAD_REQUEST, RepoException.Type.NoFilterEntered
     );
-
   }
 
   @Test
   public void deleteCollectionNotFound() {
-
     assertRepoError(target("/collections/" + bucketName)
             .queryParam("key", "collection1")
             .queryParam("version", 1)
@@ -1057,12 +998,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
             .delete(),
         Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound
     );
-
   }
 
   @Test
   public void deleteCollectionWithSameTags() {
-
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
 
@@ -1099,13 +1038,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
             .delete(),
         Response.Status.BAD_REQUEST,
         RepoException.Type.MoreThanOneTaggedCollection);
-
-
   }
 
   @Test
   public void getCollectionsVersions() {
-
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
     String uuidObj2 = createObject(bucketName, objectName2, contentType2);
@@ -1149,12 +1085,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     JsonArray responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonArray();
     assertNotNull(responseObj);
     assertEquals(2, responseObj.size());
-
   }
 
   @Test
   public void getCollectionsVersionsNoKey() {
-
     assertRepoError(target("/collections/versions" + bucketName)
             .request(MediaType.APPLICATION_JSON_TYPE)
             .accept(MediaType.APPLICATION_JSON_TYPE)
@@ -1164,7 +1098,6 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void getCollectionsVersionsNoCollection() {
-
     assertRepoError(target("/collections/versions/" + bucketName)
             .queryParam("key", "collection1")
             .request(MediaType.APPLICATION_JSON_TYPE)
@@ -1175,7 +1108,6 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void createCollection() {
-
     generateCollectionData();
 
     Response response = target("/collections/" + bucketName)
@@ -1203,13 +1135,11 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
             .get(),
         Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound
     );
-
   }
 
 
   @Test
   public void createCollectionValidUserMetadata() {
-
     generateBuckets(bucketName);
     String uuidObj1 = createObject(bucketName, objectName1, contentType1);
 
@@ -1247,14 +1177,12 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     assertNotNull(responseObj);
 
     assertEquals(USER_METADATA, responseObj.get("userMetadata").getAsString());
-
   }
 
   /*@Test*/
   /* TODO : uncommment test. It's failing due to the KEYSUMCOLL. The test will work when removing
    versionCheksum column and adding uuid */
   public void createConsecutiveSimilarCollections() {
-
     generateBuckets(bucketName);
     String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
 
@@ -1302,8 +1230,6 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     JsonArray responseObj = gson.fromJson(versionsResponse.readEntity(String.class), JsonElement.class).getAsJsonArray();
     assertNotNull(responseObj);
     assertEquals(2, responseObj.size());
-
   }
-
 
 }

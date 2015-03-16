@@ -43,17 +43,14 @@ public abstract class BaseRepoService {
   protected SqlService sqlService;
 
   protected void sqlReleaseConnection() throws RepoException {
-
     try {
       sqlService.releaseConnection();
     } catch (SQLException e) {
       throw new RepoException(e);
     }
-
   }
 
   protected void sqlRollback(String data) throws RepoException {
-
     getLog().error("DB rollback: " + data + "\n" +
         StringUtils.join(Thread.currentThread().getStackTrace(), "\n\t"));
 
@@ -98,13 +95,11 @@ public abstract class BaseRepoService {
     if (!AUDITING_ENABLED) return;
 
     try {
-
       boolean result = sqlService.insertAudit(audit);
 
       if (!result) {
         throw new RepoException("Error saving audit operation to database " + audit);
       }
-
     } catch (SQLException e) {
       getLog().error("Exception: {} when trying to save audit operation {}",
           e.getMessage(),

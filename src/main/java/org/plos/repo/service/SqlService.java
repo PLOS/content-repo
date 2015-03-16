@@ -104,7 +104,6 @@ public abstract class SqlService {
   }
 
   private static RepoCollection mapCollectionRow(ResultSet rs) throws SQLException, RepoException {
-
     RepoCollection collection = new RepoCollection(rs.getString(COLLECTION_KEY_COLUMN), rs.getInt(BUCKET_ID_COLUMN),
         rs.getString(BUCKET_NAME_COLUMN), Status.STATUS_VALUES.get(rs.getInt(STATUS_COLUMN)));
     collection.setId(rs.getInt(ID_COLUMN));
@@ -118,7 +117,6 @@ public abstract class SqlService {
   }
 
   private static Audit mapAuditRow(ResultSet rs) throws SQLException, RepoException {
-
     return new Audit.AuditBuilder(rs.getString("BUCKETNAME"), Operation.OPERATION_VALUES.get(rs.getString("OPERATION")))
         .setKey(rs.getString("KEYVALUE"))
         .setUuid(UUIDFormatter.getUuid(rs.getString(UUID_COLUMN)))
@@ -135,7 +133,6 @@ public abstract class SqlService {
   }
 
   private static void closeDbStuff(ResultSet result, PreparedStatement p) throws SQLException {
-
     if (result != null) {
       result.close();
     }
@@ -143,7 +140,6 @@ public abstract class SqlService {
     if (p != null) {
       p.close();
     }
-
   }
 
   /**
@@ -190,12 +186,10 @@ public abstract class SqlService {
   }
 
   public Bucket getBucket(String bucketName) throws SQLException {
-
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
-
       p = connectionLocal.get().prepareStatement("SELECT * FROM buckets WHERE bucketName=?");
 
       p.setString(1, bucketName);
@@ -207,37 +201,30 @@ public abstract class SqlService {
       } else {
         return null;
       }
-
     } finally {
       closeDbStuff(result, p);
     }
   }
 
   public int deleteBucket(String bucketName) throws SQLException {
-
     PreparedStatement p = null;
 
     try {
-
       p = connectionLocal.get().prepareStatement("DELETE FROM buckets WHERE bucketName=?");
 
       p.setString(1, bucketName);
 
       return p.executeUpdate();
-
     } finally {
       closeDbStuff(null, p);
     }
-
   }
 
   // FOR TESTING ONLY
   public int deleteObject(RepoObject repoObject) throws SQLException {
-
     PreparedStatement p = null;
 
     try {
-
       p = connectionLocal.get().prepareStatement("DELETE FROM objects " +
           "WHERE objKey=? AND bucketId=? AND versionNumber=?");
 
@@ -246,20 +233,16 @@ public abstract class SqlService {
       p.setInt(3, repoObject.getVersionNumber());
 
       return p.executeUpdate();
-
     } finally {
       closeDbStuff(null, p);
     }
-
   }
 
   // FOR TESTING ONLY
   public int deleteCollection(RepoCollection repoCollection) throws SQLException {
-
     PreparedStatement p = null;
 
     try {
-
       p = connectionLocal.get().prepareStatement("DELETE FROM collectionObject WHERE collectionId=?");
       p.setInt(1, repoCollection.getId());
       p.executeUpdate();
@@ -267,12 +250,9 @@ public abstract class SqlService {
       p = connectionLocal.get().prepareStatement("DELETE FROM collections WHERE id=?");
       p.setInt(1, repoCollection.getId());
       return p.executeUpdate();
-
-
     } finally {
       closeDbStuff(null, p);
     }
-
   }
 
   public int markObjectPurged(String key, String bucketName, Integer version, UUID uuid, String tag) throws SQLException {
@@ -284,7 +264,6 @@ public abstract class SqlService {
   }
 
   private int markObject(String key, String bucketName, Integer version, UUID uuid, String tag, Status status) throws SQLException {
-
     PreparedStatement p = null;
 
     Bucket bucket = getBucket(bucketName);
@@ -294,7 +273,6 @@ public abstract class SqlService {
     }
 
     try {
-
       StringBuilder query = new StringBuilder();
       query.append("UPDATE objects SET status=? WHERE objKey=? AND bucketId=?");
 
@@ -326,20 +304,16 @@ public abstract class SqlService {
       }
 
       return p.executeUpdate();
-
     } finally {
       closeDbStuff(null, p);
     }
-
   }
 
   private Integer getNextAvailableVersionNumber(String bucketName, String key, String tableName, String keyName) throws SQLException {
-
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
-
       StringBuilder query = new StringBuilder();
       query.append("SELECT versionNumber FROM  ");
       query.append(tableName);
@@ -359,11 +333,9 @@ public abstract class SqlService {
       } else {
         return 0;
       }
-
     } finally {
       closeDbStuff(result, p);
     }
-
   }
 
   public Integer getCollectionNextAvailableVersion(String bucketName, String key) throws SQLException {
@@ -375,12 +347,10 @@ public abstract class SqlService {
   }
 
   public RepoObject getObject(String bucketName, String key) throws SQLException, RepoException {
-
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
-
       p = connectionLocal.get().prepareStatement("SELECT " + OBJECT_COLUMNS + ", b.BUCKETNAME  FROM objects obj, buckets b " +
           "WHERE obj.bucketId = b.bucketId AND b.bucketName=? AND obj.objKey=? AND status=? ORDER BY obj.creationDate " +
           "DESC LIMIT 1");
@@ -403,20 +373,16 @@ public abstract class SqlService {
       } else {
         return null;
       }
-
     } finally {
       closeDbStuff(result, p);
     }
-
   }
 
   public RepoObject getObject(String bucketName, String key, Integer version, UUID uuid, String tag) throws SQLException, RepoException {
-
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
-
       StringBuilder query = new StringBuilder();
       query.append("SELECT " + OBJECT_COLUMNS + ", b.BUCKETNAME FROM objects obj, buckets b " +
           "WHERE obj.bucketId = b.bucketId AND b.bucketName=? AND obj.objKey=?");
@@ -463,16 +429,13 @@ public abstract class SqlService {
       } else {
         return null;
       }
-
     } finally {
       closeDbStuff(result, p);
     }
-
   }
 
   public RepoObject getObject(String bucketName, String key, Integer version, UUID uuid,
                               String tag, boolean searchInDeleted, boolean searchInPurged) throws SQLException, RepoException {
-
     PreparedStatement p = null;
     ResultSet result = null;
 
@@ -499,7 +462,6 @@ public abstract class SqlService {
     query.append(" ORDER BY obj.creationDate DESC LIMIT 1");
 
     try {
-
       p = connectionLocal.get().prepareStatement(query.toString());
 
       p.setString(1, bucketName);
@@ -535,21 +497,17 @@ public abstract class SqlService {
       } else {
         return null;
       }
-
     } finally {
       closeDbStuff(result, p);
     }
-
   }
 
   public int insertObject(RepoObject repoObject) throws SQLException {
-
     // TODO: return object or objectid from this function?
 
     PreparedStatement p = null;
 
     try {
-
       p = connectionLocal.get().prepareStatement("INSERT INTO objects (objKey, checksum, timestamp, bucketId, contentType, downloadName, size, " +
           "tag, versionNumber, status, creationDate, userMetadata, uuid) " +
           "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
@@ -570,20 +528,16 @@ public abstract class SqlService {
       p.setString(13, repoObject.getUuid().toString());
 
       return p.executeUpdate();
-
     } finally {
       closeDbStuff(null, p);
     }
-
   }
 
   public Integer objectCount(boolean includeDeleted, String bucketName) throws SQLException {
-
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
-
       StringBuilder q = new StringBuilder("SELECT COUNT(*) FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
       if (!includeDeleted) {
         q.append(" AND a.status=?");
@@ -609,20 +563,17 @@ public abstract class SqlService {
       } else {
         return null;
       }
-
     } finally {
       closeDbStuff(result, p);
     }
   }
 
   public boolean insertBucket(Bucket bucket, Timestamp creationDate) throws SQLException {
-
     int result;
 
     PreparedStatement p = null;
 
     try {
-
       p = connectionLocal.get().prepareStatement("INSERT INTO buckets (bucketName, timestamp, creationDate) " +
           "VALUES(?, ?, ?)");
 
@@ -631,7 +582,6 @@ public abstract class SqlService {
       p.setTimestamp(3, creationDate);
 
       result = p.executeUpdate();
-
     } finally {
       closeDbStuff(null, p);
     }
@@ -640,21 +590,17 @@ public abstract class SqlService {
   }
 
   public List<Bucket> listBuckets(Timestamp timestamp) throws SQLException {
-
     // TODO : add timestamp to buckets
     return null;
-
   }
 
   public List<Bucket> listBuckets() throws SQLException {
-
     List<Bucket> buckets = new ArrayList<>();
 
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
-
       p = connectionLocal.get().prepareStatement("SELECT * FROM buckets");
 
       result = p.executeQuery();
@@ -665,22 +611,18 @@ public abstract class SqlService {
       }
 
       return buckets;
-
     } finally {
       closeDbStuff(result, p);
     }
-
   }
 
   public List<Bucket> getObjectsSize(String bucketName) throws SQLException {
-
     List<Bucket> buckets = new ArrayList<>();
 
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
-
       p = connectionLocal.get().prepareStatement("");
 
       result = p.executeQuery();
@@ -691,22 +633,18 @@ public abstract class SqlService {
       }
 
       return buckets;
-
     } finally {
       closeDbStuff(result, p);
     }
-
   }
 
   public List<RepoObject> listObjects(String bucketName, Integer offset, Integer limit, boolean includeDeleted, boolean includePurge, String tag) throws SQLException, RepoException {
-
     List<RepoObject> repoObjects = new ArrayList<>();
 
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
-
       StringBuilder q = new StringBuilder();
       q.append("SELECT " + OBJECT_COLUMNS + ", b.BUCKETNAME FROM objects as obj, buckets as b " +
           "WHERE obj.bucketId = b.bucketId");
@@ -761,22 +699,18 @@ public abstract class SqlService {
       }
 
       return repoObjects;
-
     } finally {
       closeDbStuff(result, p);
     }
-
   }
 
   public List<RepoObject> listObjects(Timestamp timestamp) throws SQLException, RepoException {
-
     List<RepoObject> repoObjects = new ArrayList<>();
 
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
-
       StringBuilder q = new StringBuilder();
       q.append("SELECT " + OBJECT_COLUMNS + " FROM objects obj WHERE timestamp >= ?");
 
@@ -789,11 +723,9 @@ public abstract class SqlService {
       }
 
       return repoObjects;
-
     } finally {
       closeDbStuff(result, p);
     }
-
   }
 
   /**
@@ -809,14 +741,12 @@ public abstract class SqlService {
    * @throws SQLException
    */
   public List<RepoCollection> listCollections(String bucketName, Integer offset, Integer limit, Boolean includeDeleted, String tag) throws SQLException, RepoException {
-
     List<RepoCollection> repoCollections = new ArrayList<>();
 
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
-
       p = connectionLocal.get().prepareStatement(
           getCollectionMetadataQuery(bucketName, offset, limit, includeDeleted, tag));
 
@@ -842,11 +772,9 @@ public abstract class SqlService {
       }
 
       return repoCollections;
-
     } finally {
       closeDbStuff(result, p);
     }
-
   }
 
   /**
@@ -861,14 +789,12 @@ public abstract class SqlService {
    * @throws SQLException
    */
   public List<RepoCollection> listCollectionsMetaData(String bucketName, Integer offset, Integer limit, Boolean includeDeleted, String tag) throws SQLException, RepoException {
-
     List<RepoCollection> repoCollections = new ArrayList<>();
 
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
-
       p = connectionLocal.get().prepareStatement(getCollectionMetadataQuery(bucketName, offset, limit, includeDeleted, tag));
 
       int i = 1;
@@ -892,11 +818,9 @@ public abstract class SqlService {
       }
 
       return repoCollections;
-
     } finally {
       closeDbStuff(result, p);
     }
-
   }
 
   private String getCollectionMetadataQuery(String bucketName, Integer offset, Integer limit, boolean includeDeleted, String tag) {
@@ -924,14 +848,12 @@ public abstract class SqlService {
   }
 
   public List<RepoCollection> listCollections(Timestamp timestamp) throws SQLException, RepoException {
-
     List<RepoCollection> repoCollections = new ArrayList<>();
 
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
-
       StringBuilder q = new StringBuilder();
       q.append("SELECT " + COLLECTION_COLUMNS + " FROM collections WHERE c.timestamp > ?");
 
@@ -944,11 +866,9 @@ public abstract class SqlService {
       }
 
       return repoCollections;
-
     } finally {
       closeDbStuff(result, p);
     }
-
   }
 
   /**
@@ -959,14 +879,12 @@ public abstract class SqlService {
    * @throws SQLException
    */
   protected List<RepoObject> listCollectionObjects(Integer id) throws SQLException, RepoException {
-
     List<RepoObject> repoObjects = new ArrayList<>();
 
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
-
       StringBuilder q = new StringBuilder();
       q.append(" SELECT " + OBJECT_COLUMNS + ", b.*\n" +
           "FROM objects obj, collectionObject co, buckets b\n" +
@@ -985,11 +903,9 @@ public abstract class SqlService {
       }
 
       return repoObjects;
-
     } finally {
       closeDbStuff(result, p);
     }
-
   }
 
   /**
@@ -1002,12 +918,10 @@ public abstract class SqlService {
    * @throws SQLException
    */
   public RepoCollection getCollection(String bucketName, String key) throws SQLException, RepoException {
-
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
-
       StringBuilder query = new StringBuilder();
       query.append("SELECT " + COLLECTION_COLUMNS + ", b.BUCKETNAME FROM collections c, buckets b " +
           "WHERE c.bucketId = b.bucketId AND b.bucketName=? " +
@@ -1035,11 +949,9 @@ public abstract class SqlService {
       } else {
         return null;
       }
-
     } finally {
       closeDbStuff(result, p);
     }
-
   }
 
 
@@ -1056,12 +968,10 @@ public abstract class SqlService {
    * @throws SQLException
    */
   public RepoCollection getCollection(String bucketName, String key, Integer version, String tag, UUID uuid) throws SQLException, RepoException {
-
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
-
       StringBuilder query = new StringBuilder();
       query.append("SELECT " + COLLECTION_COLUMNS + ", b.BUCKETNAME FROM collections c, buckets b " +
           "WHERE c.bucketId = b.bucketId AND b.bucketName=? AND collKey=? ");
@@ -1110,11 +1020,9 @@ public abstract class SqlService {
       } else {
         return null;
       }
-
     } finally {
       closeDbStuff(result, p);
     }
-
   }
 
   /**
@@ -1126,14 +1034,12 @@ public abstract class SqlService {
    * @throws SQLException
    */
   public List<RepoCollection> listCollectionVersions(String bucketName, String key) throws SQLException, RepoException {
-
     List<RepoCollection> repoCollections = new ArrayList<RepoCollection>();
 
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
-
       p = connectionLocal.get().prepareStatement("SELECT " + COLLECTION_COLUMNS + ", b.BUCKETNAME FROM collections c, buckets b " +
           "WHERE c.bucketId = b.bucketId AND b.bucketName=? AND c.collKey=? AND c.status=? " +
           "ORDER BY versionNumber ASC");
@@ -1151,7 +1057,6 @@ public abstract class SqlService {
       }
 
       return repoCollections;
-
     } finally {
       closeDbStuff(result, p);
     }
@@ -1169,7 +1074,6 @@ public abstract class SqlService {
    * @throws SQLException
    */
   public int markCollectionDeleted(String key, String bucketName, Integer versionNumber, String tag, UUID uuid) throws SQLException {
-
     PreparedStatement p = null;
 
     Bucket bucket = getBucket(bucketName);
@@ -1179,7 +1083,6 @@ public abstract class SqlService {
     }
 
     try {
-
       StringBuilder query = new StringBuilder();
       query.append("UPDATE collections SET status=? WHERE collKey=? AND bucketId=?");
 
@@ -1211,22 +1114,18 @@ public abstract class SqlService {
       }
 
       return p.executeUpdate();
-
     } finally {
       closeDbStuff(null, p);
     }
-
   }
 
   public List<RepoObject> listObjectVersions(String bucketName, String objectKey) throws SQLException, RepoException {
-
     List<RepoObject> repoObjects = new ArrayList<>();
 
     PreparedStatement p = null;
     ResultSet result = null;
 
     try {
-
       p = connectionLocal.get().prepareStatement("SELECT " + OBJECT_COLUMNS + ", b.BUCKETNAME FROM objects obj, buckets b " +
           "WHERE obj.bucketId = b.bucketId AND bucketName=? AND obj.objKey=? AND status=? " +
           "ORDER BY versionNumber ASC");
@@ -1242,14 +1141,12 @@ public abstract class SqlService {
       }
 
       return repoObjects;
-
     } finally {
       closeDbStuff(result, p);
     }
   }
 
   public int insertCollection(RepoCollection repoCollection) throws SQLException {
-
     PreparedStatement p = null;
     ResultSet keys = null;
 
@@ -1280,12 +1177,9 @@ public abstract class SqlService {
     } finally {
       closeDbStuff(keys, p);
     }
-
-
   }
 
   public Boolean existsActiveCollectionForObject(String objKey, String bucketName, Integer version, UUID uuid, String tag) throws SQLException, RepoException {
-
     RepoObject repoObject = this.getObject(bucketName, objKey, version, uuid, tag);
 
     if (repoObject == null) {
@@ -1306,19 +1200,15 @@ public abstract class SqlService {
 
       if (result.next()) {
         return true;
-
       }
 
       return false;
-
     } finally {
       closeDbStuff(result, p);
     }
-
   }
 
   public int insertCollectionObjects(Integer collectionId, String objectKey, String bucketName, UUID objUUID) throws SQLException {
-
     PreparedStatement p = null;
     ResultSet result = null;
 
@@ -1345,15 +1235,12 @@ public abstract class SqlService {
         p.setInt(2, objId);
 
         return p.executeUpdate();
-
       }
 
       return 0;
-
     } finally {
       closeDbStuff(result, p);
     }
-
   }
 
   public int countUsedAndDeletedObjectsReference(String bucketName, String checksum) throws SQLException {
@@ -1366,7 +1253,6 @@ public abstract class SqlService {
     q.append(" AND checksum=?");
 
     try {
-
       p = connectionLocal.get().prepareStatement(q.toString());
 
       p.setInt(1, Status.USED.getValue());
@@ -1381,18 +1267,15 @@ public abstract class SqlService {
       } else {
         return 0;
       }
-
     } finally {
       closeDbStuff(result, p);
     }
   }
 
   public int removeBucketContent(String bucketName) throws SQLException {
-
     PreparedStatement p = null;
 
     try {
-
       p = connectionLocal.get().prepareStatement("SELECT bucketId FROM buckets WHERE bucketName=?");
       p.setString(1, bucketName);
 
@@ -1423,12 +1306,9 @@ public abstract class SqlService {
       p = connectionLocal.get().prepareStatement("DELETE FROM buckets WHERE bucketId=?");
       p.setInt(1, bucketId);
       return p.executeUpdate();
-
-
     } finally {
       closeDbStuff(null, p);
     }
-
   }
 
   /**
@@ -1446,7 +1326,6 @@ public abstract class SqlService {
     PreparedStatement p = null;
 
     try {
-
       p = connectionLocal.get().prepareStatement("INSERT INTO audit (bucketName, keyValue, operation, uuid) VALUES (?,?,?,?)");
 
       p.setString(1, audit.getBucket());
@@ -1457,11 +1336,9 @@ public abstract class SqlService {
       p.setString(4, audit.getUuid() == null ? "" : audit.getUuid().toString());
 
       return p.executeUpdate() > 0;
-
     } finally {
       closeDbStuff(null, p);
     }
-
   }
 
   /**
@@ -1538,9 +1415,9 @@ public abstract class SqlService {
       }
 
       return repoAudit;
-
     } finally {
       closeDbStuff(result, p);
     }
   }
+
 }

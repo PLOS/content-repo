@@ -66,7 +66,6 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void invalidBucketName() {
-
     assertRepoError(
         target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
             .post(Entity.form(new Form()
@@ -77,7 +76,6 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void deleteNonEmptyBucket() {
-
     target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
         .post(Entity.form(new Form()
             .param("name", bucketName)
@@ -93,7 +91,6 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void deleteNonExsitingBucket() {
-
     assertRepoError(
         target("/buckets/" + "nonExistingBucket")
             .request(MediaType.APPLICATION_JSON_TYPE).delete(),
@@ -102,7 +99,6 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void crudHappyPath() throws Exception {
-
     // CREATE
 
     String responseString = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).get(String.class);
@@ -131,12 +127,10 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
 
     response = target("/buckets/" + bucketName).request().delete();
     assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
-
   }
 
   @Test
   public void deleteBucketWithDeletedContent() {
-
     // create bucket
     Response createBucketResponse = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
         .post(Entity.form(new Form().param("name", bucketName).param("creationDateTime", CREATION_DATE_TIME_STRING)));
@@ -168,12 +162,10 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
     Response deleteBucketResponse = target("/buckets/" + bucketName).request().accept(MediaType.APPLICATION_JSON_TYPE).delete();
 
     assertRepoError(deleteBucketResponse, Response.Status.BAD_REQUEST, RepoException.Type.CantDeleteNonEmptyBucket);
-
   }
 
   @Test
   public void deleteBucketWithPurgeContent() {
-
     Response createBucketResponse = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
         .post(Entity.form(new Form().param("name", bucketName).param("creationDateTime", CREATION_DATE_TIME_STRING)));
 
@@ -238,7 +230,6 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
         .accept(MediaType.APPLICATION_JSON_TYPE)
         .get();
     assertRepoError(getColResponse, Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound);
-
   }
 
 }

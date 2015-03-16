@@ -34,7 +34,6 @@ public class InputRepoObjectValidator {
 
 
   public void validate(InputRepoObject repoObject) throws RepoException {
-
     if (repoObject.getKey() == null) {
       throw new RepoException(RepoException.Type.NoKeyEntered);
     }
@@ -45,7 +44,6 @@ public class InputRepoObjectValidator {
 
     timestampValidator.validate(repoObject.getTimestamp(), RepoException.Type.CouldNotParseTimestamp);
     timestampValidator.validate(repoObject.getCreationDateTime(), RepoException.Type.CouldNotParseCreationDate);
-
   }
 
 }

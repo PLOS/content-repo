@@ -41,7 +41,6 @@ public class ThreadLocalTest extends RepoBaseSpringTest {
   @Before
   @SuppressWarnings("unchecked")
   public void setup() throws Exception {
-
     // clear data calls sqlService.getConnection()
     clearData(objectStore, sqlService);
 
@@ -61,7 +60,6 @@ public class ThreadLocalTest extends RepoBaseSpringTest {
 
   @Test
   public void testThreadLocalSingleThread() throws Exception {
-
     // ExistingConnection : GET
     Connection conn = threadLocalHnd.get();
     assertNotNull(conn);
@@ -101,7 +99,6 @@ public class ThreadLocalTest extends RepoBaseSpringTest {
 
   @Test
   public void testThreadLocalMultipleThreads() throws Exception {
-
     final int THREADS = 10;
 
     this.endGate = new CountDownLatch(THREADS);
@@ -137,4 +134,5 @@ public class ThreadLocalTest extends RepoBaseSpringTest {
       assertTrue(c.isClosed());
     }
   }
+
 }
