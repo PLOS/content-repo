@@ -53,8 +53,8 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   private final String CREATION_DATE_TIME_STRING = CREATION_DATE_TIME.toString();
 
   private final String testData1 = "test data one goes\nhere.";
-
   private String USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\", \"version\":1.1 }";
+
 
 
   @Before
@@ -172,9 +172,9 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   public void createWithExistingKey(){
 
     generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
+    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
 
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
+    InputObject object1 = new InputObject(objectName1,uuidObj1);
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
@@ -202,11 +202,11 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   public void versionNonExistingCollection(){
 
     generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
-    String versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
+    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
+    String uuidObj2 = createObject(bucketName, objectName2, contentType2);
 
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
-    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
+    InputObject object1 = new InputObject(objectName1,uuidObj1);
+    InputObject object2 = new InputObject(objectName2,uuidObj2);
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
@@ -228,11 +228,11 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   public void autoCreateCollection(){
 
     generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
-    String versionChecksumObj2 = createObject(bucketName, objectName2, contentType1);
+    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
+    String uuidObj2 = createObject(bucketName, objectName2, contentType1);
 
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
-    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
+    InputObject object1 = new InputObject(objectName1,uuidObj1);
+    InputObject object2 = new InputObject(objectName2,uuidObj2);
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
@@ -253,11 +253,11 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   public void autoVersionExistingKeyCollection(){
 
     generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
-    String versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
+    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
+    String uuidObj2 = createObject(bucketName, objectName2, contentType2);
 
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
-    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
+    InputObject object1 = new InputObject(objectName1,uuidObj1);
+    InputObject object2 = new InputObject(objectName2,uuidObj2);
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
@@ -282,6 +282,35 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   }
 
   @Test
+  public void createColletionInvalidObjectUuid(){
+
+    generateBuckets(bucketName);
+
+    InputCollection inputCollection = new InputCollection();
+    inputCollection.setBucketName(bucketName);
+    inputCollection.setKey("invalidKey");
+    inputCollection.setCreate("new");
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("invalidKey", "789789")}));
+    Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
+
+    assertRepoError(target("/collections").request()
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .post(collectionEntity),
+        Response.Status.BAD_REQUEST,
+        RepoException.Type.InvalidUuid
+    );
+
+    Response response = target("/collections/" + bucketName)
+        .queryParam("version", "0")
+        .queryParam("key", "invalidKey")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .accept(MediaType.APPLICATION_JSON_TYPE)
+        .get();
+    assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+
+  }
+
+  @Test
   public void createColletionNonexistingObject(){
 
     generateBuckets(bucketName);
@@ -290,7 +319,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("nonexistingKey");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("nonexistingKey", "789789")}));
+    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("nonexistingKey", "046b6c7f-0b8a-43b9-b35d-6489e6daee91")}));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertRepoError(target("/collections").request()
@@ -314,10 +343,10 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   public void getAllCollections(){
 
     generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
-    String versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
-    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
+    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
+    String uuidObj2 = createObject(bucketName, objectName2, contentType2);
+    InputObject object1 = new InputObject(objectName1,uuidObj1);
+    InputObject object2 = new InputObject(objectName2,uuidObj2);
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
@@ -361,11 +390,11 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   public void getCollectionsWithPagination(){
 
     generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
-    String versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
+    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
+    String uuidObj2 = createObject(bucketName, objectName2, contentType2);
 
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
-    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
+    InputObject object1 = new InputObject(objectName1,uuidObj1);
+    InputObject object2 = new InputObject(objectName2,uuidObj2);
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
@@ -446,11 +475,11 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   public void getCollectionsUsingTag(){
 
     generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
-    String versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
+    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
+    String uuidObj2 = createObject(bucketName, objectName2, contentType2);
 
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
-    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
+    InputObject object1 = new InputObject(objectName1,uuidObj1);
+    InputObject object2 = new InputObject(objectName2,uuidObj2);
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
@@ -497,11 +526,11 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   public void getCollectionsUsingBucket(){
 
     generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
-    String versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
+    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
+    String uuidObj2 = createObject(bucketName, objectName2, contentType2);
 
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
-    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
+    InputObject object1 = new InputObject(objectName1,uuidObj1);
+    InputObject object2 = new InputObject(objectName2,uuidObj2);
 
     InputCollection inputCollection = new InputCollection();
     inputCollection.setBucketName(bucketName);
@@ -518,14 +547,14 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     );
 
     generateBuckets("bucket2");
-    String versionChecksumObj3 = createObject("bucket2", "object3", "image/gif");
+    String uuidObj3 = createObject("bucket2", "object3", "image/gif");
 
     InputCollection inputCollection2 = new InputCollection();
     inputCollection2.setBucketName("bucket2");
     inputCollection2.setKey("collection2");
     inputCollection2.setCreate("new");
     inputCollection2.setTag("AOP");
-    inputCollection2.setObjects(Arrays.asList(new InputObject[]{new InputObject("object3", versionChecksumObj3)}));
+    inputCollection2.setObjects(Arrays.asList(new InputObject[]{new InputObject("object3", uuidObj3)}));
     Entity<InputCollection> collectionEntity2 = Entity.entity(inputCollection2, MediaType.APPLICATION_JSON_TYPE);
 
     assertEquals(target("/collections").request()
@@ -594,11 +623,11 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   public void getCollectionMoreThanOneWithSameTag(){
 
     generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
-    String versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
+    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
+    String uuidObj2 = createObject(bucketName, objectName2, contentType2);
 
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
-    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
+    InputObject object1 = new InputObject(objectName1,uuidObj1);
+    InputObject object2 = new InputObject(objectName2,uuidObj2);
 
     // create collection 1
     InputCollection inputCollection = new InputCollection();
@@ -653,11 +682,11 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   public void getLatestCollection(){
 
     generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
-    String versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
+    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
+    String uuidObj2 = createObject(bucketName, objectName2, contentType2);
 
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
-    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
+    InputObject object1 = new InputObject(objectName1,uuidObj1);
+    InputObject object2 = new InputObject(objectName2,uuidObj2);
 
     // create collection 1
     InputCollection inputCollection = new InputCollection();
@@ -726,18 +755,18 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
     JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
     assertNotNull(responseObj);
-    return responseObj.get("versionChecksum").getAsString();
+    return responseObj.get("uuid").getAsString();
 
   }
 
   private void generateCollectionData(){
 
     generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
-    String versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
+    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
+    String uuidObj2 = createObject(bucketName, objectName2, contentType2);
 
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
-    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
+    InputObject object1 = new InputObject(objectName1,uuidObj1);
+    InputObject object2 = new InputObject(objectName2,uuidObj2);
 
     // create collection 1
     InputCollection inputCollection = new InputCollection();
@@ -825,12 +854,12 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   }
 
   @Test
-  public void getCollectionByVersionChecksum(){
+  public void getCollectionByUuid(){
 
     generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
+    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
 
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
+    InputObject object1 = new InputObject(objectName1,uuidObj1);
 
     // create collection 1
     InputCollection inputCollection = new InputCollection();
@@ -847,11 +876,11 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
     JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
     assertNotNull(responseObj);
-    String versionChecksum = responseObj.get("versionChecksum").getAsString();
+    String uuid = responseObj.get("uuid").getAsString();
 
     Response responseGet = target("/collections/" + bucketName)
         .queryParam("key", "collection1")
-        .queryParam("versionChecksum", versionChecksum)
+        .queryParam("uuid", uuid)
         .request(MediaType.APPLICATION_JSON_TYPE)
         .accept(MediaType.APPLICATION_JSON_TYPE)
         .get();
@@ -863,7 +892,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     assertEquals("collection1", responseObj.get("key").getAsString());
     assertEquals(0, responseObjGET.get("versionNumber").getAsInt());
     assertEquals(1, responseObjGET.get("objects").getAsJsonArray().size());
-    assertEquals(versionChecksum, responseObjGET.get("versionChecksum").getAsString());
+    assertEquals(uuid, responseObjGET.get("uuid").getAsString());
 
 
   }
@@ -895,12 +924,12 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   }
 
   @Test
-  public void deleteCollectionWithVersionChecksum(){
+  public void deleteCollectionWithUuid(){
 
     generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
+    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
 
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
+    InputObject object1 = new InputObject(objectName1,uuidObj1);
 
     // create collection 1
     InputCollection inputCollection = new InputCollection();
@@ -917,7 +946,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
     JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
     assertNotNull(responseObj);
-    String versionChecksum = responseObj.get("versionChecksum").getAsString();
+    String uuid = responseObj.get("uuid").getAsString();
 
     Response responseGet = target("/collections/" + bucketName)
         .queryParam("key", "collection1")
@@ -930,7 +959,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
     assertEquals(target("/collections/" + bucketName)
             .queryParam("key", "collection1")
-            .queryParam("versionChecksum", versionChecksum)
+            .queryParam("uuid", uuid)
             .request()
             .accept(MediaType.APPLICATION_JSON_TYPE)
             .delete()
@@ -953,9 +982,9 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   public void deleteCollectionWithTag(){
 
     generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
+    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
 
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
+    InputObject object1 = new InputObject(objectName1,uuidObj1);
 
     // create collection 1
     InputCollection inputCollection = new InputCollection();
@@ -1037,9 +1066,9 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   public void deleteCollectionWithSameTags(){
 
     generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
+    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
 
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
+    InputObject object1 = new InputObject(objectName1,uuidObj1);
 
     // create collection 1
     InputCollection inputCollection = new InputCollection();
@@ -1054,8 +1083,8 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
         .accept(MediaType.APPLICATION_JSON_TYPE)
         .post(collectionEntity);
 
-    String versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
-    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
+    String uuidObj2 = createObject(bucketName, objectName2, contentType2);
+    InputObject object2 = new InputObject(objectName2,uuidObj2);
     inputCollection.setCreate("version");
     inputCollection.setObjects(Arrays.asList(new InputObject[]{object2}));
 
@@ -1080,11 +1109,11 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
   public void getCollectionsVersions(){
 
     generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
-    String versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
+    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
+    String uuidObj2 = createObject(bucketName, objectName2, contentType2);
 
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
-    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
+    InputObject object1 = new InputObject(objectName1,uuidObj1);
+    InputObject object2 = new InputObject(objectName2,uuidObj2);
 
     // create collection1
     InputCollection inputCollection = new InputCollection();
@@ -1179,15 +1208,14 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   }
 
+
   @Test
-  public void createCollectionWithUserMetadata(){
+  public void createCollectionValidUserMetadata(){
 
     generateBuckets(bucketName);
-    String versionChecksumObj1 = createObject(bucketName, objectName1, contentType1);
-    String versionChecksumObj2 = createObject(bucketName, objectName2, contentType2);
+    String uuidObj1 = createObject(bucketName, objectName1, contentType1);
 
-    InputObject object1 = new InputObject(objectName1,versionChecksumObj1);
-    InputObject object2 = new InputObject(objectName2,versionChecksumObj2);
+    InputObject object1 = new InputObject(objectName1,uuidObj1);
 
     // create collection 1
     InputCollection inputCollection = new InputCollection();
@@ -1197,6 +1225,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
     inputCollection.setTag("AOP");
     inputCollection.setUserMetadata(USER_METADATA);
+
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     Response response = target("/collections").request()

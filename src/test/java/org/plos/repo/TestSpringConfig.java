@@ -37,6 +37,7 @@ import org.springframework.core.io.Resource;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
+import java.sql.Statement;
 
 public class TestSpringConfig {
 
@@ -68,23 +69,10 @@ public class TestSpringConfig {
   @Bean
   public ObjectStore objectStore() throws Exception {
     return new InMemoryFileStoreService();
-//    return new FileSystemStoreService("/tmp/repo_unittest");
-//    return new MogileStoreService("toast", new String[]{"localhost:7001"}, 1, 1, 100);
   }
 
   @Bean
   public SqlService sqlService() throws Exception {
-
-//    MysqlDataSource ds = new MysqlDataSource();
-//    ds.setUrl("jdbc:mysql://localhost:3306/plosrepo_unittest");
-//    ds.setUser("root");
-//    ds.setPassword("");
-//
-//    Connection connection = ds.getConnection();
-//
-//    SqlService service = new MysqlService();
-//    Resource sqlFile = new ClassPathResource("setup.mysql");
-
 
     JDBCDataSource ds = new JDBCDataSource();
     ds.setUrl("jdbc:hsqldb:mem:plosrepo-unittest-hsqldb;shutdown=true;sql.syntax_mys=true");

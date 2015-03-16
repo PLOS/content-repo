@@ -18,6 +18,7 @@
 package org.plos.repo.models;
 
 import java.sql.Timestamp;
+import java.util.UUID;
 
 /**
  * Represents the operation's values to audit
@@ -28,7 +29,7 @@ public class Audit {
   private final String bucket;
   private final String key;
   private final Operation operation;
-  private final String versionChecksum;
+  private final UUID uuid;
   private final Timestamp timestamp;
   
   private Audit(AuditBuilder auditBuilder){
@@ -36,7 +37,7 @@ public class Audit {
     this.bucket = auditBuilder.bucket;
     this.key = auditBuilder.key;
     this.operation = auditBuilder.operation;
-    this.versionChecksum = auditBuilder.versionChecksum;
+    this.uuid = auditBuilder.uuid;
     this.timestamp = auditBuilder.timestamp;
   }
   // All getter, and NO setter to provide immutability
@@ -56,8 +57,8 @@ public class Audit {
     return operation;
   }
 
-  public String getVersionChecksum () {
-    return versionChecksum;
+  public UUID getUuid() {
+    return uuid;
   }
 
   public Timestamp getTimestamp () {
@@ -72,7 +73,7 @@ public class Audit {
     private final Operation operation; // required
     private Integer id;
     private String key;
-    private String versionChecksum;
+    private UUID uuid;
     private Timestamp timestamp;
     
     public AuditBuilder(String bucket, Operation operation) {
@@ -90,8 +91,8 @@ public class Audit {
       return this;
     }
     
-    public AuditBuilder setVersionChecksum(String versionChecksum) {
-      this.versionChecksum = versionChecksum;
+    public AuditBuilder setUuid(UUID uuid) {
+      this.uuid = uuid;
       return this;
     }
      
@@ -115,7 +116,7 @@ public class Audit {
     result.append(" BucketName: ").append(this.bucket).append(",");
     result.append(" Key: ").append(this.key).append(",");
     result.append(" Operation: ").append(this.operation.getValue()).append(",");
-    result.append(" VersionChecksum: ").append(this.versionChecksum).append(" } ");
+    result.append(" Uuid: ").append(this.uuid).append(" } ");
     return result.toString();
   }
 }

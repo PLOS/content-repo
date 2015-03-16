@@ -43,9 +43,6 @@ public abstract class BaseRepoService {
   @Inject
   protected SqlService sqlService;
 
-  @Inject
-  protected ChecksumGenerator checksumGenerator;
-  
   protected void sqlReleaseConnection() throws RepoException {
 
     try {

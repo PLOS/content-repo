@@ -1,4 +1,3 @@
-
 #
 # Start tracking the Content Repo Schema Versions
 # The string in schema_ver will indicate the last
@@ -13,19 +12,22 @@ CREATE TABLE IF NOT EXISTS CREPO_SCHEMA_INFO (
 );
 
 #
-# Create the table representing Audit.
+# Objects are being update with UUID information
 #
-CREATE TABLE IF NOT EXISTS audit (
-    id INTEGER NOT NULL AUTO_INCREMENT,
-    bucketName VARCHAR (255) NOT NULL,
-    keyValue VARCHAR (255),
-    operation VARCHAR (20) NOT NULL,
-    uuid CHAR (36),
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
-);
+
+ALTER TABLE objects
+ADD COLUMN uuid CHAR(36);
+
+
+#
+# Collections are being update with UUID information
+#
+
+ALTER TABLE collections
+ADD COLUMN uuid CHAR(36);
+
 
 # INSERT the version string. This should happen last.
 # The temporal order will indicate which scripts have been
 # run to update this database.
-INSERT CREPO_SCHEMA_INFO SET schema_ver = '04-add-audit';
+INSERT CREPO_SCHEMA_INFO SET schema_ver = '05-add-uuid-column';

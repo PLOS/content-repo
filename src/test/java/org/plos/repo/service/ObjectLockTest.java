@@ -28,10 +28,7 @@ import org.plos.repo.models.input.InputRepoObject;
 
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
 import static org.junit.Assert.assertEquals;
@@ -97,8 +94,8 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     this.startGate = new CountDownLatch(1);  // make all thread starts at the same time. Since all threads are going to be waiting on startGate, once all thread are created, we perform a startGate.countDown()
   }
 
-  //Comment out for we can build the binary and start manual test
-  /*@Test
+  //Comment out in order to build the binary and start manual test
+  //@Test
   public void testReaderAndWritersSameKeyAndSameData() throws Exception {
 
     final int INSERT_THREADS = 25;
@@ -144,10 +141,10 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     // create new objects + list objects + update objects + list objects ----> all operations calls getObject underneath
     verify(spySqlService, times(READER_THREADS*3 + INSERT_THREADS)).getObject(anyString(), anyString());
 
-  }*/
+  }
 
-  //Comment out for we can build the binary and start manual test
-  /*@Test
+  //Comment out in order to build the binary and start manual test
+  //@Test
   public void testReaderAndWritersSameKeyDifferentData() throws Exception {
 
     final int INSERT_THREADS = 25;
@@ -195,8 +192,9 @@ public class ObjectLockTest extends RepoBaseSpringTest {
       assertEquals(1 + UPDATE_THREADS, versions.size());
     }
 
-    verify(spySqlService, times(READER_THREADS*2)).getObject(anyString(), anyString(), anyInt(), anyString(), anyString());
-  }*/
+    verify(spySqlService, times(READER_THREADS*2)).getObject(anyString(), anyString(), anyInt(), any(UUID.class), anyString());
+  }
+
 
 
   @Test
@@ -259,7 +257,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
     verify(spySqlService, times(INSERT_THREADS + UPDATE_THREADS + READER_THREADS)).getObject(anyString(), anyString()); // insert object + list objects + update objets
 
-    verify(spySqlService, times(READER_THREADS*2)).getObject(anyString(), anyString(), anyInt(), anyString(), anyString()); // reading objects (3 times) + deleting objects
+    verify(spySqlService, times(READER_THREADS*2)).getObject(anyString(), anyString(), anyInt(), any(UUID.class), anyString()); // reading objects (3 times) + deleting objects
   }
 
   @Test
@@ -300,7 +298,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
     }
 
     // when deleting an object, we first verify that the object is not contain in an active collection. For that end, we look for the existing object using sqlService getObject
-    verify(spySqlService, times(READER_THREADS)).getObject(anyString(), anyString(), anyInt(), anyString(), anyString());
+    verify(spySqlService, times(READER_THREADS)).getObject(anyString(), anyString(), anyInt(), any(UUID.class), anyString());
   }
 
   private void execute(final int insertThreads, final int updateThreads,

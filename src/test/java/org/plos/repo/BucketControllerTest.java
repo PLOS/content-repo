@@ -157,11 +157,11 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
 
     JsonObject responseObj = gson.fromJson(createObjResponse.readEntity(String.class), JsonElement.class).getAsJsonObject();
     TestCase.assertNotNull(responseObj);
-    String versionChecksum = responseObj.get("versionChecksum").getAsString();
+    String uuid = responseObj.get("uuid").getAsString();
 
     Response deleteObjectResponse = target("/objects/" + bucketName)
         .queryParam("key", "object3")
-        .queryParam("versionChecksum", versionChecksum)
+        .queryParam("uuid", uuid)
         .request()
         .accept(MediaType.APPLICATION_JSON_TYPE)
         .delete();
@@ -194,9 +194,9 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
 
     JsonObject responseObj = gson.fromJson(createObjResponse.readEntity(String.class), JsonElement.class).getAsJsonObject();
     TestCase.assertNotNull(responseObj);
-    String versionChecksumObj = responseObj.get("versionChecksum").getAsString();
+    String uuidObj = responseObj.get("uuid").getAsString();
 
-    InputObject object1 = new InputObject("object3", versionChecksumObj);
+    InputObject object1 = new InputObject("object3", uuidObj);
 
     // create collection
     InputCollection inputCollection = new InputCollection();
@@ -212,13 +212,13 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
 
     JsonObject responseColl = gson.fromJson(createCollResponse.readEntity(String.class), JsonElement.class).getAsJsonObject();
     TestCase.assertNotNull(responseObj);
-    String versionChecksumColl = responseObj.get("versionChecksum").getAsString();
+    String uuidCol = responseObj.get("uuid").getAsString();
 
     // purge object
     Response purgeResponse = target("/objects/" + bucketName)
         .queryParam("key", "object3")
         .queryParam("purge", true)
-        .queryParam("versionChecksum", versionChecksumObj)
+        .queryParam("uuid", uuidObj)
         .request()
         .accept(MediaType.APPLICATION_JSON_TYPE)
         .delete();
@@ -228,13 +228,13 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
     assertEquals(Response.Status.OK.getStatusCode(), deleteBucketResponse.getStatus());
 
     // get object
-    Response getObjResponse = target("/objects/" + bucketName).queryParam("key", "object1").queryParam("versionChecksum", versionChecksumObj).request().get();
+    Response getObjResponse = target("/objects/" + bucketName).queryParam("key", "object1").queryParam("uuid", uuidObj).request().get();
     assertRepoError(getObjResponse, Response.Status.NOT_FOUND, RepoException.Type.ObjectNotFound);
 
     // get object
     Response getColResponse = target("/collections/" + bucketName)
         .queryParam("key", "collection1")
-        .queryParam("versionChecksum", versionChecksumColl)
+        .queryParam("uuid", uuidCol)
         .request(MediaType.APPLICATION_JSON_TYPE)
         .accept(MediaType.APPLICATION_JSON_TYPE)
         .get();
