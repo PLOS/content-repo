@@ -20,7 +20,9 @@ package org.plos.repo.service;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.Striped;
 import org.hsqldb.lib.StringUtil;
+import org.plos.repo.models.Audit;
 import org.plos.repo.models.Bucket;
+import org.plos.repo.models.Operation;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.Status;
 import org.plos.repo.models.input.ElementFilter;
@@ -62,8 +64,6 @@ public class RepoService extends BaseRepoService {
   @Inject
   private TimestampInputValidator timestampValidator;
 
-  @Inject
-  private JournalService journalService;
 
   public List<Bucket> listBuckets() throws RepoException {
     try {
@@ -114,10 +114,12 @@ public class RepoService extends BaseRepoService {
 
       if (!sqlService.insertBucket(bucket, creationDate)) {
         throw new RepoException("Unable to create bucket in database: " + name);
-      }
-
+      } 
+      
       newBucket = sqlService.getBucket(name);
 
+      auditOperation(new Audit.AuditBuilder(name, Operation.CREATE_BUCKET).build());
+      
       sqlService.transactionCommit();
       rollback = false;
 
@@ -139,10 +141,7 @@ public class RepoService extends BaseRepoService {
       writeLock.unlock();
 
     }
-    if(!rollback){
-        journalService.createBucket(name);
-      
-    }
+
     return newBucket;
   }
 
@@ -187,7 +186,9 @@ public class RepoService extends BaseRepoService {
       bucketDeletion = objectStore.deleteBucket(bucket);
       if (bucketDeletion.isPresent() && !bucketDeletion.get()) {
         throw new RepoException("Unable to delete bucket in object store: " + name);
-      }
+      } 
+      
+      auditOperation(new Audit.AuditBuilder(name, Operation.DELETE_BUCKET).build());
 
       sqlService.transactionCommit();
       rollback = false;
@@ -210,10 +211,6 @@ public class RepoService extends BaseRepoService {
       writeLock.unlock();
     }
 
-    if(!rollback) {
-      journalService.deleteBucket(name);
-
-    }
   }
 
   public boolean serverSupportsReproxy() {
@@ -466,13 +463,21 @@ public class RepoService extends BaseRepoService {
       }
 
       if (Status.DELETED.equals(status)){
-
-        int objectDeteled = sqlService.markObjectDeleted(key, bucketName, elementFilter.getVersion(),
-            elementFilter.getVersionChecksum(), elementFilter.getTag());
-
-        if (objectDeteled == 0)
+        
+        if(Status.DELETED.equals(repoObject.getStatus())) {
           throw new RepoException(RepoException.Type.ObjectNotFound);
-
+        }
+        
+        sqlService.markObjectDeleted(key, bucketName, elementFilter.getVersion(),
+            elementFilter.getVersionChecksum(), elementFilter.getTag());
+        
+        if(!Status.DELETED.equals(repoObject.getStatus())) {
+          auditOperation(new Audit.AuditBuilder(repoObject.getBucketName(), Operation.DELETE_OBJECT)
+              .setKey(repoObject.getKey())
+              .setVersionChecksum(repoObject.getVersionChecksum())
+              .build());
+        }
+        
       } else if (Status.PURGED.equals(status)){
         purgeObjectContentAndDb(repoObject, elementFilter);
       }
@@ -491,11 +496,7 @@ public class RepoService extends BaseRepoService {
       sqlReleaseConnection();
       writeLock.unlock();
     }
-    if(!rollback && repoObject != null){
-      repoObject.setStatus(status);
-      journalService.deletePurgeObject(repoObject);
-      
-    }
+
   }
 
   /**
@@ -528,6 +529,11 @@ public class RepoService extends BaseRepoService {
       if (objectPurged == 0){
         throw new RepoException(RepoException.Type.ObjectNotFound);
       }
+
+      auditOperation(new Audit.AuditBuilder(repoObject.getBucketName(), Operation.PURGE_OBJECT)
+          .setKey(repoObject.getKey())
+          .setVersionChecksum(repoObject.getVersionChecksum())
+                          .build());
 
       // verify if any other USED or DELETED objects has a reference to the same file. If it is the last reference to the object, remove it from the system,
       // if not, just mark the record in the DB as purge
@@ -685,7 +691,12 @@ public class RepoService extends BaseRepoService {
 
       if (sqlService.insertObject(repoObject) == 0) {
         throw new RepoException("Error saving content to database");
-      }
+      } 
+        
+      auditOperation(new Audit.AuditBuilder(repoObject.getBucketName(), Operation.CREATE_OBJECT)
+                          .setKey(repoObject.getKey())
+                          .setVersionChecksum(repoObject.getVersionChecksum())
+                          .build());
 
       sqlService.transactionCommit();
       rollback = false;
@@ -703,10 +714,6 @@ public class RepoService extends BaseRepoService {
       }
 
       sqlReleaseConnection();
-    }
-
-    if(!rollback && repoObject != null) {
-      journalService.createUpdateObject(repoObject);
     }
 
     return repoObject;
@@ -759,7 +766,12 @@ public class RepoService extends BaseRepoService {
       // add a record to the DB for the new object
       if (sqlService.insertObject(newRepoObject) == 0) {
         throw new RepoException("Error saving content to database");
-      }
+      } 
+        
+      auditOperation(new Audit.AuditBuilder(newRepoObject.getBucketName(), Operation.UPDATE_OBJECT)
+                          .setKey(newRepoObject.getKey())
+                          .setVersionChecksum(newRepoObject.getVersionChecksum())
+                          .build());
 
       sqlService.transactionCommit();
       rollback = false;
@@ -779,10 +791,7 @@ public class RepoService extends BaseRepoService {
       sqlReleaseConnection();
 
     }
-    if(!rollback && newRepoObject != null) {
-      journalService.createUpdateObject(newRepoObject);
 
-    }
     return newRepoObject;
   }
 

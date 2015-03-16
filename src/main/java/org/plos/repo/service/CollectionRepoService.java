@@ -21,7 +21,9 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.hsqldb.lib.StringUtil;
+import org.plos.repo.models.Audit;
 import org.plos.repo.models.Bucket;
+import org.plos.repo.models.Operation;
 import org.plos.repo.models.RepoCollection;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.Status;
@@ -49,8 +51,6 @@ public class CollectionRepoService extends BaseRepoService {
   @Inject
   private InputCollectionValidator inputCollectionValidator;
 
-  @Inject
-  private JournalService journalService;
 
   /**
    * Returns a list of collections meta data for the given bucket name <code>bucketName</code>. In case pagination
@@ -116,7 +116,7 @@ public class CollectionRepoService extends BaseRepoService {
       if (elementFilter == null || elementFilter.isEmpty()) // no filters defined
         repoCollection = sqlService.getCollection(bucketName, key);
       else
-        repoCollection = sqlService.getCollection(bucketName, key, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum(), false);
+        repoCollection = sqlService.getCollection(bucketName, key, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum());
 
       if (repoCollection == null)
         throw new RepoException(RepoException.Type.CollectionNotFound);
@@ -183,9 +183,9 @@ public class CollectionRepoService extends BaseRepoService {
    * @throws org.plos.repo.service.RepoException
    */
   public void deleteCollection(String bucketName, String key, ElementFilter elementFilter) throws RepoException {
-
+    
     boolean rollback = false;
-
+    
     try {
 
       if (StringUtil.isEmpty(key))
@@ -197,15 +197,25 @@ public class CollectionRepoService extends BaseRepoService {
 
       sqlService.getConnection();
       rollback = true;
-
+      
       if (elementFilter.getTag() != null & elementFilter.getVersionChecksum() == null & elementFilter.getVersion() == null){
         if (sqlService.listCollections(bucketName, 0, 10, false, elementFilter.getTag()).size() > 1){
           throw new RepoException(RepoException.Type.MoreThanOneTaggedCollection);
         }
       }
 
-      if (sqlService.markCollectionDeleted(key, bucketName, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum()) == 0)
+      RepoCollection collection = sqlService.getCollection(bucketName, key, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum());
+      
+      if(collection == null) {
         throw new RepoException(RepoException.Type.CollectionNotFound);
+      }
+      
+      sqlService.markCollectionDeleted(key, bucketName, elementFilter.getVersion(), elementFilter.getTag(), elementFilter.getVersionChecksum());
+
+      auditOperation(new Audit.AuditBuilder(bucketName, Operation.DELETE_COLLECTION)
+          .setKey(collection.getKey())
+          .setVersionChecksum(collection.getVersionChecksum())
+          .build());
 
       sqlService.transactionCommit();
       rollback = false;
@@ -221,9 +231,7 @@ public class CollectionRepoService extends BaseRepoService {
       sqlReleaseConnection();
 
     }
-    if(!rollback) {
-      journalService.deleteCollection(bucketName, key, elementFilter);
-    }
+    
   }
 
   /**
@@ -275,15 +283,16 @@ public class CollectionRepoService extends BaseRepoService {
 
       } else if (CreateMethod.AUTO.equals(method)){
         log.debug("Creation Method: auto. Key: " + inputCollection.getKey() );
-        if (existingRepoCollection == null)
+        if (existingRepoCollection == null) {
           newRepoCollection = createNewCollection(inputCollection, timestamp, creationDate);
-        else
+        } else {
           newRepoCollection = updateCollection(inputCollection, timestamp, existingRepoCollection, creationDate);
-
+        }
+        
       } else {
         throw new RepoException(RepoException.Type.InvalidCreationMethod);
       }
-
+      
       sqlService.transactionCommit();
       rollback = false;
 
@@ -296,9 +305,7 @@ public class CollectionRepoService extends BaseRepoService {
       }
       sqlReleaseConnection();
     }
-    if(!rollback && newRepoCollection != null) {
-        journalService.createUpdateCollection(newRepoCollection);
-    }
+    
     return newRepoCollection;
   }
 
@@ -319,8 +326,8 @@ public class CollectionRepoService extends BaseRepoService {
       repoCollection.setTag(inputCollection.getTag());
       repoCollection.setCreationDate(creationDate);
       repoCollection.setUserMetadata(inputCollection.getUserMetadata());
-        
-      return createCollection(repoCollection, inputCollection.getObjects());
+
+      return createCollection(repoCollection, inputCollection.getObjects(), Operation.CREATE_COLLECTION);
 
     } catch(SQLIntegrityConstraintViolationException e){
       log.debug("Error trying to create a collection, key: " + inputCollection.getKey() + " . SQLIntegrityConstraintViolationException:  " + e.getMessage());
@@ -343,7 +350,7 @@ public class CollectionRepoService extends BaseRepoService {
     repoCollection.setCreationDate(creationDate);
     repoCollection.setUserMetadata(inputCollection.getUserMetadata());
     try{
-      return createCollection(repoCollection, inputCollection.getObjects());
+      return createCollection(repoCollection, inputCollection.getObjects(), Operation.UPDATE_COLLECTION);
     } catch(SQLIntegrityConstraintViolationException e){
       log.debug("Error trying to version a collection, key: " + inputCollection.getKey() + " . SQLIntegrityConstraintViolationException:  " + e.getMessage());
       throw new RepoException(RepoException.Type.CantCreateCollectionVersionWithNoOrig);
@@ -355,7 +362,7 @@ public class CollectionRepoService extends BaseRepoService {
   }
 
   private RepoCollection createCollection(RepoCollection repoCollection,
-                                      List<InputObject> inputObjects) throws SQLException, RepoException {
+                                      List<InputObject> inputObjects,Operation operation) throws SQLException, RepoException {
 
     Integer versionNumber = sqlService.getCollectionNextAvailableVersion(repoCollection.getBucketName(), repoCollection.getKey());   // change to support collections
     repoCollection.setVersionNumber(versionNumber);
@@ -377,7 +384,12 @@ public class CollectionRepoService extends BaseRepoService {
       }
 
     }
-
+          
+    auditOperation(new Audit.AuditBuilder(repoCollection.getBucketName(), operation)
+                        .setKey(repoCollection.getKey())
+                        .setVersionChecksum(repoCollection.getVersionChecksum())
+                        .build());
+      
     return repoCollection;
 
 

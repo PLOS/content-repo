@@ -21,7 +21,14 @@ import org.hsqldb.jdbc.JDBCDataSource;
 import org.plos.repo.models.validator.InputCollectionValidator;
 import org.plos.repo.models.validator.InputRepoObjectValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
-import org.plos.repo.service.*;
+import org.plos.repo.service.CollectionRepoService;
+import org.plos.repo.service.HsqlService;
+import org.plos.repo.service.InMemoryFileStoreService;
+import org.plos.repo.service.ObjectStore;
+import org.plos.repo.service.RepoInfoService;
+import org.plos.repo.service.RepoService;
+import org.plos.repo.service.ScriptRunner;
+import org.plos.repo.service.SqlService;
 import org.plos.repo.util.ChecksumGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ClassPathResource;
@@ -57,9 +64,6 @@ public class TestSpringConfig {
 
   @Bean
   public ChecksumGenerator versionChecksumGenerator(){ return new ChecksumGenerator(); }
-
-  @Bean
-  public JournalService journalService(){ return new JournalService(); }
 
   @Bean
   public ObjectStore objectStore() throws Exception {

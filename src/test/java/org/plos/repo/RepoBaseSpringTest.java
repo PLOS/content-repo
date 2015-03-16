@@ -77,10 +77,6 @@ public abstract class RepoBaseSpringTest {
       sqlService.deleteBucket(bucket.getBucketName());
       objectStore.deleteBucket(bucket);
     }
-
-    // remove journal from DB
-    
-    sqlService.deleteJournal();
     
     // TODO: assert both refs are empty
 

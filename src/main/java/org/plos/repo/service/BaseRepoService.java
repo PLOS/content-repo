@@ -18,6 +18,7 @@
 package org.plos.repo.service;
 
 import org.apache.commons.lang.StringUtils;
+import org.plos.repo.models.Audit;
 import org.plos.repo.util.ChecksumGenerator;
 import org.slf4j.Logger;
 
@@ -44,7 +45,7 @@ public abstract class BaseRepoService {
 
   @Inject
   protected ChecksumGenerator checksumGenerator;
-
+  
   protected void sqlReleaseConnection() throws RepoException {
 
     try {
@@ -76,6 +77,30 @@ public abstract class BaseRepoService {
       throw new RepoException(RepoException.Type.InvalidLimit);
   }
 
+  /**
+   * This method audit all the others services operations  
+   * @param audit contains the operation's information to audit
+   * @throws RepoException if there is a error saving the audit row
+   */
+  protected void auditOperation(Audit audit) throws RepoException{
+    final boolean result;
+
+    try {
+      
+      result = sqlService.insertAudit(audit);
+      
+      if (!result) {
+        throw new RepoException("Error saving audit operation to database " + audit);
+      }
+
+    } catch (SQLException e){
+      getLog().error("Exception: {} when trying to save audit operation {}", 
+          e.getMessage(), 
+          audit.toString());
+      throw new RepoException("Exception: " + e.getMessage() + " when trying to save audit operation " + audit);
+    } 
+  }
+  
   public abstract Logger getLog();
 
 }
