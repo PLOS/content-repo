@@ -94,7 +94,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
     sqlServiceField.setAccessible(true);
     sqlServiceField.set(collectionRepoService, spySqlService);
 
-    inputObjects = new ArrayList<InputObject>();
+    inputObjects = new ArrayList<>();
     for (int i = 0; i < 1000; i++) {
       String key = OBJECT_KEY + i;
       InputRepoObject inputRepoObject = new InputRepoObject();

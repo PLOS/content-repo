@@ -76,10 +76,9 @@ public class RepoServiceTest {
   @Test
   public void testListObjectsHappyPath() throws RepoException, SQLException, MalformedURLException {
     doNothing().when(sqlService).getReadOnlyConnection();
-    ;
     when(sqlService.getBucket(VALID_BUCKET)).thenReturn(bucket);
 
-    List<RepoObject> repoObjects = new ArrayList<RepoObject>();
+    List<RepoObject> repoObjects = new ArrayList<>();
     RepoObject ob = new RepoObject();
     ob.setId(0);
     ob.setKey("key");

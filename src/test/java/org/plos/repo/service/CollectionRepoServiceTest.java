@@ -86,7 +86,6 @@ public class CollectionRepoServiceTest {
   @Test
   public void testListCollectionsHappyPath() throws RepoException, SQLException {
     doNothing().when(sqlService).getReadOnlyConnection();
-    ;
     when(sqlService.getBucket(VALID_BUCKET)).thenReturn(bucket);
 
     when(sqlService.listCollectionsMetaData(VALID_BUCKET, VALID_OFFSET, VALID_LIMIT, true, VALID_TAG)).thenReturn(repoCollections);
@@ -159,7 +158,7 @@ public class CollectionRepoServiceTest {
   public void testGetCollectionVersionHappyPath() throws RepoException, SQLException {
     doNothing().when(sqlService).getReadOnlyConnection();
 
-    List<RepoCollection> expRepoCollections = new ArrayList<RepoCollection>();
+    List<RepoCollection> expRepoCollections = new ArrayList<>();
     RepoCollection coll1 = mock(RepoCollection.class);
     RepoCollection coll2 = mock(RepoCollection.class);
     expRepoCollections.add(coll1);

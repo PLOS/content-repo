@@ -65,8 +65,8 @@ public class ChecksumGeneratorTest {
   @Mock
   private RepoObject repoObject2;
 
-  private List<String> objects1Checksum = Arrays.asList(new String[]{OBJ1_VERSION_CHECKSUM, OBJ2_VERSION_CHECKSUM});
-  private List<String> objects2Checksum = Arrays.asList(new String[]{OBJ2_VERSION_CHECKSUM, OBJ1_VERSION_CHECKSUM});
+  private List<String> objects1Checksum = Arrays.asList(OBJ1_VERSION_CHECKSUM, OBJ2_VERSION_CHECKSUM);
+  private List<String> objects2Checksum = Arrays.asList(OBJ2_VERSION_CHECKSUM, OBJ1_VERSION_CHECKSUM);
 
   @Before
   public void setUp() {

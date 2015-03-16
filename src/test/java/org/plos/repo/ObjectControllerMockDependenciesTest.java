@@ -98,7 +98,7 @@ public class ObjectControllerMockDependenciesTest {
     when(object4.getTimestamp()).thenReturn(timestamp);
     when(object4.getCreationDate()).thenReturn(timestamp);
 
-    List<RepoObject> repoObjects = new ArrayList<RepoObject>();
+    List<RepoObject> repoObjects = new ArrayList<>();
     repoObjects.add(object1);
     repoObjects.add(object2);
     repoObjects.add(object3);

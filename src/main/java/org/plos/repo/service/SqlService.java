@@ -1034,7 +1034,7 @@ public abstract class SqlService {
    * @throws SQLException
    */
   public List<RepoCollection> listCollectionVersions(String bucketName, String key) throws SQLException, RepoException {
-    List<RepoCollection> repoCollections = new ArrayList<RepoCollection>();
+    List<RepoCollection> repoCollections = new ArrayList<>();
 
     PreparedStatement p = null;
     ResultSet result = null;
@@ -1163,7 +1163,7 @@ public abstract class SqlService {
       p.setInt(5, repoCollection.getVersionNumber());
       p.setString(6, repoCollection.getTag());
       p.setTimestamp(7, repoCollection.getCreationDate());
-      p.setString(8, (String) repoCollection.getUserMetadata());
+      p.setString(8, repoCollection.getUserMetadata());
       p.setString(9, repoCollection.getUuid().toString());
 
       p.executeUpdate();
@@ -1356,7 +1356,7 @@ public abstract class SqlService {
       throw new RuntimeException("Auditing is not enabled (no service should call listAudit)");
     }
 
-    List<Audit> repoAudit = new ArrayList<Audit>();
+    List<Audit> repoAudit = new ArrayList<>();
     PreparedStatement p = null;
     ResultSet result = null;
     boolean filter = false;

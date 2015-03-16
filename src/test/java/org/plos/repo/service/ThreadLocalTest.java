@@ -112,7 +112,6 @@ public class ThreadLocalTest extends RepoBaseSpringTest {
             startGate.await();
             try {
               sqlService.getReadOnlyConnection();
-              ;
               connections.add(threadLocalHnd.get());
               sqlService.releaseConnection();
             } finally {

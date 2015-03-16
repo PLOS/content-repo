@@ -57,7 +57,7 @@ public class InputCollectionValidatorTest {
   @Mock
   private InputCollection inputCollection;
 
-  private List<InputObject> inputObjects = Arrays.asList(new InputObject[]{new InputObject("key", "sads123dsadas456")});
+  private List<InputObject> inputObjects = Arrays.asList(new InputObject("key", "sads123dsadas456"));
 
   @Before
   public void setUp() {

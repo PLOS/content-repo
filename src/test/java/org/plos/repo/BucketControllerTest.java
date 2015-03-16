@@ -194,7 +194,7 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
+    inputCollection.setObjects(Arrays.asList(object1));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     Response createCollResponse = target("/collections").request()

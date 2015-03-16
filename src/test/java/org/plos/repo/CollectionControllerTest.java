@@ -149,7 +149,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName("invalidBucket");
     inputCollection.setKey("invalidBucket");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("obj1", "213i3b21312")}));
+    inputCollection.setObjects(Arrays.asList(new InputObject("obj1", "213i3b21312")));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertRepoError(target("/collections").request()
@@ -170,7 +170,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("existingKey");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
+    inputCollection.setObjects(Arrays.asList(object1));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertEquals(target("/collections").request()
@@ -200,7 +200,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("existingKey");
     inputCollection.setCreate("version");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1, object2}));
+    inputCollection.setObjects(Arrays.asList(object1, object2));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertRepoError(target("/collections").request()
@@ -224,7 +224,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("existingKey");
     inputCollection.setCreate("auto");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1, object2}));
+    inputCollection.setObjects(Arrays.asList(object1, object2));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertEquals(target("/collections").request()
@@ -247,7 +247,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("existingKey");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1, object2}));
+    inputCollection.setObjects(Arrays.asList(object1, object2));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertEquals(target("/collections").request()
@@ -272,7 +272,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("invalidKey");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("invalidKey", "789789")}));
+    inputCollection.setObjects(Arrays.asList(new InputObject("invalidKey", "789789")));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertRepoError(target("/collections").request()
@@ -299,7 +299,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("nonexistingKey");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{new InputObject("nonexistingKey", "046b6c7f-0b8a-43b9-b35d-6489e6daee91")}));
+    inputCollection.setObjects(Arrays.asList(new InputObject("nonexistingKey", "046b6c7f-0b8a-43b9-b35d-6489e6daee91")));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertRepoError(target("/collections").request()
@@ -330,7 +330,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1, object2}));
+    inputCollection.setObjects(Arrays.asList(object1, object2));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertEquals(target("/collections").request()
@@ -376,7 +376,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1, object2}));
+    inputCollection.setObjects(Arrays.asList(object1, object2));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertEquals(target("/collections").request()
@@ -458,7 +458,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
     inputCollection.setTag("AOP");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1, object2}));
+    inputCollection.setObjects(Arrays.asList(object1, object2));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertEquals(target("/collections").request()
@@ -507,7 +507,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
     inputCollection.setTag("AOP");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1, object2}));
+    inputCollection.setObjects(Arrays.asList(object1, object2));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertEquals(target("/collections").request()
@@ -524,7 +524,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection2.setKey("collection2");
     inputCollection2.setCreate("new");
     inputCollection2.setTag("AOP");
-    inputCollection2.setObjects(Arrays.asList(new InputObject[]{new InputObject("object3", uuidObj3)}));
+    inputCollection2.setObjects(Arrays.asList(new InputObject("object3", uuidObj3)));
     Entity<InputCollection> collectionEntity2 = Entity.entity(inputCollection2, MediaType.APPLICATION_JSON_TYPE);
 
     assertEquals(target("/collections").request()
@@ -598,7 +598,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
+    inputCollection.setObjects(Arrays.asList(object1));
     inputCollection.setTag("AOP");
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
@@ -612,7 +612,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
     // version collection1, using a creation_date_time previous for the creation date time of collection 1
     inputCollection.setCreate("version");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object2}));
+    inputCollection.setObjects(Arrays.asList(object2));
     inputCollection.setCreationDateTime(CREATION_DATE_TIME_STRING);
 
     response = target("/collections").request()
@@ -655,7 +655,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
+    inputCollection.setObjects(Arrays.asList(object1));
     inputCollection.setTag("AOP");
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
@@ -669,7 +669,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
     // version collection1, using a creation_date_time previous for the creation date time of collection 1
     inputCollection.setCreate("version");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object2}));
+    inputCollection.setObjects(Arrays.asList(object2));
     inputCollection.setCreationDateTime(CREATION_DATE_TIME_STRING);
 
     response = target("/collections").request()
@@ -729,7 +729,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
+    inputCollection.setObjects(Arrays.asList(object1));
     inputCollection.setTag("AOP");
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
@@ -744,7 +744,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     // version collection 1
     inputCollection.setCreate("version");
     inputCollection.setTag("FINAL");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1, object2}));
+    inputCollection.setObjects(Arrays.asList(object1, object2));
 
     assertEquals(target("/collections").request()
             .accept(MediaType.APPLICATION_JSON_TYPE)
@@ -816,7 +816,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
+    inputCollection.setObjects(Arrays.asList(object1));
     inputCollection.setTag("AOP");
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
@@ -881,7 +881,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
+    inputCollection.setObjects(Arrays.asList(object1));
     inputCollection.setTag("AOP");
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
@@ -934,7 +934,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
+    inputCollection.setObjects(Arrays.asList(object1));
     inputCollection.setTag("AOP");
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
@@ -1012,7 +1012,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
+    inputCollection.setObjects(Arrays.asList(object1));
     inputCollection.setTag("AOP");
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
@@ -1023,7 +1023,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     String uuidObj2 = createObject(bucketName, objectName2, contentType2);
     InputObject object2 = new InputObject(objectName2, uuidObj2);
     inputCollection.setCreate("version");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object2}));
+    inputCollection.setObjects(Arrays.asList(object2));
 
     target("/collections").request()
         .accept(MediaType.APPLICATION_JSON_TYPE)
@@ -1054,7 +1054,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1, object2}));
+    inputCollection.setObjects(Arrays.asList(object1, object2));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     assertEquals(target("/collections").request()
@@ -1066,7 +1066,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     // version collection1
     inputCollection.setKey("collection1");
     inputCollection.setCreate("version");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object2}));
+    inputCollection.setObjects(Arrays.asList(object2));
     assertEquals(target("/collections")
             .request()
             .accept(MediaType.APPLICATION_JSON_TYPE)
@@ -1150,7 +1150,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
+    inputCollection.setObjects(Arrays.asList(object1));
     inputCollection.setTag("AOP");
     inputCollection.setUserMetadata(USER_METADATA);
 
@@ -1193,7 +1193,7 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
+    inputCollection.setObjects(Arrays.asList(object1));
     inputCollection.setTag("AOP");
     inputCollection.setUserMetadata(USER_METADATA);
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
