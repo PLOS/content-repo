@@ -78,16 +78,29 @@ public abstract class BaseRepoService {
   }
 
   /**
+   * A global flag for temporarily disabling the auditing feature. It is disabled across the entire application build
+   * for present released, and is planned to be re-enabled permanently in a future release.
+   * <p/>
+   * In a perfect world this would be a configurable/injectable value. Because this is temporary, it's quick and dirty.
+   * If its value is set to {@code true}, we expect all unit tests to pass, but there is no way to run the unit tests
+   * like that without recompiling.
+   * <p/>
+   * When the auditing feature is ready to be permanently re-enabled, this should be set to true, then deleted (with all
+   * references factored out).
+   */
+  public static final boolean AUDITING_ENABLED = false;
+
+  /**
    * This method audit all the others services operations  
    * @param audit contains the operation's information to audit
    * @throws RepoException if there is a error saving the audit row
    */
   protected void auditOperation(Audit audit) throws RepoException{
-    final boolean result;
+    if (!AUDITING_ENABLED) return;
 
     try {
-      
-      result = sqlService.insertAudit(audit);
+
+      boolean result = sqlService.insertAudit(audit);
       
       if (!result) {
         throw new RepoException("Error saving audit operation to database " + audit);

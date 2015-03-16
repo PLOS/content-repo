@@ -1328,6 +1328,9 @@ public abstract class SqlService {
    * @throws SQLException
    */
   public boolean insertAudit(Audit audit) throws SQLException {
+    if (!BaseRepoService.AUDITING_ENABLED) {
+      throw new RuntimeException("Auditing is not enabled (no service should call insertAudit)");
+    }
 
     PreparedStatement p = null;
 
@@ -1360,6 +1363,9 @@ public abstract class SqlService {
    * @throws SQLException
    */
   public List<Audit> listAudit(String bucket, String key, String versionChecksum, Operation operation, Timestamp timestamp) throws SQLException {
+    if (!BaseRepoService.AUDITING_ENABLED) {
+      throw new RuntimeException("Auditing is not enabled (no service should call listAudit)");
+    }
 
     List<Audit> repoAudit = new ArrayList<Audit>();
     PreparedStatement p = null;

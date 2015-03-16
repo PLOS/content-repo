@@ -44,6 +44,7 @@ package org.plos.repo;
  import java.util.Date;
  import java.util.List;
 
+ import static org.plos.repo.service.BaseRepoService.AUDITING_ENABLED;
 
  public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
@@ -113,7 +114,9 @@ package org.plos.repo;
     
     sqlService.getReadOnlyConnection();
     Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) != null);
-    Assert.assertTrue(sqlService.listAudit(bucket1.getBucketName(), null, null, null, null).size() > 0);
+    if (AUDITING_ENABLED) {
+      Assert.assertTrue(sqlService.listAudit(bucket1.getBucketName(), null, null, null, null).size() > 0);
+    }
     sqlService.releaseConnection();
     Assert.assertTrue(objectStore.bucketExists(bucket1).get());
   }
@@ -150,9 +153,12 @@ package org.plos.repo;
     objStoreField.set(repoService, spyObjectStore);
 
     try {
-      List<Audit> audit = sqlService.listAudit(bucket1.getBucketName(),null, null, null, null);
+      List<Audit> audit = null;
+      if (AUDITING_ENABLED) {
+        audit = sqlService.listAudit(bucket1.getBucketName(), null, null, null, null);
+      }
       repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
-      Assert.assertTrue(sqlService.listAudit(bucket1.getBucketName(),null, null, null, null).size() == audit.size());
+      Assert.assertTrue(!AUDITING_ENABLED || sqlService.listAudit(bucket1.getBucketName(), null, null, null, null).size() == audit.size());
       Assert.fail();
     } catch (RepoException e) {
       Assert.assertTrue(e.getType() == RepoException.Type.ServerError);
@@ -189,9 +195,11 @@ package org.plos.repo;
     // check db state
 
     sqlService.getReadOnlyConnection();
-    List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), null, null, null, null);
-    Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) == null);
-    Assert.assertTrue(sqlService.listAudit(bucket1.getBucketName(), null, null, null, null).size() == auditList.size());
+    if (AUDITING_ENABLED) {
+      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), null, null, null, null);
+      Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) == null);
+      Assert.assertTrue(sqlService.listAudit(bucket1.getBucketName(), null, null, null, null).size() == auditList.size());
+    }
     sqlService.releaseConnection();
     Assert.assertFalse(objectStore.bucketExists(bucket1).get());
 
@@ -212,10 +220,12 @@ package org.plos.repo;
 
     sqlService.getReadOnlyConnection();
     Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) == null);
-    List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), null, null, Operation.CREATE_BUCKET, null);
-    Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.CREATE_BUCKET));
-    auditList = sqlService.listAudit(bucket1.getBucketName(), null, null, Operation.DELETE_BUCKET, null);
-    Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.DELETE_BUCKET));
+    if (AUDITING_ENABLED) {
+      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), null, null, Operation.CREATE_BUCKET, null);
+      Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.CREATE_BUCKET));
+      auditList = sqlService.listAudit(bucket1.getBucketName(), null, null, Operation.DELETE_BUCKET, null);
+      Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.DELETE_BUCKET));
+    }
     sqlService.releaseConnection();
     Assert.assertFalse(objectStore.bucketExists(bucket1).get());
 
@@ -258,11 +268,13 @@ package org.plos.repo;
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
 
     Assert.assertTrue(objFromDb.getKey().equals(KEY));
-    List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), KEY, objFromDb.getVersionChecksum(), null, null);
-    Audit audit = auditList.get(0);
-    Assert.assertTrue(audit.getBucket().equals(bucket1.getBucketName()));
-    Assert.assertTrue(audit.getKey().equals(KEY));
-    Assert.assertTrue(audit.getOperation().equals(Operation.CREATE_OBJECT));
+    if (AUDITING_ENABLED) {
+      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), KEY, objFromDb.getVersionChecksum(), null, null);
+      Audit audit = auditList.get(0);
+      Assert.assertTrue(audit.getBucket().equals(bucket1.getBucketName()));
+      Assert.assertTrue(audit.getKey().equals(KEY));
+      Assert.assertTrue(audit.getOperation().equals(Operation.CREATE_OBJECT));
+    }
     sqlService.releaseConnection();
 
     Assert.assertTrue(objectStore.objectExists(objFromDb));
@@ -366,9 +378,11 @@ package org.plos.repo;
 
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
     Assert.assertTrue(objFromDb.getKey().equals(KEY));
-    List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), KEY, objFromDb.getVersionChecksum(), Operation.UPDATE_OBJECT, null);
-    Assert.assertTrue(auditList.size() == 1);
-    Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.UPDATE_OBJECT));
+    if (AUDITING_ENABLED) {
+      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), KEY, objFromDb.getVersionChecksum(), Operation.UPDATE_OBJECT, null);
+      Assert.assertTrue(auditList.size() == 1);
+      Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.UPDATE_OBJECT));
+    }
     sqlService.releaseConnection();
 
     Assert.assertTrue(objectStore.objectExists(objFromDb));
@@ -454,8 +468,10 @@ package org.plos.repo;
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
 
     Assert.assertTrue(objFromDb != null);
-    List<Audit> audit = sqlService.listAudit(bucket1.getBucketName(), KEY, null, null, CREATION_DATE_TIME);
-    Assert.assertTrue(!audit.get(audit.size() - 1).getOperation().equals(Operation.UPDATE_OBJECT));
+    if (AUDITING_ENABLED) {
+      List<Audit> audit = sqlService.listAudit(bucket1.getBucketName(), KEY, null, null, CREATION_DATE_TIME);
+      Assert.assertTrue(!audit.get(audit.size() - 1).getOperation().equals(Operation.UPDATE_OBJECT));
+    }
     sqlService.releaseConnection();
 
     RepoObject repoObject = new RepoObject();
@@ -492,9 +508,11 @@ package org.plos.repo;
 
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
     Assert.assertTrue(objFromDb.getKey().equals(KEY));
-    List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), KEY, objFromDb.getVersionChecksum(), null, null);
-    Assert.assertTrue(auditList.size() > 0);
-    Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.UPDATE_OBJECT));
+    if (AUDITING_ENABLED) {
+      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), KEY, objFromDb.getVersionChecksum(), null, null);
+      Assert.assertTrue(auditList.size() > 0);
+      Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.UPDATE_OBJECT));
+    }
     sqlService.releaseConnection();
 
     Assert.assertTrue(objectStore.objectExists(objFromDb));
@@ -547,9 +565,11 @@ package org.plos.repo;
 
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
     Assert.assertTrue(objFromDb.getKey().equals(KEY));
-    List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), KEY, null, Operation.DELETE_OBJECT, null);
-    Assert.assertTrue(auditList.size() > 0);
-    Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.DELETE_OBJECT));
+    if (AUDITING_ENABLED) {
+      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), KEY, null, Operation.DELETE_OBJECT, null);
+      Assert.assertTrue(auditList.size() > 0);
+      Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.DELETE_OBJECT));
+    }
     sqlService.releaseConnection();
 
       Assert.assertTrue(objectStore.objectExists(objFromDb));
@@ -607,9 +627,11 @@ package org.plos.repo;
       
     // check state
       sqlService.getReadOnlyConnection();
-    List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), KEY, repoObject.getVersionChecksum(), Operation.PURGE_OBJECT, null);
-    Assert.assertTrue(auditList.size() > 0);
-    Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.PURGE_OBJECT));
+    if (AUDITING_ENABLED) {
+      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), KEY, repoObject.getVersionChecksum(), Operation.PURGE_OBJECT, null);
+      Assert.assertTrue(auditList.size() > 0);
+      Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.PURGE_OBJECT));
+    }
     sqlService.releaseConnection();      
       
   }
@@ -670,9 +692,11 @@ package org.plos.repo;
 
     // verify that the purge object does not exists the file system
     Assert.assertNull(sqlService.getObject(bucket1.getBucketName(), "key1", null, object2.getVersionChecksum(), null));
-    List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), "key1",  object2.getVersionChecksum(), Operation.PURGE_OBJECT, null);
-    Assert.assertTrue(auditList.size() > 0);
-    Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.PURGE_OBJECT));
+    if (AUDITING_ENABLED) {
+      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), "key1",  object2.getVersionChecksum(), Operation.PURGE_OBJECT, null);
+      Assert.assertTrue(auditList.size() > 0);
+      Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.PURGE_OBJECT));
+    }
     sqlService.releaseConnection();
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 1);
