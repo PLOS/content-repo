@@ -302,12 +302,12 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
     JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
     TestCase.assertNotNull(responseObj);
-    String versionChecksum = responseObj.get("versionChecksum").getAsString();
+    String uuid = responseObj.get("uuid").getAsString();
 
     Response purgeResponse = target("/objects/" + bucketName)
         .queryParam("key", "object1")
         .queryParam("purge", true)
-        .queryParam("versionChecksum", versionChecksum)
+        .queryParam("uuid", uuid)
         .request()
         .accept(MediaType.APPLICATION_JSON_TYPE)
         .delete();
@@ -347,12 +347,12 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
 
     JsonObject jsonResponseObj1 = gson.fromJson(responseObj1.readEntity(String.class), JsonElement.class).getAsJsonObject();
     TestCase.assertNotNull(jsonResponseObj1);
-    String versionChecksum = jsonResponseObj1.get("versionChecksum").getAsString();
+    String uuid = jsonResponseObj1.get("uuid").getAsString();
 
     Response purgeResponse = target("/objects/" + bucketName)
         .queryParam("key", "object1")
         .queryParam("purge", true)
-        .queryParam("versionChecksum", versionChecksum)
+        .queryParam("uuid", uuid)
         .request()
         .accept(MediaType.APPLICATION_JSON_TYPE)
         .delete();

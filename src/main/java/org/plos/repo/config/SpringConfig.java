@@ -20,6 +20,7 @@ import javax.sql.DataSource;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
+import java.sql.Statement;
 
 @Configuration
 @EnableTransactionManagement
@@ -51,9 +52,6 @@ public class SpringConfig {
 
   @Bean
   public ChecksumGenerator versionChecksumGenerator(){ return new ChecksumGenerator(); }
-
-  @Bean
-  public JournalService journalService(){ return new JournalService(); }
 
   @Bean
   public ObjectStore objectStore() throws Exception {

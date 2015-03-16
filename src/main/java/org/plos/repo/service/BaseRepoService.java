@@ -18,6 +18,7 @@
 package org.plos.repo.service;
 
 import org.apache.commons.lang.StringUtils;
+import org.plos.repo.models.Audit;
 import org.plos.repo.util.ChecksumGenerator;
 import org.slf4j.Logger;
 
@@ -41,9 +42,6 @@ public abstract class BaseRepoService {
 
   @Inject
   protected SqlService sqlService;
-
-  @Inject
-  protected ChecksumGenerator checksumGenerator;
 
   protected void sqlReleaseConnection() throws RepoException {
 
@@ -76,6 +74,43 @@ public abstract class BaseRepoService {
       throw new RepoException(RepoException.Type.InvalidLimit);
   }
 
+  /**
+   * A global flag for temporarily disabling the auditing feature. It is disabled across the entire application build
+   * for present released, and is planned to be re-enabled permanently in a future release.
+   * <p/>
+   * In a perfect world this would be a configurable/injectable value. Because this is temporary, it's quick and dirty.
+   * If its value is set to {@code true}, we expect all unit tests to pass, but there is no way to run the unit tests
+   * like that without recompiling.
+   * <p/>
+   * When the auditing feature is ready to be permanently re-enabled, this should be set to true, then deleted (with all
+   * references factored out).
+   */
+  public static final boolean AUDITING_ENABLED = false;
+
+  /**
+   * This method audit all the others services operations  
+   * @param audit contains the operation's information to audit
+   * @throws RepoException if there is a error saving the audit row
+   */
+  protected void auditOperation(Audit audit) throws RepoException{
+    if (!AUDITING_ENABLED) return;
+
+    try {
+
+      boolean result = sqlService.insertAudit(audit);
+      
+      if (!result) {
+        throw new RepoException("Error saving audit operation to database " + audit);
+      }
+
+    } catch (SQLException e){
+      getLog().error("Exception: {} when trying to save audit operation {}", 
+          e.getMessage(), 
+          audit.toString());
+      throw new RepoException("Exception: " + e.getMessage() + " when trying to save audit operation " + audit);
+    } 
+  }
+  
   public abstract Logger getLog();
 
 }

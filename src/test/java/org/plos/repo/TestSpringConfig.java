@@ -21,7 +21,14 @@ import org.hsqldb.jdbc.JDBCDataSource;
 import org.plos.repo.models.validator.InputCollectionValidator;
 import org.plos.repo.models.validator.InputRepoObjectValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
-import org.plos.repo.service.*;
+import org.plos.repo.service.CollectionRepoService;
+import org.plos.repo.service.HsqlService;
+import org.plos.repo.service.InMemoryFileStoreService;
+import org.plos.repo.service.ObjectStore;
+import org.plos.repo.service.RepoInfoService;
+import org.plos.repo.service.RepoService;
+import org.plos.repo.service.ScriptRunner;
+import org.plos.repo.service.SqlService;
 import org.plos.repo.util.ChecksumGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ClassPathResource;
@@ -30,6 +37,7 @@ import org.springframework.core.io.Resource;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
+import java.sql.Statement;
 
 public class TestSpringConfig {
 
@@ -59,28 +67,12 @@ public class TestSpringConfig {
   public ChecksumGenerator versionChecksumGenerator(){ return new ChecksumGenerator(); }
 
   @Bean
-  public JournalService journalService(){ return new JournalService(); }
-
-  @Bean
   public ObjectStore objectStore() throws Exception {
     return new InMemoryFileStoreService();
-//    return new FileSystemStoreService("/tmp/repo_unittest");
-//    return new MogileStoreService("toast", new String[]{"localhost:7001"}, 1, 1, 100);
   }
 
   @Bean
   public SqlService sqlService() throws Exception {
-
-//    MysqlDataSource ds = new MysqlDataSource();
-//    ds.setUrl("jdbc:mysql://localhost:3306/plosrepo_unittest");
-//    ds.setUser("root");
-//    ds.setPassword("");
-//
-//    Connection connection = ds.getConnection();
-//
-//    SqlService service = new MysqlService();
-//    Resource sqlFile = new ClassPathResource("setup.mysql");
-
 
     JDBCDataSource ds = new JDBCDataSource();
     ds.setUrl("jdbc:hsqldb:mem:plosrepo-unittest-hsqldb;shutdown=true;sql.syntax_mys=true");

@@ -22,6 +22,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Collection of objects.
@@ -37,9 +38,9 @@ public class RepoCollection {
   private Status status;
   private String tag;
   private Timestamp creationDate;
-  private String versionChecksum;
   private List<RepoObject> repoObjects;
   private String userMetadata;
+  private UUID uuid;
 
 
   // empty constructor required for JAXB mapping
@@ -138,14 +139,6 @@ public class RepoCollection {
     this.creationDate = creationDate;
   }
 
-  public String getVersionChecksum() {
-    return versionChecksum;
-  }
-
-  public void setVersionChecksum(String versionChecksum) {
-    this.versionChecksum = versionChecksum;
-  }
-
   public boolean equals(RepoObject o) {
     return EqualsBuilder.reflectionEquals(this, o);
   }
@@ -163,5 +156,13 @@ public class RepoCollection {
     if (userMetadata != null){
       this.userMetadata = userMetadata.trim();
     }
+  }
+
+  public UUID getUuid() {
+    return uuid;
+  }
+
+  public void setUuid(UUID uuid) {
+    this.uuid = uuid;
   }
 }

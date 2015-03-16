@@ -21,6 +21,7 @@ import org.plos.repo.models.input.InputRepoObject;
 
 import java.net.URL;
 import java.sql.Timestamp;
+import java.util.UUID;
 
 
 public class RepoObject {
@@ -38,9 +39,9 @@ public class RepoObject {
   private Integer versionNumber;
   private Status status;
   private Timestamp creationDate;
-  private String versionChecksum;
   private URL[] reproxyURL;
   private String userMetadata;
+  private UUID uuid;
 
   public RepoObject() {
   }
@@ -127,10 +128,6 @@ public class RepoObject {
     return creationDate;
   }
 
-  public String getVersionChecksum() {
-    return versionChecksum;
-  }
-
   public URL[] getReproxyURL() {
     return reproxyURL;
   }
@@ -187,10 +184,6 @@ public class RepoObject {
     this.creationDate = creationDate;
   }
 
-  public void setVersionChecksum(String versionChecksum) {
-    this.versionChecksum = versionChecksum;
-  }
-
   public void setReproxyURL(URL[] reproxyURL) {
     this.reproxyURL = reproxyURL;
   }
@@ -203,5 +196,13 @@ public class RepoObject {
     if (userMetadata != null){
       this.userMetadata = userMetadata.trim();
     }
+  }
+
+  public UUID getUuid() {
+    return uuid;
+  }
+
+  public void setUuid(UUID uuid) {
+    this.uuid = uuid;
   }
 }

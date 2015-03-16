@@ -40,10 +40,10 @@ public class RepoCollectionOutput {
   private Integer versionNumber;
   private String tag;
   private String creationDate;
-  private String versionChecksum;
   private Status status;
   private List<RepoObjectOutput> objects;
   private String userMetadata;
+  private String uuid;
 
   private RepoCollectionOutput() {
 
@@ -55,9 +55,12 @@ public class RepoCollectionOutput {
     this.versionNumber = repoCollection.getVersionNumber();
     this.tag = repoCollection.getTag();
     this.creationDate = TimestampFormatter.getFormattedTimestamp(repoCollection.getCreationDate());
-    this.versionChecksum = repoCollection.getVersionChecksum();
     this.status = repoCollection.getStatus();
     this.userMetadata = repoCollection.getUserMetadata();
+
+    if (repoCollection.getUuid() != null){
+      this.uuid = repoCollection.getUuid().toString();
+    }
 
     if(repoCollection.getRepoObjects()!=null && repoCollection.getRepoObjects().size() >0){
       this.objects = Lists.newArrayList(Iterables.transform(repoCollection.getRepoObjects(), RepoObjectOutput.typeFunction()));
@@ -118,10 +121,6 @@ public class RepoCollectionOutput {
     this.creationDate = creationDate;
   }
 
-  public String getVersionChecksum() {
-    return versionChecksum;
-  }
-
   public Status getStatus() {
     return status;
   }
@@ -130,16 +129,20 @@ public class RepoCollectionOutput {
     this.status = status;
   }
 
-  public void setVersionChecksum(String versionChecksum) {
-    this.versionChecksum = versionChecksum;
-  }
-
   public String getUserMetadata() {
     return userMetadata;
   }
 
   public void setUserMetadata(String userMetadata) {
     this.userMetadata = userMetadata;
+  }
+
+  public String getUuid() {
+    return uuid;
+  }
+
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
   }
 
   @Override

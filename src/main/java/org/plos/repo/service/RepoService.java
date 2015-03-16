@@ -20,13 +20,16 @@ package org.plos.repo.service;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.Striped;
 import org.hsqldb.lib.StringUtil;
+import org.plos.repo.models.Audit;
 import org.plos.repo.models.Bucket;
+import org.plos.repo.models.Operation;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.Status;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputRepoObject;
 import org.plos.repo.models.validator.InputRepoObjectValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
+import org.plos.repo.util.UUIDFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +44,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 
@@ -62,8 +66,6 @@ public class RepoService extends BaseRepoService {
   @Inject
   private TimestampInputValidator timestampValidator;
 
-  @Inject
-  private JournalService journalService;
 
   public List<Bucket> listBuckets() throws RepoException {
     try {
@@ -114,10 +116,12 @@ public class RepoService extends BaseRepoService {
 
       if (!sqlService.insertBucket(bucket, creationDate)) {
         throw new RepoException("Unable to create bucket in database: " + name);
-      }
-
+      } 
+      
       newBucket = sqlService.getBucket(name);
 
+      auditOperation(new Audit.AuditBuilder(name, Operation.CREATE_BUCKET).build());
+      
       sqlService.transactionCommit();
       rollback = false;
 
@@ -139,10 +143,7 @@ public class RepoService extends BaseRepoService {
       writeLock.unlock();
 
     }
-    if(!rollback){
-        journalService.createBucket(name);
-      
-    }
+
     return newBucket;
   }
 
@@ -187,7 +188,9 @@ public class RepoService extends BaseRepoService {
       bucketDeletion = objectStore.deleteBucket(bucket);
       if (bucketDeletion.isPresent() && !bucketDeletion.get()) {
         throw new RepoException("Unable to delete bucket in object store: " + name);
-      }
+      } 
+      
+      auditOperation(new Audit.AuditBuilder(name, Operation.DELETE_BUCKET).build());
 
       sqlService.transactionCommit();
       rollback = false;
@@ -210,10 +213,6 @@ public class RepoService extends BaseRepoService {
       writeLock.unlock();
     }
 
-    if(!rollback) {
-      journalService.deleteBucket(name);
-
-    }
   }
 
   public boolean serverSupportsReproxy() {
@@ -308,8 +307,11 @@ public class RepoService extends BaseRepoService {
       if ((elementFilter == null) || (elementFilter.isEmpty())){
         repoObject = sqlService.getObject(bucketName, key);
       }
-      else
-        repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag());
+      else{
+        UUID uuid = UUIDFormatter.getUuid(elementFilter.getUuid());
+        repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), uuid, elementFilter.getTag());
+      }
+
 
       if (repoObject == null)
         throw new RepoException(RepoException.Type.ObjectNotFound);
@@ -385,18 +387,18 @@ public class RepoService extends BaseRepoService {
     try {
       content = objectStore.getInputStream(repoObject);
     } catch (Exception e) {
-      log.error("Error retrieving content for object.  Key: {} , bucketName: {} , versionChecksum: {} . Error: {}",
+      log.error("Error retrieving content for object.  Key: {} , bucketName: {} , uuid: {} . Error: {}",
           repoObject.getKey(),
           repoObject.getBucketName(),
-          repoObject.getVersionChecksum(),
+          repoObject.getUuid().toString(),
           e.getMessage());
       throw new RepoException(e);
     }
     if (content == null){
-      log.error("Error retrieving content for object. Content not found.  Key: {} , bucketName: {} , versionChecksum: {} ",
+      log.error("Error retrieving content for object. Content not found.  Key: {} , bucketName: {} , uuid: {} ",
           repoObject.getKey(),
           repoObject.getBucketName(),
-          repoObject.getVersionChecksum());
+          repoObject.getUuid().toString());
       throw new RepoException(RepoException.Type.ObjectContentNotFound);
     }
     return content;
@@ -454,25 +456,35 @@ public class RepoService extends BaseRepoService {
       sqlService.getConnection();
       rollback = true;
 
-      if (elementFilter.getTag() != null & elementFilter.getVersionChecksum() == null & elementFilter.getVersion() == null){
+      if (elementFilter.getTag() != null & elementFilter.getUuid() == null & elementFilter.getVersion() == null){
         if (sqlService.listObjects(bucketName, 0, 10, false, false, elementFilter.getTag()).size() > 1){
           throw new RepoException(RepoException.Type.MoreThanOneTaggedObject);
         }
       }
 
-      repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag(), true, false);
+      UUID uuid = UUIDFormatter.getUuid(elementFilter.getUuid());
+      repoObject = sqlService.getObject(bucketName, key, elementFilter.getVersion(), uuid, elementFilter.getTag(), true, false);
+
       if (repoObject == null) {
         throw new RepoException(RepoException.Type.ObjectNotFound);
       }
 
       if (Status.DELETED.equals(status)){
 
-        int objectDeteled = sqlService.markObjectDeleted(key, bucketName, elementFilter.getVersion(),
-            elementFilter.getVersionChecksum(), elementFilter.getTag());
-
-        if (objectDeteled == 0)
+        if(Status.DELETED.equals(repoObject.getStatus())) {
           throw new RepoException(RepoException.Type.ObjectNotFound);
-
+        }
+        
+        sqlService.markObjectDeleted(key, bucketName, elementFilter.getVersion(),
+            UUIDFormatter.getUuid(elementFilter.getUuid()), elementFilter.getTag());
+        
+        if(!Status.DELETED.equals(repoObject.getStatus())) {
+          auditOperation(new Audit.AuditBuilder(repoObject.getBucketName(), Operation.DELETE_OBJECT)
+              .setKey(repoObject.getKey())
+              .setUuid(repoObject.getUuid())
+              .build());
+        }
+        
       } else if (Status.PURGED.equals(status)){
         purgeObjectContentAndDb(repoObject, elementFilter);
       }
@@ -491,11 +503,7 @@ public class RepoService extends BaseRepoService {
       sqlReleaseConnection();
       writeLock.unlock();
     }
-    if(!rollback && repoObject != null){
-      repoObject.setStatus(status);
-      journalService.deletePurgeObject(repoObject);
-      
-    }
+
   }
 
   /**
@@ -522,12 +530,18 @@ public class RepoService extends BaseRepoService {
         throw new RepoException(e);
       }
 
+      UUID uuid = UUIDFormatter.getUuid(elementFilter.getUuid());
       int objectPurged = sqlService.markObjectPurged(repoObject.getKey(), repoObject.getBucketName(),
-                            elementFilter.getVersion(), elementFilter.getVersionChecksum(), elementFilter.getTag());
+                            elementFilter.getVersion(), uuid, elementFilter.getTag());
 
       if (objectPurged == 0){
         throw new RepoException(RepoException.Type.ObjectNotFound);
       }
+
+      auditOperation(new Audit.AuditBuilder(repoObject.getBucketName(), Operation.PURGE_OBJECT)
+          .setKey(repoObject.getKey())
+          .setUuid(repoObject.getUuid())
+                          .build());
 
       // verify if any other USED or DELETED objects has a reference to the same file. If it is the last reference to the object, remove it from the system,
       // if not, just mark the record in the DB as purge
@@ -659,8 +673,7 @@ public class RepoService extends BaseRepoService {
       repoObject.setVersionNumber(versionNumber);
       repoObject.setCreationDate(cretationDateTime);
 
-
-      repoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(repoObject));
+      repoObject.setUuid(UUID.randomUUID());
 
       // determine if the object should be added to the store or not
       if (objectStore.objectExists(repoObject)) {
@@ -685,7 +698,12 @@ public class RepoService extends BaseRepoService {
 
       if (sqlService.insertObject(repoObject) == 0) {
         throw new RepoException("Error saving content to database");
-      }
+      } 
+        
+      auditOperation(new Audit.AuditBuilder(repoObject.getBucketName(), Operation.CREATE_OBJECT)
+                          .setKey(repoObject.getKey())
+                          .setUuid(repoObject.getUuid())
+                          .build());
 
       sqlService.transactionCommit();
       rollback = false;
@@ -705,10 +723,6 @@ public class RepoService extends BaseRepoService {
       sqlReleaseConnection();
     }
 
-    if(!rollback && repoObject != null) {
-      journalService.createUpdateObject(repoObject);
-    }
-
     return repoObject;
   }
 
@@ -726,7 +740,6 @@ public class RepoService extends BaseRepoService {
     try {
 
       newRepoObject = createNewRepoObjectForUpate(inputRepoObject, repoObject, timestamp, cretationDateTime);
-      /*newRepoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(newRepoObject));*/
 
       sqlService.getConnection();
       rollback = true;
@@ -753,13 +766,19 @@ public class RepoService extends BaseRepoService {
         }
       }
 
-      newRepoObject.setVersionChecksum(checksumGenerator.generateVersionChecksum(newRepoObject));
+      newRepoObject.setUuid(UUID.randomUUID());
+
       newRepoObject.setVersionNumber(sqlService.getObjectNextAvailableVersion(inputRepoObject.getBucketName(), newRepoObject.getKey()));
       
       // add a record to the DB for the new object
       if (sqlService.insertObject(newRepoObject) == 0) {
         throw new RepoException("Error saving content to database");
-      }
+      } 
+        
+      auditOperation(new Audit.AuditBuilder(newRepoObject.getBucketName(), Operation.UPDATE_OBJECT)
+                          .setKey(newRepoObject.getKey())
+                          .setUuid(newRepoObject.getUuid())
+                          .build());
 
       sqlService.transactionCommit();
       rollback = false;
@@ -779,10 +798,7 @@ public class RepoService extends BaseRepoService {
       sqlReleaseConnection();
 
     }
-    if(!rollback && newRepoObject != null) {
-      journalService.createUpdateObject(newRepoObject);
 
-    }
     return newRepoObject;
   }
 

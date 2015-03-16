@@ -25,13 +25,17 @@ package org.plos.repo;
  import org.mockito.BDDMockito;
  import org.mockito.Mockito;
  import org.plos.repo.models.Bucket;
- import org.plos.repo.models.Journal;
+ import org.plos.repo.models.Audit;
  import org.plos.repo.models.Operation;
  import org.plos.repo.models.RepoObject;
  import org.plos.repo.models.Status;
  import org.plos.repo.models.input.ElementFilter;
  import org.plos.repo.models.input.InputRepoObject;
- import org.plos.repo.service.*;
+ import org.plos.repo.service.RepoException;
+ import org.plos.repo.service.RepoService;
+ import org.plos.repo.service.SqlService;
+ import org.plos.repo.service.BaseRepoService;
+ import org.plos.repo.service.ObjectStore;
 
  import java.io.InputStream;
  import java.lang.reflect.Field;
@@ -40,6 +44,7 @@ package org.plos.repo;
  import java.util.Date;
  import java.util.List;
 
+ import static org.plos.repo.service.BaseRepoService.AUDITING_ENABLED;
 
  public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
@@ -109,7 +114,9 @@ package org.plos.repo;
     
     sqlService.getReadOnlyConnection();
     Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) != null);
-    Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), null, null, null).size() == 1);
+    if (AUDITING_ENABLED) {
+      Assert.assertTrue(sqlService.listAudit(bucket1.getBucketName(), null, null, null, null).size() > 0);
+    }
     sqlService.releaseConnection();
     Assert.assertTrue(objectStore.bucketExists(bucket1).get());
   }
@@ -146,8 +153,12 @@ package org.plos.repo;
     objStoreField.set(repoService, spyObjectStore);
 
     try {
+      List<Audit> audit = null;
+      if (AUDITING_ENABLED) {
+        audit = sqlService.listAudit(bucket1.getBucketName(), null, null, null, null);
+      }
       repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
-      Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), null, null, null).size() == 0);
+      Assert.assertTrue(!AUDITING_ENABLED || sqlService.listAudit(bucket1.getBucketName(), null, null, null, null).size() == audit.size());
       Assert.fail();
     } catch (RepoException e) {
       Assert.assertTrue(e.getType() == RepoException.Type.ServerError);
@@ -184,8 +195,11 @@ package org.plos.repo;
     // check db state
 
     sqlService.getReadOnlyConnection();
-    Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) == null);
-    Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), null, null, null).size() == 0);
+    if (AUDITING_ENABLED) {
+      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), null, null, null, null);
+      Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) == null);
+      Assert.assertTrue(sqlService.listAudit(bucket1.getBucketName(), null, null, null, null).size() == auditList.size());
+    }
     sqlService.releaseConnection();
     Assert.assertFalse(objectStore.bucketExists(bucket1).get());
 
@@ -206,10 +220,12 @@ package org.plos.repo;
 
     sqlService.getReadOnlyConnection();
     Assert.assertTrue(sqlService.getBucket(bucket1.getBucketName()) == null);
-    List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), null, null, null); 
-    Assert.assertTrue(journalList.size() == 2);
-    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE_BUCKET));
-    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.DELETE_BUCKET));
+    if (AUDITING_ENABLED) {
+      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), null, null, Operation.CREATE_BUCKET, null);
+      Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.CREATE_BUCKET));
+      auditList = sqlService.listAudit(bucket1.getBucketName(), null, null, Operation.DELETE_BUCKET, null);
+      Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.DELETE_BUCKET));
+    }
     sqlService.releaseConnection();
     Assert.assertFalse(objectStore.bucketExists(bucket1).get());
 
@@ -239,7 +255,7 @@ package org.plos.repo;
   public void createNewObject() throws Exception {
 
     repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
-
+      
     try {
       repoService.createObject(RepoService.CreateMethod.NEW, createInputRepoObject());
     } catch (RepoException e) {
@@ -252,12 +268,13 @@ package org.plos.repo;
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
 
     Assert.assertTrue(objFromDb.getKey().equals(KEY));
-    List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), KEY, null, null);
-    Assert.assertTrue(journalList.size() == 1);
-    Journal journal = journalList.get(0);
-    Assert.assertTrue(journal.getBucket().equals(bucket1.getBucketName()));
-    Assert.assertTrue(journal.getKey().equals(KEY));
-    Assert.assertTrue(journal.getOperation().equals(Operation.CREATE_OBJECT));
+    if (AUDITING_ENABLED) {
+      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), KEY, objFromDb.getUuid().toString(), null, null);
+      Audit audit = auditList.get(0);
+      Assert.assertTrue(audit.getBucket().equals(bucket1.getBucketName()));
+      Assert.assertTrue(audit.getKey().equals(KEY));
+      Assert.assertTrue(audit.getOperation().equals(Operation.CREATE_OBJECT));
+    }
     sqlService.releaseConnection();
 
     Assert.assertTrue(objectStore.objectExists(objFromDb));
@@ -280,7 +297,7 @@ package org.plos.repo;
     Field objStoreField = RepoService.class.getDeclaredField("objectStore");
     objStoreField.setAccessible(true);
     objStoreField.set(repoService, spyObjectStore);
-
+    
     try {
       repoService.createObject(RepoService.CreateMethod.NEW, createInputRepoObject());
       Assert.fail();
@@ -292,11 +309,8 @@ package org.plos.repo;
     // check state
     sqlService.getReadOnlyConnection();
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
-
     Assert.assertTrue(objFromDb == null);
-    Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), KEY, null, null).size() == 0);
     sqlService.releaseConnection();
-
     RepoObject repoObject = new RepoObject();
     repoObject.setChecksum("cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151");
     repoObject.setSize(0l);
@@ -315,7 +329,7 @@ package org.plos.repo;
 
     Field sqlServiceField = BaseRepoService.class.getDeclaredField("sqlService");
     sqlServiceField.setAccessible(true);
-    sqlServiceField.set(repoService, spySqlService);
+      sqlServiceField.set(repoService, spySqlService);
 
     try {
       repoService.createObject(RepoService.CreateMethod.NEW, createInputRepoObject());
@@ -329,8 +343,7 @@ package org.plos.repo;
     sqlService.getReadOnlyConnection();
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
 
-    Assert.assertTrue(objFromDb == null);
-    Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), KEY, Operation.CREATE_OBJECT, null).size() == 0);
+      Assert.assertTrue(objFromDb == null);
     sqlService.releaseConnection();
     RepoObject repoObject = new RepoObject();
     repoObject.setChecksum("cbcc2ff6a0894e6e7f9a1a6a6a36b68fb36aa151");
@@ -365,10 +378,11 @@ package org.plos.repo;
 
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
     Assert.assertTrue(objFromDb.getKey().equals(KEY));
-    List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), KEY, null, null);
-    Assert.assertTrue(journalList.size() == 2);
-    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE_OBJECT));
-    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.UPDATE_OBJECT));
+    if (AUDITING_ENABLED) {
+      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), KEY, objFromDb.getUuid().toString(), Operation.UPDATE_OBJECT, null);
+      Assert.assertTrue(auditList.size() == 1);
+      Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.UPDATE_OBJECT));
+    }
     sqlService.releaseConnection();
 
     Assert.assertTrue(objectStore.objectExists(objFromDb));
@@ -454,8 +468,10 @@ package org.plos.repo;
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
 
     Assert.assertTrue(objFromDb != null);
-    Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), null, null, null).size() == 2);
-    Assert.assertTrue(sqlService.listJournal(bucket1.getBucketName(), KEY, null, null).size() == 1);
+    if (AUDITING_ENABLED) {
+      List<Audit> audit = sqlService.listAudit(bucket1.getBucketName(), KEY, null, null, CREATION_DATE_TIME);
+      Assert.assertTrue(!audit.get(audit.size() - 1).getOperation().equals(Operation.UPDATE_OBJECT));
+    }
     sqlService.releaseConnection();
 
     RepoObject repoObject = new RepoObject();
@@ -492,10 +508,11 @@ package org.plos.repo;
 
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
     Assert.assertTrue(objFromDb.getKey().equals(KEY));
-    List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), KEY, null, null);
-    Assert.assertTrue(journalList.size() == 2);
-    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE_OBJECT));
-    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.UPDATE_OBJECT));
+    if (AUDITING_ENABLED) {
+      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), KEY, objFromDb.getUuid().toString(), null, null);
+      Assert.assertTrue(auditList.size() > 0);
+      Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.UPDATE_OBJECT));
+    }
     sqlService.releaseConnection();
 
     Assert.assertTrue(objectStore.objectExists(objFromDb));
@@ -548,9 +565,11 @@ package org.plos.repo;
 
     RepoObject objFromDb = sqlService.getObject(bucket1.getBucketName(), KEY);
     Assert.assertTrue(objFromDb.getKey().equals(KEY));
-    List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), KEY, null, null);
-    Assert.assertTrue(journalList.size() == 3);
-    Assert.assertTrue(journalList.get(2).getOperation().equals(Operation.DELETE_OBJECT));
+    if (AUDITING_ENABLED) {
+      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), KEY, null, Operation.DELETE_OBJECT, null);
+      Assert.assertTrue(auditList.size() > 0);
+      Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.DELETE_OBJECT));
+    }
     sqlService.releaseConnection();
 
       Assert.assertTrue(objectStore.objectExists(objFromDb));
@@ -597,7 +616,7 @@ package org.plos.repo;
   public void deletePurgedObject() throws Exception {
 
     repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME.toString());
-    repoService.createObject(RepoService.CreateMethod.NEW, createInputRepoObject());
+    RepoObject repoObject = repoService.createObject(RepoService.CreateMethod.NEW, createInputRepoObject());
     repoService.deleteObject(bucket1.getBucketName(), "key1", new ElementFilter(0, null, null), Status.PURGED);
 
     try {
@@ -608,10 +627,11 @@ package org.plos.repo;
       
     // check state
       sqlService.getReadOnlyConnection();
-    List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), KEY, null, null);
-    Assert.assertTrue(journalList.size() == 2);
-    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE_OBJECT));
-    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.PURGE_OBJECT));
+    if (AUDITING_ENABLED) {
+      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), KEY, repoObject.getUuid().toString(), Operation.PURGE_OBJECT, null);
+      Assert.assertTrue(auditList.size() > 0);
+      Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.PURGE_OBJECT));
+    }
     sqlService.releaseConnection();      
       
   }
@@ -671,12 +691,12 @@ package org.plos.repo;
     sqlService.getReadOnlyConnection();
 
     // verify that the purge object does not exists the file system
-    Assert.assertNull(sqlService.getObject(bucket1.getBucketName(), "key1", null, object2.getVersionChecksum(), null));
-    List<Journal> journalList = sqlService.listJournal(bucket1.getBucketName(), "key1", null, null);
-    Assert.assertTrue(journalList.size() == 3);
-    Assert.assertTrue(journalList.get(0).getOperation().equals(Operation.CREATE_OBJECT));
-    Assert.assertTrue(journalList.get(1).getOperation().equals(Operation.UPDATE_OBJECT));
-    Assert.assertTrue(journalList.get(2).getOperation().equals(Operation.PURGE_OBJECT));
+    Assert.assertNull(sqlService.getObject(bucket1.getBucketName(), "key1", null, object2.getUuid(), null));
+    if (AUDITING_ENABLED) {
+      List<Audit> auditList = sqlService.listAudit(bucket1.getBucketName(), "key1",  object2.getUuid().toString(), Operation.PURGE_OBJECT, null);
+      Assert.assertTrue(auditList.size() > 0);
+      Assert.assertTrue(auditList.get(0).getOperation().equals(Operation.PURGE_OBJECT));
+    }
     sqlService.releaseConnection();
 
     Assert.assertTrue(repoService.getObjectVersions(objFromDb.getBucketName(), objFromDb.getKey()).size() == 1);
@@ -710,7 +730,7 @@ package org.plos.repo;
       object2 = repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
 
       //purge object1
-      repoService.deleteObject(bucket1.getBucketName(), "key1", new ElementFilter(null, null, object1.getVersionChecksum()), Status.PURGED);
+      repoService.deleteObject(bucket1.getBucketName(), "key1", new ElementFilter(null, null, object1.getUuid().toString()), Status.PURGED);
 
     } catch (RepoException e) {
       Assert.fail(e.getMessage());
@@ -724,18 +744,19 @@ package org.plos.repo;
     Assert.assertEquals("obj2", obj2FromDb.getTag());
 
     // verify that the first object created has been purge
-    RepoObject obj1FromDb = sqlService.getObject(bucket1.getBucketName(), "key1", null, object1.getVersionChecksum(), null);
+    RepoObject obj1FromDb = sqlService.getObject(bucket1.getBucketName(), "key1", null, object1.getUuid(), null);
     Assert.assertNull(obj1FromDb);
 
       sqlService.releaseConnection();
 
     Assert.assertTrue(obj2FromDb.getKey().equals("key1"));
     Assert.assertTrue(objectStore.objectExists(obj2FromDb));
-      Assert.assertTrue(IOUtils.toString(objectStore.getInputStream(obj2FromDb)).equals(dataContent));
+    Assert.assertTrue(IOUtils.toString(objectStore.getInputStream(obj2FromDb)).equals(dataContent));
 
     // verify that at service level we can't get the meta info for object1. object1 has been purged
     try{
-      repoService.getObject(bucket1.getBucketName(), "key1", new ElementFilter(null, null, object1.getVersionChecksum()));
+      repoService.getObject(bucket1.getBucketName(), "key1",
+          new ElementFilter(null, null, object1.getUuid().toString()));
       Assert.fail("A repo exception was expected. ");
     } catch (RepoException e){
       Assert.assertEquals(e.getType(), RepoException.Type.ObjectNotFound);
@@ -874,7 +895,7 @@ package org.plos.repo;
   }
 
   @Test
-  public void getObjectUsingVersionChecksum() throws RepoException {
+  public void getObjectUsingUuid() throws RepoException {
 
     repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
 
@@ -899,12 +920,13 @@ package org.plos.repo;
     RepoObject repoObject = repoService.createObject(RepoService.CreateMethod.VERSION, inputRepoObject);
 
     // get the latest object
-    RepoObject resultRepoObject = repoService.getObject(bucket1.getBucketName(), KEY, new ElementFilter(null, null, repoObject.getVersionChecksum()));
+    RepoObject resultRepoObject = repoService.getObject(bucket1.getBucketName(), KEY,
+        new ElementFilter(null, null, repoObject.getUuid().toString()));
 
     // object must match the one with the oldest creation time
     Assert.assertEquals(new Integer(1), resultRepoObject.getVersionNumber());
     Assert.assertEquals(creationDateTime2, resultRepoObject.getCreationDate());
-    Assert.assertEquals(repoObject.getVersionChecksum(), resultRepoObject.getVersionChecksum());
+    Assert.assertEquals(repoObject.getUuid(), resultRepoObject.getUuid());
 
   }
 

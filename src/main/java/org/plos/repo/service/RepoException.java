@@ -50,6 +50,9 @@ public class RepoException extends Exception {
     NoFilterEntered(23, "At least one of the filters is required"),
     MoreThanOneTaggedCollection(24, "There are more than one collections with that tag. Please specify version or versionNumber. "),
     MoreThanOneTaggedObject(25, "There are more than one object with that tag. Please specify version or versionNumber. "),
+    InvalidUserMetadataFormat(26, "The user metadata must be a valid json. "),
+    InvalidUuid(27, "The uuid format is invalid. "),
+
 
     // user errors for system state
     CantDeleteNonEmptyBucket(30, "Can not delete bucket since it contains objects"),
@@ -59,7 +62,7 @@ public class RepoException extends Exception {
     CantCreateNewCollectionWithUsedKey(34, "Can not create a collection with a key that already exists"),
     CantCreateCollectionVersionWithNoOrig(35, "Can not version a collection that does not exist"),
     CantCreateCollectionWithNoObjects(36, "Can not create a collection that does not have objects"),
-    ObjectFilePathMissing(5, "The file path object is missing");
+    ObjectFilePathMissing(37, "The file path object is missing");
     
     private final int value;
     private final String message;
