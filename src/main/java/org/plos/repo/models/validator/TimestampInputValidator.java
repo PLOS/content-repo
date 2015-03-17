@@ -28,6 +28,7 @@ public class TimestampInputValidator {
 
   /**
    * Verifies if the <code>timeStamp</code> format is valid.
+   *
    * @param timeStamp a single String representing a timestamp to be validated
    * @param errorType RepoException.Type to be thrown if the timestamp is no valid
    * @throws RepoException

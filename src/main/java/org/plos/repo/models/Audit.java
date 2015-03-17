@@ -24,6 +24,7 @@ import java.util.UUID;
  * Represents the operation's values to audit
  */
 public class Audit {
+
   // All final attributes
   private final Integer id;
   private final String bucket;
@@ -31,8 +32,8 @@ public class Audit {
   private final Operation operation;
   private final UUID uuid;
   private final Timestamp timestamp;
-  
-  private Audit(AuditBuilder auditBuilder){
+
+  private Audit(AuditBuilder auditBuilder) {
     this.id = auditBuilder.id;
     this.bucket = auditBuilder.bucket;
     this.key = auditBuilder.key;
@@ -40,20 +41,21 @@ public class Audit {
     this.uuid = auditBuilder.uuid;
     this.timestamp = auditBuilder.timestamp;
   }
+
   // All getter, and NO setter to provide immutability
-  public Integer getId () {
+  public Integer getId() {
     return id;
   }
 
-  public String getBucket () {
+  public String getBucket() {
     return bucket;
   }
 
-  public String getKey () {
+  public String getKey() {
     return key;
   }
 
-  public Operation getOperation () {
+  public Operation getOperation() {
     return operation;
   }
 
@@ -61,7 +63,7 @@ public class Audit {
     return uuid;
   }
 
-  public Timestamp getTimestamp () {
+  public Timestamp getTimestamp() {
     return timestamp;
   }
 
@@ -75,7 +77,7 @@ public class Audit {
     private String key;
     private UUID uuid;
     private Timestamp timestamp;
-    
+
     public AuditBuilder(String bucket, Operation operation) {
       this.bucket = bucket;
       this.operation = operation;
@@ -85,17 +87,17 @@ public class Audit {
       this.id = id;
       return this;
     }
-    
+
     public AuditBuilder setKey(String key) {
       this.key = key;
       return this;
     }
-    
+
     public AuditBuilder setUuid(UUID uuid) {
       this.uuid = uuid;
       return this;
     }
-     
+
     public AuditBuilder setTimestamp(Timestamp timestamp) {
       this.timestamp = timestamp;
       return this;
@@ -103,15 +105,16 @@ public class Audit {
 
     /**
      * Return the finally constructed Audit object
+     *
      * @return Audit object
      */
-    public Audit build(){
+    public Audit build() {
       return new Audit(this);
     }
   }
-  
+
   @Override
-  public String toString () {
+  public String toString() {
     StringBuilder result = new StringBuilder(" Audit { ");
     result.append(" BucketName: ").append(this.bucket).append(",");
     result.append(" Key: ").append(this.key).append(",");
@@ -119,4 +122,5 @@ public class Audit {
     result.append(" Uuid: ").append(this.uuid).append(" } ");
     return result.toString();
   }
+
 }

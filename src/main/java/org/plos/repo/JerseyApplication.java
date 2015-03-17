@@ -27,10 +27,10 @@ public class JerseyApplication extends ResourceConfig {
    * Register JAX-RS application components.
    */
   public JerseyApplication() {
-
     packages("org.plos.repo.rest");
 
     register(MultiPartFeature.class);
     register(RequestContextFilter.class);
   }
+
 }

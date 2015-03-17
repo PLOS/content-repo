@@ -32,7 +32,10 @@ import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 /**
@@ -54,63 +57,56 @@ public class InputCollectionValidatorTest {
   @Mock
   private InputCollection inputCollection;
 
-  private List<InputObject> inputObjects = Arrays.asList(new InputObject[]{new InputObject("key", "sads123dsadas456")});
+  private List<InputObject> inputObjects = Arrays.asList(new InputObject("key", "sads123dsadas456"));
 
   @Before
-  public void setUp(){
+  public void setUp() {
     inputCollectionValidator = new InputCollectionValidator();
     initMocks(this);
   }
 
   @Test
   public void validateHappyPathTest() throws RepoException {
-
     mockInputCollectionCalls(inputObjects);
 
     inputCollectionValidator.validate(inputCollection);
 
     verifyInputCollectionCalls(2);
-
   }
 
   @Test
   public void validateNoKeyTest() throws RepoException {
-
-    try{
+    try {
       inputCollectionValidator.validate(inputCollection);
       fail(FAIL_MSG);
-    } catch(RepoException re){
+    } catch (RepoException re) {
       assertEquals(re.getType(), RepoException.Type.NoCollectionKeyEntered);
       verify(inputCollection).getKey();
     }
-
   }
 
   @Test
   public void validateNoBucketNameTest() throws RepoException {
-
     when(inputCollection.getKey()).thenReturn(VALID_KEY);
-    try{
+    try {
       inputCollectionValidator.validate(inputCollection);
       fail(FAIL_MSG);
-    } catch(RepoException re){
+    } catch (RepoException re) {
       assertEquals(re.getType(), RepoException.Type.NoBucketEntered);
       verify(inputCollection).getKey();
     }
-
   }
 
   @Test
   public void validateNoObjectsTest() throws RepoException {
     mockInputCollectionCalls(null);
-    try{
+    try {
       inputCollectionValidator.validate(inputCollection);
       fail(FAIL_MSG);
-    } catch(RepoException re){
+    } catch (RepoException re) {
       assertEquals(re.getType(), RepoException.Type.CantCreateCollectionWithNoObjects);
       verifyInputCollectionCalls(1);
     }
-
   }
 
   private void mockInputCollectionCalls(List<InputObject> objects) throws RepoException {
@@ -125,7 +121,7 @@ public class InputCollectionValidatorTest {
     when(inputCollection.getObjects()).thenReturn(objects);
   }
 
-  private void verifyInputCollectionCalls(Integer getObjectsCalls) throws RepoException{
+  private void verifyInputCollectionCalls(Integer getObjectsCalls) throws RepoException {
     verify(inputCollection).getKey();
     verify(inputCollection).getKey();
     verify(inputCollection).getBucketName();
@@ -136,8 +132,6 @@ public class InputCollectionValidatorTest {
     verify(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseCreationDate);
 
     verify(inputCollection, times(getObjectsCalls)).getObjects();
-
   }
-
 
 }

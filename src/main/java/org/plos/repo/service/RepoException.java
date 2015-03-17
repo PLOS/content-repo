@@ -25,7 +25,6 @@ public class RepoException extends Exception {
   private static final long serialVersionUID = 4654104578364892572L;
 
   public enum Type {
-
     ServerError(0, "Server error"), // this message is not used
     ObjectNotFound(1, "Object not found"),
     BucketNotFound(2, "Bucket not found"),
@@ -63,7 +62,7 @@ public class RepoException extends Exception {
     CantCreateCollectionVersionWithNoOrig(35, "Can not version a collection that does not exist"),
     CantCreateCollectionWithNoObjects(36, "Can not create a collection that does not have objects"),
     ObjectFilePathMissing(37, "The file path object is missing");
-    
+
     private final int value;
     private final String message;
 

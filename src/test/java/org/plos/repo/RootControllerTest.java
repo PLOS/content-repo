@@ -42,8 +42,7 @@ public class RootControllerTest extends RepoBaseJerseyTest {
   }
 
   @Test
-  public void getStatusTest(){
-
+  public void getStatusTest() {
     // create bucket 1
     target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
         .post(Entity.form(new Form()
@@ -68,8 +67,6 @@ public class RootControllerTest extends RepoBaseJerseyTest {
     assertNotNull(responseObj.get("serviceStarted").getAsString());
     assertNotNull(responseObj.get("readsSinceStart").getAsLong());
     assertNotNull(responseObj.get("writesSinceStart").getAsLong());
-
   }
-
 
 }

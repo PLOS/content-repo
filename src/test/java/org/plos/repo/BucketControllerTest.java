@@ -27,7 +27,6 @@ import org.junit.Test;
 import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.input.InputObject;
 import org.plos.repo.service.RepoException;
-import org.springframework.http.HttpStatus;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Form;
@@ -55,34 +54,32 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
     target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
         .post(Entity.form(new Form()
             .param("name", bucketName)
-            .param("creationDateTime",CREATION_DATE_TIME_STRING)));
+            .param("creationDateTime", CREATION_DATE_TIME_STRING)));
 
     assertRepoError(
         target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
             .post(Entity.form(new Form()
                 .param("name", bucketName)
-                .param("creationDateTime",CREATION_DATE_TIME_STRING))),
+                .param("creationDateTime", CREATION_DATE_TIME_STRING))),
         Response.Status.BAD_REQUEST, RepoException.Type.BucketAlreadyExists);
   }
 
   @Test
   public void invalidBucketName() {
-
     assertRepoError(
         target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
             .post(Entity.form(new Form()
                 .param("name", "plos-bucketunittest-bad?&name")
-                .param("creationDateTime",CREATION_DATE_TIME_STRING))),
+                .param("creationDateTime", CREATION_DATE_TIME_STRING))),
         Response.Status.BAD_REQUEST, RepoException.Type.IllegalBucketName);
   }
 
   @Test
   public void deleteNonEmptyBucket() {
-
     target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
         .post(Entity.form(new Form()
             .param("name", bucketName)
-            .param("creationDateTime",CREATION_DATE_TIME_STRING)));
+            .param("creationDateTime", CREATION_DATE_TIME_STRING)));
 
     target("/objects").request().post(Entity.entity(new FormDataMultiPart().field("bucketName", bucketName).field("create", "new").field("key", "object1").field("file", "test", MediaType.TEXT_PLAIN_TYPE), MediaType.MULTIPART_FORM_DATA));
 
@@ -94,7 +91,6 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void deleteNonExsitingBucket() {
-
     assertRepoError(
         target("/buckets/" + "nonExistingBucket")
             .request(MediaType.APPLICATION_JSON_TYPE).delete(),
@@ -103,21 +99,20 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void crudHappyPath() throws Exception {
-
     // CREATE
 
     String responseString = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE).get(String.class);
     assertEquals(responseString, "[]");
 
     Response response = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
-        .post(Entity.form(new Form().param("name", bucketName).param("creationDateTime",CREATION_DATE_TIME_STRING)));
+        .post(Entity.form(new Form().param("name", bucketName).param("creationDateTime", CREATION_DATE_TIME_STRING)));
 
     assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
 
     response = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
         .post(Entity.form(new Form()
             .param("name", "plos-bucketunittest-bucket2")
-            .param("creationDateTime",CREATION_DATE_TIME_STRING)));
+            .param("creationDateTime", CREATION_DATE_TIME_STRING)));
 
     assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
 
@@ -132,15 +127,13 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
 
     response = target("/buckets/" + bucketName).request().delete();
     assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
-
   }
 
   @Test
-  public void deleteBucketWithDeletedContent(){
-
+  public void deleteBucketWithDeletedContent() {
     // create bucket
     Response createBucketResponse = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
-        .post(Entity.form(new Form().param("name", bucketName).param("creationDateTime",CREATION_DATE_TIME_STRING)));
+        .post(Entity.form(new Form().param("name", bucketName).param("creationDateTime", CREATION_DATE_TIME_STRING)));
 
     assertEquals(createBucketResponse.getStatus(), Response.Status.CREATED.getStatusCode());
 
@@ -169,14 +162,12 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
     Response deleteBucketResponse = target("/buckets/" + bucketName).request().accept(MediaType.APPLICATION_JSON_TYPE).delete();
 
     assertRepoError(deleteBucketResponse, Response.Status.BAD_REQUEST, RepoException.Type.CantDeleteNonEmptyBucket);
-
   }
 
   @Test
-  public void deleteBucketWithPurgeContent(){
-
+  public void deleteBucketWithPurgeContent() {
     Response createBucketResponse = target("/buckets").request(MediaType.APPLICATION_JSON_TYPE)
-        .post(Entity.form(new Form().param("name", bucketName).param("creationDateTime",CREATION_DATE_TIME_STRING)));
+        .post(Entity.form(new Form().param("name", bucketName).param("creationDateTime", CREATION_DATE_TIME_STRING)));
 
     assertEquals(createBucketResponse.getStatus(), Response.Status.CREATED.getStatusCode());
 
@@ -203,7 +194,7 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
     inputCollection.setBucketName(bucketName);
     inputCollection.setKey("collection1");
     inputCollection.setCreate("new");
-    inputCollection.setObjects(Arrays.asList(new InputObject[]{object1}));
+    inputCollection.setObjects(Arrays.asList(object1));
     Entity<InputCollection> collectionEntity = Entity.entity(inputCollection, MediaType.APPLICATION_JSON_TYPE);
 
     Response createCollResponse = target("/collections").request()
@@ -239,7 +230,6 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
         .accept(MediaType.APPLICATION_JSON_TYPE)
         .get();
     assertRepoError(getColResponse, Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound);
-
   }
 
 }

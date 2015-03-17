@@ -3,7 +3,14 @@ package org.plos.repo.config;
 import org.plos.repo.models.validator.InputCollectionValidator;
 import org.plos.repo.models.validator.InputRepoObjectValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
-import org.plos.repo.service.*;
+import org.plos.repo.service.CollectionRepoService;
+import org.plos.repo.service.HsqlService;
+import org.plos.repo.service.MysqlService;
+import org.plos.repo.service.ObjectStore;
+import org.plos.repo.service.RepoInfoService;
+import org.plos.repo.service.RepoService;
+import org.plos.repo.service.ScriptRunner;
+import org.plos.repo.service.SqlService;
 import org.plos.repo.util.ChecksumGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +27,6 @@ import javax.sql.DataSource;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
-import java.sql.Statement;
 
 @Configuration
 @EnableTransactionManagement
@@ -39,26 +45,35 @@ public class SpringConfig {
   }
 
   @Bean
-  public CollectionRepoService collectionRepoService() { return new CollectionRepoService();}
+  public CollectionRepoService collectionRepoService() {
+    return new CollectionRepoService();
+  }
 
   @Bean
-  public InputCollectionValidator inputCollectionValidator(){ return new InputCollectionValidator(); }
+  public InputCollectionValidator inputCollectionValidator() {
+    return new InputCollectionValidator();
+  }
 
   @Bean
-  public InputRepoObjectValidator inputRepoObjectValidator(){ return new InputRepoObjectValidator(); }
+  public InputRepoObjectValidator inputRepoObjectValidator() {
+    return new InputRepoObjectValidator();
+  }
 
   @Bean
-  public TimestampInputValidator timestampInputValidator(){ return new TimestampInputValidator(); }
+  public TimestampInputValidator timestampInputValidator() {
+    return new TimestampInputValidator();
+  }
 
   @Bean
-  public ChecksumGenerator versionChecksumGenerator(){ return new ChecksumGenerator(); }
+  public ChecksumGenerator versionChecksumGenerator() {
+    return new ChecksumGenerator();
+  }
 
   @Bean
   public ObjectStore objectStore() throws Exception {
-
     Context initContext = new InitialContext();
-    Context envContext  = (Context)initContext.lookup("java:/comp/env");
-    ObjectStore objStore = (ObjectStore)envContext.lookup("repo/objectStore");
+    Context envContext = (Context) initContext.lookup("java:/comp/env");
+    ObjectStore objStore = (ObjectStore) envContext.lookup("repo/objectStore");
 
     log.info("ObjectStore: " + objStore.getClass().toString());
 
@@ -67,10 +82,9 @@ public class SpringConfig {
 
   @Bean
   public SqlService sqlService() throws Exception {
-
     Context initContext = new InitialContext();
-    Context envContext  = (Context)initContext.lookup("java:/comp/env");
-    DataSource ds = (DataSource)envContext.lookup("jdbc/repoDB");
+    Context envContext = (Context) initContext.lookup("java:/comp/env");
+    DataSource ds = (DataSource) envContext.lookup("jdbc/repoDB");
     Connection connection = ds.getConnection();
 
     // TODO: change transactionmanager to javax
@@ -85,15 +99,11 @@ public class SpringConfig {
     Resource sqlFile;
 
     if (dbBackend.equalsIgnoreCase("MySQL")) {
-
       service = new MysqlService();
       sqlFile = new ClassPathResource("setup.mysql");
-
     } else if (dbBackend.equalsIgnoreCase("HSQL Database Engine")) {
-
       service = new HsqlService();
       sqlFile = new ClassPathResource("setup.hsql");
-
     } else {
       throw new Exception("Database type not supported: " + dbBackend);
     }

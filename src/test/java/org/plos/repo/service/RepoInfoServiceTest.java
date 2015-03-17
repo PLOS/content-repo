@@ -23,14 +23,11 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.internal.util.reflection.Whitebox;
-import org.plos.repo.models.output.Bucket;
 import org.plos.repo.models.output.ServiceStatus;
 
-import javax.xml.bind.annotation.XmlTransient;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -56,7 +53,7 @@ public class RepoInfoServiceTest {
   private List<org.plos.repo.models.Bucket> buckets;
 
   @Before
-  public void setUp(){
+  public void setUp() {
     repoInfoService = new RepoInfoService();
     initMocks(this);
     Whitebox.setInternalState(repoInfoService, "startTime", new Date());
@@ -64,7 +61,6 @@ public class RepoInfoServiceTest {
 
   @Test
   public void getStatusHappyPathTest() throws RepoException {
-
     List<org.plos.repo.models.Bucket> buckets = new ArrayList<>();
     buckets.add(mock(org.plos.repo.models.Bucket.class));
     buckets.add(mock(org.plos.repo.models.Bucket.class));
@@ -78,7 +74,6 @@ public class RepoInfoServiceTest {
     assertNotNull(status.writesSinceStart);
 
     verify(repoService).listBuckets();
-
   }
 
 }

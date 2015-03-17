@@ -46,7 +46,6 @@ public class RepoCollectionOutput {
   private String uuid;
 
   private RepoCollectionOutput() {
-
   }
 
   public RepoCollectionOutput(RepoCollection repoCollection) {
@@ -58,18 +57,16 @@ public class RepoCollectionOutput {
     this.status = repoCollection.getStatus();
     this.userMetadata = repoCollection.getUserMetadata();
 
-    if (repoCollection.getUuid() != null){
+    if (repoCollection.getUuid() != null) {
       this.uuid = repoCollection.getUuid().toString();
     }
 
-    if(repoCollection.getRepoObjects()!=null && repoCollection.getRepoObjects().size() >0){
+    if (repoCollection.getRepoObjects() != null && repoCollection.getRepoObjects().size() > 0) {
       this.objects = Lists.newArrayList(Iterables.transform(repoCollection.getRepoObjects(), RepoObjectOutput.typeFunction()));
     }
-
   }
 
-  public void addObjects(List<RepoObjectOutput> repoObjectOutputs){
-
+  public void addObjects(List<RepoObjectOutput> repoObjectOutputs) {
     this.objects = repoObjectOutputs;
   }
 
@@ -157,12 +154,10 @@ public class RepoCollectionOutput {
 
   public static Function<RepoCollection, RepoCollectionOutput> typeFunction() {
     return new Function<RepoCollection, RepoCollectionOutput>() {
-
       @Override
       public RepoCollectionOutput apply(RepoCollection repoCollection) {
         return new RepoCollectionOutput(repoCollection);
       }
-
     };
   }
 

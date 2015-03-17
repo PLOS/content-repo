@@ -41,7 +41,9 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class CollectionLockTest extends RepoBaseSpringTest {
 
@@ -63,10 +65,10 @@ public class CollectionLockTest extends RepoBaseSpringTest {
   @Inject
   protected CollectionRepoService collectionRepoService;
 
-/**
-   * JUnit only captures assertion errors raised in the main thread, so we'll
-   * create an explicit error instance to record assertion failures in
-   * in worker threads (only the first). Guard access with lock object.*/
+  /**
+   * JUnit only captures assertion errors raised in the main thread, so we'll create an explicit error instance to
+   * record assertion failures in in worker threads (only the first). Guard access with lock object.
+   */
   private AssertionError assertionFailure;
   private final java.lang.Object lock = new java.lang.Object();
 
@@ -78,12 +80,10 @@ public class CollectionLockTest extends RepoBaseSpringTest {
     String getTag(int i);
 
     Timestamp getTimestamp();
-
   }
 
   @Before
   public void setup() throws Exception {
-
     clearData(objectStore, sqlService);
 
     repoService.createBucket(BUCKET_NAME, CREATION_DATE_TIME.toString());
@@ -94,9 +94,9 @@ public class CollectionLockTest extends RepoBaseSpringTest {
     sqlServiceField.setAccessible(true);
     sqlServiceField.set(collectionRepoService, spySqlService);
 
-    inputObjects = new ArrayList<InputObject>();
-    for (int i=0; i < 1000 ; i++ ){
-      String key = OBJECT_KEY+i;
+    inputObjects = new ArrayList<>();
+    for (int i = 0; i < 1000; i++) {
+      String key = OBJECT_KEY + i;
       InputRepoObject inputRepoObject = new InputRepoObject();
       inputRepoObject.setKey(key);
       inputRepoObject.setBucketName(BUCKET_NAME);
@@ -115,7 +115,6 @@ public class CollectionLockTest extends RepoBaseSpringTest {
   /*@Test*/
   // TODO: decide if these tests are needed or not
   public void testReaderAndWritersSameKeyAndSameData() throws Exception {
-
     final int INSERT_THREADS = 100;
     final int UPDATE_THREADS = 100;
     final int DELETE_THREADS = 0;
@@ -131,14 +130,16 @@ public class CollectionLockTest extends RepoBaseSpringTest {
       }
 
       @Override
-      public Timestamp getTimestamp() { return CREATION_DATE_TIME;  }
+      public Timestamp getTimestamp() {
+        return CREATION_DATE_TIME;
+      }
     };
 
     this.endGate = new CountDownLatch(INSERT_THREADS + DELETE_THREADS + READER_THREADS);
     execute(INSERT_THREADS, 0, DELETE_THREADS, READER_THREADS, inputObjects, callback);
     List<RepoCollection> repoCollections = collectionRepoService.listCollections(BUCKET_NAME, null, null, false, null);
     assertEquals(1, repoCollections.size()); // since all the collections where are trying to write are equals & they have
-    
+
     this.startGate = new CountDownLatch(1);
     this.endGate = new CountDownLatch(UPDATE_THREADS + DELETE_THREADS + READER_THREADS);
     execute(0, UPDATE_THREADS, DELETE_THREADS, READER_THREADS, inputObjects, callback);
@@ -150,14 +151,12 @@ public class CollectionLockTest extends RepoBaseSpringTest {
     assertEquals(COLLECTION_KEY, coll.getKey());
     assertEquals(Integer.valueOf(0), coll.getVersionNumber());
 
-    verify(spySqlService, times(INSERT_THREADS + READER_THREADS*2 + UPDATE_THREADS)).getCollection(anyString(), anyString()); // create new collection + list objects, when tag is null + update collection (when looking for exisiting ones)
+    verify(spySqlService, times(INSERT_THREADS + READER_THREADS * 2 + UPDATE_THREADS)).getCollection(anyString(), anyString()); // create new collection + list objects, when tag is null + update collection (when looking for exisiting ones)
     verify(spySqlService, times(inputObjects.size())).insertCollectionObjects(anyInt(), anyString(), anyString(), any(UUID.class));
-
   }
 
   @Test
   public void createCollectionsAndNewVersionForEachCollTest() throws Exception {
-
     final int INSERT_THREADS = 100;
     final int UPDATE_THREADS = 100;
     final int DELETE_THREADS = 0;
@@ -173,7 +172,9 @@ public class CollectionLockTest extends RepoBaseSpringTest {
       }
 
       @Override
-      public Timestamp getTimestamp() { return new Timestamp(new Date().getTime()); }
+      public Timestamp getTimestamp() {
+        return new Timestamp(new Date().getTime());
+      }
     };
 
     this.endGate = new CountDownLatch(INSERT_THREADS + DELETE_THREADS + READER_THREADS);
@@ -191,7 +192,9 @@ public class CollectionLockTest extends RepoBaseSpringTest {
       }
 
       @Override
-      public Timestamp getTimestamp() { return new Timestamp(new Date().getTime()); }
+      public Timestamp getTimestamp() {
+        return new Timestamp(new Date().getTime());
+      }
     };
     this.startGate = new CountDownLatch(1);
     this.endGate = new CountDownLatch(UPDATE_THREADS + DELETE_THREADS + READER_THREADS);
@@ -204,8 +207,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
     verify(spySqlService, times(READER_THREADS)).getCollection(anyString(), anyString(), anyInt(), anyString(), any(UUID.class)); // reading collections with tags
     verify(spySqlService, times(INSERT_THREADS + UPDATE_THREADS)).getCollectionNextAvailableVersion(anyString(), anyString()); // when creating and versioning a collection
     verify(spySqlService, times(INSERT_THREADS + UPDATE_THREADS)).insertCollection(any(RepoCollection.class)); // when creating and versioning a collection
-    verify(spySqlService, times((INSERT_THREADS + UPDATE_THREADS)*inputObjects.size())).insertCollectionObjects(anyInt(), anyString(), anyString(), any(UUID.class));
-
+    verify(spySqlService, times((INSERT_THREADS + UPDATE_THREADS) * inputObjects.size())).insertCollectionObjects(anyInt(), anyString(), anyString(), any(UUID.class));
   }
 
 
@@ -215,13 +217,11 @@ public class CollectionLockTest extends RepoBaseSpringTest {
                        final List<InputObject> objects,
                        final Callback cb)
       throws InterruptedException {
-
 /*------------------------------------------------------------------
 
    INSERT
 
 ------------------------------------------------------------------*/
-
 
 
     for (int i = 0; i < insertThreads; i++) {
@@ -245,7 +245,6 @@ public class CollectionLockTest extends RepoBaseSpringTest {
                 }
               }
             } catch (RepoException e) {
-
               if (e.getType() == RepoException.Type.ServerError) {
                 synchronized (lock) {
                   if (assertionFailure == null) {
@@ -255,7 +254,6 @@ public class CollectionLockTest extends RepoBaseSpringTest {
                   }
                 }
               }
-
             } finally {
               endGate.countDown();
             }
@@ -272,7 +270,6 @@ public class CollectionLockTest extends RepoBaseSpringTest {
    UPDATE
 
 ------------------------------------------------------------------*/
-
 
 
     for (int i = 0; i < updateThreads; i++) {
@@ -294,9 +291,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
                   }
                 }
               }
-
             } catch (RepoException e) {
-
               if (e.getType() == RepoException.Type.ServerError) {
                 synchronized (lock) {
                   if (assertionFailure == null) {
@@ -306,7 +301,6 @@ public class CollectionLockTest extends RepoBaseSpringTest {
                   }
                 }
               }
-
             } finally {
               endGate.countDown();
             }
@@ -325,7 +319,6 @@ public class CollectionLockTest extends RepoBaseSpringTest {
 ------------------------------------------------------------------*/
 
 
-
     for (int i = 0; i < deleteThreads; i++) {
       final int j = i;
       final Thread t = new Thread() {
@@ -338,9 +331,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
               endGate.countDown();
             }
           } catch (RepoException e) {
-
             if (e.getType() != RepoException.Type.ObjectNotFound) {
-
               synchronized (lock) {
                 if (assertionFailure == null) {
                   assertionFailure = new AssertionError(String.format(
@@ -348,7 +339,6 @@ public class CollectionLockTest extends RepoBaseSpringTest {
                 }
               }
             }
-
           } catch (Exception e) {
             throw new RuntimeException(e);
           }
@@ -370,7 +360,6 @@ public class CollectionLockTest extends RepoBaseSpringTest {
           try {
             startGate.await();  // don't start until startGate is 0
             try {
-
               RepoCollection repoCollection = collectionRepoService.getCollection(BUCKET_NAME, cb.getKeyname(j), new ElementFilter(null, cb.getTag(j), null));
 
               if (!repoCollection.getKey().equals(cb.getKeyname(j))) {
@@ -382,14 +371,11 @@ public class CollectionLockTest extends RepoBaseSpringTest {
                   }
                 }
               }
-
             } finally {
               endGate.countDown();
             }
           } catch (RepoException e) {
-
             if (e.getType() != RepoException.Type.CollectionNotFound) {
-
               synchronized (lock) {
                 if (assertionFailure == null) {
                   assertionFailure = new AssertionError(String.format(
@@ -397,7 +383,6 @@ public class CollectionLockTest extends RepoBaseSpringTest {
                 }
               }
             }
-
           } catch (Exception e) {
             throw new RuntimeException(e);
           }

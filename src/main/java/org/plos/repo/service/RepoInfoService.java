@@ -27,7 +27,6 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.io.InputStream;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -57,18 +56,15 @@ public class RepoInfoService {
 
 
   private void sqlReleaseConnection() throws RepoException {
-
     try {
       sqlService.releaseConnection();
     } catch (SQLException e) {
       throw new RepoException(e);
     }
-
   }
 
   @PostConstruct
   public void init() {
-
     startTime = new Date();
 
     try (InputStream is = getClass().getResourceAsStream("/version.properties")) {
@@ -89,7 +85,6 @@ public class RepoInfoService {
   }
 
   public ServiceConfigInfo getConfig() {
-
     ServiceConfigInfo config = new ServiceConfigInfo();
     config.version = projectVersion;
     config.objectStoreBackend = objectStore.getClass().toString();
@@ -99,7 +94,6 @@ public class RepoInfoService {
   }
 
   public ServiceStatus getStatus() throws RepoException {
-
     ServiceStatus status = new ServiceStatus();
 
     List<Bucket> bucketList = repoService.listBuckets();
@@ -113,20 +107,19 @@ public class RepoInfoService {
   }
 
   public Bucket bucketInfo(String bucketName) throws RepoException {
-
     try {
       sqlService.getReadOnlyConnection();
 
       Bucket bucket = sqlService.getBucket(bucketName);
 
-      if (bucket == null)
+      if (bucket == null) {
         throw new RepoException(RepoException.Type.BucketNotFound);
+      }
 
       bucket.setTotalObjects(sqlService.objectCount(true, bucketName));
       bucket.setActiveObjects(sqlService.objectCount(false, bucketName));
 
       return bucket;
-
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {

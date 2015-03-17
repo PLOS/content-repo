@@ -26,7 +26,6 @@ import java.util.Hashtable;
 public class MogileStoreFactory implements ObjectFactory {
 
   public Object getObjectInstance(Object o, Name name, Context context, Hashtable<?, ?> hashtable) throws Exception {
-
     return new org.plos.repo.service.MogileStoreService(
         ((Reference) o).get("domain").getContent().toString(),
         ((Reference) o).get("trackers").getContent().toString().split(","),
@@ -35,4 +34,5 @@ public class MogileStoreFactory implements ObjectFactory {
         Long.parseLong(((Reference) o).get("maxIdleTimeMillis").getContent().toString())
     );
   }
+
 }

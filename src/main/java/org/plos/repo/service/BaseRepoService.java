@@ -19,7 +19,6 @@ package org.plos.repo.service;
 
 import org.apache.commons.lang.StringUtils;
 import org.plos.repo.models.Audit;
-import org.plos.repo.util.ChecksumGenerator;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -44,17 +43,14 @@ public abstract class BaseRepoService {
   protected SqlService sqlService;
 
   protected void sqlReleaseConnection() throws RepoException {
-
     try {
       sqlService.releaseConnection();
     } catch (SQLException e) {
       throw new RepoException(e);
     }
-
   }
 
   protected void sqlRollback(String data) throws RepoException {
-
     getLog().error("DB rollback: " + data + "\n" +
         StringUtils.join(Thread.currentThread().getStackTrace(), "\n\t"));
 
@@ -67,11 +63,13 @@ public abstract class BaseRepoService {
 
 
   protected void validatePagination(Integer offset, Integer limit) throws RepoException {
-    if (offset < 0)
+    if (offset < 0) {
       throw new RepoException(RepoException.Type.InvalidOffset);
+    }
 
-    if (limit <= 0 || limit > MAX_PAGE_SIZE)
+    if (limit <= 0 || limit > MAX_PAGE_SIZE) {
       throw new RepoException(RepoException.Type.InvalidLimit);
+    }
   }
 
   /**
@@ -88,29 +86,28 @@ public abstract class BaseRepoService {
   public static final boolean AUDITING_ENABLED = false;
 
   /**
-   * This method audit all the others services operations  
+   * This method audit all the others services operations
+   *
    * @param audit contains the operation's information to audit
    * @throws RepoException if there is a error saving the audit row
    */
-  protected void auditOperation(Audit audit) throws RepoException{
+  protected void auditOperation(Audit audit) throws RepoException {
     if (!AUDITING_ENABLED) return;
 
     try {
-
       boolean result = sqlService.insertAudit(audit);
-      
+
       if (!result) {
         throw new RepoException("Error saving audit operation to database " + audit);
       }
-
-    } catch (SQLException e){
-      getLog().error("Exception: {} when trying to save audit operation {}", 
-          e.getMessage(), 
+    } catch (SQLException e) {
+      getLog().error("Exception: {} when trying to save audit operation {}",
+          e.getMessage(),
           audit.toString());
       throw new RepoException("Exception: " + e.getMessage() + " when trying to save audit operation " + audit);
-    } 
+    }
   }
-  
+
   public abstract Logger getLog();
 
 }

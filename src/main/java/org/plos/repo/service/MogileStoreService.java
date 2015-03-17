@@ -24,14 +24,12 @@ import com.guba.mogilefs.PooledMogileFSImpl;
 import org.apache.commons.io.IOUtils;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
-import org.plos.repo.models.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URL;
 import java.security.MessageDigest;
 import java.util.UUID;
 
@@ -65,12 +63,12 @@ public class MogileStoreService extends ObjectStore {
     try {
       InputStream in = mfs.getFileStream(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()));
 
-      if (in == null)
+      if (in == null) {
         return false;
+      }
 
       in.close();
       return true;
-
     } catch (Exception e) {
       return false;
     }
@@ -84,22 +82,19 @@ public class MogileStoreService extends ObjectStore {
   @Override
   public String[] getFilePaths(RepoObject repoObject) throws RepoException {
     String[] paths = null;
-    try{
-      
+    try {
       paths = mfs.getPaths(getObjectLocationString(repoObject.getBucketName(), repoObject.getChecksum()), true);
 
       if (paths == null) {
         throw new RepoException(RepoException.Type.ObjectFilePathMissing);
       }
-      
-    } catch(Exception e){
+    } catch (Exception e) {
       throw new RepoException(e);
-      
     }
-    
+
     return paths;
   }
-  
+
   @Override
   public InputStream getInputStream(RepoObject repoObject) throws RepoException {
     try {
@@ -127,7 +122,6 @@ public class MogileStoreService extends ObjectStore {
 
   @Override
   public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException {
-
     final String tempFileLocation = UUID.randomUUID().toString() + ".tmp";
 
     // NOTE: in the future we can avoid having to read to memory by using a
@@ -162,7 +156,6 @@ public class MogileStoreService extends ObjectStore {
           return checksum;
         }
       };
-
     } catch (Exception e) {
       throw new RepoException(e);
     }

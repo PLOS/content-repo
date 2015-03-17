@@ -68,17 +68,14 @@ public class ObjectControllerMockDependenciesTest {
   private Gson gson = new Gson();
 
   @Before
-  public void setUp(){
-
+  public void setUp() {
     objectController = new ObjectController();
     initMocks(this);
-
   }
 
 
   @Test
   public void reproxyUrlGenerationTest() throws MalformedURLException, RepoException {
-
     RepoObject object1 = mock(RepoObject.class);
     URL url1 = new URL("http", "localhost", 8080, "contentRepo1");
     URL url2 = new URL("http", "localhost", 8080, "contentRepo2");
@@ -101,7 +98,7 @@ public class ObjectControllerMockDependenciesTest {
     when(object4.getTimestamp()).thenReturn(timestamp);
     when(object4.getCreationDate()).thenReturn(timestamp);
 
-    List<RepoObject> repoObjects = new ArrayList<RepoObject>();
+    List<RepoObject> repoObjects = new ArrayList<>();
     repoObjects.add(object1);
     repoObjects.add(object2);
     repoObjects.add(object3);
@@ -113,7 +110,6 @@ public class ObjectControllerMockDependenciesTest {
 
     assertNotNull(objectsResponse);
     assertEquals(objectsResponse.getStatus(), Response.Status.OK.getStatusCode());
-
   }
 
 }

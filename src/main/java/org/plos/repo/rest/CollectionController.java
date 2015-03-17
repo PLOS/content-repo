@@ -19,7 +19,11 @@ package org.plos.repo.rest;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.wordnik.swagger.annotations.*;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiParam;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 import org.apache.http.HttpStatus;
 import org.plos.repo.models.RepoCollection;
 import org.plos.repo.models.input.ElementFilter;
@@ -33,7 +37,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.ws.rs.*;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -41,7 +53,7 @@ import java.util.List;
 
 
 @Path("/collections")
-@Api(value="/collections")
+@Api(value = "/collections")
 public class CollectionController {
 
   private static final Logger log = LoggerFactory.getLogger(CollectionController.class);
@@ -68,21 +80,17 @@ public class CollectionController {
       @ApiParam(required = false) @QueryParam("limit") Integer limit,
       @ApiParam(required = false) @DefaultValue("false") @QueryParam("includeDeleted") boolean includeDeleted,
       @ApiParam(required = false) @QueryParam("tag") String tag) {
-
     try {
-
       List<RepoCollection> repoCollections = collectionRepoService.listCollections(bucketName, offset, limit, includeDeleted, tag);
       List<RepoCollectionOutput> outputCollections = Lists.newArrayList(Iterables.transform(repoCollections, RepoCollectionOutput.typeFunction()));
 
       return Response.status(Response.Status.OK)
-          .entity(new GenericEntity<List<RepoCollectionOutput>>(outputCollections){})
+          .entity(new GenericEntity<List<RepoCollectionOutput>>(outputCollections) {
+          })
           .build();
-
     } catch (RepoException e) {
-
       return ObjectController.handleError(e);
     }
-
   }
 
   @GET
@@ -99,9 +107,7 @@ public class CollectionController {
       @ApiParam(required = true) @PathParam("bucketName") String bucketName,
       @ApiParam(required = true) @QueryParam("key") String key,
       @ApiParam("collectionFilter") @BeanParam ElementFilter elementFilter) {
-
     try {
-
       RepoCollection repoCollection = collectionRepoService.getCollection(bucketName, key, elementFilter);
 
       RepoCollectionOutput outputCollection = new RepoCollectionOutput(repoCollection);
@@ -112,7 +118,6 @@ public class CollectionController {
     } catch (RepoException e) {
       return ObjectController.handleError(e);
     }
-
   }
 
   @GET
@@ -128,20 +133,18 @@ public class CollectionController {
   public Response getCollectionVersions(
       @ApiParam(required = true) @PathParam("bucketName") String bucketName,
       @ApiParam(required = true) @QueryParam("key") String key) {
-
     try {
-
       List<RepoCollection> repoCollections = collectionRepoService.getCollectionVersions(bucketName, key);
 
-      List<RepoCollectionOutput> outputCollections =  Lists.newArrayList(Iterables.transform(repoCollections, RepoCollectionOutput.typeFunction()));
+      List<RepoCollectionOutput> outputCollections = Lists.newArrayList(Iterables.transform(repoCollections, RepoCollectionOutput.typeFunction()));
 
       return Response.status(Response.Status.OK)
-          .entity(new GenericEntity<List<RepoCollectionOutput>>(outputCollections){})
+          .entity(new GenericEntity<List<RepoCollectionOutput>>(outputCollections) {
+          })
           .build();
     } catch (RepoException e) {
       return ObjectController.handleError(e);
     }
-
   }
 
   @DELETE
@@ -157,14 +160,12 @@ public class CollectionController {
       @ApiParam(required = true) @PathParam("bucketName") String bucketName,
       @ApiParam(required = true) @QueryParam("key") String key,
       @ApiParam("collectionFilter") @BeanParam ElementFilter elementFilter) {
-
     try {
       collectionRepoService.deleteCollection(bucketName, key, elementFilter);
       return Response.status(Response.Status.OK).build();
     } catch (RepoException e) {
       return ObjectController.handleError(e);
     }
-
   }
 
 
@@ -178,14 +179,13 @@ public class CollectionController {
       @ApiResponse(code = HttpStatus.SC_BAD_REQUEST, message = "The collection was unable to be created (see response text for more details)"),
       @ApiResponse(code = HttpStatus.SC_INTERNAL_SERVER_ERROR, message = "Server error")
   })
-  public Response createOrUpdateCollection(@ApiParam("collection") InputCollection inputCollection){
-
+  public Response createOrUpdateCollection(@ApiParam("collection") InputCollection inputCollection) {
     try {
-
       RepoService.CreateMethod method;
 
-      if (inputCollection.getCreate() == null)
+      if (inputCollection.getCreate() == null) {
         throw new RepoException(RepoException.Type.NoCreationMethodEntered);
+      }
 
       try {
         method = RepoService.CreateMethod.valueOf(inputCollection.getCreate().toUpperCase());
@@ -200,12 +200,9 @@ public class CollectionController {
       RepoCollectionOutput outputCollection = new RepoCollectionOutput(repoCollection);
 
       return Response.status(Response.Status.CREATED).entity(outputCollection).build();
-
     } catch (RepoException e) {
       return ObjectController.handleError(e);
     }
-
   }
-
 
 }

@@ -26,7 +26,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class ThreadLocalTest extends RepoBaseSpringTest {
 
@@ -35,9 +38,9 @@ public class ThreadLocalTest extends RepoBaseSpringTest {
   private CountDownLatch startGate;
   private CountDownLatch endGate;
 
-  @Before @SuppressWarnings("unchecked")
+  @Before
+  @SuppressWarnings("unchecked")
   public void setup() throws Exception {
-
     // clear data calls sqlService.getConnection()
     clearData(objectStore, sqlService);
 
@@ -50,54 +53,52 @@ public class ThreadLocalTest extends RepoBaseSpringTest {
 
   @Test
   public void testConnectionEquality() throws Exception {
-    Connection conn  = threadLocalHnd.get();
+    Connection conn = threadLocalHnd.get();
     Connection conn2 = threadLocalHnd.get();
     assertEquals(conn, conn2);
   }
 
   @Test
   public void testThreadLocalSingleThread() throws Exception {
-
     // ExistingConnection : GET
     Connection conn = threadLocalHnd.get();
-    assertNotNull( conn );
+    assertNotNull(conn);
 
     // ExistingConnection : REMOVE
     this.sqlService.releaseConnection();
-    assertNull( threadLocalHnd.get() );
+    assertNull(threadLocalHnd.get());
 
     // make sure safe to call release multiple times
     this.sqlService.releaseConnection();
-    assertNull( threadLocalHnd.get() );
+    assertNull(threadLocalHnd.get());
 
     // NoConnection: REMOVE (no-op?)
     threadLocalHnd.remove();
 
     // NoConnection : GET
     conn = threadLocalHnd.get();
-    assertNull( conn );
+    assertNull(conn);
 
     // NoConnection : SET
     this.sqlService.getConnection();
     Connection conn1 = threadLocalHnd.get();
-    assertNotNull( conn1 );
+    assertNotNull(conn1);
 
     // ExistingConnection : SET (overwrites)
-    this.sqlService.getConnection();  
+    this.sqlService.getConnection();
     Connection conn2 = threadLocalHnd.get();
-    assertTrue( conn1 != conn2 );
+    assertTrue(conn1 != conn2);
 
     // Be a good citizen and close connections before removing as thread locals
     conn1.close();
     conn2.close();
-    
+
     threadLocalHnd.remove();
-    assertNull( threadLocalHnd.get() );
+    assertNull(threadLocalHnd.get());
   }
 
   @Test
   public void testThreadLocalMultipleThreads() throws Exception {
-
     final int THREADS = 10;
 
     this.endGate = new CountDownLatch(THREADS);
@@ -110,8 +111,8 @@ public class ThreadLocalTest extends RepoBaseSpringTest {
           try {
             startGate.await();
             try {
-              sqlService.getReadOnlyConnection();;
-              connections.add( threadLocalHnd.get() );
+              sqlService.getReadOnlyConnection();
+              connections.add(threadLocalHnd.get());
               sqlService.releaseConnection();
             } finally {
               endGate.countDown();
@@ -129,7 +130,8 @@ public class ThreadLocalTest extends RepoBaseSpringTest {
 
     assertEquals(THREADS, connections.size());
     for (Connection c : connections) {
-      assertTrue( c.isClosed() );       
+      assertTrue(c.isClosed());
     }
   }
+
 }

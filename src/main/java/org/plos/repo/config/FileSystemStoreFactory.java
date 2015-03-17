@@ -35,9 +35,11 @@ public class FileSystemStoreFactory implements ObjectFactory {
     String dataDirectory = (String) ((Reference) o).get(DATA_DIR_PARAM).getContent();
     String reproxyBaseUrl = null;
 
-    if (((Reference) o).get(REPROXY_BASE_URL) != null)
+    if (((Reference) o).get(REPROXY_BASE_URL) != null) {
       reproxyBaseUrl = (String) ((Reference) o).get(REPROXY_BASE_URL).getContent();
+    }
 
     return new FileSystemStoreService(dataDirectory, reproxyBaseUrl);
   }
+
 }

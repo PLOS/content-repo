@@ -46,7 +46,6 @@ public abstract class RepoBaseJerseyTest extends JerseyTest {
   protected Gson gson = new Gson();
 
   protected void assertRepoError(Response response, Response.Status httpStatus, RepoException.Type repoError) {
-
     JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
 
     assertEquals(httpStatus.getStatusCode(), response.getStatus());
@@ -57,7 +56,6 @@ public abstract class RepoBaseJerseyTest extends JerseyTest {
 
   @Override
   protected javax.ws.rs.core.Application configure() {
-
     context = new AnnotationConfigApplicationContext(TestSpringConfig.class);
 
     ResourceConfig config = new JerseyApplication().property("contextConfig", context);

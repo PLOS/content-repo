@@ -37,7 +37,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -65,20 +68,17 @@ public class RepoServiceTest {
   private Bucket bucket;
 
   @Before
-  public void setUp(){
-
+  public void setUp() {
     repoService = new RepoService();
     initMocks(this);
-
   }
 
   @Test
   public void testListObjectsHappyPath() throws RepoException, SQLException, MalformedURLException {
-
-    doNothing().when(sqlService).getReadOnlyConnection();;
+    doNothing().when(sqlService).getReadOnlyConnection();
     when(sqlService.getBucket(VALID_BUCKET)).thenReturn(bucket);
 
-    List<RepoObject> repoObjects = new ArrayList<RepoObject>();
+    List<RepoObject> repoObjects = new ArrayList<>();
     RepoObject ob = new RepoObject();
     ob.setId(0);
     ob.setKey("key");
@@ -107,7 +107,6 @@ public class RepoServiceTest {
     verify(objectStore).hasXReproxy();
     verify(objectStore).getRedirectURLs(ob);
     verify(sqlService).releaseConnection();
-
   }
 
 }

@@ -34,7 +34,9 @@ import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 /**
@@ -56,50 +58,44 @@ public class InputRepoObjectValidatorTest {
   @Mock
   private InputRepoObject inputRepoObject;
 
-  private List<InputObject> inputObjects = Arrays.asList(new InputObject[]{new InputObject("key", "sads123dsadas456")});
+  private List<InputObject> inputObjects = Arrays.asList(new InputObject("key", "sads123dsadas456"));
 
   @Before
-  public void setUp(){
+  public void setUp() {
     inputRepoObjectValidator = new InputRepoObjectValidator();
     initMocks(this);
   }
 
   @Test
   public void validateHappyPathTest() throws RepoException {
-
     mockInputCollectionCalls(inputObjects);
 
     inputRepoObjectValidator.validate(inputRepoObject);
 
     verifyInputCollectionCalls(2);
-
   }
 
   @Test
   public void validateNoKeyTest() throws RepoException {
-
-    try{
+    try {
       inputRepoObjectValidator.validate(inputRepoObject);
       fail(FAIL_MSG);
-    } catch(RepoException re){
+    } catch (RepoException re) {
       assertEquals(re.getType(), RepoException.Type.NoKeyEntered);
       verify(inputRepoObject).getKey();
     }
-
   }
 
   @Test
   public void validateNoBucketNameTest() throws RepoException {
-
     when(inputRepoObject.getKey()).thenReturn(VALID_KEY);
-    try{
+    try {
       inputRepoObjectValidator.validate(inputRepoObject);
       fail(FAIL_MSG);
-    } catch(RepoException re){
+    } catch (RepoException re) {
       assertEquals(re.getType(), RepoException.Type.NoBucketEntered);
       verify(inputRepoObject).getKey();
     }
-
   }
 
   private void mockInputCollectionCalls(List<InputObject> objects) throws RepoException {
@@ -110,10 +106,9 @@ public class InputRepoObjectValidatorTest {
 
     doNothing().when(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseTimestamp);
     doNothing().when(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseCreationDate);
-
   }
 
-  private void verifyInputCollectionCalls(Integer getObjectsCalls) throws RepoException{
+  private void verifyInputCollectionCalls(Integer getObjectsCalls) throws RepoException {
     verify(inputRepoObject).getKey();
     verify(inputRepoObject).getKey();
     verify(inputRepoObject).getBucketName();
@@ -122,8 +117,6 @@ public class InputRepoObjectValidatorTest {
 
     verify(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseTimestamp);
     verify(timestampInputValidator).validate(VALID_TIMESTAMP, RepoException.Type.CouldNotParseCreationDate);
-
   }
-
 
 }

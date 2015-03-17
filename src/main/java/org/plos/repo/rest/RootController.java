@@ -34,7 +34,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 @Path("/")
-@Api(value="info")
+@Api(value = "info")
 public class RootController {
 
   @Inject
@@ -45,7 +45,6 @@ public class RootController {
 
   @GET
   public Response index() {
-
     // TODO: display spirit animal (squirrel, foraging woodpecker ?)
 
     return Response.temporaryRedirect(UriBuilder.fromPath("docs").build()).build();

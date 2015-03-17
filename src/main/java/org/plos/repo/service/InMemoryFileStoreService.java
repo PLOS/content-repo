@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.net.URL;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,7 +52,7 @@ public class InMemoryFileStoreService extends ObjectStore {
   @Override
   public InputStream getInputStream(RepoObject repoObject) {
     Map<String, byte[]> bucket = data.get(repoObject.getBucketName());
-    if (bucket != null){
+    if (bucket != null) {
       byte[] content = bucket.get(repoObject.getChecksum());
       if (content != null) {
         return new ByteArrayInputStream(content);
@@ -90,7 +89,6 @@ public class InMemoryFileStoreService extends ObjectStore {
 
   @Override
   public Optional<Boolean> deleteBucket(Bucket bucket) {
-
     // TODO: what if it contains stuff?
 
     return Optional.of(data.remove(bucket.getBucketName()) != null);
@@ -98,21 +96,18 @@ public class InMemoryFileStoreService extends ObjectStore {
 
   @Override
   public boolean saveUploadedObject(Bucket bucket, UploadInfo uploadInfo, RepoObject repoObject) {
-
     byte[] tempContent = tempdata.get(uploadInfo.getTempLocation());
     data.get(bucket.getBucketName()).put(uploadInfo.getChecksum(), tempContent);
     return (tempdata.remove(uploadInfo.getTempLocation()) != null);
-
   }
 
   @Override
   public boolean deleteObject(RepoObject repoObject) {
-
-    if (!objectExists(repoObject))
+    if (!objectExists(repoObject)) {
       return false;
+    }
 
     return data.get(repoObject.getBucketName()).remove(repoObject.getChecksum()) != null;
-
   }
 
   @Override
@@ -124,7 +119,6 @@ public class InMemoryFileStoreService extends ObjectStore {
 
   @Override
   public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException {
-
     try {
       MessageDigest digest = checksumGenerator.getDigestMessage();
 
@@ -156,7 +150,6 @@ public class InMemoryFileStoreService extends ObjectStore {
     } catch (Exception e) {
       throw new RepoException(e);
     }
-
   }
 
 }

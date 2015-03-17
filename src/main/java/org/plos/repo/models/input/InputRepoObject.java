@@ -31,35 +31,45 @@ import java.io.InputStream;
 @XmlRootElement
 public class InputRepoObject {
 
-  @ApiParam(required = true) @FormDataParam("key")
+  @ApiParam(required = true)
+  @FormDataParam("key")
   private String key; // what the user specifies
 
-  @ApiParam(required = true) @FormDataParam("bucketName")
+  @ApiParam(required = true)
+  @FormDataParam("bucketName")
   private String bucketName;
 
-  @ApiParam(value = "MIME type") @FormDataParam("contentType")
+  @ApiParam(value = "MIME type")
+  @FormDataParam("contentType")
   private String contentType;
 
-  @ApiParam(value = "name of file when downloaded", required = false) @FormDataParam("downloadName")
+  @ApiParam(value = "name of file when downloaded", required = false)
+  @FormDataParam("downloadName")
   private String downloadName;
 
   @ApiParam(value = "creation method", allowableValues = "new,version,auto", defaultValue = "new",
-      required = true) @FormDataParam("create")
+      required = true)
+  @FormDataParam("create")
   private String create;
 
-  @ApiParam(value = "last modification time", required = false) @FormDataParam("timestamp")
+  @ApiParam(value = "last modification time", required = false)
+  @FormDataParam("timestamp")
   private String timestamp;   // created time
 
-  @ApiParam(value = "creation time", required = false) @FormDataParam("creationDateTime")
+  @ApiParam(value = "creation time", required = false)
+  @FormDataParam("creationDateTime")
   private String creationDateTime;   // created time
 
-  @ApiParam(value = "creation time", required = false) @FormDataParam("tag")
+  @ApiParam(value = "creation time", required = false)
+  @FormDataParam("tag")
   private String tag;
 
-  @ApiParam(value = "user metadata", required = false) @FormDataParam("userMetadata")
+  @ApiParam(value = "user metadata", required = false)
+  @FormDataParam("userMetadata")
   private String userMetadata;
 
-  @ApiParam(required = false) @FormDataParam("file")
+  @ApiParam(required = false)
+  @FormDataParam("file")
   private InputStream uploadedInputStream;
 
   public String getKey() {
@@ -141,4 +151,5 @@ public class InputRepoObject {
   public void setUploadedInputStream(InputStream uploadedInputStream) {
     this.uploadedInputStream = uploadedInputStream;
   }
+
 }

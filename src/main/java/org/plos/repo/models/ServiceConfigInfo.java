@@ -21,8 +21,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class ServiceConfigInfo {
+
   public String version;
   public String objectStoreBackend;
   public String sqlServiceBackend;
   public boolean hasXReproxy;
+
 }

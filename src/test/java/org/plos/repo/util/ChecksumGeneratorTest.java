@@ -29,8 +29,12 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 /**
@@ -61,11 +65,11 @@ public class ChecksumGeneratorTest {
   @Mock
   private RepoObject repoObject2;
 
-  private List<String> objects1Checksum = Arrays.asList(new String[]{OBJ1_VERSION_CHECKSUM, OBJ2_VERSION_CHECKSUM});
-  private List<String> objects2Checksum = Arrays.asList(new String[]{OBJ2_VERSION_CHECKSUM, OBJ1_VERSION_CHECKSUM});
+  private List<String> objects1Checksum = Arrays.asList(OBJ1_VERSION_CHECKSUM, OBJ2_VERSION_CHECKSUM);
+  private List<String> objects2Checksum = Arrays.asList(OBJ2_VERSION_CHECKSUM, OBJ1_VERSION_CHECKSUM);
 
   @Before
-  public void setUp(){
+  public void setUp() {
     checksumGenerator = new ChecksumGenerator();
     repoObject1 = new RepoObject();
     repoObject1.setId(0);
@@ -78,7 +82,6 @@ public class ChecksumGeneratorTest {
 
   @Test
   public void generateChecksumForSameCollection() throws RepoException {
-
     mockCollectionCalls(repoCollection1, COLLECTION_KEY, TIMESTAMP, TAG);
     mockCollectionCalls(repoCollection2, COLLECTION_KEY, TIMESTAMP, TAG);
 
@@ -91,13 +94,11 @@ public class ChecksumGeneratorTest {
 
     verifyCollectionCalls(repoCollection1, 2);
     verifyCollectionCalls(repoCollection2, 2);
-
   }
 
 
   @Test
   public void generateChecksumForDifObjsCollection() throws RepoException {
-
     mockCollectionCalls(repoCollection1, COLLECTION_KEY, TIMESTAMP, TAG);
     mockCollectionCalls(repoCollection2, COLLECTION_KEY, TIMESTAMP, null);
 
@@ -110,12 +111,10 @@ public class ChecksumGeneratorTest {
 
     verifyCollectionCalls(repoCollection1, 2);
     verifyCollectionCalls(repoCollection2, 1);
-
   }
 
   @Test
   public void generateChecksumForSameObject() throws RepoException {
-
     mockObjectCalls(repoObject1, OBJECT_KEY1, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
     mockObjectCalls(repoObject2, OBJECT_KEY1, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
 
@@ -125,12 +124,10 @@ public class ChecksumGeneratorTest {
     assertNotNull(checksumObj1);
     assertNotNull(checksumObj2);
     assertEquals(checksumObj1, checksumObj2);
-
   }
 
   @Test
   public void generateChecksumForDifObject() throws RepoException {
-
     mockObjectCalls(repoObject1, OBJECT_KEY1, TIMESTAMP, TAG, CONTENT_TYPE, DOWNLOAD_NAME, OBJ1_CHECKSUM);
     mockObjectCalls(repoObject2, OBJECT_KEY1, TIMESTAMP, TAG, CONTENT_TYPE1, null, OBJ1_CHECKSUM);
 
@@ -141,11 +138,10 @@ public class ChecksumGeneratorTest {
     assertNotNull(checksumObj2);
     assertNotEquals(checksumObj1, checksumObj2);
 
-    verifyObjectCalls(repoObject1, 2, 2 ,2);
+    verifyObjectCalls(repoObject1, 2, 2, 2);
     verifyObjectCalls(repoObject2, 2, 2, 1);
-
   }
-  
+
   private void mockObjectCalls(RepoObject repoObject, String key, Timestamp timestamp, String tag, String contentType, String downloadName, String checksum) {
     when(repoObject.getKey()).thenReturn(key);
     when(repoObject.getCreationDate()).thenReturn(timestamp);
@@ -170,7 +166,7 @@ public class ChecksumGeneratorTest {
     when(repoCollection.getTag()).thenReturn(tag);
   }
 
-  private void verifyCollectionCalls(RepoCollection repoCollection, int tagTimes){
+  private void verifyCollectionCalls(RepoCollection repoCollection, int tagTimes) {
     verify(repoCollection).getKey();
     verify(repoCollection).getCreationDate();
     verify(repoCollection, times(tagTimes)).getTag();
