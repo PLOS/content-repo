@@ -1,0 +1,8 @@
+Instructions
+
+The migration for this software deploy requires a pre and post 
+software deploy DB modification.
+
+Run  04a-UUID-audit-upgrade-pre-deploy.sql on the CREPO db pre-deploy.
+Run  04b-UUID-audit-upgrade-post-deploy.sql on the CREPO db post-deploy.
+
