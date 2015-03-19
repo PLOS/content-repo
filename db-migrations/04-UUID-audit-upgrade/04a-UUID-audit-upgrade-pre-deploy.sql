@@ -112,9 +112,7 @@ DROP index keySum on collections;
 ALTER TABLE collections MODIFY versionChecksum varchar(255);
 
 ALTER TABLE objects ADD CONSTRAINT UNIQUE ObjkeyUniversalID (bucketId, objkey, uuid);
-ALTER TABLE objects ADD CONSTRAINT UNIQUE keyVersion (bucketId, objkey, versionNumber);
 
 ALTER TABLE collections ADD CONSTRAINT UNIQUE CollkeyUniversalID (bucketId, collkey, uuid);
-ALTER TABLE collections ADD CONSTRAINT UNIQUE keyVersion (bucketId, collkey, versionNumber);
 
 INSERT CREPO_SCHEMA_INFO SET schema_ver = '04-UUID-audit-upgrade-predeploy';
