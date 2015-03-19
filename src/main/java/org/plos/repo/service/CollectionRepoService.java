@@ -208,7 +208,7 @@ public class CollectionRepoService extends BaseRepoService {
 
       auditOperation(new Audit.AuditBuilder(bucketName, Operation.DELETE_COLLECTION)
           .setKey(collection.getKey())
-          .setUuid(uuid)
+          .setUuid(collection.getUuid())
           .build());
 
       sqlService.transactionCommit();
