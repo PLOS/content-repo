@@ -142,8 +142,7 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
     objStoreField.set(repoService, spyObjectStore);
 
     try {
-      List<Audit> audit = null;
-      audit = sqlService.listAudit(bucket1.getBucketName(), null, null, null, null);
+      List<Audit> audit = sqlService.listAudit(bucket1.getBucketName(), null, null, null, null);
       repoService.createBucket(bucket1.getBucketName(), CREATION_DATE_TIME_STRING);
       Assert.assertTrue(sqlService.listAudit(bucket1.getBucketName(), null, null, null, null).size() == audit.size());
       Assert.fail();
