@@ -92,7 +92,6 @@ public abstract class BaseRepoService {
    * @throws RepoException if there is a error saving the audit row
    */
   protected void auditOperation(Audit audit) throws RepoException {
-    if (!AUDITING_ENABLED) return;
 
     try {
       boolean result = sqlService.insertAudit(audit);
