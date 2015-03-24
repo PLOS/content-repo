@@ -83,7 +83,7 @@ public abstract class BaseRepoService {
    * When the auditing feature is ready to be permanently re-enabled, this should be set to true, then deleted (with all
    * references factored out).
    */
-  public static final boolean AUDITING_ENABLED = false;
+  public static final boolean AUDITING_ENABLED = true;
 
   /**
    * This method audit all the others services operations
