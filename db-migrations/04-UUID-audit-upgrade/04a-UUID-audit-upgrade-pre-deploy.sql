@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS audit (
 
 ALTER TABLE objects
 ADD COLUMN uuid CHAR(36);
+ALTER TABLE objects 
+ADD COLUMN userMetadata LONGTEXT;
 
 #
 # Collections are being update with UUID information
@@ -39,6 +41,8 @@ ADD COLUMN uuid CHAR(36);
 
 ALTER TABLE collections
 ADD COLUMN uuid CHAR(36);
+ALTER TABLE collections 
+ADD COLUMN userMetadata LONGTEXT;
 
 DELIMITER //
 
