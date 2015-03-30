@@ -82,5 +82,5 @@ CREATE TABLE IF NOT EXISTS audit (
 
 #
 # IMPORTANT: This must be set to the proper version.
-# 
-INSERT CREPO_SCHEMA_INFO SET schema_ver='01-add-collections';
+#
+INSERT CREPO_SCHEMA_INFO SET schema_ver='04b-UUID-audit-upgrade-post-deploy';
