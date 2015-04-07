@@ -1414,4 +1414,38 @@ public abstract class SqlService {
     }
   }
 
+
+
+  /**
+   * Returns a list of audit records order by creation date. The resulting list will be paginated using
+   * <code>offset</code> and <code>limit</code> parameters
+   *
+   * @param offset         an Integer used to determine the offset of the response
+   * @param limit          an Integer used to determine the limit of the response
+   * @return a list of {@link org.plos.repo.models.Audit}
+   * @throws SQLException
+   */
+  public List<Audit> listAuditRegisters(Integer offset, Integer limit) throws SQLException, RepoException {
+    List<Audit> auditRecords = new ArrayList<>();
+
+    PreparedStatement p = null;
+    ResultSet result = null;
+
+    try {
+
+      String query = "SELECT * FROM audit a ORDER BY a.timestamp LIMIT " + limit + " OFFSET " + offset;
+      p = connectionLocal.get().prepareStatement(query);
+
+      result = p.executeQuery();
+
+      while (result.next()) {
+        auditRecords.add(mapAuditRow(result));
+      }
+
+      return auditRecords;
+    } finally {
+      closeDbStuff(result, p);
+    }
+  }
+
 }
