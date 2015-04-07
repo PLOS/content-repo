@@ -20,13 +20,16 @@
 package org.plos.repo.models.output;
 
 import com.google.common.base.Function;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.hsqldb.lib.StringUtil;
 import org.plos.repo.models.Audit;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.sql.Timestamp;
 
 /**
- * Represents the operation's values to audit
+ * Audit record to be return to the client
  */
 @XmlRootElement
 public class RepoAuditOutput {
@@ -41,9 +44,13 @@ public class RepoAuditOutput {
 
   public RepoAuditOutput(Audit audit) {
     this.bucket = audit.getBucket();
-    this.key = audit.getKey();
+    if (!StringUtil.isEmpty(audit.getKey())){
+      this.key = audit.getKey();
+    }
     this.operation = audit.getOperation().getValue();
-    this.uuid = audit.getUuid().toString();
+    if (audit.getUuid() != null){
+      this.uuid = audit.getUuid().toString();
+    }
     this.timestamp = audit.getTimestamp();
   }
 
@@ -67,14 +74,34 @@ public class RepoAuditOutput {
     return timestamp;
   }
 
+  public void setBucket(String bucket) {
+    this.bucket = bucket;
+  }
+
+  public void setKey(String key) {
+    this.key = key;
+  }
+
+  public void setOperation(String operation) {
+    this.operation = operation;
+  }
+
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
+  }
+
+  public void setTimestamp(Timestamp timestamp) {
+    this.timestamp = timestamp;
+  }
+
   @Override
-  public String toString() {
-    StringBuilder result = new StringBuilder(" Audit { ");
-    result.append(" BucketName: ").append(this.bucket).append(",");
-    result.append(" Key: ").append(this.key).append(",");
-    result.append(" Operation: ").append(this.operation).append(",");
-    result.append(" Uuid: ").append(this.uuid).append(" } ");
-    return result.toString();
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this);
+  }
+
+  @Override
+  public boolean equals(java.lang.Object obj) {
+    return EqualsBuilder.reflectionEquals(this, obj);
   }
 
   public static Function<Audit, RepoAuditOutput> typeFunction() {
