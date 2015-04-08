@@ -55,4 +55,7 @@ class JSONResponse(AbstractResponse):
   def get_objectKey(self):
     return self.jpath('$..objectKey')
 
+  def get_collectionKey(self):
+    return self.jpath('$..collectionKey')
+
 

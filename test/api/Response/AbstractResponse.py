@@ -88,9 +88,10 @@ class AbstractResponse(object):
 #  def get_objectReproxyURL(self):
 #    pass
 #
-#  @abstractmethod
-#  def get_collectionKey(self):
-#    pass
+
+  @abstractmethod
+  def get_collectionKey(self):
+    pass
 #
 #  @abstractmethod
 #  def get_collectionTimestamp(self):
