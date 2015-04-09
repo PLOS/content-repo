@@ -113,13 +113,13 @@ class AbstractResponse(object):
 #  def get_collectionCreationDate(self):
 #    pass
 #
-#  @abstractmethod
-#  def get_collectionVersionChecksum(self):
-#    pass
-#
-#  @abstractmethod
-#  def get_collectionStatus(self):
-#    pass
+  @abstractmethod
+  def get_collectionUUID(self):
+    pass
+
+  @abstractmethod
+  def get_collectionStatus(self):
+    pass
 #
 #  @abstractmethod
 #  def get_collectionObjects(self):

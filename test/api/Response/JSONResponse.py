@@ -59,6 +59,12 @@ class JSONResponse(AbstractResponse):
     return self.jpath('$[*]')
 
   def get_collectionKey(self):
-    return self.jpath('$..collectionKey')
+    return self.jpath('$..key')
+
+  def get_collectionUUID(self):
+    return self.jpath('$..uuid')
+
+  def get_collectionStatus(self):
+    return self.jpath('$..status')
 
 
