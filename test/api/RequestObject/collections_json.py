@@ -16,38 +16,37 @@ HEADER = '-H'
 
 class CollectionsJson(BaseServiceTest):
 
-    # Define a default bucketName
-    bucketName = u'corpus'
-
-    # Set the bucketName according our development or performance stack environments
-    def set_bucketName():
-        global bucketName
-        if(API_BASE_URL == 'http://sfo-perf-plosrepo01.int.plos.org:8002'):
-            bucketName = u'mogilefs-prod-repo'
-        elif(API_BASE_URL == 'http://rwc-prod-plosrepo.int.plos.org:8002'):
-            bucketName = u'mogilefs-prod-repo'
-
-    # Call the set bucketName method
-    set_bucketName()
-
-    # Request for GET collections endpoint
     def get_collections(self):
         """
-        Calls CREPO API to get collections list
-        :param
+        Calls CREPO API to GET collections list
+        :param bucketName The Collection's bucket name
         :return:JSON response
         """
-        header = {'header': HEADER}
-        self.doGet('%s' % COLLECTIONS_API + '?bucketName=' + self.bucketName, header, DEFAULT_HEADERS)
+        params = {'bucketName': self.get_bucket_name()}
+        self.doGet('%s' % COLLECTIONS_API, params, DEFAULT_HEADERS)
         self.parse_response_as_json()
 
     @needs('parsed', 'parse_response_as_json()')
-    def verify_collections(self):
+    def verify_list_collections(self):
         """
-        Verifies a valid response to api request GET /collections
+        Verifies a valid response to api request GET/POST collections
         :param API_BASE_URL from Base.Config or environment variable
         :return: Success or Error msg on Failure
         """
         print ('Validating collections...'),
-        actual_collectionKey = self.parsed.get_collectionKey()
-        print(unicode(actual_collectionKey))
+        collections = self.parsed.get_collections()
+        self.assertIsNotNone(collections)
+        for i in range(len(collections)):
+            print collections[i]
+
+    # Get the bucketName according our development or performance stack environments
+    def get_bucket_name(self):
+        bucket_name = u'corpus'
+        if(API_BASE_URL == 'http://sfo-perf-plosrepo01.int.plos.org:8002'):
+            bucket_name = u'mogilefs-prod-repo'
+        elif(API_BASE_URL == 'http://rwc-prod-plosrepo.int.plos.org:8002'):
+            bucket_name = u'mogilefs-prod-repo'
+        return bucket_name
+
+
+

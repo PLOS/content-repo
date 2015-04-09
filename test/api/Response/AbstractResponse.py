@@ -90,6 +90,10 @@ class AbstractResponse(object):
 #
 
   @abstractmethod
+  def get_collections(self):
+    pass
+
+  @abstractmethod
   def get_collectionKey(self):
     pass
 #
