@@ -1425,7 +1425,7 @@ public abstract class SqlService {
    * @return a list of {@link org.plos.repo.models.Audit}
    * @throws SQLException
    */
-  public List<Audit> listAuditRegisters(Integer offset, Integer limit) throws SQLException, RepoException {
+  public List<Audit> listAuditRecords(Integer offset, Integer limit) throws SQLException, RepoException {
     List<Audit> auditRecords = new ArrayList<>();
 
     PreparedStatement p = null;

@@ -19,31 +19,13 @@
 
 package org.plos.repo.service;
 
-import com.google.common.base.Optional;
 import com.google.common.util.concurrent.Striped;
-import org.hsqldb.lib.StringUtil;
 import org.plos.repo.models.*;
-import org.plos.repo.models.input.ElementFilter;
-import org.plos.repo.models.input.InputRepoObject;
-import org.plos.repo.models.validator.InputRepoObjectValidator;
-import org.plos.repo.models.validator.TimestampInputValidator;
-import org.plos.repo.util.UUIDFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.MediaType;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 
 /**
@@ -77,7 +59,8 @@ public class AuditRepoService extends BaseRepoService {
 
       sqlService.getReadOnlyConnection();
 
-      return sqlService.listAuditRegisters(offset, limit);
+      return sqlService.listAuditRecords(offset, limit);
+
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
