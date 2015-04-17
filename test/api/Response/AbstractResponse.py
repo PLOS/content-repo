@@ -88,6 +88,7 @@ class AbstractResponse(object):
 #  def get_objectReproxyURL(self):
 #    pass
 #
+  #####
 
   @abstractmethod
   def get_collections(self):
@@ -112,7 +113,7 @@ class AbstractResponse(object):
 #  @abstractmethod
 #  def get_collectionCreationDate(self):
 #    pass
-#
+  #####
   @abstractmethod
   def get_collectionUUID(self):
     pass
@@ -160,4 +161,12 @@ class AbstractResponse(object):
 #  @abstractmethod
 #  def get_infoHasXReproxy(self):
 #    pass
-#####
+  #####
+  @abstractmethod
+  def get_repoErroCode(self):
+    pass
+
+  @abstractmethod
+  def get_message(self):
+    pass
+

@@ -10,8 +10,9 @@ import json
 from ...Base.base_service_test import BaseServiceTest
 from ...Base.Config import API_BASE_URL
 from ...Base.api import needs
+from buckets_json import BucketsJson
 
-COLLECTIONS_API = API_BASE_URL + '/v1/collections'
+COLLECTIONS_API = API_BASE_URL + '/collections'
 DEFAULT_HEADERS = {'Accept': 'application/json'}
 HEADER = '-H'
 
@@ -23,7 +24,7 @@ class CollectionsJson(BaseServiceTest):
         :param bucketName The Collection's bucket name
         :return:JSON response
         """
-        params = {'bucketName': self.get_bucket_name()}
+        params = {'bucketName': BucketsJson.get_bucket_name()}
         self.doGet('%s' % COLLECTIONS_API, params, DEFAULT_HEADERS)
         self.parse_response_as_json()
 
@@ -69,15 +70,6 @@ class CollectionsJson(BaseServiceTest):
         self.assertTrue(expected_collection_status in actual_collection_status, expected_collection_status + ' not found in ' + unicode(actual_collection_status))
         self.assertIsNotNone(self.parsed.get_collectionUUID())
 
-    # Get the bucketName according our development or performance stack environments
-    def get_bucket_name(self):
-        bucket_name = u'corpus'
-        if(API_BASE_URL == 'http://sfo-perf-plosrepo01.int.plos.org:8002'):
-            bucket_name = u'mogilefs-prod-repo'
-        elif(API_BASE_URL == 'http://rwc-prod-plosrepo.int.plos.org:8002'):
-            bucket_name = u'mogilefs-prod-repo'
-        return bucket_name
-
     # Get the collection key according our development or performance stack environments
     def get_coll_key(self):
         _coll_key = u'10.1371/journal.pone.0099139'
@@ -105,7 +97,7 @@ class CollectionsJson(BaseServiceTest):
     # Get the collection data
     def get_input_collection(self):
         _input_collection = {'key':self.get_coll_key(),
-                             'bucketName':self.get_bucket_name(),
+                             'bucketName':BucketsJson.get_bucket_name(),
                              'create':'auto',
                              'objects': self.get_input_object()}
         return _input_collection

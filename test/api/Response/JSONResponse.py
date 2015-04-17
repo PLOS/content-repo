@@ -32,7 +32,7 @@ class JSONResponse(AbstractResponse):
     return jsonpath(self._json, path)
 
   def get_buckets(self):
-    return self.jpath('$.')
+    return self.jpath('$[*]')
 
   def get_bucketTimestamp(self):
     return self.jpath('$..timestamp')
@@ -67,4 +67,8 @@ class JSONResponse(AbstractResponse):
   def get_collectionStatus(self):
     return self.jpath('$..status')
 
+  def get_repoErroCode(self):
+    return self.jpath('$..repoErrorCode')
 
+  def get_message(self):
+    return self.jpath('$..message')
