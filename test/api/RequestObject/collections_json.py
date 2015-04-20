@@ -66,13 +66,15 @@ class CollectionsJson(BaseServiceTest):
         actual_collection_key = self.parsed.get_collectionKey()
         actual_collection_status = self.parsed.get_collectionStatus()
 
-        self.assertTrue(expected_collection_key in actual_collection_key, expected_collection_key + ' not found in ' + unicode(actual_collection_key))
-        self.assertTrue(expected_collection_status in actual_collection_status, expected_collection_status + ' not found in ' + unicode(actual_collection_status))
+        self.assertTrue(not not actual_collection_key, "get_collectionKey returned invalid %r"%(actual_collection_key,))
+        self.assertTrue(actual_collection_key and expected_collection_key in actual_collection_key, expected_collection_key + ' not found in ' + unicode(actual_collection_key))
+        self.assertTrue(not not actual_collection_status, "get_collectionKey returned invalid %r"%(actual_collection_status,))
+        self.assertTrue(actual_collection_status and expected_collection_status in actual_collection_status, expected_collection_status + ' not found in ' + unicode(actual_collection_status))
         self.assertIsNotNone(self.parsed.get_collectionUUID())
 
     # Get the collection key according our development or performance stack environments
     def get_coll_key(self):
-        _coll_key = u'10.1371/journal.pone.0099139'
+        _coll_key = u'10.1371/journal.pone.0121442'
         if(API_BASE_URL == 'http://sfo-perf-plosrepo01.int.plos.org:8002'):
             _coll_key = u'10.1371/journal.pone.0099139'
         elif(API_BASE_URL == 'http://rwc-prod-plosrepo.int.plos.org:8002'):
@@ -90,8 +92,8 @@ class CollectionsJson(BaseServiceTest):
             _input_objects = [{'key':'PDF/10.1371/journal.pone.0099139',
                                'uuid':'f634cf68-c37e-404e-962f-a80e3856139c'}]
         else:
-            _input_objects = [{'key':'PDF/10.1371/journal.pone.0099139',
-                               'uuid':'747dbba5-0e5d-46d2-a8ff-fb27802b8ac1'}]
+            _input_objects = [{'key':'10.1371/journal.pone.0121442.PDF',
+                               'uuid':'f3a22530-a4c9-419b-8e85-0989c93e8164'}]
         return _input_objects
 
     # Get the collection data

@@ -29,7 +29,7 @@
 
   <!-- Application Loggers -->
   <logger name="org.plos.repo">
-    <level value="info"/>
+    <level value="debug"/>
   </logger>
 
   <!-- 3rdparty Loggers -->

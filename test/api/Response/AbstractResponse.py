@@ -163,7 +163,7 @@ class AbstractResponse(object):
 #    pass
   #####
   @abstractmethod
-  def get_repoErroCode(self):
+  def get_repoErrorCode(self):
     pass
 
   @abstractmethod

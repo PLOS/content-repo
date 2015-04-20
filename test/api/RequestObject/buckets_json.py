@@ -14,105 +14,100 @@ BUCKETS_API = API_BASE_URL + '/buckets'
 DEFAULT_HEADERS = {'Accept': 'application/json'}
 HEADER = '-H'
 
+# get BUCKET_NAME based on whether API_BASE_URL is on prod or not.
+BUCKET_NAME = u'corpus'
+if API_BASE_URL.split('/')[2] in (
+    'sfo-perf-plosrepo01.int.plos.org:8002',
+    'rwc-prod-plosrepo.int.plos.org:8002'):
+  BUCKET_NAME = u'mogilefs-prod-repo'
+
+
 # Http Codes
 OK = 200
 CREATED = 201
 BAD_REQUEST = 400
+NOT_FOUND = 404
 
 class BucketsJson(BaseServiceTest):
 
-  def post_bucket(self):
-    """
-    Calls CREPO API to post bucket
-    :param
-    :return:JSON response
-    """
-    self.get_bucket()
-    if self.parsed.get_bucketName() == False:
-      data = {'name': self.get_bucket_name()}
-      self.doPost('%s' % BUCKETS_API, data, None, DEFAULT_HEADERS)
-      self.parse_response_as_json()
-      self.verify_bucket_post()
-    else:
-      print 'The bucket already exists'
-
-  def post_bucket_exist(self):
-    """
-    Calls CREPO API to post bucket that already exist
-    :param
-    :return:JSON response
-    """
-    data = {'name': self.get_bucket_name()}
-    self.doPost('%s' % BUCKETS_API, data, None, DEFAULT_HEADERS)
-    self.parse_response_as_json()
-    self.verify_http_status(BAD_REQUEST)
-
-
-  def post_bucket_without_bucketName(self):
-    """
-    Calls CREPO API to post bucket without bucketName specified
-    :param
-    :return:JSON response
-    """
-    self.doPost('%s' % BUCKETS_API, None, None, DEFAULT_HEADERS)
-    self.parse_response_as_json()
-    self.verify_http_status(BAD_REQUEST)
-
-
   def get_buckets(self):
     """
-    Calls CREPO API to get bucket list
-    :param
-    :return:JSON response
+    Calls CREPO API to get buckets list
+    GET /buckets
     """
     header = {'header': HEADER}
     self.doGet('%s' % BUCKETS_API, header, DEFAULT_HEADERS)
     self.parse_response_as_json()
+    self.buckets = [x['bucketName'] for x in self.parsed.get_buckets()]
 
-  def get_bucket(self):
+  def post_bucket(self, name=None):
+    """
+    Calls CREPO API to create bucket by name.
+    POST /buckets form: name={name}
+
+    :param name: optional bucket name.
+    """
+    data = None
+    if name:
+      data = {'name': name}
+    self.doPost('%s' % BUCKETS_API, data, None, DEFAULT_HEADERS)
+    self.parse_response_as_json()
+
+  def get_bucket(self, name):
     """
     Calls CREPO API to get a bucket by name
-    :param
-    :return:JSON response
+    GET /buckets/{name}
+
+    :param name: bucket name.
     """
     header = {'header': HEADER}
-    self.doGet('%s' % BUCKETS_API +'/' + self.get_bucket_name()  , header, DEFAULT_HEADERS)
+    self.doGet('%s/%s' % (BUCKETS_API, name), None, DEFAULT_HEADERS)
     self.parse_response_as_json()
-    self.verify_http_status(OK)
 
+  def delete_bucket(self, name):
+    """
+    Calls CREPO API to get a bucket by name
+    DELETE /buckets/{name}
+
+    :param name: bucket name.
+    """
+    self.doDelete('%s/%s' % (BUCKETS_API, name), None, DEFAULT_HEADERS)
 
   @needs('parsed', 'parse_response_as_json()')
-  def verify_bucket_post(self):
+  def verify_get_buckets(self):
     """
-    Verifies a valid response to api request POST /bucket
-    by validating the corpus bucket specific to either our
-    development or performance stack environments.
-    :param API_BASE_URL from Base.Config or environment variable
-    :return: Success or Error msg on Failure
+    Verifies a valid response for GET /buckets and fills self.buckets.
     """
-    print ('Validating bucket post...')
+    self.verify_http_status(OK)
+
+  def verify_has_bucket(self, name):
+    """
+    Verifies that the name exists in buckets.
+    """
+    self.assertTrue(name in self.buckets, '%r not found in %r'%(name, self.buckets))
+
+  def verify_no_bucket(self, name):
+    """
+    Verifies that the name does not exists in buckets.
+    """
+    self.assertTrue(name not in self.buckets, '%r found in %r'%(name, self.buckets))
+
+  @needs('parsed', 'parse_response_as_json()')
+  def verify_get_bucket(self, name):
+    """
+    Verifies a valid response to api request GET /buckets/{name}
+    """
+    actual_bucket = self.parsed.get_bucketName()
+    self.assertTrue(name in actual_bucket, '%r is not in %r'%(name, actual_bucket))
+
+  @needs('parsed', 'parse_response_as_json()')
+  def verify_post_bucket(self, name):
+    """
+    Verifies a valid response to api request POST /buckets
+    """
     self.verify_http_status(CREATED)
-    expected_bucket = self.get_bucket_name()
-    actual_buckets = self.parsed.get_bucketName()
-    self.assertTrue(expected_bucket in actual_buckets, expected_bucket + ' not found in ' + unicode(actual_buckets))
-
-  @needs('parsed', 'parse_response_as_json()')
-  def verify_buckets_list(self):
-    """
-    Verifies a valid response to api request GET /buckets
-    by validating the collection list size.
-    :param API_BASE_URL from Base.Config or environment variable
-    :return: Success or Error msg on Failure
-    """
-    print ('Validating buckets get list...')
-    self.verify_http_status(OK)
-    self.assertIsNotNone(self.parsed.get_buckets())
-    buckets = self.parsed.get_buckets()
-    if(buckets and len(buckets) > 0):
-      print 'The bucket has %s element(s)' % len(buckets)
-    else:
-      print 'The bucket list is empty'
-
+    actual_bucket = self.parsed.get_bucketName()
+    self.assertTrue(name in actual_bucket, '%r is not in %r'%(name, actual_bucket))
 
   @needs('parsed', 'parse_response_as_json()')
   def verify_http_status(self, httpCode):
@@ -121,27 +116,25 @@ class BucketsJson(BaseServiceTest):
     :param
     :return: Error msg on Failure
     """
-    print ('Validating HTTP Status...')
-    print (self.parsed.get_json())
-
-    if(httpCode == OK or httpCode == CREATED):
+    self.verify_http_code_is(httpCode)
+    if httpCode == OK or httpCode == CREATED:
       self.assertIsNotNone(self.parsed.get_bucketName())
       self.assertIsNotNone(self.parsed.get_bucketCreationDate())
       self.assertIsNotNone(self.parsed.get_bucketTimestamp())
     else:
-      self.assertIsNotNone(self.parsed.get_repoErroCode())
+      self.assertIsNotNone(self.parsed.get_repoErrorCode())
       self.assertIsNotNone(self.parsed.get_message())
-      print ('ErrorCode: ' +  str(self.parsed.get_repoErroCode()[0]) + ' - Message: ' + self.parsed.get_message()[0])
+
+  def verify_default_bucket(self):
+    """
+    Verify that the default bucket has active objects
+    """
+    self.assertTrue(self.parsed.get_bucketActiveObjects() > 0, '%r is not valid'%(self.parsed.get_bucketActiveObjects()))
 
   @staticmethod
   def get_bucket_name():
     """
     Get the bucketName according our development or performance stack environments
-    :return: bucketName string
+    :return: bucket name string
     """
-    bucket_name = u'corpus'
-    if(API_BASE_URL == 'http://sfo-perf-plosrepo01.int.plos.org:8002'):
-      bucket_name = u'mogilefs-prod-repo'
-    elif(API_BASE_URL == 'http://rwc-prod-plosrepo.int.plos.org:8002'):
-      bucket_name = u'mogilefs-prod-repo'
-    return bucket_name
+    return BUCKET_NAME

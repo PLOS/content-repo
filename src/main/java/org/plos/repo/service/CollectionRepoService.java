@@ -354,6 +354,8 @@ public class CollectionRepoService extends BaseRepoService {
 
     for (InputObject inputObject : inputObjects) {
       UUID objectUUID = UUIDFormatter.getUuid(inputObject.getUuid());
+      log.debug("createCollection repoCollection=" + repoCollection.getBucketName() + "," + repoCollection.getKey()
+        + " inputObjects=" + inputObject.getKey() + "," + inputObject.getUuid() + " collId=" + collId + " objectUUID=" + objectUUID.toString());
       if (sqlService.insertCollectionObjects(collId, inputObject.getKey(), repoCollection.getBucketName(), objectUUID) == 0) {
         throw new RepoException(RepoException.Type.ObjectCollectionNotFound);
       }

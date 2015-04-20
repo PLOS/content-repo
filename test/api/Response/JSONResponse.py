@@ -47,13 +47,37 @@ class JSONResponse(AbstractResponse):
     return self.jpath('$..bucketName')
 
   def get_bucketActiveObjects(self):
-    return self.jpath('$..bucketActiveObjects')
+    return self.jpath('$..activeObjects')
 
   def get_bucketTotalObjects(self):
-    return self.jpath('$..bucketTotalObjects')
+    return self.jpath('$..totalObjects')
+
+  def get_objects(self):
+    return self.jpath('$[*]')
 
   def get_objectKey(self):
     return self.jpath('$..objectKey')
+
+  def get_objectDownloadName(self):
+    return self.jpath('$..downloadName')
+
+  def get_objectContentType(self):
+    return self.jpath('$..contentType')
+
+  def get_objectSize(self):
+    return self.jpath('$..size')
+
+  def get_objectVersionNumber(self):
+    return self.jpath('$..versionNumber')
+
+  def get_objectVersionNumber(self):
+    return self.jpath('$..versionNumber')
+
+  def get_objectStatus(self):
+    return self.jpath('$..status')
+
+  def get_objectAttribute(self, name):
+    return self._json.get(name, None)
 
   def get_collections(self):
     return self.jpath('$[*]')
@@ -67,7 +91,7 @@ class JSONResponse(AbstractResponse):
   def get_collectionStatus(self):
     return self.jpath('$..status')
 
-  def get_repoErroCode(self):
+  def get_repoErrorCode(self):
     return self.jpath('$..repoErrorCode')
 
   def get_message(self):

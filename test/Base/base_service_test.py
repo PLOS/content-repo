@@ -60,8 +60,8 @@ class BaseServiceTest(unittest.TestCase):
     self._debug()
 
   @timeit
-  def doDelete(self, url, data=None, headers=None):
-    self.__response = delete(url, headers=headers, data=data, verify=False, timeout=TIMEOUT, allow_redirects=True)
+  def doDelete(self, url, data=None, headers=None, params=None):
+    self.__response = delete(url, params=params, headers=headers, data=data, verify=False, timeout=TIMEOUT, allow_redirects=True)
     self._debug()
 
   @timeit
