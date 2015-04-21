@@ -70,9 +70,6 @@ class JSONResponse(AbstractResponse):
   def get_objectVersionNumber(self):
     return self.jpath('$..versionNumber')
 
-  def get_objectVersionNumber(self):
-    return self.jpath('$..versionNumber')
-
   def get_objectStatus(self):
     return self.jpath('$..status')
 
@@ -90,6 +87,12 @@ class JSONResponse(AbstractResponse):
 
   def get_collectionStatus(self):
     return self.jpath('$..status')
+
+  def get_collectionVersionNumber(self):
+    return self.jpath('$..versionNumber')
+
+  def get_collectionAttribute(self, name):
+    return self._json.get(name, None)
 
   def get_repoErrorCode(self):
     return self.jpath('$..repoErrorCode')

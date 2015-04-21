@@ -9,7 +9,7 @@ __author__ = 'msingh@plos.org'
 from ...Base.base_service_test import BaseServiceTest
 from ...Base.Config import API_BASE_URL
 from ...Base.api import needs
-from buckets_json import BUCKETS_API, DEFAULT_HEADERS, HEADER
+from buckets_json import DEFAULT_HEADERS, HEADER
 
 OBJECTS_API = API_BASE_URL + '/objects'
 

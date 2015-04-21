@@ -4,102 +4,101 @@
 Base class for CREPO Collection JSON related services
 """
 
-__author__ = 'gabriela.filomeno'
+__author__ = 'gfilomeno@plos.org'
 
 import json
 from ...Base.base_service_test import BaseServiceTest
 from ...Base.Config import API_BASE_URL
 from ...Base.api import needs
-from buckets_json import BucketsJson
+from buckets_json import DEFAULT_HEADERS, HEADER
+from objects_json import OBJECTS_API
 
 COLLECTIONS_API = API_BASE_URL + '/collections'
-DEFAULT_HEADERS = {'Accept': 'application/json'}
-HEADER = '-H'
+
+# Http Codes
+OK = 200
+CREATED = 201
+BAD_REQUEST = 400
+NOT_FOUND = 404
 
 class CollectionsJson(BaseServiceTest):
 
-    def get_collections(self):
+    def get_collections(self, **kwargs):
         """
-        Calls CREPO API to GET collections list
-        :param bucketName The Collection's bucket name
-        :return:JSON response
+        Calls CREPO API to get collections list in a bucket
+        GET /collections ?bucketName={bucketName}...
+
+        :param bucketName, offset, limit, includeDeleted, includePurged, tag
         """
-        params = {'bucketName': BucketsJson.get_bucket_name()}
-        self.doGet('%s' % COLLECTIONS_API, params, DEFAULT_HEADERS)
+        self.doGet('%s' % COLLECTIONS_API, kwargs, DEFAULT_HEADERS)
         self.parse_response_as_json()
 
-    def post_collection(self):
+    def post_collections(self, collection_data):
         """
-        Calls CREPO API to POST collection
-        :param JSON request Input Collection
-        :return:JSON response
+        Calls CREPO API to create collection.
+
+        :param JSON collection structure.
         """
-        DEFAULT_HEADERS = {'Content-Type': 'application/json'}
-        self.doPost('%s' % COLLECTIONS_API, json.dumps(self.get_input_collection()), None, DEFAULT_HEADERS)
+        #print json.dumps(collection_data)
+        self.doPost('%s' % COLLECTIONS_API, data=json.dumps(collection_data), files=None, headers={'Content-Type': 'application/json'})
         self.parse_response_as_json()
+
+    def get_collection(self, bucketName=None, **kwargs):
+        """
+        Calls CREPO API to get a collection by key
+        :param name: bucket name.key
+        """
+        self.doGet('%s/%s' % (COLLECTIONS_API, bucketName), params=kwargs, headers=DEFAULT_HEADERS)
+        self.parse_response_as_json()
+
+    def get_collection_versions(self, bucketName=None, **kwargs):
+        """
+        Calls CREPO API to get a collection versions
+        :param name: bucket name, key
+        """
+        self.doGet('%s/versions/%s' % (COLLECTIONS_API, bucketName), params=kwargs, headers=DEFAULT_HEADERS)
+        self.parse_response_as_json()
+
+    def delete_collection(self, bucketName=None, **kwargs):
+        """
+        Calls CREPO API to delete a collection
+        :param name: bucket name.
+        """
+        self.doDelete('%s/%s' % (COLLECTIONS_API, bucketName), params=kwargs, headers=DEFAULT_HEADERS)
 
 
     @needs('parsed', 'parse_response_as_json()')
-    def verify_list_collections(self):
+    def verify_get_collections(self):
         """
-        Verifies a valid response to api request GET/POST collections
-        :param API_BASE_URL from Base.Config or environment variable
-        :return: Success or Error msg on Failure
+        Verifies a valid response for GET /collections.
         """
-        print ('Validating collections...'),
-        collections = self.parsed.get_collections()
-        self.assertIsNotNone(collections)
-        for i in range(len(collections)):
-            print collections[i]
+        self.verify_http_status_is(OK)
 
     @needs('parsed', 'parse_response_as_json()')
-    def verify_post_collections(self):
+    def verify_get_collection(self, **kwargs):
         """
-        Verifies a valid response to api request POST collection
-        :param API_BASE_URL from Base.Config or environment variable
-        :return: Success or Error msg on Failure
+        Verifies a valid response for GET /collection/{bucketName}
         """
-        print ('Validating POST collection...'),
-        expected_collection_key = self.get_coll_key()
-        expected_collection_status = 'USED'
+        self.verify_http_code_is(OK)
+        print "****JSON " + str(self.parsed.get_json())
+        for k, v in kwargs.items():
+            actual = self.parsed.get_collectionAttribute(k)
+            self.assertEquals(actual, v, "%r is not correct: %r != %r"%(k, v, actual))
 
-        actual_collection_key = self.parsed.get_collectionKey()
-        actual_collection_status = self.parsed.get_collectionStatus()
+    def get_objects(self, **kwargs):
+        """
+        Calls CREPO API to get objects list in a bucket
+        GET /objects ?bucketName={bucketName}...
 
-        self.assertTrue(not not actual_collection_key, "get_collectionKey returned invalid %r"%(actual_collection_key,))
-        self.assertTrue(actual_collection_key and expected_collection_key in actual_collection_key, expected_collection_key + ' not found in ' + unicode(actual_collection_key))
-        self.assertTrue(not not actual_collection_status, "get_collectionKey returned invalid %r"%(actual_collection_status,))
-        self.assertTrue(actual_collection_status and expected_collection_status in actual_collection_status, expected_collection_status + ' not found in ' + unicode(actual_collection_status))
-        self.assertIsNotNone(self.parsed.get_collectionUUID())
+        :param bucketName, offset, limit, includeDeleted, includePurged, tag
+        """
+        self.doGet('%s' % OBJECTS_API, kwargs, DEFAULT_HEADERS)
+        self.parse_response_as_json()
 
-    # Get the collection key according our development or performance stack environments
-    def get_coll_key(self):
-        _coll_key = u'10.1371/journal.pone.0121442'
-        if(API_BASE_URL == 'http://sfo-perf-plosrepo01.int.plos.org:8002'):
-            _coll_key = u'10.1371/journal.pone.0099139'
-        elif(API_BASE_URL == 'http://rwc-prod-plosrepo.int.plos.org:8002'):
-            _coll_key = u'10.1371/journal.pone.0099139'
-        return _coll_key
-
-    # Get the collection's objects according our development or performance stack environments
-    # TODO: Once the test cases for objects will be do, we could integrate a get object call
-    def get_input_object(self):
-        _input_objects = []
-        if(API_BASE_URL == 'http://sfo-perf-plosrepo01.int.plos.org:8002'):
-            _input_objects = [{'key':'PDF/10.1371/journal.pone.0099139',
-                               'uuid':'f634cf68-c37e-404e-962f-a80e3856139c'}]
-        elif(API_BASE_URL == 'http://rwc-prod-plosrepo.int.plos.org:8002'):
-            _input_objects = [{'key':'PDF/10.1371/journal.pone.0099139',
-                               'uuid':'f634cf68-c37e-404e-962f-a80e3856139c'}]
-        else:
-            _input_objects = [{'key':'10.1371/journal.pone.0121442.PDF',
-                               'uuid':'f3a22530-a4c9-419b-8e85-0989c93e8164'}]
-        return _input_objects
-
-    # Get the collection data
-    def get_input_collection(self):
-        _input_collection = {'key':self.get_coll_key(),
-                             'bucketName':BucketsJson.get_bucket_name(),
-                             'create':'auto',
-                             'objects': self.get_input_object()}
-        return _input_collection
+    def post_objects_auto(self,  files=None, **kwargs):
+        """
+        Create a new objects to build collection.
+        """
+        for i in (0,5):
+            self.doPost('%s' % OBJECTS_API, data=kwargs, files=files, headers=DEFAULT_HEADERS)
+            self.parse_response_as_json()
