@@ -1208,38 +1208,21 @@ public abstract class SqlService {
     }
   }
 
-  public int insertCollectionObjects(Integer collectionId, String objectKey, String bucketName, UUID objUUID) throws SQLException {
+  public int insertCollectionObjects(Integer collectionId, Integer objectId) throws SQLException {
     PreparedStatement p = null;
-    ResultSet result = null;
 
     try {
-      p =
-          connectionLocal.get().prepareStatement("SELECT * FROM objects obj, buckets b " +
-              "WHERE obj.bucketId = b.bucketId " +
-              "AND b.bucketName=? " +
-              "AND objKey=? AND uuid= ?");
-
-      p.setString(1, bucketName);
-      p.setString(2, objectKey);
-      p.setString(3, objUUID.toString());
-
-      result = p.executeQuery();
-      Integer objId = null;
-      if (result.next()) {
-        objId = result.getInt("ID");
 
         p = connectionLocal.get().prepareStatement("INSERT INTO collectionObject (collectionId, objectId) " +
             "VALUES (?,?)");
 
         p.setInt(1, collectionId);
-        p.setInt(2, objId);
+        p.setInt(2, objectId);
 
         return p.executeUpdate();
-      }
 
-      return 0;
     } finally {
-      closeDbStuff(result, p);
+      closeDbStuff(null, p);
     }
   }
 

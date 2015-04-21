@@ -22,6 +22,7 @@ import org.plos.repo.models.Audit;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Operation;
 import org.plos.repo.models.RepoCollection;
+import org.plos.repo.models.RepoObject;
 import org.plos.repo.models.Status;
 import org.plos.repo.models.input.ElementFilter;
 import org.plos.repo.models.input.InputCollection;
@@ -35,6 +36,7 @@ import javax.inject.Inject;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -352,17 +354,26 @@ public class CollectionRepoService extends BaseRepoService {
       throw new RepoException("Error saving content to database");
     }
 
+    List<RepoObject> repoObjectList = new ArrayList<>();
+    RepoObject repoObject = null;
+
     for (InputObject inputObject : inputObjects) {
       UUID objectUUID = UUIDFormatter.getUuid(inputObject.getUuid());
-      if (sqlService.insertCollectionObjects(collId, inputObject.getKey(), repoCollection.getBucketName(), objectUUID) == 0) {
+      repoObject = sqlService.getObject(repoCollection.getBucketName(), inputObject.getKey(), null, objectUUID, null);
+      if (repoObject != null) {
+        sqlService.insertCollectionObjects(collId, repoObject.getId());
+        repoObjectList.add(repoObject);
+      } else {
         throw new RepoException(RepoException.Type.ObjectCollectionNotFound);
       }
     }
+    // Add objects list to collection object
+    repoCollection.addObjects(repoObjectList);
 
     auditOperation(new Audit.AuditBuilder(repoCollection.getBucketName(), operation)
-        .setKey(repoCollection.getKey())
-        .setUuid(repoCollection.getUuid())
-        .build());
+            .setKey(repoCollection.getKey())
+            .setUuid(repoCollection.getUuid())
+            .build());
 
     return repoCollection;
   }
