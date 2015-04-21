@@ -60,7 +60,6 @@ class BucketsJson(BaseServiceTest):
 
     :param name: bucket name.
     """
-    header = {'header': HEADER}
     self.doGet('%s/%s' % (BUCKETS_API, name), None, DEFAULT_HEADERS)
     self.parse_response_as_json()
 

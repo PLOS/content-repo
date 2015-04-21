@@ -33,8 +33,8 @@ class TestCollections(CollectionsJson):
         bucketName = BucketsJson.get_bucket_name()
         self.get_collections(bucketName=bucketName)
         collections = self.parsed.get_collections()
-        if(collections):
-            for  coll in collections:
+        if collections:
+            for coll in collections:
                 if coll['key'].startswith('testcollection'):
                     self.delete_collection(bucketName=bucketName, key=coll['key'], version=coll['versionNumber'], purge=True)
 
@@ -44,8 +44,8 @@ class TestCollections(CollectionsJson):
         """
         self.test_cleanup()
         bucketName = BucketsJson.get_bucket_name()
-        key = self.get_collection_key()
-        userMetadata = self.get_usermetada(key)
+        key = TestCollections.get_collection_key()
+        userMetadata = TestCollections.get_usermetada(key)
         objects = self.get_objects_json()
         collection_data = {'bucketName': bucketName, 'key': key,
                            'create':'new','objects':objects, 'userMetadata':userMetadata}
@@ -64,8 +64,8 @@ class TestCollections(CollectionsJson):
         Create a new version of a collection.
         """
         bucketName = BucketsJson.get_bucket_name()
-        key = self.get_collection_key()
-        userMetadata = self.get_usermetada(key)
+        key = TestCollections.get_collection_key()
+        userMetadata = TestCollections.get_usermetada(key)
         objects = self.get_objects_json()
         collection_data = {'bucketName': bucketName, 'key': key,
                            'create':'auto','objects':objects, 'userMetadata':userMetadata}
@@ -104,7 +104,7 @@ class TestCollections(CollectionsJson):
         Fail to post objects if no bucket
         """
         bucketName = BucketsJson.get_bucket_name()
-        key = self.get_collection_key()
+        key = TestCollections.get_collection_key()
         objects = [{'key':'testobject', 'uuid':'604b8984-cf9f-4c3c-944e-d136d53770da'}]
         collection_data = {'bucketName': bucketName, 'key': key,
                            'create':'new','objects':objects}
@@ -116,7 +116,7 @@ class TestCollections(CollectionsJson):
         Fail to post objects version if not exist
         """
         bucketName = BucketsJson.get_bucket_name()
-        key = self.get_collection_key()
+        key = TestCollections.get_collection_key()
         self.get_collection(bucketName=bucketName, key=key)
         self.verify_http_code_is(NOT_FOUND)
         objects = self.get_objects_json()
@@ -124,12 +124,6 @@ class TestCollections(CollectionsJson):
                            'create':'version','objects':objects}
         self.post_collections(collection_data)
         self.verify_http_code_is(BAD_REQUEST)
-
-    def get_collection_key(self):
-        return "testcollection%d" % random.randint(1000, 9999)
-
-    def get_usermetada(self, key):
-        return {'path':'/crepo/mogile/%r' % key}
 
     def get_objects_json(self):
         # Create objects
@@ -148,7 +142,13 @@ class TestCollections(CollectionsJson):
                 objects_records.append({ 'key': obj['key'], 'uuid': obj['uuid'] })
         return objects_records
 
+    @staticmethod
+    def get_collection_key():
+        return "testcollection%d" % random.randint(1000, 9999)
 
+    @staticmethod
+    def get_usermetada(key):
+        return {'path':'/crepo/mogile/%r' % key}
 
 if __name__ == '__main__':
     CollectionsJson._run_tests_randomly()

@@ -10,7 +10,7 @@ import json
 from ...Base.base_service_test import BaseServiceTest
 from ...Base.Config import API_BASE_URL
 from ...Base.api import needs
-from buckets_json import DEFAULT_HEADERS, HEADER
+from buckets_json import DEFAULT_HEADERS
 from objects_json import OBJECTS_API
 
 COLLECTIONS_API = API_BASE_URL + '/collections'
@@ -37,7 +37,7 @@ class CollectionsJson(BaseServiceTest):
         """
         Calls CREPO API to create collection.
 
-        :param JSON collection structure.
+        :param collection_data. JSON collection structure
         """
         #print json.dumps(collection_data)
         self.doPost('%s' % COLLECTIONS_API, data=json.dumps(collection_data), files=None, headers={'Content-Type': 'application/json'})
@@ -80,7 +80,6 @@ class CollectionsJson(BaseServiceTest):
         Verifies a valid response for GET /collection/{bucketName}
         """
         self.verify_http_code_is(OK)
-        print "****JSON " + str(self.parsed.get_json())
         for k, v in kwargs.items():
             actual = self.parsed.get_collectionAttribute(k)
             self.assertEquals(actual, v, "%r is not correct: %r != %r"%(k, v, actual))
@@ -95,10 +94,12 @@ class CollectionsJson(BaseServiceTest):
         self.doGet('%s' % OBJECTS_API, kwargs, DEFAULT_HEADERS)
         self.parse_response_as_json()
 
-    def post_objects_auto(self,  files=None, **kwargs):
+    def post_objects_auto(self, files=None, **kwargs):
         """
         Create a new objects to build collection.
         """
-        for i in (0,5):
+        count = 0
+        while count < 5:
             self.doPost('%s' % OBJECTS_API, data=kwargs, files=files, headers=DEFAULT_HEADERS)
             self.parse_response_as_json()
+            count = count + 1
