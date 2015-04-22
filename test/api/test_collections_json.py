@@ -2,7 +2,7 @@
 
 __author__ = 'gfilomeno@plos.org'
 
-'''
+"""
 POST /collections
 Create a new collection. Create a new version of a collection.
 Fail to create new version if collection does not exist. or bucket does not exist or object does not exist.
@@ -19,10 +19,13 @@ Get all the versions of a collection.
 
 DELETE /collections/{bucketName} ?key
 Delete a collection.
-'''
+"""
 from ..api.RequestObject.collections_json import CollectionsJson, OK, CREATED, BAD_REQUEST, NOT_FOUND
 from ..api.RequestObject.buckets_json import BucketsJson
-import random, StringIO, time
+import random
+import StringIO
+import time
+
 
 class TestCollections(CollectionsJson):
 
@@ -36,7 +39,8 @@ class TestCollections(CollectionsJson):
         if collections:
             for coll in collections:
                 if coll['key'].startswith('testcollection'):
-                    self.delete_collection(bucketName=bucketName, key=coll['key'], version=coll['versionNumber'], purge=True)
+                    self.delete_collection(bucketName=bucketName, key=coll['key'], version=coll['versionNumber'],
+                                           purge=True)
 
     def test_post_collections_new(self):
         """
@@ -48,7 +52,7 @@ class TestCollections(CollectionsJson):
         userMetadata = TestCollections.get_usermetada(key)
         objects = self.get_objects_json()
         collection_data = {'bucketName': bucketName, 'key': key,
-                           'create':'new','objects':objects, 'userMetadata':userMetadata}
+                           'create': 'new', 'objects': objects, 'userMetadata': userMetadata}
         self.post_collections(collection_data)
         self.verify_http_code_is(CREATED)
         self.get_collection(bucketName, key=key)
@@ -68,18 +72,18 @@ class TestCollections(CollectionsJson):
         userMetadata = TestCollections.get_usermetada(key)
         objects = self.get_objects_json()
         collection_data = {'bucketName': bucketName, 'key': key,
-                           'create':'auto','objects':objects, 'userMetadata':userMetadata}
+                           'create': 'auto', 'objects': objects, 'userMetadata': userMetadata}
         self.post_collections(collection_data)
         self.get_collection(bucketName, key=key)
         version = self.parsed.get_collectionVersionNumber()[0]
-        time.sleep(1) # this is needed, otherwise the second POST does not work. TODO: file a bug.
+        time.sleep(1)  # this is needed, otherwise the second POST does not work. TODO: file a bug.
         collection_data = {'bucketName': bucketName, 'key': key,
-                           'create':'version','objects':objects, 'userMetadata':userMetadata}
+                           'create': 'version', 'objects': objects, 'userMetadata': userMetadata}
         self.post_collections(collection_data)
         self.verify_http_code_is(CREATED)
         self.get_collection(bucketName, key=key)
         version_updated = self.parsed.get_collectionVersionNumber()[0]
-        self.assertEquals(version+1, version_updated, 'version is not incremented')
+        self.assertEquals(version + 1, version_updated, 'version is not incremented')
         self.verify_get_collection(key=key)
         self.get_collection_versions(bucketName, key=key)
         collection_list = self.parsed.get_collections()
@@ -91,11 +95,11 @@ class TestCollections(CollectionsJson):
         """
         Fail to post objects if no bucket
         """
-        bucketName = "testbucket%d" % random.randint(1000, 1999)
+        bucketName = 'testbucket%d' % random.randint(1000, 1999)
         key = self.get_collection_key()
         objects = self.get_objects_json()
         collection_data = {'bucketName': bucketName, 'key': key,
-                           'create':'new','objects':objects}
+                           'create': 'new', 'objects': objects}
         self.post_collections(collection_data)
         self.verify_http_code_is(NOT_FOUND)
 
@@ -105,9 +109,9 @@ class TestCollections(CollectionsJson):
         """
         bucketName = BucketsJson.get_bucket_name()
         key = TestCollections.get_collection_key()
-        objects = [{'key':'testobject', 'uuid':'604b8984-cf9f-4c3c-944e-d136d53770da'}]
+        objects = [{'key': 'testobject', 'uuid': '604b8984-cf9f-4c3c-944e-d136d53770da'}]
         collection_data = {'bucketName': bucketName, 'key': key,
-                           'create':'new','objects':objects}
+                           'create': 'new', 'objects': objects}
         self.post_collections(collection_data)
         self.verify_http_code_is(NOT_FOUND)
 
@@ -121,34 +125,34 @@ class TestCollections(CollectionsJson):
         self.verify_http_code_is(NOT_FOUND)
         objects = self.get_objects_json()
         collection_data = {'bucketName': bucketName, 'key': key,
-                           'create':'version','objects':objects}
+                           'create': 'version', 'objects': objects}
         self.post_collections(collection_data)
         self.verify_http_code_is(BAD_REQUEST)
 
     def get_objects_json(self):
         # Create objects
         bucketName = BucketsJson.get_bucket_name()
-        key = "testobject%d" % random.randint(1000, 9999)
-        download = "%s.txt"%(key,)
+        key = 'testobject%d' % random.randint(1000, 9999)
+        download = '%s.txt' % (key,)
         self.post_objects_auto(bucketName=bucketName, key=key,
-                      contentType="text/plain", downloadName=download,
-                      create="new", files=[("file", StringIO.StringIO("test content"))])
+                               contentType='text/plain', downloadName=download,
+                               create='new', files=[('file', StringIO.StringIO('test content'))])
         # Get JSON objects
         objects_records = []
         self.get_objects(bucketName=bucketName, offset=0, limit=10)
         objects = self.parsed.get_objects()
         for obj in objects:
             if obj['key'].startswith('testobject'):
-                objects_records.append({ 'key': obj['key'], 'uuid': obj['uuid'] })
+                objects_records.append({'key': obj['key'], 'uuid': obj['uuid']})
         return objects_records
 
     @staticmethod
     def get_collection_key():
-        return "testcollection%d" % random.randint(1000, 9999)
+        return 'testcollection%d' % random.randint(1000, 9999)
 
     @staticmethod
     def get_usermetada(key):
-        return {'path':'/crepo/mogile/%r' % key}
+        return {'path': '/crepo/mogile/%r' % key}
 
 if __name__ == '__main__':
     CollectionsJson._run_tests_randomly()

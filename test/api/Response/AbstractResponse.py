@@ -71,4 +71,3 @@ class AbstractResponse(object):
   @abstractmethod
   def get_message(self):
     pass
-

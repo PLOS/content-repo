@@ -16,17 +16,15 @@ HEADER = '-H'
 
 # get BUCKET_NAME based on whether API_BASE_URL is on prod or not.
 BUCKET_NAME = u'corpus'
-if API_BASE_URL.split('/')[2] in (
-    'sfo-perf-plosrepo01.int.plos.org:8002',
-    'rwc-prod-plosrepo.int.plos.org:8002'):
+if API_BASE_URL.split('/')[2] in ('sfo-perf-plosrepo01.int.plos.org:8002', 'rwc-prod-plosrepo.int.plos.org:8002'):
   BUCKET_NAME = u'mogilefs-prod-repo'
-
 
 # Http Codes
 OK = 200
 CREATED = 201
 BAD_REQUEST = 400
 NOT_FOUND = 404
+
 
 class BucketsJson(BaseServiceTest):
 
@@ -83,13 +81,13 @@ class BucketsJson(BaseServiceTest):
     """
     Verifies that the name exists in buckets.
     """
-    self.assertTrue(name in self.buckets, '%r not found in %r'%(name, self.buckets))
+    self.assertTrue(name in self.buckets, '%r not found in %r' % (name, self.buckets))
 
   def verify_no_bucket(self, name):
     """
     Verifies that the name does not exists in buckets.
     """
-    self.assertTrue(name not in self.buckets, '%r found in %r'%(name, self.buckets))
+    self.assertTrue(name not in self.buckets, '%r found in %r' % (name, self.buckets))
 
   @needs('parsed', 'parse_response_as_json()')
   def verify_get_bucket(self, name):
@@ -97,7 +95,7 @@ class BucketsJson(BaseServiceTest):
     Verifies a valid response to api request GET /buckets/{name}
     """
     actual_bucket = self.parsed.get_bucketName()
-    self.assertTrue(name in actual_bucket, '%r is not in %r'%(name, actual_bucket))
+    self.assertTrue(name in actual_bucket, '%r is not in %r' % (name, actual_bucket))
 
   @needs('parsed', 'parse_response_as_json()')
   def verify_post_bucket(self, name):
@@ -106,12 +104,12 @@ class BucketsJson(BaseServiceTest):
     """
     self.verify_http_status(CREATED)
     actual_bucket = self.parsed.get_bucketName()
-    self.assertTrue(name in actual_bucket, '%r is not in %r'%(name, actual_bucket))
+    self.assertTrue(name in actual_bucket, '%r is not in %r' % (name, actual_bucket))
 
   @needs('parsed', 'parse_response_as_json()')
   def verify_http_status(self, httpCode):
     """
-    Verifies API response according to http reponse code
+    Verifies API response according to http response code
     :param
     :return: Error msg on Failure
     """
@@ -128,7 +126,8 @@ class BucketsJson(BaseServiceTest):
     """
     Verify that the default bucket has active objects
     """
-    self.assertTrue(self.parsed.get_bucketActiveObjects() > 0, '%r is not valid'%(self.parsed.get_bucketActiveObjects()))
+    self.assertTrue(self.parsed.get_bucketActiveObjects() > 0,
+                    '%r is not valid' % (self.parsed.get_bucketActiveObjects()))
 
   @staticmethod
   def get_bucket_name():

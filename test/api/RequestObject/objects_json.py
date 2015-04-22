@@ -9,7 +9,7 @@ __author__ = 'msingh@plos.org'
 from ...Base.base_service_test import BaseServiceTest
 from ...Base.Config import API_BASE_URL
 from ...Base.api import needs
-from buckets_json import DEFAULT_HEADERS, HEADER
+from buckets_json import DEFAULT_HEADERS
 
 OBJECTS_API = API_BASE_URL + '/objects'
 
@@ -18,6 +18,7 @@ OK = 200
 CREATED = 201
 BAD_REQUEST = 400
 NOT_FOUND = 404
+
 
 class ObjectsJson(BaseServiceTest):
 
@@ -77,8 +78,7 @@ class ObjectsJson(BaseServiceTest):
     """
     Verifies a valid response for GET /objects.
     """
-    self.verify_http_status_is(OK)
-
+    self.verify_http_code_is(OK)
 
   @needs('parsed', 'parse_response_as_json()')
   def verify_get_object_meta(self, **kwargs):
@@ -88,10 +88,11 @@ class ObjectsJson(BaseServiceTest):
     self.verify_http_code_is(OK)
     for k, v in kwargs.items():
       actual = self.parsed.get_objectAttribute(k)
-      self.assertEquals(actual, v, "%r is not correct: %r != %r"%(k, v, actual))
+      self.assertEquals(actual, v, '%r is not correct: %r != %r' % (k, v, actual))
 
   def verify_get_object(self, content=''):
     """
     Verifies a valid response for GET /objects/{bucketName}
     """
-    self.assertEquals(self.get_http_response().text, content, 'content %r != %r'%(content, self.get_http_response().text))
+    self.assertEquals(self.get_http_response().text, content, 'content %r != %r' % (content,
+                                                                                    self.get_http_response().text))

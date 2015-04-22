@@ -21,6 +21,7 @@ CREATED = 201
 BAD_REQUEST = 400
 NOT_FOUND = 404
 
+
 class CollectionsJson(BaseServiceTest):
 
     def get_collections(self, **kwargs):
@@ -39,8 +40,8 @@ class CollectionsJson(BaseServiceTest):
 
         :param collection_data. JSON collection structure
         """
-        #print json.dumps(collection_data)
-        self.doPost('%s' % COLLECTIONS_API, data=json.dumps(collection_data), files=None, headers={'Content-Type': 'application/json'})
+        self.doPost('%s' % COLLECTIONS_API, data=json.dumps(collection_data), files=None,
+                    headers={'Content-Type': 'application/json'})
         self.parse_response_as_json()
 
     def get_collection(self, bucketName=None, **kwargs):
@@ -66,13 +67,12 @@ class CollectionsJson(BaseServiceTest):
         """
         self.doDelete('%s/%s' % (COLLECTIONS_API, bucketName), params=kwargs, headers=DEFAULT_HEADERS)
 
-
     @needs('parsed', 'parse_response_as_json()')
     def verify_get_collections(self):
         """
         Verifies a valid response for GET /collections.
         """
-        self.verify_http_status_is(OK)
+        self.verify_http_code_is(OK)
 
     @needs('parsed', 'parse_response_as_json()')
     def verify_get_collection(self, **kwargs):
@@ -82,7 +82,7 @@ class CollectionsJson(BaseServiceTest):
         self.verify_http_code_is(OK)
         for k, v in kwargs.items():
             actual = self.parsed.get_collectionAttribute(k)
-            self.assertEquals(actual, v, "%r is not correct: %r != %r"%(k, v, actual))
+            self.assertEquals(actual, v, '%r is not correct: %r != %r' % (k, v, actual))
 
     def get_objects(self, **kwargs):
         """
@@ -102,4 +102,4 @@ class CollectionsJson(BaseServiceTest):
         while count < 5:
             self.doPost('%s' % OBJECTS_API, data=kwargs, files=files, headers=DEFAULT_HEADERS)
             self.parse_response_as_json()
-            count = count + 1
+            count += 1

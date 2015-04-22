@@ -2,7 +2,7 @@
 
 __author__ = 'jgray@plos.org'
 
-'''
+"""
 Test cases for Content Repo Bucket requests.
 
 POST /buckets
@@ -16,9 +16,10 @@ Delete a bucket. Error if not empty.
 
 GET /buckets/{bucketName}
 Info about the bucket. Error if bucket name not exist.
-'''
+"""
 from ..api.RequestObject.buckets_json import BucketsJson, OK, CREATED, BAD_REQUEST, NOT_FOUND
 import random
+
 
 class TestBuckets(BucketsJson):
 
@@ -28,7 +29,7 @@ class TestBuckets(BucketsJson):
     """
     self.get_buckets()
     for name in self.buckets:
-      if name.startswith("testbucket"):
+      if name.startswith('testbucket'):
         self.delete_bucket(name)
 
   def test_post_bucket(self):
@@ -39,7 +40,7 @@ class TestBuckets(BucketsJson):
     in subsequent get bucket request, but not before.
     """
     # self.test_cleanup()
-    name = "testbucket%d" % (random.randint(1000,1999))
+    name = 'testbucket%d' % (random.randint(1000, 1999))
     self.get_buckets()
     self.verify_no_bucket(name)
     self.post_bucket(name)
@@ -56,7 +57,7 @@ class TestBuckets(BucketsJson):
     Post a new bucket two times, the second time fails.
     """
     # self.test_cleanup()
-    name = "testbucket%d" % (random.randint(1000,1999))
+    name = 'testbucket%d' % (random.randint(1000, 1999))
     self.post_bucket(name)
     self.post_bucket(name)
     self.verify_http_status(BAD_REQUEST)
@@ -73,14 +74,13 @@ class TestBuckets(BucketsJson):
     self.post_bucket()
     self.verify_http_status(BAD_REQUEST)
 
-
   def test_get_bucket_by_name(self):
     """
     Get Bucket by name.
 
     Post a new bucket, and then do a get to verify it exists.
     """
-    name = "testbucket%d" % (random.randint(1000,1999))
+    name = 'testbucket%d' % (random.randint(1000, 1999))
     self.post_bucket(name)
     self.get_bucket(name)
     self.verify_get_bucket(name)
@@ -92,7 +92,7 @@ class TestBuckets(BucketsJson):
 
     Verify that a name does not exist, and then do a get to verify it fails.
     """
-    name = "testbucket%d" % (random.randint(1000,1999))
+    name = 'testbucket%d' % (random.randint(1000, 1999))
     self.get_buckets()
     self.verify_no_bucket(name)
     self.get_bucket(name)
@@ -104,8 +104,8 @@ class TestBuckets(BucketsJson):
 
     Post two buckets, and verify that get buckets has those.
     """
-    name1 = "testbucket%d" % (random.randint(1000,1999))
-    name2 = "testbucket%d" % (random.randint(2000,2999))
+    name1 = 'testbucket%d' % (random.randint(1000, 1999))
+    name2 = 'testbucket%d' % (random.randint(2000, 2999))
     self.get_buckets()
     self.verify_no_bucket(name1)
     self.verify_no_bucket(name2)
@@ -134,7 +134,7 @@ class TestBuckets(BucketsJson):
     Post a new bucket, and then delete it, and verify that it does not exist anymore.
     """
     # self.test_cleanup()
-    name = "testbucket%d" % (random.randint(1000,1999))
+    name = 'testbucket%d' % (random.randint(1000, 1999))
     self.post_bucket(name)
     self.get_buckets()
     self.verify_has_bucket(name)
@@ -150,7 +150,7 @@ class TestBuckets(BucketsJson):
     Try to delete a bucket that does not exist.
     """
     # self.test_cleanup()
-    name = "testbucket%d" % (random.randint(1000,1999))
+    name = 'testbucket%d' % (random.randint(1000, 1999))
     self.get_buckets()
     self.verify_no_bucket(name)
     self.delete_bucket(name)

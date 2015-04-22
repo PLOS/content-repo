@@ -2,7 +2,7 @@
 
 __author__ = 'msingh@plos.org'
 
-'''
+"""
 Test cases for Content Repo objects requests.
 
 POST /objects
@@ -24,10 +24,13 @@ Get info about an object and its versions.
 
 DELETE /objects/{bucketName} ?key
 Delete an object.
-'''
+"""
 from ..api.RequestObject.objects_json import ObjectsJson, OK, CREATED, BAD_REQUEST, NOT_FOUND
 from ..api.RequestObject.buckets_json import BucketsJson
-import random, StringIO, time
+import random
+import StringIO
+import time
+
 
 class TestObjects(ObjectsJson):
 
@@ -48,20 +51,20 @@ class TestObjects(ObjectsJson):
     """
     self.test_cleanup()
     bucketName = BucketsJson.get_bucket_name()
-    key = "testobject%d" % random.randint(1000, 9999)
-    download = "%s.txt"%(key,)
+    key = 'testobject%d' % random.randint(1000, 9999)
+    download = '%s.txt' % (key,)
     self.post_objects(bucketName=bucketName, key=key,
-                      contentType="text/plain", downloadName=download,
-                      create="new", files=[("file", StringIO.StringIO("test content"))])
+                      contentType='text/plain', downloadName=download,
+                      create='new', files=[('file', StringIO.StringIO('test content'))])
     self.verify_http_code_is(CREATED)
     self.get_object_meta(bucketName=bucketName, key=key)
     self.verify_http_code_is(OK)
-    self.verify_get_object_meta(contentType="text/plain", downloadName=download)
+    self.verify_get_object_meta(contentType='text/plain', downloadName=download)
     version = self.parsed.get_objectVersionNumber()[0]
     self.assertEquals(version, 0, 'version is not 0 for new')
     self.get_object(bucketName=bucketName, key=key)
     self.verify_http_code_is(OK)
-    self.verify_get_object(content="test content")
+    self.verify_get_object(content='test content')
     self.delete_object(bucketName=bucketName, key=key, version=version, purge=True)
     self.verify_http_code_is(OK)
 
@@ -70,28 +73,28 @@ class TestObjects(ObjectsJson):
     Create a new version of an object.
     """
     bucketName = BucketsJson.get_bucket_name()
-    key = "testobject%d" % random.randint(1000, 9999)
-    download = "%s.txt"%(key,)
+    key = 'testobject%d' % random.randint(1000, 9999)
+    download = '%s.txt' % (key,)
     self.post_objects(bucketName=bucketName, key=key,
-                      contentType="text/plain", downloadName=download,
-                      create="auto", files=[("file", StringIO.StringIO("test content"))])
+                      contentType='text/plain', downloadName=download,
+                      create='auto', files=[('file', StringIO.StringIO('test content'))])
     self.get_object_meta(bucketName=bucketName, key=key)
     version = self.parsed.get_objectVersionNumber()[0]
     self.get_object(bucketName=bucketName, key=key)
-    time.sleep(1) # this is needed, otherwise the second POST does not work. TODO: file a bug.
-    download_updated = "%supdated.txt"%(key,)
+    time.sleep(1)  # this is needed, otherwise the second POST does not work. TODO: file a bug.
+    download_updated = '%supdated.txt' % (key,)
     self.post_objects(bucketName=bucketName, key=key,
-                      contentType="text/plain", downloadName=download_updated,
-                      create="version", files=[("file", StringIO.StringIO("test content updated"))])
+                      contentType='text/plain', downloadName=download_updated,
+                      create='version', files=[('file', StringIO.StringIO('test content updated'))])
     self.verify_http_code_is(CREATED)
     self.get_object_meta(bucketName=bucketName, key=key)
     self.verify_http_code_is(OK)
-    self.verify_get_object_meta(contentType="text/plain", downloadName=download_updated)
+    self.verify_get_object_meta(contentType='text/plain', downloadName=download_updated)
     version_updated = self.parsed.get_objectVersionNumber()[0]
     self.get_object(bucketName=bucketName, key=key)
     self.verify_http_code_is(OK)
-    self.verify_get_object(content="test content updated")
-    self.assertEquals(version+1, version_updated, 'version is not incremented')
+    self.verify_get_object(content='test content updated')
+    self.assertEquals(version + 1, version_updated, 'version is not incremented')
     self.delete_object(bucketName=bucketName, key=key, version=version, purge=True)
     self.delete_object(bucketName=bucketName, key=key, version=version_updated, purge=True)
 
@@ -99,12 +102,12 @@ class TestObjects(ObjectsJson):
     """
     Fail to post objects if no bucket
     """
-    bucketName = "testbucket%d" % random.randint(1000, 1999)
-    key = "testobject%d" % random.randint(1000, 9999)
-    download = "%s.txt"%(key,)
+    bucketName = 'testbucket%d' % random.randint(1000, 1999)
+    key = 'testobject%d' % random.randint(1000, 9999)
+    download = '%s.txt' % (key,)
     self.post_objects(bucketName=bucketName, key=key,
-                      contentType="text/plain", downloadName=download,
-                      create="new", files=[("file", StringIO.StringIO("test content"))])
+                      contentType='text/plain', downloadName=download,
+                      create='new', files=[('file', StringIO.StringIO('test content'))])
     self.verify_http_code_is(NOT_FOUND)
 
   def test_post_objects_version_not_exist(self):
@@ -112,13 +115,13 @@ class TestObjects(ObjectsJson):
     Fail to post objects version if not exist
     """
     bucketName = BucketsJson.get_bucket_name()
-    key = "testobject%d" % random.randint(1000, 9999)
+    key = 'testobject%d' % random.randint(1000, 9999)
     self.get_object(bucketName=bucketName, key=key)
     self.verify_http_code_is(NOT_FOUND)
-    download = "%s-updated.txt"%(key,)
+    download = '%s-updated.txt' % (key,)
     self.post_objects(bucketName=bucketName, key=key,
-                      contentType="text/plain", downloadName=download,
-                      create="version", files=[("file", StringIO.StringIO("test content updated"))])
+                      contentType='text/plain', downloadName=download,
+                      create='version', files=[('file', StringIO.StringIO('test content updated'))])
     self.verify_http_code_is(BAD_REQUEST)
 
 
