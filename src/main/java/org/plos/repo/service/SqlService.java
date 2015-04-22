@@ -67,13 +67,13 @@ public abstract class SqlService {
   private static final String KEY_VALUE_COLUMN = "KEYVALUE";
   private static final String OPERATION_COLUMN = "OPERATION";
 
-  private static String OBJECT_COLUMNS = "obj." + OBJECT_KEY_COLUMN + ", obj." + BUCKET_ID_COLUMN
+  private static final String OBJECT_COLUMNS = "obj." + OBJECT_KEY_COLUMN + ", obj." + BUCKET_ID_COLUMN
       + ", obj." + STATUS_COLUMN + ", obj." + ID_COLUMN + ", obj." + CHECKSUM_COLUMN
       + ", obj." + TIMESTAMP_COLUMN + ", obj." + DOWNLOAD_NAME_COLUMN + ", obj." + CONTENT_TYPE_COLUMN
       + ", obj." + SIZE_COLUMN + ", obj." + TAG_COLUMN + ", obj." + VERSION_NUMBER_COLUMN + ", obj." + CREATION_DATE_COLUMN
       + ", obj." + USER_METADATA_COLUMN + " , obj." + UUID_COLUMN;
 
-  private static String COLLECTION_COLUMNS = "c." + COLLECTION_KEY_COLUMN + ", c." + BUCKET_ID_COLUMN
+  private static final String COLLECTION_COLUMNS = "c." + COLLECTION_KEY_COLUMN + ", c." + BUCKET_ID_COLUMN
       + ", c." + STATUS_COLUMN + ", c." + ID_COLUMN + ", c." + TIMESTAMP_COLUMN
       + ", c." + TAG_COLUMN + ", c." + VERSION_NUMBER_COLUMN + ", c." + CREATION_DATE_COLUMN
       + ", c." + USER_METADATA_COLUMN + ", c." + UUID_COLUMN;
@@ -126,7 +126,7 @@ public abstract class SqlService {
         .build();
   }
 
-  public static Bucket mapBucketRow(ResultSet rs) throws SQLException {
+  private static Bucket mapBucketRow(ResultSet rs) throws SQLException {
     return new Bucket(rs.getInt(BUCKET_ID_COLUMN),
         rs.getString(BUCKET_NAME_COLUMN),
         rs.getTimestamp(TIMESTAMP_COLUMN),
@@ -279,14 +279,13 @@ public abstract class SqlService {
   }
 
   private Integer getNextAvailableVersionNumber(String bucketName, String key, String tableName, String keyName) throws SQLException {
-    StringBuilder query = new StringBuilder();
-    query.append("SELECT versionNumber FROM  ");
-    query.append(tableName);
-    query.append(" a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND ");
-    query.append(keyName);
-    query.append("=? ORDER BY versionNumber DESC LIMIT 1");
+    String query = "SELECT versionNumber FROM  "
+        + tableName
+        + " a, buckets b WHERE a.bucketId = b.bucketId AND b.bucketName=? AND "
+        + keyName
+        + "=? ORDER BY versionNumber DESC LIMIT 1";
 
-    try (PreparedStatement p = connectionLocal.get().prepareStatement(query.toString())) {
+    try (PreparedStatement p = connectionLocal.get().prepareStatement(query)) {
       p.setString(1, bucketName);
       p.setString(2, key);
 
@@ -335,8 +334,8 @@ public abstract class SqlService {
 
   public RepoObject getObject(String bucketName, String key, Integer version, UUID uuid, String tag) throws SQLException, RepoException {
     StringBuilder query = new StringBuilder();
-    query.append("SELECT " + OBJECT_COLUMNS + ", b.BUCKETNAME FROM objects obj, buckets b " +
-        "WHERE obj.bucketId = b.bucketId AND b.bucketName=? AND obj.objKey=?");
+    query.append("SELECT ").append(OBJECT_COLUMNS).append(", b.BUCKETNAME FROM objects obj, buckets b ")
+        .append("WHERE obj.bucketId = b.bucketId AND b.bucketName=? AND obj.objKey=?");
 
     if (version != null) {
       query.append(" AND versionNumber=?");
@@ -385,8 +384,8 @@ public abstract class SqlService {
   public RepoObject getObject(String bucketName, String key, Integer version, UUID uuid,
                               String tag, boolean searchInDeleted, boolean searchInPurged) throws SQLException, RepoException {
     StringBuilder query = new StringBuilder();
-    query.append("SELECT " + OBJECT_COLUMNS + ", b.BUCKETNAME FROM objects obj, buckets b " +
-        "WHERE obj.bucketId = b.bucketId AND b.bucketName=? AND obj.objKey=?");
+    query.append("SELECT ").append(OBJECT_COLUMNS).append(", b.BUCKETNAME FROM objects obj, buckets b ")
+        .append("WHERE obj.bucketId = b.bucketId AND b.bucketName=? AND obj.objKey=?");
 
     if (version != null) {
       query.append(" AND versionNumber=?");
@@ -433,9 +432,7 @@ public abstract class SqlService {
 
       try (ResultSet result = p.executeQuery()) {
         if (result.next()) {
-          RepoObject repoObject = mapObjectRow(result);
-
-          return repoObject;
+          return mapObjectRow(result);
         } else {
           return null;
         }
@@ -546,8 +543,8 @@ public abstract class SqlService {
     List<RepoObject> repoObjects = new ArrayList<>();
 
     StringBuilder q = new StringBuilder();
-    q.append("SELECT " + OBJECT_COLUMNS + ", b.BUCKETNAME FROM objects as obj, buckets as b " +
-        "WHERE obj.bucketId = b.bucketId");
+    q.append("SELECT ").append(OBJECT_COLUMNS).append(", b.BUCKETNAME FROM objects as obj, buckets as b ")
+        .append("WHERE obj.bucketId = b.bucketId");
 
     if (!includeDeleted && !includePurge) {
       q.append(" AND status=?");
@@ -562,10 +559,10 @@ public abstract class SqlService {
       q.append(" AND TAG=?");
     }
     if (limit != null) {
-      q.append(" LIMIT " + limit);
+      q.append(" LIMIT ").append(limit);
     }
     if (offset != null) {
-      q.append(" OFFSET " + offset);
+      q.append(" OFFSET ").append(offset);
     }
     try (PreparedStatement p = connectionLocal.get().prepareStatement(q.toString())) {
       int i = 1;
@@ -604,7 +601,7 @@ public abstract class SqlService {
     List<RepoObject> repoObjects = new ArrayList<>();
 
     StringBuilder q = new StringBuilder();
-    q.append("SELECT " + OBJECT_COLUMNS + " FROM objects obj WHERE timestamp >= ?");
+    q.append("SELECT ").append(OBJECT_COLUMNS).append(" FROM objects obj WHERE timestamp >= ?");
 
     try (PreparedStatement p = null /* FIXME */) {
       p.setTimestamp(1, timestamp);
@@ -702,8 +699,8 @@ public abstract class SqlService {
 
   private String getCollectionMetadataQuery(String bucketName, Integer offset, Integer limit, boolean includeDeleted, String tag) {
     StringBuilder q = new StringBuilder();
-    q.append("SELECT " + COLLECTION_COLUMNS + ", b.BUCKETNAME " +
-        "FROM collections c, buckets b WHERE c.bucketId = b.bucketId");
+    q.append("SELECT ").append(COLLECTION_COLUMNS).append(", b.BUCKETNAME ")
+        .append("FROM collections c, buckets b WHERE c.bucketId = b.bucketId");
 
     if (!includeDeleted) {
       q.append(" AND status=?");
@@ -715,10 +712,10 @@ public abstract class SqlService {
       q.append(" AND TAG=?");
     }
     if (limit != null) {
-      q.append(" LIMIT " + limit);
+      q.append(" LIMIT ").append(limit);
     }
     if (offset != null) {
-      q.append(" OFFSET " + offset);
+      q.append(" OFFSET ").append(offset);
     }
 
     return q.toString();
@@ -727,10 +724,8 @@ public abstract class SqlService {
   public List<RepoCollection> listCollections(Timestamp timestamp) throws SQLException, RepoException {
     List<RepoCollection> repoCollections = new ArrayList<>();
 
-    StringBuilder q = new StringBuilder();
-    q.append("SELECT " + COLLECTION_COLUMNS + " FROM collections WHERE c.timestamp > ?");
-
-    try (PreparedStatement p = connectionLocal.get().prepareStatement(q.toString())) {
+    String q = "SELECT " + COLLECTION_COLUMNS + " FROM collections WHERE c.timestamp > ?";
+    try (PreparedStatement p = connectionLocal.get().prepareStatement(q)) {
       p.setTimestamp(1, timestamp);
 
       try (ResultSet result = null /* FIXME */) {
@@ -750,17 +745,16 @@ public abstract class SqlService {
    * @return a list of {@link org.plos.repo.models.RepoObject }
    * @throws SQLException
    */
-  protected List<RepoObject> listCollectionObjects(Integer id) throws SQLException, RepoException {
+  private List<RepoObject> listCollectionObjects(Integer id) throws SQLException, RepoException {
     List<RepoObject> repoObjects = new ArrayList<>();
 
-    StringBuilder q = new StringBuilder();
-    q.append(" SELECT " + OBJECT_COLUMNS + ", b.*\n" +
-        "FROM objects obj, collectionObject co, buckets b\n" +
-        "WHERE co.collectionId = ?\n" +
-        "AND co.objectId = obj.id\n" +
-        "AND obj.bucketId = b.bucketId");
+    String q = " SELECT " + OBJECT_COLUMNS + ", b.*\n"
+        + "FROM objects obj, collectionObject co, buckets b\n"
+        + "WHERE co.collectionId = ?\n"
+        + "AND co.objectId = obj.id\n"
+        + "AND obj.bucketId = b.bucketId";
 
-    try (PreparedStatement p = connectionLocal.get().prepareStatement(q.toString())) {
+    try (PreparedStatement p = connectionLocal.get().prepareStatement(q)) {
       p.setInt(1, id);
 
       try (ResultSet result = p.executeQuery()) {
@@ -783,12 +777,11 @@ public abstract class SqlService {
    * @throws SQLException
    */
   public RepoCollection getCollection(String bucketName, String key) throws SQLException, RepoException {
-    StringBuilder query = new StringBuilder();
-    query.append("SELECT " + COLLECTION_COLUMNS + ", b.BUCKETNAME FROM collections c, buckets b " +
-        "WHERE c.bucketId = b.bucketId AND b.bucketName=? " +
-        "AND collKey=? AND status=? ORDER BY c.creationDate DESC LIMIT 1");
+    String query = "SELECT " + COLLECTION_COLUMNS + ", b.BUCKETNAME FROM collections c, buckets b "
+        + "WHERE c.bucketId = b.bucketId AND b.bucketName=? "
+        + "AND collKey=? AND status=? ORDER BY c.creationDate DESC LIMIT 1";
 
-    try (PreparedStatement p = connectionLocal.get().prepareStatement(query.toString())) {
+    try (PreparedStatement p = connectionLocal.get().prepareStatement(query)) {
       p.setString(1, bucketName);
       p.setString(2, key);
       p.setInt(3, Status.USED.getValue());
@@ -827,8 +820,8 @@ public abstract class SqlService {
    */
   public RepoCollection getCollection(String bucketName, String key, Integer version, String tag, UUID uuid) throws SQLException, RepoException {
     StringBuilder query = new StringBuilder();
-    query.append("SELECT " + COLLECTION_COLUMNS + ", b.BUCKETNAME FROM collections c, buckets b " +
-        "WHERE c.bucketId = b.bucketId AND b.bucketName=? AND collKey=? ");
+    query.append("SELECT ").append(COLLECTION_COLUMNS).append(", b.BUCKETNAME FROM collections c, buckets b ")
+        .append("WHERE c.bucketId = b.bucketId AND b.bucketName=? AND collKey=? ");
 
     if (version != null) {
       query.append(" AND versionNumber=?");
@@ -1015,11 +1008,7 @@ public abstract class SqlService {
       p.setInt(1, repoObject.getId());
 
       try (ResultSet result = p.executeQuery()) {
-        if (result.next()) {
-          return true;
-        }
-
-        return false;
+        return result.next();
       }
     }
   }
@@ -1035,12 +1024,12 @@ public abstract class SqlService {
   }
 
   public int countUsedAndDeletedObjectsReference(String bucketName, String checksum) throws SQLException {
-    StringBuilder q = new StringBuilder("SELECT COUNT(*) FROM objects a, buckets b WHERE a.bucketId = b.bucketId");
-    q.append(" AND a.status IN (?,?)");
-    q.append(" AND bucketName=?");
-    q.append(" AND checksum=?");
+    String q = "SELECT COUNT(*) FROM objects a, buckets b WHERE a.bucketId = b.bucketId"
+        + " AND a.status IN (?,?)"
+        + " AND bucketName=?"
+        + " AND checksum=?";
 
-    try (PreparedStatement p = connectionLocal.get().prepareStatement(q.toString())) {
+    try (PreparedStatement p = connectionLocal.get().prepareStatement(q)) {
       p.setInt(1, Status.USED.getValue());
       p.setInt(2, Status.DELETED.getValue());
       p.setString(3, bucketName);
