@@ -1208,7 +1208,7 @@ public abstract class SqlService {
     }
   }
 
-  public int insertCollectionObjects(Integer collectionId, Integer objectId) throws SQLException {
+  public boolean insertCollectionObjects(Integer collectionId, Integer objectId) throws SQLException {
     PreparedStatement p = null;
 
     try {
@@ -1219,7 +1219,7 @@ public abstract class SqlService {
         p.setInt(1, collectionId);
         p.setInt(2, objectId);
 
-        return p.executeUpdate();
+        return p.executeUpdate() > 0;
 
     } finally {
       closeDbStuff(null, p);

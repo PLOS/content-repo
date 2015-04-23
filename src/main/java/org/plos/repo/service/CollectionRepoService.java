@@ -355,14 +355,14 @@ public class CollectionRepoService extends BaseRepoService {
     }
 
     List<RepoObject> repoObjectList = new ArrayList<>();
-    RepoObject repoObject = null;
 
     for (InputObject inputObject : inputObjects) {
       UUID objectUUID = UUIDFormatter.getUuid(inputObject.getUuid());
-      repoObject = sqlService.getObject(repoCollection.getBucketName(), inputObject.getKey(), null, objectUUID, null);
+      RepoObject repoObject = sqlService.getObject(repoCollection.getBucketName(), inputObject.getKey(), null, objectUUID, null);
       if (repoObject != null) {
-        sqlService.insertCollectionObjects(collId, repoObject.getId());
-        repoObjectList.add(repoObject);
+        if (sqlService.insertCollectionObjects(collId, repoObject.getId())) {
+          repoObjectList.add(repoObject);
+        }
       } else {
         throw new RepoException(RepoException.Type.ObjectCollectionNotFound);
       }
