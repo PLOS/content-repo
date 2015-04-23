@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS CREPO_SCHEMA_INFO (
 );
 
 ALTER TABLE collections
-  MODIFY COLUMN versionNumber int(11);
+  MODIFY COLUMN versionNumber INTEGER;
 
 
 # INSERT the version string. This should happen last.
