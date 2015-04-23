@@ -358,7 +358,8 @@ public class CollectionRepoService extends BaseRepoService {
 
     for (InputObject inputObject : inputObjects) {
       UUID objectUUID = UUIDFormatter.getUuid(inputObject.getUuid());
-      RepoObject repoObject = sqlService.getObject(repoCollection.getBucketName(), inputObject.getKey(), null, objectUUID, null);
+      // Search a object by bucketName, key and uuid don't care object status
+      RepoObject repoObject = sqlService.getObject(repoCollection.getBucketName(), inputObject.getKey(), null, objectUUID, null, true, true);
       if (repoObject != null) {
         if (sqlService.insertCollectionObjects(collId, repoObject.getId())) {
           repoObjectList.add(repoObject);
