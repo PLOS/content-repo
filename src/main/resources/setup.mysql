@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS collections (
     bucketId INTEGER NOT NULL,
     collkey VARCHAR (255) NOT NULL,
     timestamp timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    versionNumber VARCHAR (255) NOT NULL,
+    versionNumber INTEGER NOT NULL,
     status TINYINT DEFAULT 0 NOT NULL,
     tag VARCHAR (200),
     creationDate TIMESTAMP DEFAULT 0,
@@ -83,4 +83,4 @@ CREATE TABLE IF NOT EXISTS audit (
 #
 # IMPORTANT: This must be set to the proper version.
 #
-INSERT CREPO_SCHEMA_INFO SET schema_ver='04b-UUID-audit-upgrade-post-deploy';
+INSERT CREPO_SCHEMA_INFO SET schema_ver='05-change-versionNumber-column';

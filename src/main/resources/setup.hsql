@@ -46,7 +46,7 @@ CREATE CACHED TABLE IF NOT EXISTS collections (
    bucketId INTEGER NOT NULL,
    collkey VARCHAR (255) NOT NULL,
    timestamp timestamp DEFAULT CURRENT_TIMESTAMP,
-   versionNumber VARCHAR (255) NOT NULL,
+   versionNumber INTEGER NOT NULL,
    status TINYINT DEFAULT 0 NOT NULL,
    tag VARCHAR (200),
    creationDate TIMESTAMP NOT NULL,
@@ -78,4 +78,4 @@ CREATE CACHED TABLE IF NOT EXISTS audit (
 --
 -- IMPORTANT: This must be set to the proper version.
 -- 
-INSERT INTO CREPO_SCHEMA_INFO  (schema_ver) VALUES ('04b-UUID-audit-upgrade-post-deploy');
+INSERT INTO CREPO_SCHEMA_INFO  (schema_ver) VALUES ('05-change-versionNumber-column');
