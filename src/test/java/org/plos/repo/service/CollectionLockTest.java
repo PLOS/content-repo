@@ -152,7 +152,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
     assertEquals(Integer.valueOf(0), coll.getVersionNumber());
 
     verify(spySqlService, times(INSERT_THREADS + READER_THREADS * 2 + UPDATE_THREADS)).getCollection(anyString(), anyString()); // create new collection + list objects, when tag is null + update collection (when looking for exisiting ones)
-    verify(spySqlService, times(inputObjects.size())).insertCollectionObjects(anyInt(), anyString(), anyString(), any(UUID.class));
+    verify(spySqlService, times(inputObjects.size())).insertCollectionObjects(anyInt(), anyInt());
   }
 
   @Test
@@ -207,7 +207,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
     verify(spySqlService, times(READER_THREADS)).getCollection(anyString(), anyString(), anyInt(), anyString(), any(UUID.class)); // reading collections with tags
     verify(spySqlService, times(INSERT_THREADS + UPDATE_THREADS)).getCollectionNextAvailableVersion(anyString(), anyString()); // when creating and versioning a collection
     verify(spySqlService, times(INSERT_THREADS + UPDATE_THREADS)).insertCollection(any(RepoCollection.class)); // when creating and versioning a collection
-    verify(spySqlService, times((INSERT_THREADS + UPDATE_THREADS) * inputObjects.size())).insertCollectionObjects(anyInt(), anyString(), anyString(), any(UUID.class));
+    verify(spySqlService, times((INSERT_THREADS + UPDATE_THREADS) * inputObjects.size())).insertCollectionObjects(anyInt(), anyInt());
   }
 
 
