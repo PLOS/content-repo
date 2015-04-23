@@ -358,6 +358,10 @@ public class CollectionRepoService extends BaseRepoService {
 
     for (InputObject inputObject : inputObjects) {
       UUID objectUUID = UUIDFormatter.getUuid(inputObject.getUuid());
+
+      log.debug("createCollection repoCollection=" + repoCollection.getBucketName() + "," + repoCollection.getKey()
+          + " inputObjects=" + inputObject.getKey() + "," + inputObject.getUuid() + " collId=" + collId + " objectUUID=" + objectUUID.toString());
+
       // Search a object by bucketName, key and uuid don't care object status
       RepoObject repoObject = sqlService.getObject(repoCollection.getBucketName(), inputObject.getKey(), null, objectUUID, null, true, true);
       if (repoObject != null) {
@@ -367,6 +371,7 @@ public class CollectionRepoService extends BaseRepoService {
       } else {
         throw new RepoException(RepoException.Type.ObjectCollectionNotFound);
       }
+
     }
     // Add objects list to collection object
     repoCollection.addObjects(repoObjectList);
