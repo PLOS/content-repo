@@ -1098,12 +1098,17 @@ public class CollectionControllerTest extends RepoBaseJerseyTest {
 
   @Test
   public void getCollectionsVersionsNoCollection() {
-    assertRepoError(target("/collections/versions/" + bucketName)
+    Response response = target("/collections/versions/" + bucketName)
             .queryParam("key", "collection1")
             .request(MediaType.APPLICATION_JSON_TYPE)
             .accept(MediaType.APPLICATION_JSON_TYPE)
-            .get(),
-        Response.Status.NOT_FOUND, RepoException.Type.CollectionNotFound);
+            .get();
+
+    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+
+    JsonArray responseColl = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonArray();
+    assertNotNull(responseColl);
+    assertEquals(0, responseColl.size());
   }
 
   @Test
