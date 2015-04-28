@@ -143,8 +143,6 @@ public class CollectionRepoService extends BaseRepoService {
    * @throws org.plos.repo.service.RepoException
    */
   public List<RepoCollection> getCollectionVersions(String bucketName, String key) throws RepoException {
-    List<RepoCollection> repoCollections = null;
-
     try {
       sqlService.getReadOnlyConnection();
 
@@ -156,15 +154,15 @@ public class CollectionRepoService extends BaseRepoService {
         throw new RepoException(RepoException.Type.NoCollectionKeyEntered);
       }
 
-      repoCollections = sqlService.listCollectionVersions(bucketName, key);
+      List<RepoCollection> repoCollections = sqlService.listCollectionVersions(bucketName, key);
+
+      return repoCollections;
 
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
       sqlReleaseConnection();
     }
-
-    return repoCollections;
   }
 
   /**
