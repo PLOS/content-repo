@@ -21,6 +21,7 @@ import org.hsqldb.jdbc.JDBCDataSource;
 import org.plos.repo.models.validator.InputCollectionValidator;
 import org.plos.repo.models.validator.InputRepoObjectValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
+import org.plos.repo.service.AuditRepoService;
 import org.plos.repo.service.CollectionRepoService;
 import org.plos.repo.service.HsqlService;
 import org.plos.repo.service.InMemoryFileStoreService;
@@ -54,6 +55,9 @@ public class TestSpringConfig {
   public CollectionRepoService collectionRepoService() {
     return new CollectionRepoService();
   }
+
+  @Bean
+  public AuditRepoService auditRepoService() {return new AuditRepoService();}
 
   @Bean
   public InputCollectionValidator inputCollectionValidator() {
