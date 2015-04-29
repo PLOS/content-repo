@@ -156,11 +156,8 @@ public class CollectionRepoService extends BaseRepoService {
 
       List<RepoCollection> repoCollections = sqlService.listCollectionVersions(bucketName, key);
 
-      if (repoCollections == null || repoCollections.size() == 0) {
-        throw new RepoException(RepoException.Type.CollectionNotFound);
-      }
-
       return repoCollections;
+
     } catch (SQLException e) {
       throw new RepoException(e);
     } finally {
