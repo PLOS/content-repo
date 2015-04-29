@@ -78,6 +78,8 @@ public abstract class RepoBaseSpringTest {
 
     // TODO: assert both refs are empty
 
+    sqlService.deleteAuditTable();
+
     sqlService.transactionCommit();
   }
 

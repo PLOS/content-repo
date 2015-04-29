@@ -17,6 +17,8 @@
 
 package org.plos.repo.service;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.JsonElement;
 import org.plos.repo.models.Audit;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Operation;
@@ -233,6 +235,19 @@ public abstract class SqlService {
       p.setInt(3, repoObject.getVersionNumber());
 
       return p.executeUpdate();
+    } finally {
+      closeDbStuff(null, p);
+    }
+  }
+
+
+  @VisibleForTesting
+  public void deleteAuditTable() throws SQLException {
+    PreparedStatement p = null;
+    try {
+      p = connectionLocal.get().prepareStatement("DELETE FROM audit ");
+
+      p.executeUpdate();
     } finally {
       closeDbStuff(null, p);
     }
