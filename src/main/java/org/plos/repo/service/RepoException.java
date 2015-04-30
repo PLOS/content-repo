@@ -61,7 +61,9 @@ public class RepoException extends Exception {
     CantCreateNewCollectionWithUsedKey(34, "Can not create a collection with a key that already exists"),
     CantCreateCollectionVersionWithNoOrig(35, "Can not version a collection that does not exist"),
     CantCreateCollectionWithNoObjects(36, "Can not create a collection that does not have objects"),
-    ObjectFilePathMissing(37, "The file path object is missing");
+    ObjectFilePathMissing(37, "The file path object is missing"),
+    // user error for missing file
+    NoFileEntered(38, "No file data entered");
 
     private final int value;
     private final String message;

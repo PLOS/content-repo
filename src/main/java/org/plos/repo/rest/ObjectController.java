@@ -100,6 +100,7 @@ public class ObjectController {
         status = Response.Status.NOT_FOUND;
         break;
 
+      case NoFileEntered:
       case ServerError:
         status = Response.Status.INTERNAL_SERVER_ERROR;
         log.error(e.getType().toString(), e);
