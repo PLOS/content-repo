@@ -241,7 +241,7 @@ public abstract class SqlService {
   }
 
 
-  @VisibleForTesting
+  @VisibleForTesting // FOR TESTING ONLY. TODO: Pull into test code and delete this method
   public void deleteAuditTable() throws SQLException {
     PreparedStatement p = null;
     try {
@@ -253,7 +253,7 @@ public abstract class SqlService {
     }
   }
 
-  // FOR TESTING ONLY
+  @VisibleForTesting // FOR TESTING ONLY. TODO: Pull into test code and delete this method
   public int deleteCollection(RepoCollection repoCollection) throws SQLException {
     PreparedStatement p = null;
 
