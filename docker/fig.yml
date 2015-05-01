@@ -4,6 +4,7 @@ reposvc:
     - ../target:/build
   links:
     - repodb:repodb
+    - node:node
     - tracker:tracker
   ports:
     - "8085:8080"
