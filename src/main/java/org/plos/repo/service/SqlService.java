@@ -600,10 +600,9 @@ public abstract class SqlService {
   public List<RepoObject> listObjects(Timestamp timestamp) throws SQLException, RepoException {
     List<RepoObject> repoObjects = new ArrayList<>();
 
-    StringBuilder q = new StringBuilder();
-    q.append("SELECT ").append(OBJECT_COLUMNS).append(" FROM objects obj WHERE timestamp >= ?");
+    String q = "SELECT " + OBJECT_COLUMNS + " FROM objects obj WHERE timestamp >= ?";
 
-    try (PreparedStatement p = null /* FIXME */) {
+    try (PreparedStatement p = connectionLocal.get().prepareStatement(q)) {
       p.setTimestamp(1, timestamp);
 
       try (ResultSet result = p.executeQuery()) {
@@ -728,7 +727,7 @@ public abstract class SqlService {
     try (PreparedStatement p = connectionLocal.get().prepareStatement(q)) {
       p.setTimestamp(1, timestamp);
 
-      try (ResultSet result = null /* FIXME */) {
+      try (ResultSet result = p.executeQuery()) {
         while (result.next()) {
           repoCollections.add(mapCollectionRow(result));
         }
