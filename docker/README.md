@@ -6,7 +6,7 @@ So you want to run your service in an isolated container?
 The docker stack provided here contains all your should need to get a full production stack running including MySQL and MogileFS.
 
 1. Make sure the service .war is built
-2. Enter this directory and run "fig build && fig up"
+2. Enter this directory and run "./repo-up.sh"
 3. Visit the running service at http://localhost:8085
 
 Requirements
