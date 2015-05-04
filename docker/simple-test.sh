@@ -21,4 +21,8 @@ curl --data "name=$BUCKET"  http://localhost:8085/buckets
 # create an object
 OBJECT=object_`date +%N`
 
-curl --form "fileupload=@README.md;filename=readme.md" --form bucketName=$BUCKET --form key=$OBJECT --form create=new http://localhost:8085/objects
+curl -F "create=new" -F "key=$OBJECT" -F "bucketName=$BUCKET" -F "file=@`pwd`/README.md" http://localhost:8085/objects
+
+# read it back
+curl -I http://localhost:8085/objects/$BUCKET?key=$OBJECT
+
