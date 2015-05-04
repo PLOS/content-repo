@@ -3,6 +3,14 @@
 # ping the service
 curl localhost:8085/config
 
+# check if mogile node is up
+docker exec -it docker_tracker_1 curl http://node:7500/dev1
+
+docker exec -it docker_tracker_1 curl http://node:7500/dev1/usage
+
+# mogile upload
+docker exec -it docker_tracker_1 mogupload --trackers=localhost --domain=maindomain --key=hosts --file=/etc/hosts 
+
 # create a bucket
 BUCKET=bucket_`date +%N`
 
