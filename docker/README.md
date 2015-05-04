@@ -12,4 +12,5 @@ The docker stack provided here contains all your should need to get a full produ
 Requirements
 ------------
 * docker >= 1.3 (www.docker.com)
+* docker-compse (pip install docker-compose)
 * fig >= 0.5.2 (www.fig.sh)
