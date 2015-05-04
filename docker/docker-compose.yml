@@ -3,8 +3,9 @@ reposvc:
   volumes:
     - ../target:/build
   links:
-    - repodb:repodb
-    - tracker:tracker
+    - repodb
+    - node
+    - tracker
   ports:
     - "8085:8080"
 
@@ -18,6 +19,9 @@ tracker:
   links:
     - mogdb
     - node
+  environment:
+    - MOG_DB_HOST=mogdb
+    - MOG_NODE_HOST=node
 
 node:
   build: node
