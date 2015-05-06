@@ -94,12 +94,15 @@ class CollectionsJson(BaseServiceTest):
         self.doGet('%s' % OBJECTS_API, kwargs, DEFAULT_HEADERS)
         self.parse_response_as_json()
 
-    def post_objects_auto(self, files=None, **kwargs):
+    def post_object(self, files=None, **kwargs):
         """
         Create a new objects to build collection.
         """
-        count = 0
-        while count < 5:
-            self.doPost('%s' % OBJECTS_API, data=kwargs, files=files, headers=DEFAULT_HEADERS)
-            self.parse_response_as_json()
-            count += 1
+        self.doPost('%s' % OBJECTS_API, data=kwargs, files=files, headers=DEFAULT_HEADERS)
+        self.parse_response_as_json()
+
+    def delete_object(self, bucketName=None, **kwargs):
+        """
+        Delete test objects
+        """
+        self.doDelete('%s/%s' % (OBJECTS_API, bucketName), params=kwargs, headers=DEFAULT_HEADERS)
