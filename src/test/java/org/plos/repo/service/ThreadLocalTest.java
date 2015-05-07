@@ -41,9 +41,6 @@ public class ThreadLocalTest extends RepoBaseSpringTest {
   @Before
   @SuppressWarnings("unchecked")
   public void setup() throws Exception {
-    // clear data calls sqlService.getConnection()
-    clearData(objectStore, sqlService);
-
     Field threadLocalField = SqlService.class.getDeclaredField("connectionLocal");
     threadLocalField.setAccessible(true);
     threadLocalHnd = (ThreadLocal<Connection>) threadLocalField.get(this.sqlService);

@@ -220,41 +220,6 @@ public abstract class SqlService {
     }
   }
 
-  // FOR TESTING ONLY
-  public int deleteObject(RepoObject repoObject) throws SQLException {
-    PreparedStatement p = null;
-
-    try {
-      p = connectionLocal.get().prepareStatement("DELETE FROM objects " +
-          "WHERE objKey=? AND bucketId=? AND versionNumber=?");
-
-      p.setString(1, repoObject.getKey());
-      p.setInt(2, repoObject.getBucketId());
-      p.setInt(3, repoObject.getVersionNumber());
-
-      return p.executeUpdate();
-    } finally {
-      closeDbStuff(null, p);
-    }
-  }
-
-  // FOR TESTING ONLY
-  public int deleteCollection(RepoCollection repoCollection) throws SQLException {
-    PreparedStatement p = null;
-
-    try {
-      p = connectionLocal.get().prepareStatement("DELETE FROM collectionObject WHERE collectionId=?");
-      p.setInt(1, repoCollection.getId());
-      p.executeUpdate();
-
-      p = connectionLocal.get().prepareStatement("DELETE FROM collections WHERE id=?");
-      p.setInt(1, repoCollection.getId());
-      return p.executeUpdate();
-    } finally {
-      closeDbStuff(null, p);
-    }
-  }
-
   public int markObjectPurged(String key, String bucketName, Integer version, UUID uuid, String tag) throws SQLException {
     return markObject(key, bucketName, version, uuid, tag, Status.PURGED);
   }
