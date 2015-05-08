@@ -124,6 +124,24 @@ class TestObjects(ObjectsJson):
                       create='version', files=[('file', StringIO.StringIO('test content updated'))])
     self.verify_http_code_is(BAD_REQUEST)
 
+  def test_get_objects(self):
+    """
+    Validates the basic bare call for the object list and
+    also the function of the limit kwarg.
+    """
+    print('\nTesting List objects (GET)\n')
+    bucketName = BucketsJson.get_bucket_name()
+    self.get_objects(bucketName)
+    self.verify_http_code_is(OK)
+    objects = self.parsed.get_objects()
+    assert(len(objects) == 1000)
+    objects = []
+    limit = '%d' % random.randint(1, 1000)
+    self.get_objects(bucketName, limit=limit)
+    self.verify_http_code_is(OK)
+    objects = self.parsed.get_objects()
+    assert(str(len(objects)) == str(limit))
+    print('\nDone\n')
 
 if __name__ == '__main__':
     ObjectsJson._run_tests_randomly()
