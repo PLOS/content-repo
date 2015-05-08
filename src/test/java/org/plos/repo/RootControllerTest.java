@@ -20,7 +20,6 @@ package org.plos.repo;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import org.junit.Before;
 import org.junit.Test;
 
 import javax.ws.rs.client.Entity;
@@ -35,11 +34,6 @@ public class RootControllerTest extends RepoBaseJerseyTest {
 
   private static String BUCKET_NAME1 = "b1";
   private static String BUCKET_NAME2 = "b2";
-
-  @Before
-  public void setup() throws Exception {
-    RepoBaseSpringTest.clearData(objectStore, sqlService);
-  }
 
   @Test
   public void getStatusTest() {

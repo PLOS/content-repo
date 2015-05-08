@@ -22,7 +22,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import junit.framework.TestCase;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.junit.Before;
 import org.junit.Test;
 import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.input.InputObject;
@@ -43,11 +42,6 @@ public class BucketControllerTest extends RepoBaseJerseyTest {
   private final String bucketName = "plos-bucketunittest-bucket1";
   private final Timestamp CREATION_DATE_TIME = new Timestamp(new Date().getTime());
   private final String CREATION_DATE_TIME_STRING = CREATION_DATE_TIME.toString();
-
-  @Before
-  public void setup() throws Exception {
-    RepoBaseSpringTest.clearData(objectStore, sqlService);
-  }
 
   @Test
   public void bucketAlreadyExists() {

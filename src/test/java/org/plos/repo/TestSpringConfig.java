@@ -32,14 +32,20 @@ import org.plos.repo.service.ScriptRunner;
 import org.plos.repo.service.SqlService;
 import org.plos.repo.util.ChecksumGenerator;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;
 
+@Configuration
 public class TestSpringConfig {
+
+  public static boolean isInitialized = false;
 
   @Bean
   public RepoInfoService repoInfoService() {
@@ -85,24 +91,38 @@ public class TestSpringConfig {
   }
 
   @Bean
-  public SqlService sqlService() throws Exception {
+  public DataSource dataSource() {
     JDBCDataSource ds = new JDBCDataSource();
     ds.setUrl("jdbc:hsqldb:mem:plosrepo-unittest-hsqldb;shutdown=true;sql.syntax_mys=true");
     ds.setUser("");
     ds.setPassword("");
+    return ds;
+  }
 
-    Connection connection = ds.getConnection();
+  @Bean
+  public SqlService sqlService() throws Exception {
+      SqlService service = new HsqlService();
+      service.setDataSource(dataSource());
+      return service;
+  }
 
-    SqlService service = new HsqlService();
+  /**
+   * Run the setup script to initialize the data base.
+   * @throws Exception
+   */
+  @PostConstruct
+  public void runOnce() throws Exception {
+    if (isInitialized) {
+      return;
+    }
+
+    Connection connection = dataSource().getConnection();
     Resource sqlFile = new ClassPathResource("setup.hsql");
-
     ScriptRunner scriptRunner = new ScriptRunner(connection, false, true);
     scriptRunner.runScript(new BufferedReader(new FileReader(sqlFile.getFile())));
 
-    connection.setAutoCommit(false);
-    service.setDataSource(ds);
+    isInitialized = true;
 
-    return service;
   }
 
 }

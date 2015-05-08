@@ -56,8 +56,6 @@ public class RepoServiceSpringTest extends RepoBaseSpringTest {
 
   @Before
   public void beforeMethods() throws Exception {
-    clearData(objectStore, sqlService);
-
     // reset the internal beans since their mocks/spies retain between tests
 
     Field objStoreField = RepoService.class.getDeclaredField("objectStore");

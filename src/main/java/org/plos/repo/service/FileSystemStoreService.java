@@ -171,6 +171,10 @@ public class FileSystemStoreService extends ObjectStore {
     final String tempFileLocation = dataDirectory + "/" + UUID.randomUUID().toString() + ".tmp";
 
     try {
+     if (uploadedInputStream == null) {
+       throw new RepoException(RepoException.Type.NoFileEntered);
+     }
+
       FileOutputStream fos = new FileOutputStream(tempFileLocation);
 
       ReadableByteChannel in = Channels.newChannel(uploadedInputStream);

@@ -6,15 +6,12 @@ import org.mockito.Mock;
 import org.plos.repo.models.Audit;
 import org.plos.repo.models.Operation;
 import org.plos.repo.models.output.RepoAuditOutput;
-import org.plos.repo.rest.ObjectController;
-import org.plos.repo.service.RepoException;
 
 import java.sql.Timestamp;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
