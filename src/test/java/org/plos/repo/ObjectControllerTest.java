@@ -23,7 +23,6 @@ import com.google.gson.JsonObject;
 import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.junit.Before;
 import org.junit.Test;
 import org.plos.repo.service.RepoException;
 
@@ -56,12 +55,6 @@ public class ObjectControllerTest extends RepoBaseJerseyTest {
   private final String CREATION_DATE_TIME = new Timestamp(new Date().getTime()).toString();
 
   private String USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\", \"version\":1.1}";
-
-
-  @Before
-  public void setup() throws Exception {
-    RepoBaseSpringTest.clearData(objectStore, sqlService);
-  }
 
   @Test
   public void createWithBadTimestamp() {

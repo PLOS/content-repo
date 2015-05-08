@@ -80,7 +80,6 @@ public class ObjectLockTest extends RepoBaseSpringTest {
 
   @Before
   public void setup() throws Exception {
-    clearData(objectStore, sqlService);
 
     repoService.createBucket(BUCKET_NAME, CREATION_DATE_TIME.toString());
 

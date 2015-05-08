@@ -17,8 +17,6 @@
 
 package org.plos.repo.service;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.gson.JsonElement;
 import org.plos.repo.models.Audit;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.Operation;
@@ -216,54 +214,6 @@ public abstract class SqlService {
 
       p.setString(1, bucketName);
 
-      return p.executeUpdate();
-    } finally {
-      closeDbStuff(null, p);
-    }
-  }
-
-  // FOR TESTING ONLY
-  public int deleteObject(RepoObject repoObject) throws SQLException {
-    PreparedStatement p = null;
-
-    try {
-      p = connectionLocal.get().prepareStatement("DELETE FROM objects " +
-          "WHERE objKey=? AND bucketId=? AND versionNumber=?");
-
-      p.setString(1, repoObject.getKey());
-      p.setInt(2, repoObject.getBucketId());
-      p.setInt(3, repoObject.getVersionNumber());
-
-      return p.executeUpdate();
-    } finally {
-      closeDbStuff(null, p);
-    }
-  }
-
-
-  @VisibleForTesting // FOR TESTING ONLY. TODO: Pull into test code and delete this method
-  public void deleteAuditTable() throws SQLException {
-    PreparedStatement p = null;
-    try {
-      p = connectionLocal.get().prepareStatement("DELETE FROM audit ");
-
-      p.executeUpdate();
-    } finally {
-      closeDbStuff(null, p);
-    }
-  }
-
-  @VisibleForTesting // FOR TESTING ONLY. TODO: Pull into test code and delete this method
-  public int deleteCollection(RepoCollection repoCollection) throws SQLException {
-    PreparedStatement p = null;
-
-    try {
-      p = connectionLocal.get().prepareStatement("DELETE FROM collectionObject WHERE collectionId=?");
-      p.setInt(1, repoCollection.getId());
-      p.executeUpdate();
-
-      p = connectionLocal.get().prepareStatement("DELETE FROM collections WHERE id=?");
-      p.setInt(1, repoCollection.getId());
       return p.executeUpdate();
     } finally {
       closeDbStuff(null, p);

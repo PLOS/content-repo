@@ -21,7 +21,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.junit.Before;
 import org.junit.Test;
 import org.plos.repo.models.Operation;
 import org.plos.repo.models.input.InputCollection;
@@ -53,12 +52,6 @@ public class AuditControllerTest extends RepoBaseJerseyTest {
 
   private final String testData1 = "test data one goes\nhere.";
   private String USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\", \"version\":1.1 }";
-
-
-  @Before
-  public void setup() throws Exception {
-    RepoBaseSpringTest.clearData(objectStore, sqlService);
-  }
 
   @Test
   public void getAuditRecordsTest() {

@@ -17,9 +17,9 @@
 
 package org.plos.repo;
 
+import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.plos.repo.models.Bucket;
-import org.plos.repo.models.RepoCollection;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.RepoService;
@@ -28,6 +28,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.inject.Inject;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.Statement;
 import java.util.List;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -43,44 +46,34 @@ public abstract class RepoBaseSpringTest {
   @Inject
   protected SqlService sqlService;
 
-  public static void clearData(ObjectStore objectStore, SqlService sqlService) throws Exception {
-    sqlService.getConnection();
+  @Inject
+  protected DataSource dataSource;
 
-    // remove collections from DB
-    List<RepoCollection> repoCollectionList = sqlService.listCollections(null, null, null, true, null);
+  /**
+   * Clean de data base before to run each test
+   * @throws Exception
+   */
+  @Before
+  public void clearData() throws Exception {
+    try(Connection connection = dataSource.getConnection();
+        Statement st = connection.createStatement();) {
 
-    for (RepoCollection repoCollection : repoCollectionList) {
-      if (sqlService.deleteCollection(repoCollection) == 0) {
-        throw new Exception("Collection not deleted in DB");
-      }
-    }
-
-    //remove objects from DB
-
-    List<RepoObject> repoObjectList = sqlService.listObjects(null, null, null, true, true, null);
-
-    for (RepoObject repoObject : repoObjectList) {
-      if (sqlService.deleteObject(repoObject) == 0) {
-        throw new Exception("Object not deleted in DB");
+      sqlService.getConnection();
+      List<RepoObject> repoObjectList = sqlService.listObjects(null, null, null, true, true, null);
+      for (RepoObject repoObject : repoObjectList) {
+        objectStore.deleteObject(repoObject);
       }
 
-      objectStore.deleteObject(repoObject);
+      List<Bucket> bucketList = sqlService.listBuckets();
+      for (Bucket bucket : bucketList) {
+        objectStore.deleteBucket(bucket);
+      }
+
+      st.executeUpdate("delete from collectionObject");
+      st.executeUpdate("delete from collections");
+      st.executeUpdate("delete from objects");
+      st.executeUpdate("delete from buckets");
+      st.executeUpdate("delete from audit");
     }
-
-    // remove buckets from DB
-
-    List<Bucket> bucketList = sqlService.listBuckets();
-
-    for (Bucket bucket : bucketList) {
-      sqlService.deleteBucket(bucket.getBucketName());
-      objectStore.deleteBucket(bucket);
-    }
-
-    // TODO: assert both refs are empty
-
-    sqlService.deleteAuditTable();
-
-    sqlService.transactionCommit();
   }
-
 }
