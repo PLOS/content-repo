@@ -146,6 +146,24 @@ class TestCollections(CollectionsJson):
                 objects_records.append({'key': obj['key'], 'uuid': obj['uuid']})
         return objects_records
 
+    def test_get_collections(self):
+      """
+      Validates the basic bare call for the collection list and
+      also the function of the limit kwarg.
+      """
+      print('\nTesting List collections (GET)\n')
+      bucketName = BucketsJson.get_bucket_name()
+      self.get_collections(bucketName)
+      self.verify_http_code_is(OK)
+      collections = self.parsed.get_collections()
+      assert(len(collections) <= 1000)
+      limit = '%d' % random.randint(1, 1000)
+      self.get_collections(bucketName, limit=limit)
+      self.verify_http_code_is(OK)
+      collections = self.parsed.get_collections()
+      assert(str(len(collections)) <= str(limit))
+      print('\nDone\n')
+
     @staticmethod
     def get_collection_key():
         return 'testcollection%d' % random.randint(1000, 9999)

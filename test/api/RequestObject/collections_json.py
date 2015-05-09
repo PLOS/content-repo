@@ -24,14 +24,14 @@ NOT_FOUND = 404
 
 class CollectionsJson(BaseServiceTest):
 
-    def get_collections(self, **kwargs):
+    def get_collections(self, bucketName=None, **kwargs):
         """
         Calls CREPO API to get collections list in a bucket
-        GET /collections ?bucketName={bucketName}...
+        GET /collections?bucketName={bucketName}...
 
         :param bucketName, offset, limit, includeDeleted, includePurged, tag
         """
-        self.doGet('%s' % COLLECTIONS_API, kwargs, DEFAULT_HEADERS)
+        self.doGet('%s?bucketName=%s' % (COLLECTIONS_API, bucketName), kwargs, DEFAULT_HEADERS)
         self.parse_response_as_json()
 
     def post_collections(self, collection_data):
