@@ -156,12 +156,12 @@ class TestCollections(CollectionsJson):
       self.get_collections(bucketName)
       self.verify_http_code_is(OK)
       collections = self.parsed.get_collections()
-      assert(len(collections) <= 1000)
+      assert(len(collections) <= 1000), 'Object list returned (%d) is greater than default list return set (%d) size or zero' % (str(len(collections)), 1000)
       limit = '%d' % random.randint(1, 1000)
       self.get_collections(bucketName, limit=limit)
       self.verify_http_code_is(OK)
       collections = self.parsed.get_collections()
-      assert(str(len(collections)) <= str(limit))
+      assert(str(len(collections)) <= str(limit)), 'Object list returned (%d) is greater than limit (%d) or zero' % (str(len(collections)), str(limit))
       print('\nDone\n')
 
     @staticmethod
