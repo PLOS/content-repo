@@ -134,12 +134,14 @@ class TestObjects(ObjectsJson):
     self.get_objects(bucketName)
     self.verify_http_code_is(OK)
     objects = self.parsed.get_objects()
-    assert(len(objects) <= 1000)
+    assert(len(objects) <= 1000), \
+      'Object list returned (%d) is greater than default return set size (%d) or zero' % (str(len(objects)), 1000)
     limit = '%d' % random.randint(1, 1000)
     self.get_objects(bucketName, limit=limit)
     self.verify_http_code_is(OK)
     objects = self.parsed.get_objects()
-    assert(str(len(objects)) <= str(limit)), 'Object list returned (%d) is greater than limit (%d) or zero' % (str(len(objects)), str(limit))
+    assert(str(len(objects)) <= str(limit)), \
+      'Object list returned (%d) is greater than limit (%d) or zero' % (str(len(objects)), str(limit))
     print('\nDone\n')
 
 if __name__ == '__main__':
