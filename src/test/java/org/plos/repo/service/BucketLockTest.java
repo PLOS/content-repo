@@ -52,7 +52,6 @@ public class BucketLockTest extends RepoBaseSpringTest {
 
   @Before
   public void setup() throws Exception {
-    clearData(objectStore, sqlService);
 
     spyObjectStore = spy(this.objectStore);
     spySqlService = spy(this.sqlService);

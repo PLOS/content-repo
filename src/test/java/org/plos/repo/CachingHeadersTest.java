@@ -57,8 +57,6 @@ public class CachingHeadersTest extends RepoBaseJerseyTest {
 
   @Before
   public void setup() throws Exception {
-    RepoBaseSpringTest.clearData(objectStore, sqlService);
-
     modifiedSinceDateTime = new DateTime(2014, 6, 25, 0, 0, 0);
     mockRepoService = Mockito.mock(RepoService.class);
   }

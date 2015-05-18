@@ -25,25 +25,41 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.AfterClass;
+import org.junit.Before;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.models.RepoObject;
 import org.plos.repo.service.ObjectStore;
 import org.plos.repo.service.RepoException;
 import org.plos.repo.service.SqlService;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import javax.sql.DataSource;
 import javax.ws.rs.core.Response;
+import java.sql.Connection;
+import java.sql.Statement;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public abstract class RepoBaseJerseyTest extends JerseyTest {
-
-  protected SqlService sqlService;
+public abstract class RepoBaseJerseyTest extends JerseyTest{
 
   protected ObjectStore objectStore;
 
-  protected static AnnotationConfigApplicationContext context;
+  protected SqlService sqlService;
+
+  protected DataSource dataSource;
 
   protected Gson gson = new Gson();
+
+  protected static AnnotationConfigApplicationContext context;
+
+  public RepoBaseJerseyTest(){
+    super();
+    sqlService = context.getBean(SqlService.class);
+    objectStore = context.getBean(ObjectStore.class);
+    dataSource = context.getBean(DataSource.class);
+  }
 
   protected void assertRepoError(Response response, Response.Status httpStatus, RepoException.Type repoError) {
     JsonObject responseObj = gson.fromJson(response.readEntity(String.class), JsonElement.class).getAsJsonObject();
@@ -57,11 +73,7 @@ public abstract class RepoBaseJerseyTest extends JerseyTest {
   @Override
   protected javax.ws.rs.core.Application configure() {
     context = new AnnotationConfigApplicationContext(TestSpringConfig.class);
-
     ResourceConfig config = new JerseyApplication().property("contextConfig", context);
-
-    sqlService = context.getBean(SqlService.class);
-    objectStore = context.getBean(ObjectStore.class);
 
     return config;
   }
@@ -75,6 +87,34 @@ public abstract class RepoBaseJerseyTest extends JerseyTest {
   @Override
   protected void configureClient(ClientConfig config) {
     config.register(MultiPartFeature.class);
+  }
+
+  /**
+   * Clean de data base before to run each test
+   * @throws Exception
+   */
+  @Before
+  public void clearData() throws Exception {
+    try(Connection connection = dataSource.getConnection();
+        Statement st = connection.createStatement();) {
+
+      sqlService.getConnection();
+      List<RepoObject> repoObjectList = sqlService.listObjects(null, null, null, true, true, null);
+      for (RepoObject repoObject : repoObjectList) {
+        objectStore.deleteObject(repoObject);
+      }
+
+      List<Bucket> bucketList = sqlService.listBuckets();
+      for (Bucket bucket : bucketList) {
+        objectStore.deleteBucket(bucket);
+      }
+
+      st.executeUpdate("delete from collectionObject");
+      st.executeUpdate("delete from collections");
+      st.executeUpdate("delete from objects");
+      st.executeUpdate("delete from buckets");
+      st.executeUpdate("delete from audit");
+    }
   }
 
 }

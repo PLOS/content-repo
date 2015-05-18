@@ -33,7 +33,6 @@ class TestCollections(CollectionsJson):
   objKey = None
   collKeys = []
 
-
   def test_cleanup(self):
     """
     Purge all objects and collections created in the test case
@@ -162,6 +161,25 @@ class TestCollections(CollectionsJson):
       objects_records = self.get_objects_json()
     return objects_records
 
+  def test_get_collections(self):
+    """
+    Validates the basic bare call for the collection list and
+    also the function of the limit kwarg.
+    """
+    print('\nTesting List collections (GET)\n')
+    bucketName = BucketsJson.get_bucket_name()
+    self.get_collections(bucketName)
+    self.verify_http_code_is(OK)
+    collections = self.parsed.get_collections()
+    assert(len(collections) <= 1000), 'Collection list returned (%s) is greater than default list ' + \
+                                      'return set (%d) size or zero' % (str(len(collections)), 1000)
+    limit = '%d' % random.randint(1, 1000)
+    self.get_collections(bucketName, limit=limit)
+    self.verify_http_code_is(OK)
+    collections = self.parsed.get_collections()
+    assert(str(len(collections)) <= str(limit)), 'Collection list returned (%s) is greater than ' + \
+                                                 'limit (%s) or zero' % (str(len(collections)), str(limit))
+    print('\nDone\n')
 
   @staticmethod
   def get_collection_key():
@@ -181,4 +199,4 @@ class TestCollections(CollectionsJson):
 
 
 if __name__ == '__main__':
-  CollectionsJson._run_tests_randomly()
+    CollectionsJson._run_tests_randomly()

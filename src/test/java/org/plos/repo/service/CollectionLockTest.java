@@ -63,7 +63,7 @@ public class CollectionLockTest extends RepoBaseSpringTest {
   private List<InputObject> inputObjects;
 
   @Inject
-  protected CollectionRepoService collectionRepoService;
+  private CollectionRepoService collectionRepoService;
 
   /**
    * JUnit only captures assertion errors raised in the main thread, so we'll create an explicit error instance to
@@ -84,7 +84,6 @@ public class CollectionLockTest extends RepoBaseSpringTest {
 
   @Before
   public void setup() throws Exception {
-    clearData(objectStore, sqlService);
 
     repoService.createBucket(BUCKET_NAME, CREATION_DATE_TIME.toString());
 
