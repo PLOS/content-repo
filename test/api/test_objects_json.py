@@ -41,9 +41,10 @@ class TestObjects(ObjectsJson):
     bucketName = BucketsJson.get_bucket_name()
     self.get_objects(bucketName=bucketName)
     objects = self.parsed.get_objects()
-    for obj in objects:
-      if obj['key'].startswith('testobject'):
-        self.delete_object(bucketName=bucketName, key=obj['key'], version=obj['versionNumber'], purge=True)
+    if objects:
+      for obj in objects:
+        if obj['key'].startswith('testobject'):
+          self.delete_object(bucketName=bucketName, key=obj['key'], version=obj['versionNumber'], purge=True)
 
   def test_post_objects_new(self):
     """
