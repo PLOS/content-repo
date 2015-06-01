@@ -1,6 +1,9 @@
 #!/usr/bin/env python2
 
 __author__ = 'fcabrales'
+"""
+Test cases for Content Repo audit requests.
+"""
 
 from ..api.RequestObject.audit_json import AuditJson
 
@@ -9,6 +12,9 @@ class GetAudit(AuditJson):
   def test_audit_offset_limit(self):
     """
     Get audit API call with %offset and %limit
+    This test will verify if audit api call works as expected given offset and limit
+    This test will verify audit bucket,keyValue,operation and uuid in a mutually exclusive matter comparing JSON
+    response with values in audit table
     """
     self.get_audit_offset_limit(0,200)
     expected_buckets = self.get_audit_offset_limit_sql_bucket(0,200)
@@ -29,6 +35,9 @@ class GetAudit(AuditJson):
   def test_audit_offset(self):
     """
     Get audit API call with %offset only
+    This test will verify if audit api call works as expected given only offset
+    This test will verify audit bucket,keyValue,operation and uuid in a mutually exclusive matter comparing JSON
+    response with values in audit table
     """
     self.get_audit_offset_only(0)
     expected_buckets = self.get_audit_offset_limit_sql_bucket(0,1000)
@@ -49,6 +58,9 @@ class GetAudit(AuditJson):
   def test_audit_limit(self):
     """
     Get audit API call with %limit only
+    This test will verify if audit api call works as expected given only limit
+    This test will verify audit bucket,keyValue,operation and uuid in a mutually exclusive matter comparing JSON
+    response with values in audit table
     """
     self.get_audit_limit_only(200)
     expected_buckets = self.get_audit_offset_limit_sql_bucket(0,200)
@@ -69,6 +81,9 @@ class GetAudit(AuditJson):
   def test_audit_no_parameters(self):
     """
     Get audit API call with no parameters
+    This test will verify if audit api call works as expected if no parameters are given
+    This test will verify audit bucket,keyValue,operation and uuid in a mutually exclusive matter comparing JSON
+    response with values in audit table
     """
     self.get_audit_no_parameters()
     expected_buckets = self.get_audit_offset_limit_sql_bucket(0,1000)
