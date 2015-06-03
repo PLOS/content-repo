@@ -99,3 +99,15 @@ class JSONResponse(AbstractResponse):
 
   def get_message(self):
     return self.jpath('$..message')
+
+  def get_configVersion(self):
+    return self.jpath('version')
+
+  def get_configObjectStore(self):
+    return self.jpath('objectStoreBackend')
+
+  def get_configSqlService(self):
+    return self.jpath('$..sqlServiceBackend')
+
+  def get_configHasXReproxy(self):
+    return self.jpath('$..hasXReproxy')
