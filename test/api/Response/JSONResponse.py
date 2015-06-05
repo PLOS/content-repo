@@ -99,3 +99,7 @@ class JSONResponse(AbstractResponse):
 
   def get_message(self):
     return self.jpath('$..message')
+
+  def get_hasXReproxy(self):
+    return self.jpath('*')
+
