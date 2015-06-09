@@ -99,3 +99,15 @@ class JSONResponse(AbstractResponse):
 
   def get_message(self):
     return self.jpath('$..message')
+
+  def get_statusBucketCount(self):
+    return self.jpath('$..bucketCount')
+
+  def get_statusServiceStarted(self):
+    return self.jpath('$..serviceStarted')
+
+  def get_statusReadsSinceStart(self):
+    return self.jpath('$..readsSinceStart')
+
+  def get_statusWritesSinceStart(self):
+    return self.jpath('$..writesSinceStart')
