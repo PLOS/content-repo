@@ -18,6 +18,7 @@ class TestConfig(ConfigJson):
     """
     Get configuration
     """
+    print('\nTesting GET /config\n')
     self.get_config()
     self.verify_get_config()
 
