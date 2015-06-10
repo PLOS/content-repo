@@ -111,3 +111,15 @@ class JSONResponse(AbstractResponse):
 
   def get_statusWritesSinceStart(self):
     return self.jpath('$..writesSinceStart')
+
+  def get_configVersion(self):
+    return self.jpath('$..version')
+
+  def get_configObjectStore(self):
+    return self.jpath('$..objectStoreBackend')
+
+  def get_configSqlService(self):
+    return self.jpath('$..sqlServiceBackend')
+
+  def get_configHasXReproxy(self):
+    return self.jpath('$..hasXReproxy')
