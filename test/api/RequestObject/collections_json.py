@@ -21,8 +21,13 @@ CREATED = 201
 BAD_REQUEST = 400
 NOT_FOUND = 404
 
+# Error Messages
+KEY_NOT_ENTERED = 'No collection key entered'
+COLLECTION_NOT_FOUND = 'Collection not found'
+BUCKET_NOT_FOUND = 'Bucket not found'
 
 class CollectionsJson(BaseServiceTest):
+
   def get_collections(self, bucketName=None, **kwargs):
     """
     Calls CREPO API to get collections list in a bucket
@@ -82,6 +87,25 @@ class CollectionsJson(BaseServiceTest):
     for k, v in kwargs.items():
       actual = self.parsed.get_collectionAttribute(k)
       self.assertEquals(actual, v, '%r is not correct: %r != %r' % (k, v, actual))
+
+  @needs('parsed', 'parse_response_as_json()')
+  def verify_get_collection_list(self, limit):
+    """
+    Verifies a valid response for GET /collections list
+    """
+    self.verify_http_code_is(OK)
+    collections = self.parsed.get_collections()
+    if collections:
+      assert(len(collections) <= 1000), 'Collection list returned (%s) is greater than default list ' + \
+                                        'return set (%d) size or zero' % (str(len(collections)), limit)
+    else:
+      print 'The collection list is empty'
+
+  @needs('parsed', 'parse_response_as_json()')
+  def verify_message_text(self, expected_message):
+    assert self.parsed.get_message()[0] == expected_message, (
+      'The message is not correct! actual: < %s\ > expected: < %s >' % (self.parsed.get_message()[0], expected_message))
+    print expected_message
 
   def get_object_versions(self, bucketName=None, **kwargs):
     """
