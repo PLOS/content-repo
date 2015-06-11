@@ -43,17 +43,23 @@ class GetAudit(AuditJson):
     expected_buckets = self.get_audit_offset_limit_sql_bucket(0,1000)
     self.verify_audit_text_bucket(expected_buckets)
 
+    """
+    This section of test case is comment out as per https://developer.plos.org/jira/browse/DPRO-1084
     self.get_audit_offset_only(0)
     expected_key_value = self.get_audit_offset_limit_sql_key_value(0,1000)
     self.verify_audit_text_key(expected_key_value)
+    """
 
     self.get_audit_offset_only(0)
     expected_operation = self.get_audit_offset_limit_sql_operation(0,1000)
     self.verify_audit_text_operation(expected_operation)
 
+    """
+    This section of test case is comment out as per https://developer.plos.org/jira/browse/DPRO-1084
     self.get_audit_offset_only(0)
     expected_uuid = self.get_audit_offset_limit_sql_uuid(0,1000)
     self.verify_audit_text_uuid(expected_uuid)
+    """
 
   def test_audit_limit(self):
     """
@@ -89,17 +95,21 @@ class GetAudit(AuditJson):
     expected_buckets = self.get_audit_offset_limit_sql_bucket(0,1000)
     self.verify_audit_text_bucket(expected_buckets)
 
+    """
+    This section of test case is comment out as per https://developer.plos.org/jira/browse/DPRO-1084
     self.get_audit_no_parameters()
     expected_key_value = self.get_audit_offset_limit_sql_key_value(0,1000)
     self.verify_audit_text_key(expected_key_value)
-
+    """
     self.get_audit_no_parameters()
     expected_operation = self.get_audit_offset_limit_sql_operation(0,1000)
     self.verify_audit_text_operation(expected_operation)
 
+    """
+    This section of test case is comment out as per https://developer.plos.org/jira/browse/DPRO-1084
     self.get_audit_no_parameters()
     expected_uuid = self.get_audit_offset_limit_sql_uuid(0,1000)
     self.verify_audit_text_uuid(expected_uuid)
-
+    """
 if __name__ == '__main__':
     AuditJson._run_tests_randomly()
