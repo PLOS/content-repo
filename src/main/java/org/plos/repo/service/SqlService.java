@@ -1151,7 +1151,7 @@ public abstract class SqlService {
   public List<Audit> listAuditRecords(Integer offset, Integer limit) throws SQLException, RepoException {
     List<Audit> auditRecords = new ArrayList<>();
 
-    String query = "SELECT * FROM audit a ORDER BY a.timestamp LIMIT " + limit + " OFFSET " + offset;
+    String query = "SELECT * FROM audit a ORDER BY a.id LIMIT " + limit + " OFFSET " + offset;
     try (PreparedStatement p = connectionLocal.get().prepareStatement(query)) {
       try (ResultSet result = p.executeQuery()) {
         while (result.next()) {
