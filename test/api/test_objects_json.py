@@ -77,7 +77,6 @@ class TestObjects(ObjectsJson):
     self.verify_http_code_is(OK)
     self.verify_get_object_meta(contentType='text/plain', downloadName=download)
     version = self.parsed.get_objectVersionNumber()[0]
-    # self.assertEquals(version, 0, 'version is not 0 for new') # this is not needed
     self.get_object(bucketName=bucketName, key=key)
     self.verify_http_code_is(OK)
     self.verify_get_object(content='test content')
