@@ -117,3 +117,27 @@ class JSONResponse(AbstractResponse):
 
   def get_audit_records_uuid(self):
     return self.jpath('$.uuid')[0]
+
+  def get_statusBucketCount(self):
+    return self.jpath('$..bucketCount')
+
+  def get_statusServiceStarted(self):
+    return self.jpath('$..serviceStarted')
+
+  def get_statusReadsSinceStart(self):
+    return self.jpath('$..readsSinceStart')
+
+  def get_statusWritesSinceStart(self):
+    return self.jpath('$..writesSinceStart')
+
+  def get_configVersion(self):
+    return self.jpath('$..version')
+
+  def get_configObjectStore(self):
+    return self.jpath('$..objectStoreBackend')
+
+  def get_configSqlService(self):
+    return self.jpath('$..sqlServiceBackend')
+
+  def get_configHasXReproxy(self):
+    return self.jpath('$..hasXReproxy')
