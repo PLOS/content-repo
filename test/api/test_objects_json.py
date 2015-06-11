@@ -77,7 +77,7 @@ class TestObjects(ObjectsJson):
     self.verify_http_code_is(OK)
     self.verify_get_object_meta(contentType='text/plain', downloadName=download)
     version = self.parsed.get_objectVersionNumber()[0]
-    self.assertEquals(version, 0, 'version is not 0 for new')
+    # self.assertEquals(version, 0, 'version is not 0 for new') # this is not needed
     self.get_object(bucketName=bucketName, key=key)
     self.verify_http_code_is(OK)
     self.verify_get_object(content='test content')
@@ -203,7 +203,7 @@ class TestObjects(ObjectsJson):
     self.verify_http_code_is(OK)
     objects = self.parsed.get_objects()
     self.assertEquals(objects and len(objects), 1, 'failed with tag=%r'%(tag,))
-    self.delete_object(bucketName=bucketName, key=key, version=0)
+    self.delete_object(bucketName=bucketName, key=key, version=objects[0]['versionNumber'])
     self.verify_http_code_is(OK)
 
   def test_get_objects_deleted(self):
@@ -222,7 +222,7 @@ class TestObjects(ObjectsJson):
     self.verify_http_code_is(OK)
     objects0 = self.parsed.get_objects()
 
-    self.delete_object(bucketName=bucketName, key=key, version=0)
+    self.delete_object(bucketName=bucketName, key=key, version=objects0[0]['versionNumber'])
     self.verify_http_code_is(OK)
     self.get_objects(bucketName, tag=tag)
     self.verify_http_code_is(OK)
@@ -269,7 +269,7 @@ class TestObjects(ObjectsJson):
                       'failed with tag=%r includePurged=true, after purging'%(tag,))
     self.assertEquals(objects1[0]['status'], 'PURGED', 'wrong status after purged: %r'%(objects1[0]['status'],))
     for key in objects0[0].keys():
-      if key != "status":
+      if key != "status" and key != "timestamp":
         self.assertEquals(objects0[0][key], objects1[0][key], 'wrong attribute %r: %r != %r'%(key, objects0[0][key], objects1[0][key]))
 
   def test_get_objects_no_bucket(self):
@@ -352,11 +352,61 @@ class TestObjects(ObjectsJson):
                       create='new', files=[('file', StringIO.StringIO('test content'))])
     self.verify_http_code_is(CREATED)
     self.get_object_meta(bucketName, key=key)
-    version = self.parsed.get_objectVersionNumber()[0]
     self.verify_http_code_is(OK)
+    version = self.parsed.get_objectVersionNumber()[0]
     self.delete_object(bucketName=bucketName, key=key, version=version, purge=True)
+    self.verify_http_code_is(OK)
     self.get_object_meta(bucketName, key=key)
     self.verify_http_code_is(NOT_FOUND)
+
+  def test_delete_objects_with_tag(self):
+    bucketName = BucketsJson.get_bucket_name()
+    key = 'testobject%d' % self.next_random()
+    tag = 'tag-' + key
+    download = '%s.txt' % (key,)
+    self.post_objects(bucketName=bucketName, key=key,
+                      contentType='text/plain', downloadName=download, tag=tag,
+                      create='new', files=[('file', StringIO.StringIO('test content'))])
+    self.verify_http_code_is(CREATED)
+    self.get_object_meta(bucketName, key=key)
+    self.verify_http_code_is(OK)
+    self.delete_object(bucketName=bucketName, key=key, tag=tag, purge=True)
+    self.verify_http_code_is(OK)
+    self.get_object_meta(bucketName, key=key)
+    self.verify_http_code_is(NOT_FOUND)
+
+  def test_delete_objects_with_uuid(self):
+    bucketName = BucketsJson.get_bucket_name()
+    key = 'testobject%d' % self.next_random()
+    download = '%s.txt' % (key,)
+    self.post_objects(bucketName=bucketName, key=key,
+                      contentType='text/plain', downloadName=download,
+                      create='new', files=[('file', StringIO.StringIO('test content'))])
+    self.verify_http_code_is(CREATED)
+    self.get_object_meta(bucketName, key=key)
+    self.verify_http_code_is(OK)
+    uuid = self.parsed.get_objectAttribute("uuid");
+    self.delete_object(bucketName=bucketName, key=key, uuid=uuid, purge=True)
+    self.verify_http_code_is(OK)
+    self.get_object_meta(bucketName, key=key)
+    self.verify_http_code_is(NOT_FOUND)
+
+  def test_delete_objects_only_key(self):
+    bucketName = BucketsJson.get_bucket_name()
+    key = 'testobject%d' % self.next_random()
+    download = '%s.txt' % (key,)
+    self.post_objects(bucketName=bucketName, key=key,
+                      contentType='text/plain', downloadName=download,
+                      create='new', files=[('file', StringIO.StringIO('test content'))])
+    self.verify_http_code_is(CREATED)
+    self.get_object_meta(bucketName, key=key)
+    version = self.parsed.get_objectVersionNumber()[0]
+    self.verify_http_code_is(OK)
+    self.delete_object(bucketName=bucketName, key=key, purge=True)
+    self.verify_http_code_is(BAD_REQUEST)
+    self.delete_object(bucketName=bucketName, key=key, version=version, purge=True)
+    self.verify_http_code_is(OK)
+
 
   def test_delete_objects_not_found(self):
     bucketName = BucketsJson.get_bucket_name()
@@ -380,8 +430,8 @@ class TestObjects(ObjectsJson):
                       create='version', files=[('file', StringIO.StringIO('test content updated'))])
     self.verify_http_code_is(CREATED)
     self.get_object_meta(bucketName, key=key)
-    version = self.parsed.get_objectVersionNumber()[0]
     self.verify_http_code_is(OK)
+    version = self.parsed.get_objectVersionNumber()[0]
     self.delete_object(bucketName=bucketName, key=key, version=version, purge=True)
     self.verify_http_code_is(OK)
     self.get_object_meta(bucketName, key=key)
@@ -398,9 +448,12 @@ class TestObjects(ObjectsJson):
                       contentType='text/plain', downloadName=download, tag=tag,
                       create='new', files=[('file', StringIO.StringIO('test content'))])
     self.verify_http_code_is(CREATED)
-    self.delete_object(bucketName=bucketName, key=key, version=0, purge=True)
+    self.get_object_meta(bucketName, key=key)
     self.verify_http_code_is(OK)
-    self.get_object_meta(bucketName, key=key, version=0)
+    version = self.parsed.get_objectVersionNumber()[0]
+    self.delete_object(bucketName=bucketName, key=key, version=version, purge=True)
+    self.verify_http_code_is(OK)
+    self.get_object_meta(bucketName, key=key, version=version)
     self.verify_http_code_is(NOT_FOUND)
     self.get_objects(bucketName, tag=tag, includePurged=True)
     self.verify_http_code_is(OK)
@@ -415,9 +468,12 @@ class TestObjects(ObjectsJson):
                       contentType='text/plain', downloadName=download, tag=tag,
                       create='new', files=[('file', StringIO.StringIO('test content'))])
     self.verify_http_code_is(CREATED)
-    self.delete_object(bucketName=bucketName, key=key, version=0, purge=False)
+    self.get_object_meta(bucketName, key=key)
     self.verify_http_code_is(OK)
-    self.get_object_meta(bucketName, key=key, version=0)
+    version = self.parsed.get_objectVersionNumber()[0]
+    self.delete_object(bucketName=bucketName, key=key, version=version, purge=False)
+    self.verify_http_code_is(OK)
+    self.get_object_meta(bucketName, key=key, version=version)
     self.verify_http_code_is(NOT_FOUND)
     self.get_objects(bucketName, tag=tag, includeDeleted=True)
     self.verify_http_code_is(OK)
@@ -425,7 +481,58 @@ class TestObjects(ObjectsJson):
     self.assertEquals(objects and len(objects), 1, 'failed to get deleted objects')
     self.assertEquals(objects[0]['status'], 'DELETED', 'status is not correct after delete: %r'%(objects[0]['status'],))
 
+  def test_get_objects_versions(self):
+    bucketName = BucketsJson.get_bucket_name()
+    key = 'testobject%d' % self.next_random()
+    download = '%s.txt' % (key,)
+    self.post_objects(bucketName=bucketName, key=key,
+                      contentType='text/plain', downloadName=download,
+                      create='new', files=[('file', StringIO.StringIO('test content'))])
+    self.verify_http_code_is(CREATED)
+    self.get_object_meta(bucketName, key=key)
+    self.verify_http_code_is(OK)
+    version0 = self.parsed.get_objectVersionNumber()[0]
+    time.sleep(1)
+    self.post_objects(bucketName=bucketName, key=key,
+                      contentType='text/plain', downloadName="updated" + download,
+                      create='version', files=[('file', StringIO.StringIO('updated test content'))])
+    self.verify_http_code_is(CREATED)
+    self.get_object_meta(bucketName, key=key)
+    self.verify_http_code_is(OK)
+    version1 = self.parsed.get_objectVersionNumber()[0]
 
+    self.get_object_versions(bucketName=bucketName, key=key)
+    self.verify_http_code_is(OK)
+    versions = self.parsed.get_objectVersionNumber()
+    self.assertEquals(versions and len(versions), 2, "incorrect number of versions: %r != 2"%(versions and len(versions),))
+    self.assertEquals(versions[0], version0, "incorrect first version: %r != %r"%(versions[0], version0))
+    self.assertEquals(versions[1], version1, "incorrect first version: %r != %r"%(versions[1], version1))
+    self.delete_object(bucketName, key=key, version=version0, purge=True)
+    self.verify_http_code_is(OK)
+
+    self.get_object_versions(bucketName=bucketName, key=key)
+    self.verify_http_code_is(OK)
+    versions = self.parsed.get_objectVersionNumber()
+    self.assertEquals(versions and len(versions), 1, "incorrect number of versions after one delete: %r != 1"%(versions and len(versions),))
+    self.assertEquals(versions[0], version1, "incorrect first version after one delete: %r != %r"%(versions[0], version1))
+
+    self.delete_object(bucketName, key=key, version=version1, purge=True)
+    self.verify_http_code_is(OK)
+
+    self.get_object_versions(bucketName=bucketName, key=key)
+    self.verify_http_code_is(OK)
+    versions = self.parsed.get_objectVersionNumber()
+    self.assertEquals(versions and len(versions), False, "incorrect number of versions after both delete: %r != False"%(versions and len(versions),))
+
+
+  def test_get_objects_versions_not_found(self):
+    bucketName = BucketsJson.get_bucket_name()
+    key = 'testobject%d' % self.next_random()
+    self.get_object_versions(bucketName=bucketName, key=key)
+    self.verify_http_code_is(OK)
+    versions = self.parsed.get_objectVersionNumber()
+    self.assertEquals(versions and len(versions), False,
+        "incorrect number of versions: %r != False"%(versions and len(versions),))
 
 if __name__ == '__main__':
     ObjectsJson._run_tests_randomly()
