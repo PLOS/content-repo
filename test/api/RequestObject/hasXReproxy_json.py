@@ -34,22 +34,18 @@ class ReproxyJson(BaseServiceTest):
     """
     self.verify_http_code_is(OK)
     # Verify hasXReproxy is not none
-    self.assertIsNotNone(self.parsed.get_hasXReproxy())
-    print "hasXReproxy: " + str(self.parsed.get_hasXReproxy())
+    self.assertIsNotNone(self.parsed.get_json())
+    try:
+      # Validate if /hasXReproxy value is the same at /config hasXReproxy
+      self.assertEquals(self.parsed.get_json(), self.get_config_reproxy())
+    except ValueError as e:
+      print e
 
-  def verify_store_reproxy(self, has_reproxy):
-    # Verify hasXReproxy value according to object store configuration
-    self.verify_http_code_is(OK)
-    self.assertIsNotNone(self.parsed.get_configObjectStore())
-    object_store = self.parsed.get_configObjectStore()[0].rsplit('.', 1)[-1]
-    if object_store in ['MogileStoreService', 'S3StoreService']:
-      self.assertTrue(has_reproxy)
-    elif object_store == 'InMemoryFileStoreService':
-      self.assertFalse(has_reproxy)
 
-  def get_config(self):
-    """
-    Calls CREPO API to get configuration information
-    """
+  def get_config_reproxy(self):
     self.doGet(CONFIG_API, DEFAULT_HEADERS)
     self.parse_response_as_json()
+    if self.parsed.get_configHasXReproxy():
+      return self.parsed.get_configHasXReproxy()[0]
+    else:
+      raise ValueError('\nConfiguration does not have hasXReproxy value\n')

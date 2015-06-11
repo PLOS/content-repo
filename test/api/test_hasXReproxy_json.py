@@ -19,11 +19,9 @@ class TestHasXReproxy(ReproxyJson):
     """
     Get reproxy information.
     """
+    print('\nTesting GET /hasXReproxy\n')
     self.get_hasXReproxy()
     self.verify_get_hasXReproxy()
-    has_reproxy = self.parsed.get_hasXReproxy()
-    self.get_config()
-    self.verify_store_reproxy(has_reproxy)
 
 if __name__ == '__main__':
   ReproxyJson._run_tests_randomly()

@@ -124,6 +124,3 @@ class JSONResponse(AbstractResponse):
   def get_configHasXReproxy(self):
     return self.jpath('$..hasXReproxy')
 
-  def get_hasXReproxy(self):
-    return self.jpath('*')
-
