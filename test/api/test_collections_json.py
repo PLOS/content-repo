@@ -189,9 +189,24 @@ class TestCollections(CollectionsJson):
     self.verify_http_code_is(OK)
     collection = self.parsed.get_json()
     # Delete the new collection
-    self.delete_collection(bucketName=self.bucketName, key=TestCollections.get_collection_key(),
+    self.delete_collection(bucketName=self.bucketName, key='@9%!#d',
                            uuid=collection['uuid'])
     self.verify_http_code_is(NOT_FOUND)
+
+  def test_delete_collection_invalid_params(self):
+    """
+    Try to delete a new collection with a invalid parameters
+    """
+    print('\nTesting DELETE /collections invalid params\n')
+    # Create a new collection
+    self.post_collections(self.create_collection_request(create='new'))
+    self.verify_http_code_is(CREATED)
+    # Delete the new collection sending invalid parameters
+    try:
+      self.delete_collection(bucketName='@9%!#d', key='@9%!#d', uuid='@9%!#d')
+      self.fail('No JSON object could be decoded')
+    except:
+      pass
 
   def test_delete_collection_only_bucket(self):
     """
@@ -221,10 +236,12 @@ class TestCollections(CollectionsJson):
     # Get collection uuid
     self.get_collection(self.bucketName, key=self.parsed.get_collectionKey()[0])
     self.verify_http_code_is(OK)
-    # Delete the new collection
-    self.delete_collection(bucketName=None, key=self.parsed.get_collectionKey()[0])
-    self.verify_http_code_is(BAD_REQUEST)
-    self.verify_message_text(FILTER_NOT_ENTERED)
+    # Delete the new collection without bucket return a HTML 405 - Method Not Allowed
+    try:
+      self.delete_collection(bucketName='', key=self.parsed.get_collectionKey()[0])
+      self.fail('No JSON object could be decoded')
+    except:
+      pass
 
   def test_delete_collection_only_filter(self):
     """
@@ -237,10 +254,27 @@ class TestCollections(CollectionsJson):
     # Get collection uuid
     self.get_collection(self.bucketName, key=self.parsed.get_collectionKey()[0])
     self.verify_http_code_is(OK)
-    # Delete the new collection
-    self.delete_collection(bucketName=None,uuid=self.parsed.get_collectionUUID()[0])
-    self.verify_http_code_is(BAD_REQUEST)
-    self.verify_message_text(KEY_NOT_ENTERED)
+    # Delete the new collection without bucket return a HTML 405 - Method Not Allowed
+    try:
+      self.delete_collection(bucketName='',uuid=self.parsed.get_collectionUUID()[0])
+      self.fail('No JSON object could be decoded')
+    except:
+      pass
+
+  def test_delete_collection_without_params(self):
+    """
+    Try to delete a new collection without parameters
+    """
+    print('\nTesting DELETE /collections without params\n')
+    # Create a new collection
+    self.post_collections(self.create_collection_request(create='new'))
+    self.verify_http_code_is(CREATED)
+    # Delete the new collection without bucket return HTML 405 - Not method allowed
+    try:
+      self.delete_collection(bucketName='')
+      self.fail('No JSON object could be decoded')
+    except:
+      pass
 
   """
   GET /collections/ list
