@@ -23,6 +23,7 @@ NOT_FOUND = 404
 
 # Error Messages
 KEY_NOT_ENTERED = 'No collection key entered'
+FILTER_NOT_ENTERED = 'At least one of the filters is required'
 COLLECTION_NOT_FOUND = 'Collection not found'
 BUCKET_NOT_FOUND = 'Bucket not found'
 
@@ -70,6 +71,8 @@ class CollectionsJson(BaseServiceTest):
     :param name: bucket name.
     """
     self.doDelete('%s/%s' % (COLLECTIONS_API, bucketName), params=kwargs, headers=DEFAULT_HEADERS)
+    if self.get_http_response().status_code != OK:
+      self.parse_response_as_json()
 
   @needs('parsed', 'parse_response_as_json()')
   def verify_get_collections(self):
@@ -104,7 +107,7 @@ class CollectionsJson(BaseServiceTest):
   @needs('parsed', 'parse_response_as_json()')
   def verify_message_text(self, expected_message):
     assert self.parsed.get_message()[0] == expected_message, (
-      'The message is not correct! actual: < %s\ > expected: < %s >' % (self.parsed.get_message()[0], expected_message))
+      'The message is not correct! actual: < %s\ > expected: < %s >' % (self.parsed.get_message()[0].strip(), expected_message))
     print expected_message
 
   def get_object_versions(self, bucketName=None, **kwargs):
