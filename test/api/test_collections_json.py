@@ -32,28 +32,29 @@ import uuid
 class TestCollections(CollectionsJson):
 
   bucketName = BucketsJson.get_bucket_name()
-  objKey = None
-  collKeys = []
 
   def setUp(self):
     self.already_done = 0
+    self.objKey = None
+    self.collKeys = []
 
   def tearDown(self):
     """
     Purge all objects and collections created in the test case
     """
     if self.already_done > 0: return
-    objects = self.get_objects_json()
-    if objects:
-      for obj in objects:
-        self.delete_object(bucketName=self.bucketName, key=obj['key'], uuid=obj['uuid'], purge=True)
-
+    # Delete collection's object for test
+    if self.objKey:
+      self.delete_object(bucketName=self.bucketName, key=self.objKey, version=0, purge=True)
+      self.verify_http_code_is(OK)
+    # Delete collections for test
     for key in self.collKeys:
       self.get_collection_versions(bucketName=self.bucketName, key=key)
       collections = self.parsed.get_collections()
       if collections:
         for coll in collections:
           self.delete_collection(bucketName=self.bucketName, key=coll['key'], version=coll['versionNumber'], purge=True)
+          self.verify_http_code_is(OK)
 
   def test_post_collections_new(self):
     """
@@ -81,7 +82,7 @@ class TestCollections(CollectionsJson):
     version = self.parsed.get_collectionVersionNumber()[0]
     time.sleep(1)  # this is needed, otherwise the second POST does not work. TODO: file a bug.
     # Create a version collection
-    self.post_collections(self.create_collection_request(key=key, create='version'))
+    self.post_collections(self.create_collection_request(key=key, objects=self.get_object_json(), create='version'))
     self.verify_http_code_is(CREATED)
     self.get_collection(self.bucketName, key=key)
     self.verify_get_collection(key=key, versionNumber=version + 1)
@@ -115,8 +116,7 @@ class TestCollections(CollectionsJson):
     collKey = TestCollections.get_collection_key()
     self.get_collection(bucketName=self.bucketName, key=collKey )
     self.verify_http_code_is(NOT_FOUND)
-    objects = self.post_objects()
-    self.post_collections(self.create_collection_request(objets=objects, key=collKey, create='version'))
+    self.post_collections(self.create_collection_request(key=collKey, create='version'))
     self.verify_http_code_is(BAD_REQUEST)
 
   """
@@ -415,31 +415,25 @@ class TestCollections(CollectionsJson):
     if params.has_key('objects'):
       objects = params['objects']
     else:
-      objects = self.post_objects()
+      objects = self.post_new_object()
     self.collKeys.append(key)
     user_metadata = TestCollections.get_usermetada(key)
     return {'bucketName': bucket, 'key': key,
             'create': params['create'], 'objects': objects, 'userMetadata': user_metadata}
 
-  def get_objects_json(self):
+  def get_object_json(self):
     # Get JSON objects
-    objects_records = []
-    self.get_object_versions(bucketName=self.bucketName, key=self.get_object_key())
-    objects = self.parsed.get_objects()
-    if objects:
-      for obj in objects:
-        objects_records.append({'key': obj['key'], 'uuid': obj['uuid']})
-    return objects_records
+    self.get_object_meta(bucketName=self.bucketName, key=self.objKey)
+    return {'key': self.objKey, 'uuid': self.parsed.get_objectAttribute('uuid')}
 
-  def post_objects(self):
-    objects_records = self.get_objects_json()
-    if not objects_records:
-      download = '%s.txt' % (self.get_object_key(),)
-      self.post_object(bucketName=self.bucketName, key=self.get_object_key(),
-                       contentType='text/plain', downloadName=download,
-                       create='auto', files=[('file', StringIO.StringIO('test content'))])
-      objects_records = self.get_objects_json()
-    return objects_records
+  def post_new_object(self):
+    self.objKey = self.get_object_key()
+    download = '%s.txt' % (self.objKey,)
+    self.post_object(bucketName=self.bucketName, key=self.objKey,
+                     contentType='text/plain', downloadName=download,
+                     create='auto', files=[('file', StringIO.StringIO('test content'))])
+    self.verify_http_code_is(CREATED)
+    return self.get_object_json()
 
   @staticmethod
   def get_collection_key():
@@ -448,10 +442,8 @@ class TestCollections(CollectionsJson):
 
   @staticmethod
   def get_object_key():
-    if not TestCollections.objKey:
-      objUUID = uuid.uuid4()
-      TestCollections.objKey = 'testobject%s' % str(objUUID).translate(None, "',-")
-    return TestCollections.objKey
+    objUUID = uuid.uuid4()
+    return 'testobject%s' % str(objUUID).translate(None, "',-")
 
   @staticmethod
   def get_usermetada(key):

@@ -26,6 +26,7 @@ KEY_NOT_ENTERED = 'No collection key entered'
 FILTER_NOT_ENTERED = 'At least one of the filters is required'
 COLLECTION_NOT_FOUND = 'Collection not found'
 BUCKET_NOT_FOUND = 'Bucket not found'
+COLLECTION_NOT_EXIST = 'Can not version a collection that does not exist'
 
 class CollectionsJson(BaseServiceTest):
 
@@ -110,14 +111,14 @@ class CollectionsJson(BaseServiceTest):
       'The message is not correct! actual: < %s\ > expected: < %s >' % (self.parsed.get_message()[0].strip(), expected_message))
     print expected_message
 
-  def get_object_versions(self, bucketName=None, **kwargs):
+  def get_object_meta(self, bucketName=None, **kwargs):
     """
     Calls CREPO API to get objects list in a bucket
     GET /objects ?bucketName={bucketName}...
 
     :param bucketName, kwargs
     """
-    self.doGet('%s/versions/%s' % (OBJECTS_API, bucketName), params=kwargs, headers=DEFAULT_HEADERS)
+    self.doGet('%s/meta/%s' % (OBJECTS_API, bucketName), params=kwargs, headers=DEFAULT_HEADERS)
     self.parse_response_as_json()
 
   def post_object(self, files=None, **kwargs):
