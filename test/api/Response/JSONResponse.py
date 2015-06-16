@@ -100,6 +100,24 @@ class JSONResponse(AbstractResponse):
   def get_message(self):
     return self.jpath('$..message')
 
+  def get_all_audit_records(self):
+    return self.jpath('$[*]')
+
+  def get_audit_records_bucket(self):
+    return self.jpath('$.bucket')[0]
+
+  def get_audit_records_key(self):
+    return self.jpath('$.key')[0]
+
+  def get_audit_records_operation(self):
+    return self.jpath('$.operation')[0]
+
+  def get_audit_records_timestamp(self):
+    return self.jpath('$.timestamp')[0]
+
+  def get_audit_records_uuid(self):
+    return self.jpath('$.uuid')[0]
+
   def get_statusBucketCount(self):
     return self.jpath('$..bucketCount')
 
@@ -123,7 +141,3 @@ class JSONResponse(AbstractResponse):
 
   def get_configHasXReproxy(self):
     return self.jpath('$..hasXReproxy')
-
-  def get_hasXReproxy(self):
-    return self.jpath('*')
-
