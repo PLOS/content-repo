@@ -1,4 +1,5 @@
 #!/usr/bin/env python2
+from test.api.RequestObject import collections_json
 
 __author__ = 'gfilomeno@plos.org'
 
@@ -21,7 +22,7 @@ DELETE /collections/{bucketName} ?key
 Delete a collection.
 """
 from ..api.RequestObject.collections_json import CollectionsJson, OK, CREATED, BAD_REQUEST, NOT_FOUND, \
-  KEY_NOT_ENTERED, COLLECTION_NOT_FOUND, BUCKET_NOT_FOUND, FILTER_NOT_ENTERED
+  KEY_NOT_ENTERED, BUCKET_NOT_ENTERED, COLLECTION_NOT_FOUND, BUCKET_NOT_FOUND, FILTER_NOT_ENTERED
 from ..api.RequestObject.buckets_json import BucketsJson
 import random
 import StringIO
@@ -267,9 +268,9 @@ class TestCollections(CollectionsJson):
     Calls CREPO API to GET /collections list without bucket name
     """
     print('\nTesting List collections (GET) without bucket\n')
-    self.get_collections(bucketName=None)
-    self.verify_http_code_is(NOT_FOUND)
-    self.verify_message_text(BUCKET_NOT_FOUND)
+    self.get_collections(bucketName='')
+    self.verify_http_code_is(BAD_REQUEST)
+    self.verify_message_text(BUCKET_NOT_ENTERED)
 
   def test_get_collections_invalid_bucket(self):
     """
@@ -288,12 +289,9 @@ class TestCollections(CollectionsJson):
     Calls CREPO API to GET /collections/{bucketName}
     """
     print('\nTesting GET collections/{bucketName}\n')
-    try:
-      collection = self.get_first_collection()
-      self.get_collection(bucketName=self.bucketName, key=collection['key'])
-      self.verify_get_collection(key=collection['key'], status='USED')
-    except ValueError as err:
-      print err
+    collection_key = self.get_new_collection_key()
+    self.get_collection(bucketName=self.bucketName, key=collection_key)
+    self.verify_get_collection(key=collection_key, status='USED')
 
   def test_get_collection_bucket_only(self):
     """
@@ -309,22 +307,20 @@ class TestCollections(CollectionsJson):
     Get collections API call with key only
     """
     print('\nTesting GET collections/{bucketName} with key only\n')
-    try:
-      collection = self.get_first_collection()
-      self.get_collection(key=collection['key'])
-      self.verify_http_code_is(NOT_FOUND)
-      self.verify_message_text(COLLECTION_NOT_FOUND)
-    except ValueError as err:
-      print err
+    collection_key = self.get_new_collection_key()
+    self.get_collection(bucketName='', key=collection_key)
+    self.verify_http_code_is(BAD_REQUEST)
+    self.verify_message_text(BUCKET_NOT_ENTERED)
 
-  def test_get_collection_no_parameters(self):
+
+  def test_get_collection_without_parameters(self):
     """
     Calls CREPO API to get collection without parameters
     """
     print('\nTesting GET collections/{bucketName} without parameters\n')
-    self.get_collection(bucketName=None)
+    self.get_collection(bucketName='')
     self.verify_http_code_is(BAD_REQUEST)
-    self.verify_message_text(KEY_NOT_ENTERED)
+    self.verify_message_text(BUCKET_NOT_ENTERED)
 
   def test_get_collection_invalid_key(self):
     """
@@ -340,13 +336,12 @@ class TestCollections(CollectionsJson):
     Get collections API call with a invalid bucket
     """
     print('\nTesting GET collections/{bucketName} with a invalid bucket name\n')
+    collection_key = self.get_new_collection_key()
     try:
-      collection = self.get_first_collection()
-      self.get_collection(bucketName='@9%&!d#', key=collection['key'])
-      self.verify_http_code_is(NOT_FOUND)
-      self.verify_message_text(BUCKET_NOT_FOUND)
-    except ValueError as err:
-      print err
+      self.get_collection(bucketName='@9%&!d#', key=collection_key)
+      self.fail('No JSON object could be decoded')
+    except:
+      pass
 
   def test_get_collection_invalid_parameters(self):
     """
@@ -355,19 +350,100 @@ class TestCollections(CollectionsJson):
     print('\nTesting GET collections/{bucketName} with invalid parameters\n')
     try:
       self.get_collection(bucketName='@9%&!d#', key='@9%&!d#')
-    except ValueError as e:
-      print e
+      self.fail('No JSON object could be decoded')
+    except:
+      pass
 
-  def get_first_collection(self):
+  """
+  GET /collections/versions/{bucketName}
+
+  """
+  def test_get_collections_versions(self):
     """
-    Calls CREPO API to GET /collections/ list and return the first collection
+    Get collections/versions API call
     """
-    self.get_collections(self.bucketName, limit=1)
-    self.verify_http_code_is(OK)
-    if self.parsed.get_collections() and len(self.parsed.get_collections()) > 0:
-      return self.parsed.get_collections()[0]
-    else:
-      raise ValueError('\nThere are not collections\n')
+    print('\nTesting GET collections/versions/{bucketName}\n')
+    collection_key = self.get_new_collection_key()
+    self.get_collection_versions(bucketName=self.bucketName, key=collection_key)
+    self.verify_get_collection()
+    self.assertTrue(self.parsed.get_collections())
+    if len(self.parsed.get_json()) > 0:
+      x = 0
+      for coll in self.parsed.get_collections():
+        self.assertTrue(coll['versionNumber'] == x)
+        x = x + 1
+
+  def test_get_collections_versions_invalid_key(self):
+    """
+    Get collections/versions API call with a invalid key
+    """
+    print('\nTesting GET collections/versions/{bucketName} with invalid key\n')
+    self.get_collection_versions(bucketName=self.bucketName, key='@9%&!d#')
+    self.verify_get_collection()
+    # Verify the collection versions list is empty
+    self.assertTrue(len(self.parsed.get_json()) == 0)
+
+  def test_get_collections_versions_invalid_bucket(self):
+    """
+    Get collections/versions API call with a invalid bucket
+    """
+    print('\nTesting GET collections/versions/{bucketName} with invalid bucket\n')
+    collection_key = self.get_new_collection_key()
+    try:
+      self.get_collection_versions(bucketName='@9%&!d#', key=collection_key)
+      self.fail('No JSON object could be decoded')
+    except:
+      pass
+
+  def test_get_collections_versions_invalid_parameters(self):
+    """
+    Get collections/versions API call with a invalid parameters
+    """
+    print('\nTesting GET collections/versions/{bucketName} with invalid parameters\n')
+    try:
+      self.get_collection_versions(bucketName='@9%&!d#', key='@9%&!d#')
+      self.fail('No JSON object could be decoded')
+    except:
+      pass
+
+  def test_get_collections_versions_key_only(self):
+    """
+    Get collections/versions API call with key only
+    """
+    print('\nTesting GET collections/versions/{bucketName} only key\n')
+    collection_key = self.get_new_collection_key()
+    self.get_collection_versions(bucketName='', key=collection_key)
+    self.verify_http_code_is(NOT_FOUND)
+    self.verify_message_text(COLLECTION_NOT_FOUND)
+
+  def test_get_collections_versions_bucket_only(self):
+    """
+    Get collections/versions API call with bucket only
+    """
+    print('\nTesting GET collections/versions/{bucketName} only bucket\n')
+    self.get_collection_versions(bucketName=self.bucketName)
+    self.verify_http_code_is(BAD_REQUEST)
+    self.verify_message_text(KEY_NOT_ENTERED)
+
+  def test_get_collections_versions_without_parameters(self):
+    """
+    Get collections/versions API call without parameters
+    """
+    print('\nTesting GET collections/versions/{bucketName} without params\n')
+    try:
+      self.get_collection_versions(bucketName='')
+      self.fail('No JSON object could be decoded')
+    except:
+      pass
+
+  def get_new_collection_key(self):
+    """
+    Calls CREPO API to POST a new collection
+    :return New collection key
+    """
+    self.post_collections(self.create_collection_request(create='auto'))
+    self.verify_http_code_is(CREATED)
+    return self.parsed.get_collectionKey()[0]
 
   def create_collection_request(self, **params):
     if params.has_key('key'):

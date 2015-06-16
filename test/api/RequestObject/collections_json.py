@@ -23,6 +23,7 @@ NOT_FOUND = 404
 
 # Error Messages
 KEY_NOT_ENTERED = 'No collection key entered'
+BUCKET_NOT_ENTERED = 'No bucket entered'
 FILTER_NOT_ENTERED = 'At least one of the filters is required'
 COLLECTION_NOT_FOUND = 'Collection not found'
 BUCKET_NOT_FOUND = 'Bucket not found'
