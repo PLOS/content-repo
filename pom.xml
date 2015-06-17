@@ -25,7 +25,7 @@
   <artifactId>content-repo</artifactId>
   <name>content-repo</name>
   <packaging>war</packaging>
-  <version>1.2.5</version>
+  <version>1.1.5</version>
 
   <description>Versioning content repository for PLoS data</description>
 
@@ -41,7 +41,7 @@
   <properties>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <buildDate>${maven.build.timestamp}</buildDate>
-    <java-version>1.8</java-version>
+    <java-version>1.7</java-version>
     <org.springframework-version>4.1.6.RELEASE</org.springframework-version>
     <org.slf4j-version>1.7.7</org.slf4j-version>
     <org.glassfish.jersey-version>2.7</org.glassfish.jersey-version>
@@ -296,8 +296,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>2.3.2</version>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
+          <source>1.7</source>
+          <target>1.7</target>
           <compilerArgument>-Xlint:all</compilerArgument>
           <showWarnings>true</showWarnings>
           <showDeprecation>true</showDeprecation>
