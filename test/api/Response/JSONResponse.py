@@ -99,3 +99,45 @@ class JSONResponse(AbstractResponse):
 
   def get_message(self):
     return self.jpath('$..message')
+
+  def get_all_audit_records(self):
+    return self.jpath('$[*]')
+
+  def get_audit_records_bucket(self):
+    return self.jpath('$.bucket')[0]
+
+  def get_audit_records_key(self):
+    return self.jpath('$.key')[0]
+
+  def get_audit_records_operation(self):
+    return self.jpath('$.operation')[0]
+
+  def get_audit_records_timestamp(self):
+    return self.jpath('$.timestamp')[0]
+
+  def get_audit_records_uuid(self):
+    return self.jpath('$.uuid')[0]
+
+  def get_statusBucketCount(self):
+    return self.jpath('$..bucketCount')
+
+  def get_statusServiceStarted(self):
+    return self.jpath('$..serviceStarted')
+
+  def get_statusReadsSinceStart(self):
+    return self.jpath('$..readsSinceStart')
+
+  def get_statusWritesSinceStart(self):
+    return self.jpath('$..writesSinceStart')
+
+  def get_configVersion(self):
+    return self.jpath('$..version')
+
+  def get_configObjectStore(self):
+    return self.jpath('$..objectStoreBackend')
+
+  def get_configSqlService(self):
+    return self.jpath('$..sqlServiceBackend')
+
+  def get_configHasXReproxy(self):
+    return self.jpath('$..hasXReproxy')
