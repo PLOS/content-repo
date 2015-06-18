@@ -171,7 +171,7 @@ class TestCollections(CollectionsJson):
 
   def test_delete_collection_invalid_key(self):
     """
-    Trye to delete a new collection with a invalid key value
+    Try to delete a new collection with a invalid key value
     """
     print('\nTesting DELETE /collections invalid key\n')
     # Create a new collection
@@ -443,7 +443,7 @@ class TestCollections(CollectionsJson):
 
   def verify_status_test_object(self):
     self.get_object_meta(bucketName=self.bucketName,  key=self.objKey, version=0)
-    print '\nVerify if the object was deleted. HTTP status code: ' + self.get_http_response().status_code
+    print '\nVerify if the object was deleted. HTTP status code: ' + str(self.get_http_response().status_code)
     return self.get_http_response().status_code == NOT_FOUND
 
   def delete_test_collection(self):
