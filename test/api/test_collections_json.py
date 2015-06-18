@@ -23,6 +23,7 @@ Delete a collection.
 from ..api.RequestObject.collections_json import CollectionsJson, OK, CREATED, BAD_REQUEST, NOT_FOUND, \
   KEY_NOT_ENTERED, COLLECTION_NOT_FOUND, BUCKET_NOT_FOUND, FILTER_NOT_ENTERED
 from ..api.RequestObject.buckets_json import BucketsJson
+import requests
 import random
 import StringIO
 import time
@@ -44,17 +45,9 @@ class TestCollections(CollectionsJson):
     """
     if self.already_done > 0: return
     # Delete collection's object for test
-    if self.objKey:
-      self.delete_object(bucketName=self.bucketName, key=self.objKey, version=0, purge=True)
-      self.verify_http_code_is(OK)
+    self.delete_test_object()
     # Delete collections for test
-    for key in self.collKeys:
-      self.get_collection_versions(bucketName=self.bucketName, key=key)
-      collections = self.parsed.get_collections()
-      if collections:
-        for coll in collections:
-          self.delete_collection(bucketName=self.bucketName, key=coll['key'], version=coll['versionNumber'], purge=True)
-          self.verify_http_code_is(OK)
+    self.delete_test_collection()
 
   def test_post_collections_new(self):
     """
@@ -431,9 +424,36 @@ class TestCollections(CollectionsJson):
     download = '%s.txt' % (self.objKey,)
     self.post_object(bucketName=self.bucketName, key=self.objKey,
                      contentType='text/plain', downloadName=download,
-                     create='auto', files=[('file', StringIO.StringIO('test content'))])
+                     create='auto', files=[('file', StringIO.StringIO('test content - ' + self.objKey))])
     self.verify_http_code_is(CREATED)
     return self.get_object_json()
+
+  def delete_test_object(self):
+    if self.objKey:
+      try:
+        self.delete_object(bucketName=self.bucketName, key=self.objKey, version=0,  purge=True)
+        self.verify_http_code_is(OK)
+      except requests.exceptions.Timeout:
+        print '\nTimeout occurred when try to delete the object: ' + self.objKey
+        if not self.verify_status_test_object():
+          print '\nRetry to delete the object'
+          self.delete_object(bucketName=self.bucketName, key=self.objKey, version=0,  purge=True)
+          self.verify_http_code_is(OK)
+
+
+  def verify_status_test_object(self):
+    self.get_object_meta(bucketName=self.bucketName,  key=self.objKey, version=0)
+    print '\nVerify if the object was deleted. HTTP status code: ' + self.get_http_response().status_code
+    return self.get_http_response().status_code == NOT_FOUND
+
+  def delete_test_collection(self):
+    for key in self.collKeys:
+      self.get_collection_versions(bucketName=self.bucketName, key=key)
+      collections = self.parsed.get_collections()
+      if collections:
+        for coll in collections:
+          self.delete_collection(bucketName=self.bucketName, key=coll['key'], version=coll['versionNumber'])
+          self.verify_http_code_is(OK)
 
   @staticmethod
   def get_collection_key():
