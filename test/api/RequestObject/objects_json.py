@@ -18,6 +18,7 @@ OK = 200
 CREATED = 201
 BAD_REQUEST = 400
 NOT_FOUND = 404
+NOT_ALLOWED = 405
 
 
 class ObjectsJson(BaseServiceTest):
@@ -29,7 +30,8 @@ class ObjectsJson(BaseServiceTest):
 
     :param bucketName, offset, limit, includeDeleted, includePurged, tag
     """
-    self.doGet('%s?bucketName=%s' % (OBJECTS_API, bucketName), kwargs, DEFAULT_HEADERS)
+    path = '%s?bucketName=%s' % (OBJECTS_API, bucketName) if bucketName else '%s' % (OBJECTS_API,)
+    self.doGet(path, kwargs, DEFAULT_HEADERS)
     self.parse_response_as_json()
 
   def post_objects(self, files=None, **kwargs):
@@ -55,7 +57,8 @@ class ObjectsJson(BaseServiceTest):
     Calls CREPO API to get a object versions
     :param name: bucket name.
     """
-    self.doGet('%s/versions/%s' % (OBJECTS_API, bucketName), params=kwargs, headers=DEFAULT_HEADERS)
+    path = '%s/versions/%s' % (OBJECTS_API, bucketName) if bucketName else '%s' % (OBJECTS_API)
+    self.doGet(path, params=kwargs, headers=DEFAULT_HEADERS)
     self.parse_response_as_json()
 
   def get_object_meta(self, bucketName=None, **kwargs):
@@ -63,7 +66,8 @@ class ObjectsJson(BaseServiceTest):
     Calls CREPO API to get a object meta
     :param name: bucket name.
     """
-    self.doGet('%s/meta/%s' % (OBJECTS_API, bucketName), params=kwargs, headers=DEFAULT_HEADERS)
+    path = '%s/meta/%s' % (OBJECTS_API, bucketName) if bucketName else '%s/meta' % (OBJECTS_API,)
+    self.doGet(path, params=kwargs, headers=DEFAULT_HEADERS)
     self.parse_response_as_json()
 
   def delete_object(self, bucketName=None, **kwargs):
@@ -71,7 +75,8 @@ class ObjectsJson(BaseServiceTest):
     Calls CREPO API to delete a object
     :param name: bucket name.
     """
-    self.doDelete('%s/%s' % (OBJECTS_API, bucketName), params=kwargs, headers=DEFAULT_HEADERS)
+    path = '%s/%s' % (OBJECTS_API, bucketName) if bucketName else '%s' % (OBJECTS_API,)
+    self.doDelete(path, params=kwargs, headers=DEFAULT_HEADERS)
 
   @needs('parsed', 'parse_response_as_json()')
   def verify_get_objects(self):

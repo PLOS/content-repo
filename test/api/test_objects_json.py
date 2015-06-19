@@ -29,7 +29,7 @@ Delete an object. With or without version or purge parameters.
 Fail to delete if not found. Delete last version, to make previous visible.
 """
 
-from ..api.RequestObject.objects_json import ObjectsJson, OK, CREATED, BAD_REQUEST, NOT_FOUND
+from ..api.RequestObject.objects_json import ObjectsJson, OK, CREATED, BAD_REQUEST, NOT_FOUND, NOT_ALLOWED
 from ..api.RequestObject.buckets_json import BucketsJson
 import random
 import StringIO
@@ -264,20 +264,27 @@ class TestObjects(ObjectsJson):
     self.get_objects(bucketName, tag=tag, includePurged=True)
     self.verify_http_code_is(OK)
     objects1 = self.parsed.get_objects()
-    self.assertEquals(objects1 and len(objects1), 1,
+    self.assertTrue(objects1 and len(objects1) >= 1,
                       'failed with tag=%r includePurged=true, after purging'%(tag,))
     self.assertEquals(objects1[0]['status'], 'PURGED', 'wrong status after purged: %r'%(objects1[0]['status'],))
     for key in objects0[0].keys():
       if key != "status" and key != "timestamp":
         self.assertEquals(objects0[0][key], objects1[0][key], 'wrong attribute %r: %r != %r'%(key, objects0[0][key], objects1[0][key]))
 
-  def test_get_objects_no_bucket(self):
+  def test_get_objects_invalid_bucket(self):
     """
     Failed to list object if bucket not found.
     """
     bucketName = 'bucket%d' % self.next_random()
     self.get_objects(bucketName)
     self.verify_http_code_is(NOT_FOUND)
+
+  def test_get_objects_no_bucket(self):
+    """
+    Failed to list object if no bucketname supplied.
+    """
+    self.get_objects()
+    self.verify_http_code_is(BAD_REQUEST)
 
   def test_get_objects_meta(self):
     """
@@ -341,6 +348,34 @@ class TestObjects(ObjectsJson):
     bucketName = 'testbucket%d' % self.next_random()
     self.get_object_meta(bucketName, key=key)
     self.verify_http_code_is(NOT_FOUND)
+
+  def test_get_objects_meta_no_bucket_no_key(self):
+    """
+    Fail to get object metadata without bucketName, or without key, or without both.
+    """
+    bucketName = BucketsJson.get_bucket_name()
+    key = 'testobject%d' % self.next_random()
+    download = '%s.txt' % (key,)
+    self.post_objects(bucketName=bucketName, key=key,
+                      contentType='text/plain', downloadName=download,
+                      create='new', files=[('file', StringIO.StringIO('test content'))])
+    self.verify_http_code_is(CREATED)
+
+    self.get_object_meta(key=key)
+    self.verify_http_code_is(NOT_FOUND)
+
+    self.get_object_meta(bucketName)
+    self.verify_http_code_is(NOT_FOUND)
+
+    self.get_object_meta()
+    self.verify_http_code_is(NOT_FOUND)
+
+    self.get_object_meta(bucketName, key=key)
+    self.verify_http_code_is(OK)
+    version = self.parsed.get_objectVersionNumber()[0]
+    self.verify_get_object_meta(contentType='text/plain', downloadName=download, versionNumber=version)
+    self.delete_object(bucketName=bucketName, key=key, version=version, purge=True)
+    self.verify_http_code_is(OK)
 
   def test_delete_objects_with_version(self):
     bucketName = BucketsJson.get_bucket_name()
@@ -480,6 +515,51 @@ class TestObjects(ObjectsJson):
     self.assertEquals(objects and len(objects), 1, 'failed to get deleted objects')
     self.assertEquals(objects[0]['status'], 'DELETED', 'status is not correct after delete: %r'%(objects[0]['status'],))
 
+  def test_delete_objects_no_bucket_no_key(self):
+    """
+    Fail to delete object with invalid bucketName or key, or empty, or for both.
+    """
+    bucketName = BucketsJson.get_bucket_name()
+    key = 'testobject%d' % self.next_random()
+    download = '%s.txt' % (key,)
+    self.post_objects(bucketName=bucketName, key=key,
+                      contentType='text/plain', downloadName=download,
+                      create='new', files=[('file', StringIO.StringIO('test content'))])
+    self.verify_http_code_is(CREATED)
+    self.get_object_meta(bucketName, key=key)
+    self.verify_http_code_is(OK)
+    version = self.parsed.get_objectVersionNumber()[0]
+
+    # invalid bucket, valid key
+    bucketName1 = 'testbucket%d' % self.next_random()
+    self.delete_object(bucketName=bucketName1, key=key, version=version, purge=True)
+    self.verify_http_code_is(NOT_FOUND)
+
+    # valid bucket, invalid key
+    key1 = 'testobject%d' % self.next_random()
+    self.delete_object(bucketName=bucketName, key=key1, version=version, purge=True)
+    self.verify_http_code_is(NOT_FOUND)
+
+    # invalid bucket, invalid key
+    self.delete_object(bucketName=bucketName1, key=key1, version=version, purge=True)
+    self.verify_http_code_is(NOT_FOUND)
+
+    # valid bucket, no key
+    self.delete_object(bucketName=bucketName, version=version, purge=True)
+    self.verify_http_code_is(BAD_REQUEST)
+
+    # no bucket, valid key
+    self.delete_object(key=key, version=version, purge=True)
+    self.verify_http_code_is(NOT_ALLOWED)
+
+    # no bucket, no key
+    self.delete_object(version=version, purge=True)
+    self.verify_http_code_is(NOT_ALLOWED)
+
+    self.delete_object(bucketName=bucketName, key=key, version=version, purge=True)
+    self.verify_http_code_is(OK)
+
+
   def test_get_objects_versions(self):
     bucketName = BucketsJson.get_bucket_name()
     key = 'testobject%d' % self.next_random()
@@ -525,13 +605,67 @@ class TestObjects(ObjectsJson):
 
 
   def test_get_objects_versions_not_found(self):
+    """
+    Fail to get objects versions if bucketName or key are invalid or empty, or for both.
+    """
     bucketName = BucketsJson.get_bucket_name()
     key = 'testobject%d' % self.next_random()
-    self.get_object_versions(bucketName=bucketName, key=key)
+    download = '%s.txt' % (key,)
+    self.post_objects(bucketName=bucketName, key=key,
+                      contentType='text/plain', downloadName=download,
+                      create='new', files=[('file', StringIO.StringIO('test content'))])
+    self.verify_http_code_is(CREATED)
+    self.get_object_meta(bucketName, key=key)
+    self.verify_http_code_is(OK)
+    version0 = self.parsed.get_objectVersionNumber()[0]
+
+    # valid bucket, invalid key
+    key1 = 'testobject%d' % self.next_random()
+    self.get_object_versions(bucketName=bucketName, key=key1)
     self.verify_http_code_is(OK)
     versions = self.parsed.get_objectVersionNumber()
     self.assertEquals(versions and len(versions), False,
-        "incorrect number of versions: %r != False"%(versions and len(versions),))
+                      "valid bucket, invalid key - incorrect number of versions: %r != False"%(versions and len(versions),))
+
+    # invalid bucket, valid key
+    bucketName1 = 'testbucket%d' % self.next_random()
+    self.get_object_versions(bucketName=bucketName1, key=key)
+    self.verify_http_code_is(OK)
+    versions = self.parsed.get_objectVersionNumber()
+    self.assertEquals(versions and len(versions), False,
+                      "invalid bucket, valid key - incorrect number of versions: %r != False"%(versions and len(versions),))
+
+    # invalid bucket, invalid key
+    self.get_object_versions(bucketName=bucketName1, key=key1)
+    self.verify_http_code_is(OK)
+    versions = self.parsed.get_objectVersionNumber()
+    self.assertEquals(versions and len(versions), False,
+                      "invalid bucket, invalid key - incorrect number of versions: %r != False"%(versions and len(versions),))
+
+    # no bucket, valid key
+    self.get_object_versions(key=key)
+    self.verify_http_code_is(BAD_REQUEST)
+    versions = self.parsed.get_objectVersionNumber()
+    self.assertEquals(versions and len(versions), False,
+                      "no bucket, valid key - incorrect number of versions: %r != False"%(versions and len(versions),))
+
+    # valid bucket, no key
+    self.get_object_versions(bucketName=bucketName,)
+    self.verify_http_code_is(BAD_REQUEST)
+    versions = self.parsed.get_objectVersionNumber()
+    self.assertEquals(versions and len(versions), False,
+                      "valid bucket, no key - incorrect number of versions: %r != False"%(versions and len(versions),))
+
+    # no bucket, no key
+    self.get_object_versions()
+    self.verify_http_code_is(BAD_REQUEST)
+    versions = self.parsed.get_objectVersionNumber()
+    self.assertEquals(versions and len(versions), False,
+                      "no bucket, no key - incorrect number of versions: %r != False"%(versions and len(versions),))
+
+    self.delete_object(bucketName, key=key, version=version0, purge=True)
+    self.verify_http_code_is(OK)
+
 
 if __name__ == '__main__':
     ObjectsJson._run_tests_randomly()
