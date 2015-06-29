@@ -430,15 +430,8 @@ class TestCollections(CollectionsJson):
 
   def delete_test_object(self):
     if self.objKey:
-      try:
-        self.delete_object(bucketName=self.bucketName, key=self.objKey, version=0,  purge=True)
-        self.verify_http_code_is(OK)
-      except requests.exceptions.Timeout:
-        print '\nTimeout occurred when try to delete the object: ' + self.objKey
-        if not self.verify_status_test_object():
-          print '\nRetry to delete the object'
-          self.delete_object(bucketName=self.bucketName, key=self.objKey, version=0,  purge=True)
-          self.verify_http_code_is(OK)
+      self.delete_object(bucketName=self.bucketName, key=self.objKey, version=0,  purge=True)
+      self.verify_http_code_is(OK)
 
 
   def verify_status_test_object(self):
