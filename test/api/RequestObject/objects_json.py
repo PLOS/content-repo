@@ -9,9 +9,11 @@ __author__ = 'msingh@plos.org'
 from ...Base.base_service_test import BaseServiceTest
 from ...Base.Config import API_BASE_URL
 from ...Base.api import needs
+from ...Base.MySQL import MySQL
 from buckets_json import DEFAULT_HEADERS
 
 OBJECTS_API = API_BASE_URL + '/objects'
+CREPO_DB = 'PLOS_REPO'
 
 # Http Codes
 OK = 200
@@ -77,6 +79,19 @@ class ObjectsJson(BaseServiceTest):
     """
     path = '%s/%s' % (OBJECTS_API, bucketName) if bucketName else '%s' % (OBJECTS_API,)
     self.doDelete(path, params=kwargs, headers=DEFAULT_HEADERS)
+
+  """
+  Below SQL statements will query ambra syndication table given archiveName
+  """
+  def get_tets_objects_sql (self, bucketName):
+    objects = MySQL().query('SELECT o.objkey, o.uuid '
+                                 'FROM '+CREPO_DB+'.objects o '
+                                 'JOIN '+CREPO_DB+'.buckets b  ON b.bucketId = o.bucketId '
+                                 'WHERE b.bucketName = %s '
+                                 'AND o.objkey like \'%testobject%\' '
+                                 'AND o.status = 0 '
+                                 'ORDER BY o.timestamp', [bucketName])
+    return objects
 
   @needs('parsed', 'parse_response_as_json()')
   def verify_get_objects(self):

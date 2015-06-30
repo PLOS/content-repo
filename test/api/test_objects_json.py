@@ -656,6 +656,13 @@ class TestObjects(ObjectsJson):
     self.assertEquals(versions and len(versions), False,
                       "no bucket, no key - incorrect number of versions: %r != False"%(versions and len(versions),))
 
+  def delete_test_objects(self):
+    objects = self.get_tets_objects_sql(BucketsJson.get_bucket_name())
+    print objects
+    if objects:
+      for obj in objects:
+        self.delete_object(bucketName=BucketsJson.get_bucket_name(), key=obj['key'], uuid=obj['uuid'], purge=True)
+        self.verify_http_code_is(OK)
 
   def get_objects_json(self):
     # Get JSON objects
