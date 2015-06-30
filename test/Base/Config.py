@@ -41,8 +41,8 @@ when **WEBDRIVER_ENVIRONMENT** is `dev`
 environment = getenv('WEBDRIVER_ENVIRONMENT', 'dev')
 base_url = getenv('WEBDRIVER_TARGET_URL', 'http://one-dpro.plosjournals.org/wombat')
 rhino_url = getenv('WEBDRIVER_RHINO_URL', 'http://one-dpro.plosjournals.org/v1')
-mysql_host = getenv('WEBDRIVER_MYSQL_HOST', 'sfo-dpro-devstack01.int.plos.org')
-crepo_host = getenv('WEBDRIVER_CREPO_HOST', 'sfo-dpro-devstack01.int.plos.org')
+mysql_host = getenv('WEBDRIVER_MYSQL_HOST', 'sfo-dpro-devstack02.int.plos.org')
+crepo_host = getenv('WEBDRIVER_CREPO_HOST', 'sfo-dpro-devstack02.int.plos.org')
 
 
 """
