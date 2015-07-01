@@ -24,6 +24,7 @@ Delete a collection.
 from ..api.RequestObject.collections_json import CollectionsJson, OK, CREATED, BAD_REQUEST, NOT_FOUND, \
   KEY_NOT_ENTERED, BUCKET_NOT_ENTERED, COLLECTION_NOT_FOUND, BUCKET_NOT_FOUND, FILTER_NOT_ENTERED
 from ..api.RequestObject.buckets_json import BucketsJson
+import requests
 import random
 import StringIO
 import time
@@ -33,28 +34,21 @@ import uuid
 class TestCollections(CollectionsJson):
 
   bucketName = BucketsJson.get_bucket_name()
-  objKey = None
-  collKeys = []
 
   def setUp(self):
     self.already_done = 0
+    self.objKey = None
+    self.collKeys = []
 
   def tearDown(self):
     """
     Purge all objects and collections created in the test case
     """
     if self.already_done > 0: return
-    objects = self.get_objects_json()
-    if objects:
-      for obj in objects:
-        self.delete_object(bucketName=self.bucketName, key=obj['key'], uuid=obj['uuid'], purge=True)
-
-    for key in self.collKeys:
-      self.get_collection_versions(bucketName=self.bucketName, key=key)
-      collections = self.parsed.get_collections()
-      if collections:
-        for coll in collections:
-          self.delete_collection(bucketName=self.bucketName, key=coll['key'], version=coll['versionNumber'], purge=True)
+    # Delete collection's object for test
+    self.delete_test_object()
+    # Delete collections for test
+    self.delete_test_collection()
 
   def test_post_collections_new(self):
     """
@@ -82,7 +76,7 @@ class TestCollections(CollectionsJson):
     version = self.parsed.get_collectionVersionNumber()[0]
     time.sleep(1)  # this is needed, otherwise the second POST does not work. TODO: file a bug.
     # Create a version collection
-    self.post_collections(self.create_collection_request(key=key, create='version'))
+    self.post_collections(self.create_collection_request(key=key, objects=self.get_object_json(), create='version'))
     self.verify_http_code_is(CREATED)
     self.get_collection(self.bucketName, key=key)
     self.verify_get_collection(key=key, versionNumber=version + 1)
@@ -116,8 +110,7 @@ class TestCollections(CollectionsJson):
     collKey = TestCollections.get_collection_key()
     self.get_collection(bucketName=self.bucketName, key=collKey )
     self.verify_http_code_is(NOT_FOUND)
-    objects = self.post_objects()
-    self.post_collections(self.create_collection_request(objets=objects, key=collKey, create='version'))
+    self.post_collections(self.create_collection_request(key=collKey, create='version'))
     self.verify_http_code_is(BAD_REQUEST)
 
   """
@@ -179,7 +172,7 @@ class TestCollections(CollectionsJson):
 
   def test_delete_collection_invalid_key(self):
     """
-    Trye to delete a new collection with a invalid key value
+    Try to delete a new collection with a invalid key value
     """
     print('\nTesting DELETE /collections invalid key\n')
     # Create a new collection
@@ -491,31 +484,45 @@ class TestCollections(CollectionsJson):
     if params.has_key('objects'):
       objects = params['objects']
     else:
-      objects = self.post_objects()
+      objects = self.post_new_object()
     self.collKeys.append(key)
     user_metadata = TestCollections.get_usermetada(key)
     return {'bucketName': bucket, 'key': key,
             'create': params['create'], 'objects': objects, 'userMetadata': user_metadata}
 
-  def get_objects_json(self):
+  def get_object_json(self):
     # Get JSON objects
-    objects_records = []
-    self.get_object_versions(bucketName=self.bucketName, key=self.get_object_key())
-    objects = self.parsed.get_objects()
-    if objects:
-      for obj in objects:
-        objects_records.append({'key': obj['key'], 'uuid': obj['uuid']})
-    return objects_records
+    self.get_object_meta(bucketName=self.bucketName, key=self.objKey)
+    return {'key': self.objKey, 'uuid': self.parsed.get_objectAttribute('uuid')}
 
-  def post_objects(self):
-    objects_records = self.get_objects_json()
-    if not objects_records:
-      download = '%s.txt' % (self.get_object_key(),)
-      self.post_object(bucketName=self.bucketName, key=self.get_object_key(),
-                       contentType='text/plain', downloadName=download,
-                       create='auto', files=[('file', StringIO.StringIO('test content'))])
-      objects_records = self.get_objects_json()
-    return objects_records
+  def post_new_object(self):
+    self.objKey = self.get_object_key()
+    download = '%s.txt' % (self.objKey,)
+    self.post_object(bucketName=self.bucketName, key=self.objKey,
+                     contentType='text/plain', downloadName=download,
+                     create='auto', files=[('file', StringIO.StringIO('test content - ' + self.objKey))])
+    self.verify_http_code_is(CREATED)
+    return self.get_object_json()
+
+  def delete_test_object(self):
+    if self.objKey:
+      self.delete_object(bucketName=self.bucketName, key=self.objKey, version=0,  purge=True)
+      self.verify_http_code_is(OK)
+
+
+  def verify_status_test_object(self):
+    self.get_object_meta(bucketName=self.bucketName,  key=self.objKey, version=0)
+    print '\nVerify if the object was deleted. HTTP status code: ' + str(self.get_http_response().status_code)
+    return self.get_http_response().status_code == NOT_FOUND
+
+  def delete_test_collection(self):
+    for key in self.collKeys:
+      self.get_collection_versions(bucketName=self.bucketName, key=key)
+      collections = self.parsed.get_collections()
+      if collections:
+        for coll in collections:
+          self.delete_collection(bucketName=self.bucketName, key=coll['key'], version=coll['versionNumber'])
+          self.verify_http_code_is(OK)
 
   @staticmethod
   def get_collection_key():
@@ -524,10 +531,8 @@ class TestCollections(CollectionsJson):
 
   @staticmethod
   def get_object_key():
-    if not TestCollections.objKey:
-      objUUID = uuid.uuid4()
-      TestCollections.objKey = 'testobject%s' % str(objUUID).translate(None, "',-")
-    return TestCollections.objKey
+    objUUID = uuid.uuid4()
+    return 'testobject%s' % str(objUUID).translate(None, "',-")
 
   @staticmethod
   def get_usermetada(key):
