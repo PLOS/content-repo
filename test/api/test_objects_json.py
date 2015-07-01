@@ -658,10 +658,9 @@ class TestObjects(ObjectsJson):
 
   def delete_test_objects(self):
     objects = self.get_tets_objects_sql(BucketsJson.get_bucket_name())
-    print objects
     if objects:
       for obj in objects:
-        self.delete_object(bucketName=BucketsJson.get_bucket_name(), key=obj['key'], uuid=obj['uuid'], purge=True)
+        self.delete_object(bucketName=BucketsJson.get_bucket_name(), key=str(obj[0]), uuid=str(obj[1]), purge=True)
         self.verify_http_code_is(OK)
 
   def get_objects_json(self):
