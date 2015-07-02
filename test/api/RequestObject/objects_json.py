@@ -83,7 +83,7 @@ class ObjectsJson(BaseServiceTest):
   """
   Below SQL statements will query ambra syndication table given archiveName
   """
-  def get_tets_objects_sql (self, bucketName):
+  def get_test_objects_sql (self, bucketName):
     objects = MySQL().query('SELECT o.objkey, o.uuid '
                                  'FROM '+CREPO_DB+'.objects o '
                                  'JOIN '+CREPO_DB+'.buckets b  ON b.bucketId = o.bucketId '
