@@ -388,23 +388,6 @@ class TestObjects(ObjectsJson):
     self.get_object_meta(bucketName, key=self.objKey)
     self.verify_http_code_is(NOT_FOUND)
 
-  def test_delete_objects_with_tag(self):
-    print 'Tests DELETE /objects with tag'
-    bucketName = BucketsJson.get_bucket_name()
-    self.objKey = self.get_object_key()
-    tag = 'tag-' + self.objKey
-    download = '%s.txt' % (self.objKey,)
-    self.post_objects(bucketName=bucketName, key=self.objKey,
-                      contentType='text/plain', downloadName=download, tag=tag,
-                      create='new', files=[('file', StringIO.StringIO('test content'))])
-    self.verify_http_code_is(CREATED)
-    self.get_object_meta(bucketName, key=self.objKey)
-    self.verify_http_code_is(OK)
-    self.delete_object(bucketName=bucketName, key=self.objKey, tag=tag, purge=True)
-    self.verify_http_code_is(OK)
-    self.get_object_meta(bucketName, key=self.objKey)
-    self.verify_http_code_is(NOT_FOUND)
-
   def test_delete_objects_with_uuid(self):
     print 'Tests DELETE /objects with uuid'
     bucketName = BucketsJson.get_bucket_name()
