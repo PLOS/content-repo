@@ -21,8 +21,16 @@ CREATED = 201
 BAD_REQUEST = 400
 NOT_FOUND = 404
 
+# Error Messages
+KEY_NOT_ENTERED = 'No collection key entered'
+BUCKET_NOT_ENTERED = 'No bucket entered'
+FILTER_NOT_ENTERED = 'At least one of the filters is required'
+COLLECTION_NOT_FOUND = 'Collection not found'
+BUCKET_NOT_FOUND = 'Bucket not found'
+COLLECTION_NOT_EXIST = 'Can not version a collection that does not exist'
 
 class CollectionsJson(BaseServiceTest):
+
   def get_collections(self, bucketName=None, **kwargs):
     """
     Calls CREPO API to get collections list in a bucket
@@ -65,6 +73,8 @@ class CollectionsJson(BaseServiceTest):
     :param name: bucket name.
     """
     self.doDelete('%s/%s' % (COLLECTIONS_API, bucketName), params=kwargs, headers=DEFAULT_HEADERS)
+    if self.get_http_response().status_code != OK:
+      self.parse_response_as_json()
 
   @needs('parsed', 'parse_response_as_json()')
   def verify_get_collections(self):
@@ -83,14 +93,33 @@ class CollectionsJson(BaseServiceTest):
       actual = self.parsed.get_collectionAttribute(k)
       self.assertEquals(actual, v, '%r is not correct: %r != %r' % (k, v, actual))
 
-  def get_object_versions(self, bucketName=None, **kwargs):
+  @needs('parsed', 'parse_response_as_json()')
+  def verify_get_collection_list(self, limit):
+    """
+    Verifies a valid response for GET /collections list
+    """
+    self.verify_http_code_is(OK)
+    collections = self.parsed.get_collections()
+    if collections:
+      assert(len(collections) <= 1000), 'Collection list returned (%s) is greater than default list ' + \
+                                        'return set (%d) size or zero' % (str(len(collections)), limit)
+    else:
+      print 'The collection list is empty'
+
+  @needs('parsed', 'parse_response_as_json()')
+  def verify_message_text(self, expected_message):
+    assert self.parsed.get_message()[0] == expected_message, (
+      'The message is not correct! actual: < %s\ > expected: < %s >' % (self.parsed.get_message()[0].strip(), expected_message))
+    print expected_message
+
+  def get_object_meta(self, bucketName=None, **kwargs):
     """
     Calls CREPO API to get objects list in a bucket
     GET /objects ?bucketName={bucketName}...
 
     :param bucketName, kwargs
     """
-    self.doGet('%s/versions/%s' % (OBJECTS_API, bucketName), params=kwargs, headers=DEFAULT_HEADERS)
+    self.doGet('%s/meta/%s' % (OBJECTS_API, bucketName), params=kwargs, headers=DEFAULT_HEADERS)
     self.parse_response_as_json()
 
   def post_object(self, files=None, **kwargs):

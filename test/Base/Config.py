@@ -53,7 +53,7 @@ dbconfig = {'user': 'root',
             'password': '',
             'host': mysql_host,
             'port': 3306,
-            'database': 'ambra',
+            'database': 'PLOS_REPO',
             'connection_timeout': 10,
             }
 
