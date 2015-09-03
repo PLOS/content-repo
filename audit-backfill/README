@@ -1,0 +1,88 @@
+See JIRA ticker: DPRO-1013
+
+Purpose:
+
+The repo audit trail was implemented well after the repo was deployed to
+production. Therefore the current audit trail in production is far from
+complete.
+
+To remedy the situation we would do the following:
+
+1. Temporarily stop article ingest.
+2. Dump the object table into a csv for processing.
+3. Process the object table csv with a python script that outputs sql inserts.
+4. Delete all the rows in the audit table.
+5. Run the sql script produce in step 3.
+6. DONE
+
+There are a couple of short cuts we can consider given the current circumstance.
+We are only interested the latest version of of any object in the objects table.
+That is, if there are 2 or more objects with the same key we are only interested
+in the lasted version. This would be entered into the audit table. No deleted
+objects would be included. We can do this because only the latest version matters
+to us since we currently do not support versioning.
+
+Current Status: partial
+
+Notes:
+
+mysql> describe audit;
++------------+--------------+------+-----+-------------------+----------------+
+| Field      | Type         | Null | Key | Default           | Extra          |
++------------+--------------+------+-----+-------------------+----------------+
+| id         | int(11)      | NO   | PRI | NULL              | auto_increment |
+| bucketName | varchar(255) | NO   |     | NULL              |                |
+| keyValue   | varchar(255) | YES  |     | NULL              |                |
+| operation  | varchar(20)  | NO   |     | NULL              |                |
+| uuid       | char(36)     | YES  |     | NULL              |                |
+| timestamp  | timestamp    | NO   |     | CURRENT_TIMESTAMP |                |
++------------+--------------+------+-----+-------------------+----------------+
+
+How to make a csv from the audit table:
+
+mysql -h rwc-dbproxy -u plosrepo -P 3306 -p -e "select * from \`audit\` ;" PLOS_REPO | sed 's/\t/","/g;s/^/"/;s/$/"/;s/\n//g' > repo_audit_table.csv
+
+mysql> describe objects;
++---------------+---------------+------+-----+---------------------+-----------------------------+
+| Field         | Type          | Null | Key | Default             | Extra                       |
++---------------+---------------+------+-----+---------------------+-----------------------------+
+| id            | int(11)       | NO   | PRI | NULL                | auto_increment              |
+| bucketId      | int(11)       | YES  | MUL | NULL                |                             |
+| objkey        | varchar(255)  | NO   |     | NULL                |                             |
+| checksum      | varchar(255)  | NO   |     | NULL                |                             |
+| timestamp     | timestamp     | NO   |     | CURRENT_TIMESTAMP   | on update CURRENT_TIMESTAMP |
+| downloadName  | varchar(1000) | YES  |     | NULL                |                             |
+| contentType   | varchar(200)  | YES  |     | NULL                |                             |
+| size          | int(11)       | NO   |     | NULL                |                             |
+| tag           | varchar(200)  | YES  |     | NULL                |                             |
+| status        | tinyint(4)    | NO   |     | 0                   |                             |
+| versionNumber | int(11)       | NO   |     | NULL                |                             |
+| creationDate  | timestamp     | NO   |     | 0000-00-00 00:00:00 |                             |
+| uuid          | char(36)      | NO   |     | NULL                |                             |
+| userMetadata  | longtext      | YES  |     | NULL                |                             |
++---------------+---------------+------+-----+---------------------+-----------------------------+
+
+mysql -h rwc-dbproxy -u plosrepo -P 3306 -p -e "select bucketId,objkey,uuid,status,creationDate,timestamp from \`objects\`;" PLOS_REPO | sed 's/\t/","/g;s/^/"/;s/$/"/;s/\n//g' > repo_object_table.csv
+
+How to make an object table csv ordered by creation date:
+
+mysql -h rwc-dbproxy -u plosrepo -P 3306 -p -e "select bucketId,objkey,uuid,status,creationDate,timestamp from \`objects\` WHERE status=0 ORDER BY creationDate;" PLOS_REPO | sed 's/\t/","/g;s/^/"/;s/$/"/;s/\n//g' > repo_object_table.csv
+
+Integers used by the Object table to indicate object status:
+
+MISSING_DATA(-1),
+USED(0),
+DELETED(1),
+PURGED(2);
+
+Trings used by the audit table to designate the actions:
+
+CREATE_BUCKET("create-bucket"),
+CREATE_OBJECT("create-object"),
+CREATE_COLLECTION("create-collection"),
+UPDATE_OBJECT("update-object"),
+UPDATE_COLLECTION("update-collection"),
+DELETE_BUCKET("delete-bucket"),
+DELETE_OBJECT("delete-object"),
+DELETE_COLLECTION("delete-collection"),
+PURGE_OBJECT("purge-object");
