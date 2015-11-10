@@ -344,7 +344,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                   if (assertionFailure == null) {
                     assertionFailure = new AssertionError(String.format(
                         "Can not create new object:%s Reason:%s", cb.getKeyname(j),
-                        e.getMessage()));
+                        e.getMessage()), e);
                   }
                 }
               }
@@ -391,7 +391,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
                     assertionFailure = new AssertionError(String.format(
                         "Can not version object:%s , tag:%s , data:%s , Reason:%s", cb.getKeyname(j),
                         cb.getTag(j), cb.getData(j),
-                        e.getMessage()));
+                        e.getMessage()), e);
                   }
                 }
               }
@@ -429,7 +429,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
               synchronized (lock) {
                 if (assertionFailure == null) {
                   assertionFailure = new AssertionError(String.format(
-                      "Delete failed for:%s Reason:%s", cb.getKeyname(j), e.getMessage()));
+                      "Delete failed for:%s Reason:%s", cb.getKeyname(j), e.getMessage()), e);
                 }
               }
             }
@@ -486,7 +486,7 @@ public class ObjectLockTest extends RepoBaseSpringTest {
               synchronized (lock) {
                 if (assertionFailure == null) {
                   assertionFailure = new AssertionError(String.format(
-                      "Read failed for:%s Reason:%s", cb.getKeyname(j), e.getMessage()));
+                      "Read failed for:%s Reason:%s", cb.getKeyname(j), e.getMessage()), e);
                 }
               }
             }
