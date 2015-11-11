@@ -22,6 +22,7 @@ import org.plos.repo.RepoBaseSpringTest;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -100,7 +101,7 @@ public class ThreadLocalTest extends RepoBaseSpringTest {
 
     this.endGate = new CountDownLatch(THREADS);
 
-    final Set<Connection> connections = new HashSet<>();
+    final Set<Connection> connections = Collections.synchronizedSet(new HashSet<>());
 
     for (int i = 0; i < THREADS; i++) {
       final Thread t = new Thread() {
