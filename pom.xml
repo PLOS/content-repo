@@ -27,7 +27,7 @@
   <artifactId>content-repo</artifactId>
   <name>content-repo</name>
   <packaging>war</packaging>
-  <version>1.1.7</version>
+  <version>1.2.0</version>
 
   <description>Versioning content repository for PLoS data</description>
 
