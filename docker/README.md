@@ -14,6 +14,3 @@ Requirements
 * docker >= 1.3 (www.docker.com)
 * docker-compse (pip install docker-compose)
 * fig >= 0.5.2 (www.fig.sh)
-
-Please contact us at dev@ambraproject.org with any questions, comments, or concerns.
-Please use [Github Issues](https://github.com/PLOS/ambraproject/issues) to report any problems, or submit a pull request.

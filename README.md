@@ -103,5 +103,7 @@ If you are using **MySQL**, you need to manually create a database (I called it 
         password=""
         url="jdbc:hsqldb:file:/tmp/repo-hsqldb;shutdown=true" />
 
-Please contact us at dev@ambraproject.org with any questions, comments, or concerns.
-Please use [Github Issues](https://github.com/PLOS/ambraproject/issues) to report any problems, or submit a pull request.
+See the [Ambra Project documentation](https://plos.github.io/ambraproject/) for
+an overview of the stack and user instructions. If you have any questions or
+comments, please email dev@ambraproject.org, open a [GitHub
+issue](https://github.com/PLOS/content-repo/issues), or submit a pull request.
