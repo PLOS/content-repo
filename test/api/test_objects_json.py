@@ -182,7 +182,14 @@ class TestObjects(ObjectsJson):
     self.assertEquals(objects and len(objects), limit,
         'incorrect items count with limit=%d: %r != %r'%(limit, objects and len(objects), limit))
     for left, right in zip(objects_all[:limit], objects):
-      self.assertEquals(left, right, 'non-matching item %r != %r'%(left, right))
+      for key in left.keys():
+        if key != "status" and key != "timestamp":
+          if key == "reproxyURL":
+            self.assertEquals(set(left[key]), set(right[key]),
+                            'wrong attribute %r: %r != %r' % (key, left[key], right[key]))
+          else:
+            self.assertEquals(left[key], right[key],
+                           'wrong attribute %r: %r != %r'%(key, left[key], right[key]))
 
   def test_get_objects_offset(self):
     """
@@ -201,7 +208,14 @@ class TestObjects(ObjectsJson):
     self.assertEquals(objects and len(objects), length - offset,
         'incorrect items count with offset=%d: %r != %r'%(offset, objects and len(objects), length - offset))
     for left, right in zip(objects_all[offset:], objects):
-      self.assertEquals(left, right, 'non-matching item %r != %r'%(left, right))
+      for key in left.keys():
+        if key != "status" and key != "timestamp":
+          if key == "reproxyURL":
+            self.assertEquals(set(left[key]), set(right[key]),
+                            'wrong attribute %r: %r != %r' % (key, left[key], right[key]))
+          else:
+            self.assertEquals(left[key], right[key],
+                           'wrong attribute %r: %r != %r'%(key, left[key], right[key]))
 
   def test_get_objects_by_tag(self):
     """
@@ -251,7 +265,12 @@ class TestObjects(ObjectsJson):
     self.assertEquals(objects1[-1]['status'], 'DELETED', 'wrong status after deleting: %r'%(objects1[-1]['status'],))
     for key in objects0[0].keys():
       if key != "status" and key != "timestamp":
-        self.assertEquals(objects0[0][key], objects1[-1][key], 'wrong attribute %r: %r != %r'%(key, objects0[0][key], objects1[-1][key]))
+        if key == "reproxyURL":
+          self.assertEquals(set(objects0[0][key]), set(objects1[-1][key]),
+                            'wrong attribute %r: %r != %r' % (key, objects0[0][key], objects1[-1][key]))
+        else:
+         self.assertEquals(objects0[0][key], objects1[-1][key],
+                           'wrong attribute %r: %r != %r'%(key, objects0[0][key], objects1[-1][key]))
 
   def test_get_objects_purged(self):
     """
@@ -287,7 +306,12 @@ class TestObjects(ObjectsJson):
     self.assertEquals(objects1[-1]['status'], 'PURGED', 'wrong status after purged: %r'%(objects1[-1]['status'],))
     for key in objects0[0].keys():
       if key != "status" and key != "timestamp":
-        self.assertEquals(objects0[0][key], objects1[-1][key], 'wrong attribute %r: %r != %r'%(key, objects0[0][key], objects1[-1][key]))
+        if key == "reproxyURL":
+          self.assertEquals(set(objects0[0][key]), set(objects1[-1][key]),
+                            'wrong attribute %r: %r != %r' % (key, objects0[0][key], objects1[-1][key]))
+        else:
+         self.assertEquals(objects0[0][key], objects1[-1][key],
+                           'wrong attribute %r: %r != %r'%(key, objects0[0][key], objects1[-1][key]))
 
   def test_get_objects_invalid_bucket(self):
     """
@@ -436,7 +460,7 @@ class TestObjects(ObjectsJson):
     self.verify_http_code_is(CREATED)
     self.get_object_meta(bucketName, key=self.objKey)
     self.verify_http_code_is(OK)
-    uuid = self.parsed.get_objectAttribute("uuid");
+    uuid = self.parsed.get_objectAttribute("uuid")
     self.delete_object(bucketName=bucketName, key=self.objKey, uuid=uuid, purge=True)
     self.verify_http_code_is(OK)
     self.get_object_meta(bucketName, key=self.objKey)
