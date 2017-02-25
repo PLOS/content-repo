@@ -337,7 +337,7 @@
                                 <type>file</type>
                                 <mapper>
                                     <type>perm</type>
-                                    <prefix>${content-repo.debInstallDir}</prefix>
+                                    <prefix>${contentrepo.debInstallDir}</prefix>
                                 </mapper>
                             </data>
                         </dataSet>
