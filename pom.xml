@@ -334,6 +334,7 @@
                         <dataSet>
                             <data>
                                 <src>${project.build.directory}/${project.build.finalName}.war</src>
+                                <dst>contentrepo.war</dst>
                                 <type>file</type>
                                 <mapper>
                                     <type>perm</type>
