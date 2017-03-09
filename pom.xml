@@ -329,7 +329,7 @@
                         <goal>jdeb</goal>
                     </goals>
                     <configuration>
-                        <deb>${project.build.directory}/${artifactId}_[[version]]+${buid.start.time}-plos${build.counter}.deb</deb>
+                        <deb>${project.build.directory}/${artifactId}_[[version]]+${current.build.date}-plos${build.counter}.deb</deb>
                         <snapshotExpand>false</snapshotExpand>
                         <dataSet>
                             <data>
