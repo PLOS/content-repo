@@ -27,7 +27,7 @@
   <artifactId>contentrepo</artifactId>
   <name>content-repo</name>
   <packaging>war</packaging>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.2.0</version>
 
   <description>Versioning content repository for PLoS data</description>
 
@@ -329,8 +329,8 @@
                         <goal>jdeb</goal>
                     </goals>
                     <configuration>
-                        <deb>${project.build.directory}/${artifactId}_[[version]].deb</deb>
-                        <snapshotExpand>true</snapshotExpand>
+                        <deb>${project.build.directory}/${artifactId}_[[version]]+${buid.start.time}-plos${build.counter}.deb</deb>
+                        <snapshotExpand>false</snapshotExpand>
                         <dataSet>
                             <data>
                                 <src>${project.build.directory}/${project.build.finalName}.war</src>
