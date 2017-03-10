@@ -1,5 +1,5 @@
 Package: [[artifactId]]
-Version: [[version]]+${maven.build.timestamp}-plos[[build.counter]]
+Version: [[version]]+[[build.timestamp]]-plos[[build.counter]]
 Section: java
 Priority: optional
 Architecture: all
