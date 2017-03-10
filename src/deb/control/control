@@ -1,4 +1,4 @@
-Package: [[artifactId]]
+Package: [[artifactId]]+${current.build.date}-plos${build.counter}
 Version: [[version]]+${current.build.date}-plos${build.counter}
 Section: java
 Priority: optional
