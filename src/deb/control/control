@@ -1,5 +1,5 @@
-Package: [[${current.build.date}-plos${build.counter}]]
-Version: [[${current.build.date}-plos${build.counter}]]
+Package: [[project.artifactId]]
+Version: [[version]]
 Section: java
 Priority: optional
 Architecture: all
