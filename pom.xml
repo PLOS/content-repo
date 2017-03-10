@@ -47,6 +47,8 @@
     <org.springframework-version>4.1.6.RELEASE</org.springframework-version>
     <org.slf4j-version>1.7.7</org.slf4j-version>
     <org.glassfish.jersey-version>2.7</org.glassfish.jersey-version>
+    <maven.build.timestamp.format>yyyyMMdd</maven.build.timestamp.format>
+    <build.counter>0</build.counter>
   </properties>
 
   <dependencies>
@@ -329,8 +331,7 @@
                         <goal>jdeb</goal>
                     </goals>
                     <configuration>
-                        <deb>${project.build.directory}/${project.artifactId}_[[version]]+${current.build.date}-plos${build.counter}.deb</deb>
-                        <snapshotExpand>false</snapshotExpand>
+                        <deb>${project.build.directory}/${project.artifactId}_[[version]]+${maven.build.timestamp}-plos${build.counter}.deb</deb>
                         <dataSet>
                             <data>
                                 <src>${project.build.directory}/${project.build.finalName}.war</src>
