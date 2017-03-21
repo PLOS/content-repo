@@ -1,0 +1,34 @@
+Template: [[artifactId]]/contentrepo_db_host
+Type: string
+Default: localhost
+Description: The host that provides the Ambra database
+
+Template: [[artifactId]]/contentrepo_db_password
+Type: password
+Default:
+Description: The password for the user that will access the Ambra database
+
+Template: [[artifactId]]/contentrepo_port
+Type: string
+Default: 8004
+Description: The HTTP port you would like content repo to be accessible from
+
+Template: [[artifactId]]/control_port
+Type: string
+Default: 8003
+Description: The TCP port to use for Tomcat shutdown control port
+
+Template: [[artifactId]]/crepo_storage_location
+Type: string
+Default: mogile
+Description: Valid values: "mogile","local"
+
+Template: [[artifactId]]/contentrepo_local_data_directory
+Type: string
+Default:
+Description: The local directory used for storing data. Only used for local crepo_storage_location
+
+Template: [[artifactId]]/contentrepo_mogile_trackers
+Type: string
+Default:
+Description: The Mogile trackers used for storing data. Only used for mogile crepo_storage_location
