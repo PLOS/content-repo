@@ -23,11 +23,6 @@ Type: string
 Default: mogile
 Description: Valid values: "mogile","local"
 
-Template: [[artifactId]]/contentrepo_local_data_directory
-Type: string
-Default:
-Description: The local directory used for storing data. Only used for local crepo_storage_location
-
 Template: [[artifactId]]/contentrepo_mogile_trackers
 Type: string
 Default:

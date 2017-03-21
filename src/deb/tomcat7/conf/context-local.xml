@@ -35,7 +35,7 @@
             validationQuery="SELECT 1"
             testOnBorrow="true"
             driverClassName="com.mysql.jdbc.Driver"
-            username="plosrepo"
+            username="repo"
             password="${CONTENTREPO_DB_PASSWORD}"
             url="jdbc:mysql://${CONTENTREPO_DB_HOST}:3306/PLOS_REPO"
             maxActive="300"
@@ -45,7 +45,7 @@
   <Resource name="repo/objectStore"
             type="org.plos.repo.service.ObjectStore"
             factory="org.plos.repo.config.FileSystemStoreFactory"
-            dataDirectory="${CONTENTREPO_LOCAL_DATA_DIRECTORY}"
+            dataDirectory="/opt/plos/data"
   />
 
 

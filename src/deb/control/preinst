@@ -16,7 +16,6 @@ $INPUT/contentrepo_port || true
 $INPUT/control_port || true
 
 $INPUT/crepo_storage_location || true
-$INPUT/contentrepo_local_data_directory || true
 $INPUT/contentrepo_mogile_trackers || true
 
 #TODO: add conditional if/fi for storage scheme. crepo_storage_location valid values: "mogile","local"
