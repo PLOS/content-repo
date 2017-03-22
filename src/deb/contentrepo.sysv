@@ -49,8 +49,8 @@ fi
 # The following variables can be overwritten in $DEFAULT
 
 # Run Tomcat 7 as this user ID and group ID
-TOMCAT7_USER=contentrepo
-TOMCAT7_GROUP=contentrepo
+TOMCAT7_USER=repo
+TOMCAT7_GROUP=repo
 
 JAVA_OPTS="-Djava.awt.headless=true -Xmx8196m -XX:-HeapDumpOnOutOfMemoryError -Dsun.net.inetaddr.ttl=30 -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
 

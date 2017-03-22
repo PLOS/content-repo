@@ -21,8 +21,8 @@ if [ -d /run/systemd/system ] ; then
 fi
 # End automatically added section
 
-TOMCAT7_USER=[[artifactId]]
-TOMCAT7_GROUP=[[artifactId]]
+TOMCAT7_USER=repo
+TOMCAT7_GROUP=repo
 HOME=[[contentrepo.debInstallDir]]
 #CONFFILE=/etc/default/[[artifactId]]
 #LR_CONFFILE=/etc/logrotate.d/tomcat7

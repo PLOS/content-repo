@@ -5,8 +5,8 @@ set -o errexit
 
 . /usr/share/debconf/confmodule
 
-TOMCAT7_USER=[[artifactId]]
-TOMCAT7_GROUP=[[artifactId]]
+TOMCAT7_USER=repo
+TOMCAT7_GROUP=repo
 HOME=[[contentrepo.debInstallDir]]
 
 function process_env_template {
