@@ -60,8 +60,11 @@ case "$1" in
   db_purge
 
   # generate configs from templates
-  process_env_template $HOME/conf/context.xml
-  cat $HOME/conf/context.xml
+  process_env_template $HOME/conf/context-mogile.xml
+  cat $HOME/conf/context-mogile.xml
+  
+  process_env_template $HOME/conf/context-local.xml
+  cat $HOME/conf/context-local.xml
 
   process_env_template $HOME/conf/server.xml
   cat $HOME/conf/server.xml
