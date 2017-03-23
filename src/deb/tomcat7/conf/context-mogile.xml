@@ -41,7 +41,7 @@
             type="org.plos.repo.service.ObjectStore"
             factory="org.plos.repo.config.MogileStoreFactory"
             domain="mogiledev"
-            trackers="$(CONTENTREPO_MOGILE_TRACKERS}"
+            trackers="${CONTENTREPO_MOGILE_TRACKERS}"
             maxTrackerConnections="-1"
             maxIdleConnections="2"
             maxIdleTimeMillis="10000"

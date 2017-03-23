@@ -59,15 +59,6 @@ case "$1" in
   # removes the saved values, so they need to be re-entered the next time around
   db_purge
 
-  echo "DEBUG-TIME!"
-  ls -all $HOME/conf/
-  
-  echo "BEFORE!-1"
-  cat $HOME/conf/context-mogile.xml
-  
-  echo "BEFORE!-2"
-  cat $HOME/conf/context.xml
-
   # generate configs from templates
   process_env_template $HOME/conf/context-mogile.xml
   cat $HOME/conf/context-mogile.xml
@@ -80,12 +71,6 @@ case "$1" in
 
   process_env_template $HOME/conf/server.xml
   cat $HOME/conf/server.xml
-
-  echo "AFTER!-1"
-  cat $HOME/conf/context-mogile.xml
-  
-  echo "AFTER!-2"
-  cat $HOME/conf/context.xml
 
 esac
 
