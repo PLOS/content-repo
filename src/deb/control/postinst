@@ -57,7 +57,7 @@ case "$1" in
 
 
   # removes the saved values, so they need to be re-entered the next time around
-  db_purge
+  # db_purge
 
   # generate configs from templates
   process_env_template $HOME/conf/context-mogile.xml
