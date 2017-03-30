@@ -40,7 +40,7 @@
   <Resource name="repo/objectStore"
             type="org.plos.repo.service.ObjectStore"
             factory="org.plos.repo.config.MogileStoreFactory"
-            domain="mogiledev"
+            domain="plos_repo"
             trackers="${CONTENTREPO_MOGILE_TRACKERS}"
             maxTrackerConnections="-1"
             maxIdleConnections="2"
