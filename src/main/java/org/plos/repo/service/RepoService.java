@@ -494,7 +494,7 @@ public class RepoService extends BaseRepoService {
 
   /**
    * Updates the status as PURGED, and try to delete the content of the object from mogile. To do so, it checks whether
-   * other USED or DELETED objects are pointing to the same content. If there’s no other objects pointing to it, or all
+   * other USED or DELETED objects are pointing to the same content. If there is no other objects pointing to it, or all
    * the objects pointing to that content are marked as PURGE, it proceeds to remove the content.
    *
    * @param repoObject    object to be purged
