@@ -59,18 +59,20 @@ when **WEBDRIVER_ENVIRONMENT** is `dev`
 """
 
 environment = getenv('WEBDRIVER_ENVIRONMENT', 'dev')
-base_url = getenv('WEBDRIVER_TARGET_URL', 'http://one-dpro.plosjournals.org/wombat')
-rhino_url = getenv('WEBDRIVER_RHINO_URL', 'http://one-dpro.plosjournals.org/v1')
-mysql_host = getenv('WEBDRIVER_MYSQL_HOST', 'sfo-dpro-devstack02.int.plos.org')
-crepo_host = getenv('WEBDRIVER_CREPO_HOST', 'sfo-dpro-devstack02.int.plos.org')
+base_url = getenv('WEBDRIVER_TARGET_URL', 'http://journals.plos.org/')
+rhino_url = getenv('WEBDRIVER_RHINO_URL', 'http://rhino-201.soma.plos.org:8006/v2')
+mysql_host = getenv('WEBDRIVER_MYSQL_HOST', 'db-contentrepo-301.soma.plos.org')
+mysql_user = getenv('WEBDRIVER_MYSQL_USER', 'root')
+mysql_password = getenv('WEBDRIVER_MYSQL_PASSWORD', '')
+crepo_host = getenv('WEBDRIVER_CREPO_HOST', 'contentrepo-301.soma.plos.org')
 
 
 """
 Create a DB Configuration for use in MySQL.py
 """
 
-dbconfig = {'user': 'root',
-            'password': '',
+dbconfig = {'user': mysql_user,
+            'password': mysql_password,
             'host': mysql_host,
             'port': 3306,
             'database': 'PLOS_REPO',
