@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# set -x
+set -e
+
+case "$1" in
+  configure|reconfigure)
+
+    . /usr/share/debconf/confmodule
+
+    INPUT="db_input high [[artifactId]]"
+
+    ########### BEGIN app-specific code ###########
+    
+    # parameters provided by the debconf wizard
+    $INPUT/contentrepo_db_host || true
+    $INPUT/contentrepo_db_password || true
+    $INPUT/contentrepo_port || true
+    $INPUT/control_port || true
+    
+    $INPUT/crepo_storage_location || true
+    $INPUT/contentrepo_mogile_trackers || true
+    
+    #TODO: add conditional if/fi for storage scheme. crepo_storage_location valid values: "mogile","local"
+    #local will not ask for mogile_trackers and mogile will not ask for local_data_directory
+    
+    ########### END app-specific code ###########
+
+    db_go || true
+
+  ;;
+
+  abort-upgrade)
+  ;;
+
+  *)
+      echo "config called with unknown argument \`$1'" >&2
+      exit 1
+  ;;
+esac
+
