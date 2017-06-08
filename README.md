@@ -1,7 +1,7 @@
 Content Repository
 ==================
 
-The content repository is a general use data store which functions similarly to Amazon S3.
+The content repository is a general use data store which functions similarly to Amazon S3. 
 
 While it is agnostic of what data is stored, all stored items are called 'objects'. Storage locations are called 'buckets'. A single object can have multiple versions within a bucket.
 
