@@ -340,7 +340,10 @@
 
                 <!--create a context.xml based on storage location (mogile/local)-->
                 <data>
+                  <src>/opt/plos/contentrepo/conf/context-${crepo.storage.location}.template.xml</src>
+                  <!--
                   <src>src/deb/tomcat7/conf/context-${crepo.storage.location}.template.xml</src>
+                  -->
                   <dst>context.xml</dst>
                   <type>file</type>
                   <mapper>
