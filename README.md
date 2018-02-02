@@ -19,7 +19,7 @@ Storage Backends
 
 The service supports multiple object store backend implementations which can be specified at service initialization time; after the first object is stored the backend cannot be changed. At the time of this writing it supports the following backends: Local filesystem, MogileFS, Amazon S3.
 
-You will need to place one of the following Resources in Tomcat's config.xml :
+You will need to place one of the following Resources in Tomcat's context.xml :
 
 If you are using **MogileFS**, set the domain and trackers accordingly. Trackers are comma separated.
 
@@ -77,7 +77,7 @@ For testing purposes there is also an **InMemoryFileStore** which you can simply
 Database Backends
 -----------------
 
-The service supports HSQLDB and MySQL. You will need to place one of the following Resources in Tomcat's config.xml :
+The service supports HSQLDB and MySQL. You will need to place one of the following Resources in Tomcat's context.xml :
 
 If you are using **MySQL**, you need to manually create a database (I called it 'repo' in the example below but call it what you want) and create a user with granted write permissions. 
 
