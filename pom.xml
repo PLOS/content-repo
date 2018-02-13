@@ -293,7 +293,7 @@
         <version>2.2</version>
         <configuration>
           <path>/</path>
-          <contextFile>/etc/ambra/context.xml</contextFile>
+          <contextFile>${ENV.home}/ambra/config/context.xml</contextFile>
         </configuration>
         <dependencies>
           <dependency>
