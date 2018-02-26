@@ -50,7 +50,6 @@
     <maven.build.timestamp.format>yyyyMMdd</maven.build.timestamp.format>
     <build.timestamp>${maven.build.timestamp}</build.timestamp>
     <build.counter>0</build.counter>
-    <crepo.storage.location>mogile</crepo.storage.location>
   </properties>
 
   <dependencies>
@@ -320,10 +319,19 @@
               <controlDir>${project.basedir}/src/deb/control</controlDir>
               <dataSet>
 
-                <!--create a context.xml based on storage location (mogile/local)-->
                 <data>
-                  <src>src/deb/tomcat7/conf/context-${crepo.storage.location}.template.xml</src>
-                  <dst>context-template.xml</dst>
+                  <src>src/deb/tomcat7/conf/context-mogile.template.xml</src>
+                  <dst>context-mogile.template.xml</dst>
+                  <type>file</type>
+                  <mapper>
+                    <type>perm</type>
+                    <prefix>/opt/plos/contentrepo/conf</prefix>
+                  </mapper>
+                </data>
+
+                <data>
+                  <src>src/deb/tomcat7/conf/context-local.template.xml</src>
+                  <dst>context-local.template.xml</dst>
                   <type>file</type>
                   <mapper>
                     <type>perm</type>
