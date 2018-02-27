@@ -20,7 +20,7 @@ Description: The TCP port to use for Tomcat shutdown control port
 
 Template: [[artifactId]]/crepo_storage_location
 Type: string
-Default: [[crepo.storage.location]]
+Default: mogile
 Description: Valid values: "mogile","local". Local is used for local development or vagrants and data is saved on the local filestore. Mogile is used for production-like environments and uses mogile to store data.
 
 Template: [[artifactId]]/contentrepo_mogile_trackers
