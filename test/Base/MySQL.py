@@ -1,4 +1,5 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # Copyright (c) 2017 Public Library of Science
 #
@@ -34,33 +35,33 @@ __author__ = 'jgray@plos.org'
 
 from mysql.connector.pooling import MySQLConnectionPool
 from contextlib import closing
-import Config
+
+from ..Base.Config import dbconfig
 
 
 class MySQL(object):
+    def __init__(self):
+        self._cnxpool = MySQLConnectionPool(pool_name="mysqlPool", pool_size=3, **dbconfig)
 
-  def __init__(self):
-    self._cnxpool = MySQLConnectionPool(pool_name="mysqlPool", pool_size=3, **Config.dbconfig)
+    def _getConnection(self):
+        return self._cnxpool.get_connection()
 
-  def _getConnection(self):
-    return self._cnxpool.get_connection()
+    def query(self, query, queryArgsTuple=None):
+        cnx = self._getConnection()
 
-  def query(self, query, queryArgsTuple=None):
-    cnx = self._getConnection()
+        with closing(cnx.cursor()) as cursor:
+            cursor.execute(query, queryArgsTuple)
+            results = cursor.fetchall()
 
-    with closing(cnx.cursor()) as cursor:
-      cursor.execute(query, queryArgsTuple)
-      results = cursor.fetchall()
+        cnx.close()
 
-    cnx.close()
+        return results
 
-    return results
+    def modify(self, query, queryArgsTuple=None):
+        cnx = self._getConnection()
 
-  def modify(self, query, queryArgsTuple=None):
-    cnx = self._getConnection()
+        with closing(cnx.cursor()) as cursor:
+            cursor.execute(query, queryArgsTuple)
+            cnx.commit()
 
-    with closing(cnx.cursor()) as cursor:
-      cursor.execute(query, queryArgsTuple)
-      cnx.commit()
-
-    cnx.close()
+        cnx.close()

@@ -1,4 +1,5 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # Copyright (c) 2017 Public Library of Science
 #
@@ -20,8 +21,6 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-__author__ = 'gfilomeno@plos.org'
-
 """
 Test cases for Content Repo Config requests.
 
@@ -29,19 +28,23 @@ GET /config
 Information about configuration
 
 """
-from ..api.RequestObject.config_json import  ConfigJson
+
+import logging
+
+from ..api.RequestObject.config_json import ConfigJson
+
+__author__ = 'gfilomeno@plos.org'
 
 
 class TestConfig(ConfigJson):
-
-  def test_get_config(self):
-    """
-    Get configuration
-    """
-    print('\nTesting GET /config\n')
-    self.get_config()
-    self.verify_get_config()
+    def test_get_config(self):
+        """
+        Get configuration
+        """
+        logging.info('\nTesting GET /config\n')
+        self.get_config()
+        self.verify_get_config()
 
 
 if __name__ == '__main__':
-  ConfigJson._run_tests_randomly()
+    ConfigJson._run_tests_randomly()

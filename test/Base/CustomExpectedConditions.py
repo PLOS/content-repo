@@ -1,4 +1,5 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # Copyright (c) 2017 Public Library of Science
 #
@@ -26,7 +27,7 @@ from selenium.common.exceptions import StaleElementReferenceException
 
 
 # === Element To Be Clickable expectation definition ===
-class element_to_be_clickable(object):
+class elementToBeClickable(object):
     """
 
     An expectation for checking that an element is **present on the DOM** of a
