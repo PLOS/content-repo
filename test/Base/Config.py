@@ -1,4 +1,5 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # Copyright (c) 2017 Public Library of Science
 #
@@ -20,14 +21,13 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-import os
 from os import getenv
 from selenium.webdriver import DesiredCapabilities
 
 # Set API_BASE_URL environment variable to desired URL in order to run suite against it
-API_BASE_URL = os.getenv('API_BASE_URL', 'http://contentrepo-201.sfo.plos.org:8002/v1')
+API_BASE_URL = getenv('API_BASE_URL', 'http://contentrepo-201.soma.plos.org:8002/v1')
 PRINT_DEBUG = False
-TIMEOUT = 30         # API call timeout, in seconds
+TIMEOUT = 30  # API call timeout, in seconds
 
 # === WebDriver specific section ===
 
@@ -65,7 +65,6 @@ mysql_host = getenv('WEBDRIVER_MYSQL_HOST', 'db-contentrepo-301.soma.plos.org')
 mysql_user = getenv('WEBDRIVER_MYSQL_USER', 'root')
 mysql_password = getenv('WEBDRIVER_MYSQL_PASSWORD', '')
 crepo_host = getenv('WEBDRIVER_CREPO_HOST', 'contentrepo-301.soma.plos.org')
-
 
 """
 Create a DB Configuration for use in MySQL.py
@@ -119,7 +118,6 @@ appium_enabled_browsers = [ANDROID,
                            IOS
                            ]
 
-
 # === Selenium Grid configuration section ===
 
 
@@ -136,7 +134,8 @@ Running through Grid **takes precedence** among all other configurations.
 Ex: If you have both `USE_APPIUM_SERVER` **AND** `USE_SELENIUM_GRID` options set to **True**,
 then tests will be run against the **Grid**.
 
-You can *still* include IOS and ANDROID capabilities as *enabled browsers* in the Grid and will be run against Appium.
+You can *still* include IOS and ANDROID capabilities as *enabled browsers* in the Grid and will be 
+run against Appium.
 
 """
 
@@ -157,7 +156,6 @@ grid_enabled_browsers = [DesiredCapabilities.FIREFOX,
                          IOS,
                          ANDROID
                          ]
-
 
 # === Performance metric gathering configuration section ===
 

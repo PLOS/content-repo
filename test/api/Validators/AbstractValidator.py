@@ -1,4 +1,5 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # Copyright (c) 2017 Public Library of Science
 #
@@ -29,15 +30,14 @@ from abc import ABCMeta, abstractmethod
 
 
 class AbstractValidator(object):
+    __metaclass__ = ABCMeta
 
-  __metaclass__ = ABCMeta
+    def __init__(self, data):
+        self._size = len(data)
 
-  def __init__(self, data):
-    self._size = len(data)
+    def get_size(self):
+        return self._size
 
-  def get_size(self):
-    return self._size
-
-  @abstractmethod
-  def metadata(self):
-    pass
+    @abstractmethod
+    def metadata(self):
+        pass
