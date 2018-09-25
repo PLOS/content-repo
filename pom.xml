@@ -47,7 +47,7 @@
     <org.springframework-version>4.1.6.RELEASE</org.springframework-version>
     <org.slf4j-version>1.7.7</org.slf4j-version>
     <org.glassfish.jersey-version>2.7</org.glassfish.jersey-version>
-    <maven.build.timestamp.format>yyyyMMdd</maven.build.timestamp.format>
+    <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
     <build.timestamp>${maven.build.timestamp}</build.timestamp>
     <build.counter>0</build.counter>
     <maven.tomcat.port>8081</maven.tomcat.port>
@@ -370,7 +370,22 @@
           </execution>
         </executions>
       </plugin>
-
+      <plugin>
+        <artifactId>apt-repo</artifactId>
+        <groupId>org.m1theo</groupId>
+        <version>0.3.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>apt-repo</goal>
+            </goals>
+            <configuration>
+              <repoDir>/var/tmp/apt</repoDir>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
