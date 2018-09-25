@@ -50,8 +50,6 @@ public class RootController {
 
   @GET
   public Response index() {
-    // TODO: display spirit animal (squirrel, foraging woodpecker ?)
-
     return Response.temporaryRedirect(UriBuilder.fromPath("docs/").build()).build();
   }
 
