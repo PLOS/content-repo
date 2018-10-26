@@ -15,7 +15,6 @@ case "$1" in
     $INPUT/contentrepo_db_host || true
     $INPUT/contentrepo_db_password || true
     $INPUT/contentrepo_port || true
-    $INPUT/control_port || true
     
     $INPUT/crepo_storage_location || true
     $INPUT/contentrepo_mogile_trackers || true

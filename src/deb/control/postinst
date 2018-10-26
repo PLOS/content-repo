@@ -51,7 +51,6 @@ case "$1" in
   $GET/contentrepo_db_host && export CONTENTREPO_DB_HOST=$RET
   $GET/contentrepo_db_password && export CONTENTREPO_DB_PASSWORD=$RET
   $GET/contentrepo_port && export CONTENTREPO_PORT=$RET
-  $GET/control_port && export CONTROL_PORT=$RET
   $GET/crepo_storage_location && export CREPO_STORAGE_LOCATION=$RET
   $GET/contentrepo_mogile_trackers && export CONTENTREPO_MOGILE_TRACKERS=$RET
 

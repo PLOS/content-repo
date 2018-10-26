@@ -13,11 +13,6 @@ Type: string
 Default: 8004
 Description: The HTTP port you would like content repo to be accessible from
 
-Template: [[artifactId]]/control_port
-Type: string
-Default: 8003
-Description: The TCP port to use for Tomcat shutdown control port
-
 Template: [[artifactId]]/crepo_storage_location
 Type: string
 Default: mogile
