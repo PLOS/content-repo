@@ -306,6 +306,26 @@
       </plugin>
 
       <plugin>
+        <groupId>com.spotify</groupId>
+        <artifactId>dockerfile-maven-plugin</artifactId>
+        <version>1.4.9</version>
+        <executions>
+          <execution>
+            <id>default</id>
+            <goals>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <repository>plos/contentrepo</repository>
+          <buildArgs>
+            <WAR_FILE>${project.build.finalName}.war</WAR_FILE>
+          </buildArgs>
+        </configuration>
+      </plugin>
+
+      <plugin>
         <artifactId>jdeb</artifactId>
         <groupId>org.vafer</groupId>
         <version>1.5</version>
