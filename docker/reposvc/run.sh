@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo Deleting contents of webapps/
-rm -rf /var/lib/tomcat8/webapps/*
+rm -rf /var/lib/tomcat7/webapps/*
 
 BUILD_DIR=/build
 SVC_WAR=*.war
@@ -12,7 +12,7 @@ WARCOUNT=$(ls ${BUILD_DIR}/${SVC_WAR} 2> /dev/null | wc -l)
 
 if [ $WARCOUNT -ne 0 ] ; then
   echo Copying WAR to webapps
-  cp `ls -t ${BUILD_DIR}/${SVC_WAR} | head -1` /var/lib/tomcat8/webapps/ROOT.war
+  cp `ls -t ${BUILD_DIR}/${SVC_WAR} | head -1` /var/lib/tomcat7/webapps/ROOT.war
 else
   echo "WAR file not found in ${BUILD_DIR}. Exiting..."
   exit 1
@@ -31,8 +31,8 @@ done;
 
 echo -e "\nDatabase (${MYSQL_HOSTNAME}) ready!"
 
-/etc/init.d/tomcat8 start
+/etc/init.d/tomcat7 start
 
 # The container will run as long as the script is running, 
 # that's why we need something long-lived here
-exec tail -f /var/log/tomcat8/catalina.out
+exec tail -f /var/log/tomcat7/catalina.out

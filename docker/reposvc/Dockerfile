@@ -17,16 +17,16 @@ RUN echo "JAVA_HOME=/usr/lib/jvm/java-7-oracle" >> /etc/environment
 # install mysql client (so we can verify when mysql server has started)
 RUN apt-get -y install mysql-client
 
-# install tomcat8
-RUN apt-get -y install tomcat8
+# install tomcat7
+RUN apt-get -y install tomcat7
 
-# change path for tomcat8
-RUN echo "JAVA_HOME=/usr/lib/jvm/java-7-oracle" >> /etc/default/tomcat8
+# change path for tomcat7
+RUN echo "JAVA_HOME=/usr/lib/jvm/java-7-oracle" >> /etc/default/tomcat7
 
 ADD run.sh /root/run.sh
 RUN chmod +x /root/run.sh
 
-ADD context.xml /etc/tomcat8/context.xml
+ADD context.xml /etc/tomcat7/context.xml
 
 ENV MYSQL_HOSTNAME repodb
 
