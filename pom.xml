@@ -223,6 +223,13 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- For cargo (see below) -->
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>5.1.12</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
 
@@ -274,7 +281,49 @@
     </resources>
 
     <plugins>
-
+      <plugin>
+        <groupId>org.codehaus.cargo</groupId>
+        <artifactId>cargo-maven2-plugin</artifactId>
+        <version>1.7.1</version>
+        <configuration>
+          <type>standalone</type>
+          <container>
+            <containerId>tomcat8x</containerId>
+            <zipUrlInstaller>
+              <url>http://repo1.maven.org/maven2/org/apache/tomcat/tomcat/8.5.37/tomcat-8.5.37.zip</url>
+            </zipUrlInstaller>
+            <dependencies>
+              <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <classpath>extra</classpath>
+              </dependency>
+            </dependencies>
+          </container>
+          <configuration>
+            <properties>
+              <cargo.servlet.port>8081</cargo.servlet.port>
+            </properties>
+            <files>
+              <file>
+                <file>${contentrepo.configDir}/context.xml</file>
+                <todir>conf</todir>
+              </file>
+            </files>
+          </configuration>
+          <deployables>
+            <deployable>
+              <groupId>org.plos</groupId>
+              <artifactId>contentrepo</artifactId>
+              <type>war</type>
+              <properties>
+                <context>/v1</context>
+              </properties>
+            </deployable>
+          </deployables>
+        </configuration>
+      </plugin>
+      
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -286,23 +335,6 @@
           <showWarnings>true</showWarnings>
           <showDeprecation>true</showDeprecation>
         </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.tomcat.maven</groupId>
-        <artifactId>tomcat7-maven-plugin</artifactId>
-        <version>2.2</version>
-        <configuration>
-          <path>/</path>
-          <contextFile>/etc/ambra/context.xml</contextFile>
-        </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.12</version>
-          </dependency>
-        </dependencies>
       </plugin>
 
       <plugin>
@@ -322,7 +354,7 @@
               <dataSet>
 
                 <data>
-                  <src>src/deb/tomcat7/conf/context-mogile.template.xml</src>
+                  <src>src/deb/tomcat8/conf/context-mogile.template.xml</src>
                   <dst>context-mogile.template.xml</dst>
                   <type>file</type>
                   <mapper>
@@ -332,7 +364,7 @@
                 </data>
 
                 <data>
-                  <src>src/deb/tomcat7/conf/context-local.template.xml</src>
+                  <src>src/deb/tomcat8/conf/context-local.template.xml</src>
                   <dst>context-local.template.xml</dst>
                   <type>file</type>
                   <mapper>
@@ -348,7 +380,7 @@
                 </data>
 
                 <data>
-                  <src>${project.basedir}/src/deb/tomcat7</src>
+                  <src>${project.basedir}/src/deb/tomcat8</src>
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
