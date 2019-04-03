@@ -25,6 +25,7 @@ package org.plos.repo.util;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import org.apache.commons.codec.binary.Hex;
 import org.plos.repo.service.RepoException;
 
 /**
@@ -48,13 +49,7 @@ public class ChecksumGenerator {
   }
 
   public String checksumToString(byte[] checksum) {
-    StringBuilder sb = new StringBuilder();
-
-    for (byte b : checksum) {
-      sb.append(Integer.toHexString((b & 0xFF) | 0x100).substring(1, 3));
-    }
-
-    return sb.toString();
+    return new String(Hex.encodeHex(checksum));
   }
 }
 
