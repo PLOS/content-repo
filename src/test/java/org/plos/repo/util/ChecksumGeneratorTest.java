@@ -29,6 +29,7 @@ import org.plos.repo.models.RepoCollection;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.service.RepoException;
 
+import java.security.MessageDigest;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Date;
@@ -177,4 +178,13 @@ public class ChecksumGeneratorTest {
     verify(repoCollection, times(tagTimes)).getTag();
   }
 
+  @Test
+  public void testEncode() throws RepoException {
+    String expected = "0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33";
+    String input = "foo";
+    ChecksumGenerator checksumGenerator = new ChecksumGenerator();
+    MessageDigest digest = checksumGenerator.getDigestMessage();
+    digest.update(input.getBytes());
+    assertEquals(expected, checksumGenerator.checksumToString(digest.digest()));
+  }
 }
