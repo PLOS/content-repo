@@ -37,9 +37,8 @@ public class ChecksumGeneratorTest {
   public void testEncode() throws RepoException {
     String expected = "0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33";
     String input = "foo";
-    ChecksumGenerator checksumGenerator = new ChecksumGenerator();
-    MessageDigest digest = checksumGenerator.getDigestMessage();
+    MessageDigest digest = ChecksumGenerator.getDigestMessage();
     digest.update(input.getBytes());
-    assertEquals(expected, checksumGenerator.checksumToString(digest.digest()));
+    assertEquals(expected, ChecksumGenerator.checksumToString(digest.digest()));
   }
 }

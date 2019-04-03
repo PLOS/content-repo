@@ -35,10 +35,7 @@ public class ChecksumGenerator {
 
   private static final String DIGEST_ALGORITHM = "SHA-1";
 
-  public ChecksumGenerator() {
-  }
-
-  public MessageDigest getDigestMessage() throws RepoException {
+  public static MessageDigest getDigestMessage() throws RepoException {
     try {
       MessageDigest messageDigest = MessageDigest.getInstance(DIGEST_ALGORITHM);
       messageDigest.reset();
@@ -48,7 +45,7 @@ public class ChecksumGenerator {
     }
   }
 
-  public String checksumToString(byte[] checksum) {
+  public static String checksumToString(byte[] checksum) {
     return new String(Hex.encodeHex(checksum));
   }
 }

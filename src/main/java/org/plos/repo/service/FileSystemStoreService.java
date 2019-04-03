@@ -25,6 +25,7 @@ package org.plos.repo.service;
 import com.google.common.base.Optional;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
+import org.plos.repo.util.ChecksumGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -183,7 +184,7 @@ public class FileSystemStoreService extends ObjectStore {
       FileOutputStream fos = new FileOutputStream(tempFileLocation);
 
       ReadableByteChannel in = Channels.newChannel(uploadedInputStream);
-      MessageDigest digest = checksumGenerator.getDigestMessage();
+      MessageDigest digest = ChecksumGenerator.getDigestMessage();
       WritableByteChannel out = Channels.newChannel(new DigestOutputStream(fos, digest));
       ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
 
@@ -197,7 +198,7 @@ public class FileSystemStoreService extends ObjectStore {
 
       fos.flush();
 
-      final String checksum = checksumGenerator.checksumToString(digest.digest());
+      final String checksum = ChecksumGenerator.checksumToString(digest.digest());
       final long finalSize = size;
 
       in.close();
