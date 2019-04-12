@@ -26,6 +26,7 @@ import com.google.common.base.Optional;
 import org.apache.commons.io.IOUtils;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
+import org.plos.repo.util.ChecksumGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,7 +126,7 @@ public class InMemoryFileStoreService extends ObjectStore {
   @Override
   public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException {
     try {
-      MessageDigest digest = checksumGenerator.getDigestMessage();
+      MessageDigest digest = ChecksumGenerator.getDigestMessage();
 
       final String tempFileLocation = UUID.randomUUID().toString() + ".tmp";
 
@@ -133,7 +134,7 @@ public class InMemoryFileStoreService extends ObjectStore {
 
       tempdata.put(tempFileLocation, bytes);
 
-      final String checksum = checksumGenerator.checksumToString(digest.digest(bytes));
+      final String checksum = ChecksumGenerator.checksumToString(digest.digest(bytes));
       final long finalSize = bytes.length;
 
       return new UploadInfo() {

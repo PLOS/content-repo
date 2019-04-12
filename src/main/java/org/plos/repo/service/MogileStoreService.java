@@ -23,18 +23,18 @@
 package org.plos.repo.service;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.guba.mogilefs.MogileFS;
 import com.guba.mogilefs.PooledMogileFSImpl;
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FileUtils;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
+import org.plos.repo.util.ChecksumGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.io.File;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.UUID;
 
@@ -44,19 +44,10 @@ public class MogileStoreService extends ObjectStore {
 
   public static final String mogileFileClass = "";
 
-  private MogileFS mfs = null;
+  public MogileFS mfs = null;
 
   public MogileStoreService(String domain, String[] trackerStrings, int maxTrackerConnections, int maxIdleConnections, long maxIdleTimeMillis) throws Exception {
     mfs = new PooledMogileFSImpl(domain, trackerStrings, maxTrackerConnections, maxIdleConnections, maxIdleTimeMillis);
-  }
-
-  private static byte[] readStreamInput(InputStream input) throws IOException {
-    Preconditions.checkNotNull(input);
-    try {
-      return IOUtils.toByteArray(input);
-    } finally {
-      input.close();
-    }
   }
 
   private String getObjectLocationString(String bucketName, String checksum) {
@@ -127,24 +118,18 @@ public class MogileStoreService extends ObjectStore {
 
   @Override
   public UploadInfo uploadTempObject(InputStream uploadedInputStream) throws RepoException {
-    final String tempFileLocation = UUID.randomUUID().toString() + ".tmp";
-
-    // NOTE: in the future we can avoid having to read to memory by using a
-    //   different MogileFS library that does not require size at creation time.
-
+    final String tempKey = UUID.randomUUID().toString() + ".tmp";
+    File tempFile = null;
     try {
-      byte[] objectData = readStreamInput(uploadedInputStream);
+      tempFile = File.createTempFile("input", "mogile");
+      MessageDigest digest = ChecksumGenerator.getDigestMessage();
+      InputStream dis = new DigestInputStream(uploadedInputStream, digest);
+      FileUtils.copyInputStreamToFile(dis, tempFile);
+      mfs.storeFile(tempKey, mogileFileClass, tempFile);
 
-      MessageDigest digest = checksumGenerator.getDigestMessage();
-
-      OutputStream fos = mfs.newFile(tempFileLocation, mogileFileClass, objectData.length);
-
-      IOUtils.write(objectData, fos);
-      fos.close();
-
-      final String checksum = checksumGenerator.checksumToString(digest.digest(objectData));
-      final long finalSize = objectData.length;
-
+      final String checksum = ChecksumGenerator.checksumToString(digest.digest());
+      final long finalSize = tempFile.length();
+      
       return new UploadInfo() {
         @Override
         public Long getSize() {
@@ -153,7 +138,7 @@ public class MogileStoreService extends ObjectStore {
 
         @Override
         public String getTempLocation() {
-          return tempFileLocation;
+          return tempKey;
         }
 
         @Override
@@ -163,6 +148,10 @@ public class MogileStoreService extends ObjectStore {
       };
     } catch (Exception e) {
       throw new RepoException(e);
+    } finally {
+      if (tempFile != null) {
+        tempFile.delete();
+      }
     }
   }
 

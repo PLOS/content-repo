@@ -40,9 +40,6 @@ public abstract class ObjectStore {
 
   private static final Logger log = LoggerFactory.getLogger(ObjectStore.class);
 
-  @Inject
-  protected ChecksumGenerator checksumGenerator;
-
   public static interface UploadInfo {
     Long getSize();
 

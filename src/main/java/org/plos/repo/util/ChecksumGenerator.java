@@ -22,14 +22,11 @@
 
 package org.plos.repo.util;
 
-import org.plos.repo.models.RepoCollection;
-import org.plos.repo.models.RepoObject;
-import org.plos.repo.service.RepoException;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collections;
-import java.util.List;
+
+import org.apache.commons.codec.binary.Hex;
+import org.plos.repo.service.RepoException;
 
 /**
  * Checksum generator.
@@ -38,51 +35,7 @@ public class ChecksumGenerator {
 
   private static final String DIGEST_ALGORITHM = "SHA-1";
 
-  public ChecksumGenerator() {
-  }
-
-  public String generateVersionChecksum(RepoCollection repoCollection, List<String> objectsChecksum) throws RepoException {
-    Collections.sort(objectsChecksum);
-
-    StringBuilder sb = new StringBuilder();
-
-    for (String checksum : objectsChecksum) {
-      sb.append(checksum);
-    }
-
-    sb.append(repoCollection.getKey());
-    sb.append(TimestampFormatter.getFormattedTimestamp(repoCollection.getCreationDate()));
-    if (repoCollection.getTag() != null) {
-      sb.append(repoCollection.getTag());
-    }
-
-    return checksumToString(this.digest(sb.toString()));
-  }
-
-  public String generateVersionChecksum(RepoObject repoObject) throws RepoException {
-    StringBuilder sb = new StringBuilder();
-
-    sb.append(repoObject.getKey());
-    sb.append(TimestampFormatter.getFormattedTimestamp(repoObject.getCreationDate()));
-    if (repoObject.getTag() != null) {
-      sb.append(repoObject.getTag());
-    }
-    if (repoObject.getContentType() != null) {
-      sb.append(repoObject.getContentType());
-    }
-    if (repoObject.getDownloadName() != null) {
-      sb.append(repoObject.getDownloadName());
-    }
-    if (repoObject.getUserMetadata() != null) {
-      sb.append(repoObject.getUserMetadata());
-    }
-
-    sb.append(repoObject.getChecksum());
-
-    return checksumToString(this.digest(sb.toString()));
-  }
-
-  public MessageDigest getDigestMessage() throws RepoException {
+  public static MessageDigest getDigestMessage() throws RepoException {
     try {
       MessageDigest messageDigest = MessageDigest.getInstance(DIGEST_ALGORITHM);
       messageDigest.reset();
@@ -92,21 +45,8 @@ public class ChecksumGenerator {
     }
   }
 
-  public String checksumToString(byte[] checksum) {
-    StringBuilder sb = new StringBuilder();
-
-    for (byte b : checksum) {
-      sb.append(Integer.toHexString((b & 0xFF) | 0x100).substring(1, 3));
-    }
-
-    return sb.toString();
+  public static String checksumToString(byte[] checksum) {
+    return new String(Hex.encodeHex(checksum));
   }
-
-  private byte[] digest(String message) throws RepoException {
-    MessageDigest messageDigest = getDigestMessage();
-    messageDigest.update(message.getBytes());
-    return messageDigest.digest();
-  }
-
 }
 
