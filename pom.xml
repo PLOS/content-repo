@@ -27,7 +27,7 @@
   <artifactId>contentrepo</artifactId>
   <name>content-repo</name>
   <packaging>war</packaging>
-  <version>1.2.7</version>
+  <version>1.2.8</version>
 
   <description>Versioning content repository for PLoS data</description>
 
@@ -373,16 +373,6 @@
                   <mapper>
                     <type>perm</type>
                     <prefix>/opt/plos/contentrepo</prefix>
-                  </mapper>
-                </data>
-
-                <data>
-                  <src>${project.basedir}/src/deb/contentrepo.sysv</src>
-                  <type>file</type>
-                  <dst>/etc/init.d/contentrepo</dst>
-                  <mapper>
-                    <type>perm</type>
-                    <filemode>755</filemode>
                   </mapper>
                 </data>
 
