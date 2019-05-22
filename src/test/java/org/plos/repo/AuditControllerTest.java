@@ -59,6 +59,11 @@ public class AuditControllerTest extends RepoBaseJerseyTest {
   private String USER_METADATA = "{ \"key\": \"obj1\", \"versionChecksum\":\"dkasdny84923mkdnu914i21\", \"version\":1.1 }";
 
   @Test
+  public void failingTest() {
+    assertNotNull(null);
+  }
+  
+  @Test
   public void getAuditRecordsTest() {
 
     createElementsToAudit();
