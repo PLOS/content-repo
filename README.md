@@ -1,6 +1,10 @@
 Content Repository
 ==================
 
+
+build: [![Build Status Badge]][Build Status]&#8193;&#9733;&#8193;
+integration: [![Integration Status Badge]][Integration Status]
+
 The content repository is a general use data store which functions similarly to Amazon S3. 
 
 While it is agnostic of what data is stored, all stored items are called 'objects'. Storage locations are called 'buckets'. A single object can have multiple versions within a bucket.
@@ -107,3 +111,8 @@ See the [Ambra Project documentation](https://plos.github.io/ambraproject/) for
 an overview of the stack and user instructions. If you have any questions or
 comments, please email dev@ambraproject.org, open a [GitHub
 issue](https://github.com/PLOS/content-repo/issues), or submit a pull request.
+
+[Build Status]: https://teamcity.plos.org/teamcity/viewType.html?buildTypeId=CRepo_Build
+[Build Status Badge]: https://teamcity.plos.org/teamcity/app/rest/builds/buildType:(id:CRepo_Build)/statusIcon.svg
+[Integration Status]: https://teamcity.plos.org/teamcity/viewType.html?buildTypeId=IntegrationTests_CRepoDev
+[Integration Status Badge]: https://teamcity.plos.org/teamcity/app/rest/builds/buildType:(id:IntegrationTests_CRepoDev)/statusIcon.svg
