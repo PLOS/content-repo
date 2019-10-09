@@ -123,6 +123,14 @@ class BaseServiceTest(unittest.TestCase):
         Create unique key (string) using current date
         :return:
         """
+        return datetime.now().strftime('%Y%m%d-%H%M%S-%f')
+
+    @staticmethod
+    def create_key2():
+        """
+        Create unique key (string) using current date
+        :return:
+        """
         return datetime.now().strftime('%Y%m%d_%H%M%S_%f')
 
     @staticmethod

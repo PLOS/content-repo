@@ -179,6 +179,13 @@ class TestObjects(ObjectsJson):
         self.get_objects(bucket_name)
         self.verify_http_code_is(OK)
         objects_all = self.parsed.get_objects()
+        if not objects_all:
+            self.new_object()
+            self.new_object()
+            self.new_object()
+            self.get_objects(bucket_name)
+            self.verify_http_code_is(OK)
+            objects_all = self.parsed.get_objects()
         length = len(objects_all)
         limit = randint(1, length)
         self.get_objects(bucket_name, limit=limit)
@@ -209,7 +216,7 @@ class TestObjects(ObjectsJson):
         self.verify_http_code_is(OK)
         objects_all = self.parsed.get_objects()
         length = len(objects_all)
-        offset = randint(1, length)
+        offset = randint(1, length-1)
         self.get_objects(bucket_name, offset=offset, limit=length - offset)
         self.verify_http_code_is(OK)
         objects = self.parsed.get_objects()
@@ -780,6 +787,13 @@ class TestObjects(ObjectsJson):
         # def create_key():
         #     return datetime.now().strftime('%Y%m%d_%H%M%S_%f')
 
-
+    def new_object(self):
+        bucket_name = BucketsJson.get_bucket_name()
+        self.obj_key = self.get_object_key()
+        download = '{0!s}.txt'.format(self.obj_key)
+        with StringIO('test content') as f:
+            self.post_objects(bucketName=bucket_name, key=self.obj_key,
+                              contentType='text/plain', downloadName=download,
+                              create='new', files=[('file', f), ])
 if __name__ == '__main__':
     ObjectsJson._run_tests_randomly()

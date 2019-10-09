@@ -36,9 +36,9 @@ DEFAULT_HEADERS = {'Accept': 'application/json'}
 HEADER = '-H'
 
 # get BUCKET_NAME based on whether API_BASE_URL is on prod or not.
-BUCKET_NAME = 'corpus'
-if API_BASE_URL.split('/')[2] in ('contentrepo-201.sfo.plos.org:8002'):
-    BUCKET_NAME = 'mogilefs-prod-repo'
+BUCKET_NAME = 'testbucketplos20191008-00'  # 'corpus'
+# if API_BASE_URL.split('/')[2] in ('contentrepo-201.sfo.plos.org:8002'):
+#     BUCKET_NAME = 'mogilefs-prod-repo'
 
 # Http Codes
 OK = 200
