@@ -43,5 +43,14 @@ class MogileFile():
         return MogileFile(sha1sum=sha1sum, fid=entry['fid'],
                           bucket=orig_bucket, length=entry['length'])
 
+    def make_mogile_path(self):
+        padded = "{:010d}".format(self.fid)
+        return "/{first}/{second}/{third}/{padded}.fid".format(
+            first=padded[0:1],
+            second=padded[1:4],
+            third=padded[4:7],
+            padded=padded)
+
+
 if __name__ == "__main__":
     main()
