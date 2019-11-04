@@ -38,3 +38,7 @@ class TestMigrate():
 
     def test_make_mogile_path(self, mogile_file):
         assert mogile_file.make_mogile_path() == '/0/564/879/0564879786.fid'
+
+    def test_contentrepo_path(self, mogile_file):
+        assert mogile_file.make_contentrepo_path() == \
+            "/f6e6fa50746ea0d0bb698e1ba8506a3e2ea8a149"

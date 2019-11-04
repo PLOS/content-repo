@@ -51,6 +51,8 @@ class MogileFile():
             third=padded[4:7],
             padded=padded)
 
+    def make_contentrepo_path(self):
+        return "/{}".format(self.sha1sum)
 
 if __name__ == "__main__":
     main()
