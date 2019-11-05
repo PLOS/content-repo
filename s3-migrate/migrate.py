@@ -2,6 +2,7 @@
 
 import os
 
+from botocore.exceptions import ClientError
 import dj_database_url
 import pymysql
 
@@ -53,6 +54,18 @@ class MogileFile():
 
     def make_contentrepo_path(self):
         return "/{}".format(self.sha1sum)
+
+    def exists_in_bucket(self, client, bucket):
+        """Return True if this file exists in the bucket."""
+        obj = client.Object(bucket, self.make_mogile_path())
+        try:
+            obj.load()
+        except ClientError as ex:
+            if ex.response['Error']['Code'] == "404":
+                return False
+            raise
+        return True
+
 
 if __name__ == "__main__":
     main()
