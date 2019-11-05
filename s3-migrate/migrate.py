@@ -29,6 +29,18 @@ def main():
         connection.close()
 
 
+def exists_in_bucket(client, bucket, path):
+    """Return True if object exists in the bucket."""
+    obj = client.Object(bucket, path)
+    try:
+        obj.load()
+    except ClientError as ex:
+        if ex.response['Error']['Code'] == "404":
+            return False
+        raise
+    return True
+
+
 class MogileFile():
     """Represents a file stored in mogile."""
 
@@ -63,16 +75,14 @@ storage of this file in S3."""
         """Return the path to use for the final storage of this file in S3."""
         return "/{}".format(self.sha1sum)
 
-    def exists_in_bucket(self, client, bucket):
-        """Return True if this file exists in the bucket."""
-        obj = client.Object(bucket, self.make_mogile_path())
-        try:
-            obj.load()
-        except ClientError as ex:
-            if ex.response['Error']['Code'] == "404":
-                return False
-            raise
-        return True
+    def mogile_file_exists_in_bucket(self, client, bucket):
+        """Return True if the intermediary mogile object exists in the
+bucket."""
+        exists_in_bucket(client, bucket, self.make_mogile_path())
+
+    def contentrepo_file_exists_in_bucket(self, client, bucket):
+        """Return True if the final contentrepo object exists in the bucket."""
+        exists_in_bucket(client, bucket, self.make_contentrepo_path())
 
 
 if __name__ == "__main__":
