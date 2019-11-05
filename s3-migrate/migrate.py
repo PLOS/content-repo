@@ -8,6 +8,7 @@ import pymysql
 
 
 def main():
+    """Perform copy of content from mogile to S3."""
     config = dj_database_url.parse(os.environ['MOGILE_DATABASE_URL'])
     connection = pymysql.connect(
         host=config['HOST'],
@@ -23,12 +24,14 @@ def main():
             cursor.execute(sql)
             result = cursor.fetchone()
             print(result)
-            print(MogileFile.parse_entry(result))
+            print(MogileFile.parse_row(result))
     finally:
         connection.close()
 
 
 class MogileFile():
+    """Represents a file stored in mogile."""
+
     def __init__(self, sha1sum: str, fid: int, bucket: str, length: int):
         self.sha1sum = sha1sum
         self.bucket = bucket
@@ -36,15 +39,19 @@ class MogileFile():
         self.fid = fid
 
     @classmethod
-    def parse_entry(cls, entry: dict):
+    def parse_row(cls, row: dict):
+        """Factory method to take an row as returned from the database and
+return a MogileFile."""
         # Sanity check, we only use one "domain" and one class
-        assert entry['dmid'] == 1, "Bad domain"
-        assert entry['classid'] == 0, "Bad class"
-        (sha1sum, orig_bucket) = entry['dkey'].split('-', 1)
-        return MogileFile(sha1sum=sha1sum, fid=entry['fid'],
-                          bucket=orig_bucket, length=entry['length'])
+        assert row['dmid'] == 1, "Bad domain"
+        assert row['classid'] == 0, "Bad class"
+        (sha1sum, orig_bucket) = row['dkey'].split('-', 1)
+        return MogileFile(sha1sum=sha1sum, fid=row['fid'],
+                          bucket=orig_bucket, length=row['length'])
 
     def make_mogile_path(self):
+        """Return the path to use for the intermediary, mogile-path-based
+storage of this file in S3."""
         padded = "{:010d}".format(self.fid)
         return "/{first}/{second}/{third}/{padded}.fid".format(
             first=padded[0:1],
@@ -53,6 +60,7 @@ class MogileFile():
             padded=padded)
 
     def make_contentrepo_path(self):
+        """Return the path to use for the final storage of this file in S3."""
         return "/{}".format(self.sha1sum)
 
     def exists_in_bucket(self, client, bucket):

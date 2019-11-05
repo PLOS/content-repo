@@ -6,15 +6,26 @@ from mock import Mock
 from migrate import MogileFile
 
 
+# pylint: disable=C0115,C0116,R0201
 class TestMigrate():
     @pytest.fixture
-    def entry(self):
-        return {'fid': 1,
-                'dmid': 1,
-                'dkey': 'f6e6fa50746ea0d0bb698e1ba8506a3e2ea8a149-mogilefs-prod-repo',
-                'length': 1593790,
-                'classid': 0,
-                'devcount': 2}
+    def s3_client(self):
+        s3_client = Mock()
+        obj = Mock()
+        s3_client.Object.return_value = obj
+        obj.load.return_value = {}
+        return s3_client
+
+    @pytest.fixture
+    def row(self):
+        return {
+            'fid': 1,
+            'dmid': 1,
+            'dkey':
+            'f6e6fa50746ea0d0bb698e1ba8506a3e2ea8a149-mogilefs-prod-repo',
+            'length': 1593790,
+            'classid': 0,
+            'devcount': 2}
 
     @pytest.fixture
     def mogile_file(self):
@@ -24,21 +35,21 @@ class TestMigrate():
             bucket='repo',
             length=1)
 
-    def test_parse_entry(self, entry):
-        file = MogileFile.parse_entry(entry)
+    def test_parse_row(self, row):
+        file = MogileFile.parse_row(row)
         assert file.sha1sum == 'f6e6fa50746ea0d0bb698e1ba8506a3e2ea8a149'
         assert file.fid == 1
         assert file.length == 1593790
 
-    def test_parse_bad_dmid(self, entry):
-        entry['dmid'] = 2
+    def test_parse_bad_dmid(self, row):
+        row['dmid'] = 2
         with pytest.raises(AssertionError, match='Bad domain'):
-            MogileFile.parse_entry(entry)
+            MogileFile.parse_row(row)
 
-    def test_parse_bad_class(self, entry):
-        entry['classid'] = 1
+    def test_parse_bad_class(self, row):
+        row['classid'] = 1
         with pytest.raises(AssertionError, match='Bad class'):
-            MogileFile.parse_entry(entry)
+            MogileFile.parse_row(row)
 
     def test_make_mogile_path(self, mogile_file):
         assert mogile_file.make_mogile_path() == '/0/564/879/0564879786.fid'
@@ -47,16 +58,16 @@ class TestMigrate():
         assert mogile_file.make_contentrepo_path() == \
             "/f6e6fa50746ea0d0bb698e1ba8506a3e2ea8a149"
 
-    def test_exists_in_bucket(self, mogile_file, s3):
-        assert mogile_file.exists_in_bucket(s3, 'my-bucket') == True
+    def test_exists_in_bucket(self, mogile_file, s3_client):
+        assert mogile_file.exists_in_bucket(s3_client, 'my-bucket') is True
 
-    def test_does_not_exist_in_bucket(self, mogile_file, s3):
+    def test_does_not_exist_in_bucket(self, mogile_file, s3_client):
         ex = ClientError({'Error': {'Code': '404'}}, 'Head')
-        s3.Object.return_value.load.side_effect = ex
-        assert mogile_file.exists_in_bucket(s3, 'my-bucket') == False
+        s3_client.Object.return_value.load.side_effect = ex
+        assert mogile_file.exists_in_bucket(s3_client, 'my-bucket') is False
 
-    def test_exists_in_bucket_raises_exception(self, mogile_file, s3):
+    def test_exists_in_bucket_raises_exception(self, mogile_file, s3_client):
         ex = ClientError({'Error': {'Code': '500'}}, 'Head')
-        s3.Object.return_value.load.side_effect = ex
+        s3_client.Object.return_value.load.side_effect = ex
         with pytest.raises(ClientError, match=r"An error occurred \(500\)"):
-            mogile_file.exists_in_bucket(s3, 'my-bucket')
+            mogile_file.exists_in_bucket(s3_client, 'my-bucket')
