@@ -73,7 +73,7 @@ class MyThread(threading.Thread):
             try:
                 mogile_file = self.queue.get_nowait()
                 print(f"Migrating {mogile_file.fid} to "
-                      f"{mogile_file.make_contentrepo_path()}")
+                      f"{mogile_file.make_contentrepo_key()}")
                 mogile_file.migrate(
                     self.mogile_client,
                     self.s3_client,
@@ -148,9 +148,9 @@ return a MogileFile."""
                           fid=row['fid'],
                           length=row['length'])
 
-    def exists_in_bucket(self, client, bucket, path):
+    def exists_in_bucket(self, client, bucket, key):
         """Return True if object exists in the bucket."""
-        obj = client.Object(bucket, path)
+        obj = client.Object(bucket, key)
         try:
             obj.load()
             if obj.content_length != self.length:
@@ -161,9 +161,9 @@ return a MogileFile."""
             raise
         return True
 
-    def make_mogile_path(self):
-        """Return the path to use for the intermediary, mogile-path-based
-storage of this file in S3."""
+    def make_intermediary_key(self):
+        """Return the key to use for the intermediary, mogile-based storage of
+this file in S3."""
         padded = "{:010d}".format(self.fid)
         return "{first}/{second}/{third}/{padded}.fid".format(
             first=padded[0:1],
@@ -171,19 +171,20 @@ storage of this file in S3."""
             third=padded[4:7],
             padded=padded)
 
-    def make_contentrepo_path(self):
-        """Return the path to use for the final storage of this file in S3."""
+    def make_contentrepo_key(self):
+        """Return the key to use for the final storage of this file in S3."""
         return self.sha1sum
 
-    def mogile_file_exists_in_bucket(self, client, bucket):
-        """Return True if the intermediary mogile object exists in the
-bucket."""
-        return self.exists_in_bucket(client, bucket, self.make_mogile_path())
+    def intermediary_exists_in_bucket(self, client, bucket):
+        """Return True if the intermediary (mogile-style key) object exists in
+the bucket."""
+        return self.exists_in_bucket(client, bucket,
+                                     self.make_intermediary_key())
 
     def contentrepo_file_exists_in_bucket(self, client, bucket):
         """Return True if the final contentrepo object exists in the bucket."""
         return self.exists_in_bucket(client, bucket,
-                                     self.make_contentrepo_path())
+                                     self.make_contentrepo_key())
 
     def get_mogile_url(self, client):
         """Get a URL from mogile that we can use to access this file."""
@@ -204,7 +205,7 @@ bucket."""
                 tmp.seek(0)
                 target = s3_client.Object(
                     bucket,
-                    self.make_contentrepo_path())
+                    self.make_contentrepo_key())
                 target.put(
                     Body=tmp,
                     ContentMD5=md5)
@@ -214,7 +215,7 @@ bucket."""
         if self.contentrepo_file_exists_in_bucket(s3_client, bucket):
             pass  # Migration done!
         else:
-            if self.mogile_file_exists_in_bucket(s3_client, bucket):
+            if self.intermediary_exists_in_bucket(s3_client, bucket):
                 # TODO: Copy content from temp location
                 pass
             else:

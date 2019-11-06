@@ -74,16 +74,17 @@ class TestMigrate():
         with pytest.raises(AssertionError, match='Bad class'):
             MogileFile.parse_row(row)
 
-    def test_make_mogile_path(self, mogile_file):
-        assert mogile_file.make_mogile_path() == '0/564/879/0564879786.fid'
+    def test_make_intermediary_key(self, mogile_file):
+        assert(mogile_file.make_intermediary_key() ==
+               '0/564/879/0564879786.fid')
 
-    def test_contentrepo_path(self, mogile_file):
-        assert mogile_file.make_contentrepo_path() == \
+    def test_make_contentrepo_key(self, mogile_file):
+        assert mogile_file.make_contentrepo_key() == \
             "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
 
     def test_exists_in_bucket(self, mogile_file, s3_client):
         s3_client.Object.return_value.content_length = mogile_file.length
-        assert(mogile_file.exists_in_bucket(s3_client, 'my-bucket', 'my-path')
+        assert(mogile_file.exists_in_bucket(s3_client, 'my-bucket', 'my-key')
                is True)
 
     def test_does_not_exist_in_bucket(self, s3_client, mogile_file):
@@ -96,7 +97,7 @@ class TestMigrate():
         ex = ClientError({'Error': {'Code': '500'}}, 'Head')
         s3_client.Object.return_value.load.side_effect = ex
         with pytest.raises(ClientError, match=r"An error occurred \(500\)"):
-            mogile_file.exists_in_bucket(s3_client, 'my-bucket', 'my-path')
+            mogile_file.exists_in_bucket(s3_client, 'my-bucket', 'my-key')
 
     def test_md5_fileobj(self, my_tempfile):
         assert (md5_fileobj_hex(my_tempfile) ==
