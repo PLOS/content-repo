@@ -108,7 +108,7 @@ return a MogileFile."""
         """Return the path to use for the intermediary, mogile-path-based
 storage of this file in S3."""
         padded = "{:010d}".format(self.fid)
-        return "/{first}/{second}/{third}/{padded}.fid".format(
+        return "{first}/{second}/{third}/{padded}.fid".format(
             first=padded[0:1],
             second=padded[1:4],
             third=padded[4:7],

@@ -61,7 +61,7 @@ class TestMigrate():
             MogileFile.parse_row(row)
 
     def test_make_mogile_path(self, mogile_file):
-        assert mogile_file.make_mogile_path() == '/0/564/879/0564879786.fid'
+        assert mogile_file.make_mogile_path() == '0/564/879/0564879786.fid'
 
     def test_contentrepo_path(self, mogile_file):
         assert mogile_file.make_contentrepo_path() == \
