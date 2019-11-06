@@ -30,9 +30,8 @@ class TestMigrate():
     @pytest.fixture
     def mogile_file(self):
         return MogileFile(
-            sha1sum='f6e6fa50746ea0d0bb698e1ba8506a3e2ea8a149',
+            dkey='f6e6fa50746ea0d0bb698e1ba8506a3e2ea8a149-repo',
             fid=564879786,
-            bucket='repo',
             length=1)
 
     def test_parse_row(self, row):
@@ -40,6 +39,8 @@ class TestMigrate():
         assert file.sha1sum == 'f6e6fa50746ea0d0bb698e1ba8506a3e2ea8a149'
         assert file.fid == 1
         assert file.length == 1593790
+        assert (file.dkey ==
+                'f6e6fa50746ea0d0bb698e1ba8506a3e2ea8a149-mogilefs-prod-repo')
 
     def test_parse_bad_dmid(self, row):
         row['dmid'] = 2

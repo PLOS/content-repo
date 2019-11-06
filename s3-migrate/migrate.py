@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import random
 import os
 
 from botocore.exceptions import ClientError
@@ -44,11 +45,11 @@ def exists_in_bucket(client, bucket, path):
 class MogileFile():
     """Represents a file stored in mogile."""
 
-    def __init__(self, sha1sum: str, fid: int, bucket: str, length: int):
-        self.sha1sum = sha1sum
-        self.bucket = bucket
+    def __init__(self, fid: int, dkey: str, length: int):
         self.length = length
         self.fid = fid
+        self.dkey = dkey
+        (self.sha1sum, self.orig_bucket) = dkey.split('-', 1)
 
     @classmethod
     def parse_row(cls, row: dict):
@@ -57,9 +58,9 @@ return a MogileFile."""
         # Sanity check, we only use one "domain" and one class
         assert row['dmid'] == 1, "Bad domain"
         assert row['classid'] == 0, "Bad class"
-        (sha1sum, orig_bucket) = row['dkey'].split('-', 1)
-        return MogileFile(sha1sum=sha1sum, fid=row['fid'],
-                          bucket=orig_bucket, length=row['length'])
+        return MogileFile(dkey=row['dkey'],
+                          fid=row['fid'],
+                          length=row['length'])
 
     def make_mogile_path(self):
         """Return the path to use for the intermediary, mogile-path-based
@@ -83,6 +84,10 @@ bucket."""
     def contentrepo_file_exists_in_bucket(self, client, bucket):
         """Return True if the final contentrepo object exists in the bucket."""
         exists_in_bucket(client, bucket, self.make_contentrepo_path())
+
+    def get_mogile_url(self, client):
+        """Get a URL from mogile that we can use to access this file."""
+        random.choice(list(client.get_paths(self.dkey).data['paths'].values()))
 
 
 if __name__ == "__main__":
