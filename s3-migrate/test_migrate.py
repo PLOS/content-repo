@@ -4,7 +4,7 @@ import pytest
 from botocore.exceptions import ClientError
 from mock import Mock
 
-from migrate import MogileFile, exists_in_bucket, \
+from migrate import MogileFile, \
     md5_fileobj_hex, sha1_fileobj_hex, md5_fileobj_b64, sha1_fileobj_b64
 
 
@@ -67,19 +67,22 @@ class TestMigrate():
         assert mogile_file.make_contentrepo_path() == \
             "/f6e6fa50746ea0d0bb698e1ba8506a3e2ea8a149"
 
-    def test_exists_in_bucket(self, s3_client):
-        assert exists_in_bucket(s3_client, 'my-bucket', 'my-path') is True
+    def test_exists_in_bucket(self, mogile_file, s3_client):
+        s3_client.Object.return_value.content_length = mogile_file.length
+        assert(mogile_file.exists_in_bucket(s3_client, 'my-bucket', 'my-path')
+               is True)
 
-    def test_does_not_exist_in_bucket(self, s3_client):
+    def test_does_not_exist_in_bucket(self, s3_client, mogile_file):
         ex = ClientError({'Error': {'Code': '404'}}, 'Head')
         s3_client.Object.return_value.load.side_effect = ex
-        assert exists_in_bucket(s3_client, 'my-bucket', 'my-file') is False
+        assert(mogile_file.exists_in_bucket(s3_client, 'my-bucket', 'my-file')
+               is False)
 
-    def test_exists_in_bucket_raises_exception(self, s3_client):
+    def test_exists_in_bucket_raises_exception(self, s3_client, mogile_file):
         ex = ClientError({'Error': {'Code': '500'}}, 'Head')
         s3_client.Object.return_value.load.side_effect = ex
         with pytest.raises(ClientError, match=r"An error occurred \(500\)"):
-            exists_in_bucket(s3_client, 'my-bucket', 'my-path')
+            mogile_file.exists_in_bucket(s3_client, 'my-bucket', 'my-path')
 
     def test_md5_fileobj(self, my_tempfile):
         assert (md5_fileobj_hex(my_tempfile) ==
