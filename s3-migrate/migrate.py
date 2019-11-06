@@ -1,11 +1,53 @@
 #!/usr/bin/env python
 
-import random
+import base64
+import hashlib
 import os
+import random
 
 from botocore.exceptions import ClientError
 import dj_database_url
 import pymysql
+
+
+def hash_fileobj(fileobj, hasher):
+    """Efficiently hash a file object using the provided hasher."""
+    blocksize = 65536
+    fileobj.seek(0)
+    block = fileobj.read(blocksize)
+    while block:
+        hasher.update(block)
+        block = fileobj.read(blocksize)
+    fileobj.seek(0)
+    return hasher
+
+
+def md5_fileobj_hex(fileobj):
+    """Efficiently calculate the MD5 sum for a file object. Returns a hex
+string."""
+    return hash_fileobj(fileobj, hashlib.md5()).hexdigest()
+
+
+def md5_fileobj_b64(fileobj):
+    """Efficiently calculate the MD5 sum for a file object. Returns a
+Base64 encoded string."""
+    return base64.b64encode(
+        hash_fileobj(fileobj, hashlib.md5()).digest()
+    ).decode("utf-8")
+
+
+def sha1_fileobj_hex(fileobj):
+    """Efficiently calculate the SHA1 sum for a file object. Returns a hex
+string."""
+    return hash_fileobj(fileobj, hashlib.sha1()).hexdigest()
+
+
+def sha1_fileobj_b64(fileobj):
+    """Efficiently calculate the SHA1 sum for a file object. Returns a
+Base64 encoded string."""
+    return base64.b64encode(
+        hash_fileobj(fileobj, hashlib.sha1()).digest()
+    ).decode("utf-8")
 
 
 def main():

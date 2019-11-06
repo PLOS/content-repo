@@ -1,9 +1,11 @@
-import pytest
+import tempfile
 
+import pytest
 from botocore.exceptions import ClientError
 from mock import Mock
 
-from migrate import MogileFile, exists_in_bucket
+from migrate import MogileFile, exists_in_bucket, \
+    md5_fileobj_hex, sha1_fileobj_hex, md5_fileobj_b64, sha1_fileobj_b64
 
 
 # pylint: disable=C0115,C0116,R0201
@@ -26,6 +28,12 @@ class TestMigrate():
             'length': 1593790,
             'classid': 0,
             'devcount': 2}
+
+    @pytest.yield_fixture
+    def my_tempfile(self):
+        with tempfile.TemporaryFile() as tmp:
+            tmp.write(b"hello world")
+            yield tmp
 
     @pytest.fixture
     def mogile_file(self):
@@ -72,3 +80,14 @@ class TestMigrate():
         s3_client.Object.return_value.load.side_effect = ex
         with pytest.raises(ClientError, match=r"An error occurred \(500\)"):
             exists_in_bucket(s3_client, 'my-bucket', 'my-path')
+
+    def test_md5_fileobj(self, my_tempfile):
+        assert (md5_fileobj_hex(my_tempfile) ==
+                "5eb63bbbe01eeed093cb22bb8f5acdc3")
+        assert md5_fileobj_b64(my_tempfile) == "XrY7u+Ae7tCTyyK7j1rNww=="
+
+    def test_sha1_fileobj(self, my_tempfile):
+        assert (sha1_fileobj_hex(my_tempfile) ==
+                "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed")
+        assert (sha1_fileobj_b64(my_tempfile) ==
+                "Kq5sNclPz7QV2+lfQIuc6R7oRu0=")
