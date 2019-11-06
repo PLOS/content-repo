@@ -4,10 +4,17 @@ import base64
 import hashlib
 import os
 import random
+import shutil
+import tempfile
+import threading
+from queue import Empty, Queue
 
-from botocore.exceptions import ClientError
+import boto3
 import dj_database_url
+import pymogilefs
 import pymysql
+import requests
+from botocore.exceptions import ClientError
 
 
 def hash_fileobj(fileobj, hasher):
@@ -50,6 +57,47 @@ Base64 encoded string."""
     ).decode("utf-8")
 
 
+class MyThread(threading.Thread):
+    """Thread worker with s3 and mogile clients available."""
+
+    def __init__(self, q: Queue, *args, **kwargs):
+        super(MyThread, self).__init__(*args, **kwargs)
+        self.queue = q
+        self.mogile_client = pymogilefs.client.Client(
+            trackers=os.environ['MOGILE_TRACKERS'].split(','),
+            domain='plos_repo')
+        self.s3_client = boto3.resource('s3')
+
+    def run(self):
+        while True:
+            try:
+                mogile_file = self.queue.get_nowait()
+                print(f"Putting {mogile_file.fid}")
+                mogile_file.maybe_put_mogile_content(
+                    self.mogile_client,
+                    self.s3_client,
+                    'testbucketplos20191008-00')
+                self.queue.task_done()
+            except Empty:
+                break
+
+    @classmethod
+    def run_pool(cls, queue):
+        """Run these threads on the data provided in the queue."""
+        threads = []
+        for _ in range(5):
+            thread = cls(queue)
+            threads.append(thread)
+            thread.start()
+
+        # block until all tasks are done
+        queue.join()
+
+        # stop workers
+        for thread in threads:
+            thread.join()
+
+
 def main():
     """Perform copy of content from mogile to S3."""
     config = dj_database_url.parse(os.environ['MOGILE_DATABASE_URL'])
@@ -59,15 +107,22 @@ def main():
         password=config['PASSWORD'],
         db=config['NAME'],
         cursorclass=pymysql.cursors.DictCursor)
+    # Debug logging
+    # boto3.set_stream_logger(name='botocore')
 
     try:
         with connection.cursor() as cursor:
             # Read a single record
-            sql = "SELECT * FROM file LIMIT 10"
+            sql = "SELECT * FROM file LIMIT 2000"
             cursor.execute(sql)
-            result = cursor.fetchone()
-            print(result)
-            print(MogileFile.parse_row(result))
+            queue = Queue()
+            while True:
+                rows = cursor.fetchmany(1000)
+                if len(rows) == 0:
+                    break
+                for row in rows:
+                    queue.put(MogileFile.parse_row(row))
+            MyThread.run_pool(queue)
     finally:
         connection.close()
 
@@ -133,6 +188,30 @@ bucket."""
         """Get a URL from mogile that we can use to access this file."""
         return random.choice(
             list(client.get_paths(self.dkey).data['paths'].values()))
+
+    def maybe_put_mogile_content(self, mogile_client, s3_client, bucket):
+        """Put mogile content in S3 if it is not there already."""
+        if not self.mogile_file_exists_in_bucket(s3_client, bucket):
+            self.put_mogile_content(mogile_client, s3_client, bucket)
+
+    def put_mogile_content(self, mogile_client, s3_client, bucket):
+        """Put content from mogile in S3."""
+        with requests.get(
+                self.get_mogile_url(mogile_client), stream=True
+        ) as req:
+            req.raise_for_status()
+            with tempfile.TemporaryFile() as tmp:
+                req.raw.decode_content = True
+                shutil.copyfileobj(req.raw, tmp)
+                assert sha1_fileobj_hex(tmp) == self.sha1sum
+                md5 = md5_fileobj_b64(tmp)
+                tmp.seek(0)
+                target = s3_client.Object(
+                    bucket,
+                    self.make_mogile_path())
+                target.put(
+                    Body=tmp,
+                    ContentMD5=md5)
 
 
 if __name__ == "__main__":
