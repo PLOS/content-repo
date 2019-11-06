@@ -83,14 +83,18 @@ class MyThread(threading.Thread):
                 break
 
     @classmethod
-    def run_pool(cls, queue):
-        """Run these threads on the data provided in the queue."""
+    def start_pool(cls, queue):
+        """Run threads on the data provided in the queue. Return a list of
+threads to pass to `finish_pool` later."""
         threads = []
         for _ in range(20):
             thread = cls(queue)
             threads.append(thread)
             thread.start()
+        return threads
 
+    @staticmethod
+    def finish_pool(queue, threads):
         # block until all tasks are done
         queue.join()
 
@@ -114,17 +118,20 @@ def main():
 
     try:
         with connection.cursor() as cursor:
-            # Read a single record
+            row_count = 1000
             sql = "SELECT * FROM file"
             cursor.execute(sql)
             queue = Queue()
-            while True:
-                rows = cursor.fetchmany(1000)
-                if len(rows) == 0:
-                    break
+            # Ensure the queue has some content for the threads to consume.
+            for row in cursor.fetchmany(row_count):
+                queue.put(MogileFile.parse_row(row))
+            threads = MyThread.start_pool(queue)
+            rows = cursor.fetchmany(row_count)
+            while len(rows) != 0:
                 for row in rows:
                     queue.put(MogileFile.parse_row(row))
-            MyThread.run_pool(queue)
+                rows = cursor.fetchmany(row_count)
+            MyThread.finish_pool(queue, threads)
     finally:
         connection.close()
 
@@ -145,9 +152,9 @@ return a MogileFile."""
         # Sanity check, we only use one "domain" and one class
         assert row['dmid'] == 1, "Bad domain"
         assert row['classid'] == 0, "Bad class"
-        return MogileFile(dkey=row['dkey'],
-                          fid=row['fid'],
-                          length=row['length'])
+        return cls(dkey=row['dkey'],
+                   fid=row['fid'],
+                   length=row['length'])
 
     def exists_in_bucket(self, client, bucket, key):
         """Return True if object exists in the bucket."""
