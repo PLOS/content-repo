@@ -191,6 +191,17 @@ the bucket."""
         return random.choice(
             list(client.get_paths(self.dkey).data['paths'].values()))
 
+    def copy_from_intermediary(self, s3_client, bucket):
+        """Copy content from the intermediary (mogile-style key) location to
+its final location."""
+        obj = s3_client.Object(
+            bucket,
+            self.make_contentrepo_key())
+        obj.copy({
+            'Bucket': bucket,
+            'Key': self.make_intermediary_key()
+        })
+
     def put(self, mogile_client, s3_client, bucket):
         """Put content from mogile to S3."""
         with requests.get(
@@ -216,9 +227,10 @@ the bucket."""
             pass  # Migration done!
         else:
             if self.intermediary_exists_in_bucket(s3_client, bucket):
-                # TODO: Copy content from temp location
-                pass
+                self.copy_from_intermediary(s3_client, bucket)
             else:
+                # Nothing is on S3 yet, copy content directly to the
+                # final location.
                 self.put(mogile_client, s3_client, bucket)
 
 
