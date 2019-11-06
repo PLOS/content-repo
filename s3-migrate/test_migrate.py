@@ -2,7 +2,7 @@ import tempfile
 
 import pytest
 from botocore.exceptions import ClientError
-from mock import Mock
+from unittest.mock import Mock
 
 from migrate import MogileFile, \
     md5_fileobj_hex, sha1_fileobj_hex, md5_fileobj_b64, sha1_fileobj_b64
@@ -116,5 +116,5 @@ class TestMigrate():
         requests_mock.get('http://example.org/2', content=b'hello world')
         mogile_file.put_mogile_content(mogile_client, s3_client, 'my-bucket')
         # Check that `put` was called with the correct MD5 sum.
-        args = s3_client.Object.return_value.put.call_args_list[0]
-        assert args.kwargs['ContentMD5'] == 'XrY7u+Ae7tCTyyK7j1rNww=='
+        _, kwargs = s3_client.Object.return_value.put.call_args_list[0]
+        assert kwargs['ContentMD5'] == 'XrY7u+Ae7tCTyyK7j1rNww=='
