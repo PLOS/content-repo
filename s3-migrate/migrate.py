@@ -76,7 +76,7 @@ class MyThread(threading.Thread):
                 mogile_file.maybe_put_mogile_content(
                     self.mogile_client,
                     self.s3_client,
-                    'testbucketplos20191008-00')
+                    os.environ['BUCKET'])
                 self.queue.task_done()
             except Empty:
                 break
