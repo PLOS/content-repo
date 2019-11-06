@@ -121,11 +121,11 @@ storage of this file in S3."""
     def mogile_file_exists_in_bucket(self, client, bucket):
         """Return True if the intermediary mogile object exists in the
 bucket."""
-        exists_in_bucket(client, bucket, self.make_mogile_path())
+        return exists_in_bucket(client, bucket, self.make_mogile_path())
 
     def contentrepo_file_exists_in_bucket(self, client, bucket):
         """Return True if the final contentrepo object exists in the bucket."""
-        exists_in_bucket(client, bucket, self.make_contentrepo_path())
+        return exists_in_bucket(client, bucket, self.make_contentrepo_path())
 
     def get_mogile_url(self, client):
         """Get a URL from mogile that we can use to access this file."""
