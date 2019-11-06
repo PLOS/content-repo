@@ -115,7 +115,7 @@ def main():
     try:
         with connection.cursor() as cursor:
             # Read a single record
-            sql = "SELECT * FROM file LIMIT 2000"
+            sql = "SELECT * FROM file"
             cursor.execute(sql)
             queue = Queue()
             while True:
