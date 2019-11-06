@@ -72,8 +72,9 @@ class MyThread(threading.Thread):
         while True:
             try:
                 mogile_file = self.queue.get_nowait()
-                print(f"Putting {mogile_file.fid}")
-                mogile_file.maybe_put_mogile_content(
+                print(f"Migrating {mogile_file.fid} to "
+                      f"{mogile_file.make_contentrepo_path()}")
+                mogile_file.migrate(
                     self.mogile_client,
                     self.s3_client,
                     os.environ['BUCKET'])
@@ -172,7 +173,7 @@ storage of this file in S3."""
 
     def make_contentrepo_path(self):
         """Return the path to use for the final storage of this file in S3."""
-        return "/{}".format(self.sha1sum)
+        return self.sha1sum
 
     def mogile_file_exists_in_bucket(self, client, bucket):
         """Return True if the intermediary mogile object exists in the
@@ -189,13 +190,8 @@ bucket."""
         return random.choice(
             list(client.get_paths(self.dkey).data['paths'].values()))
 
-    def maybe_put_mogile_content(self, mogile_client, s3_client, bucket):
-        """Put mogile content in S3 if it is not there already."""
-        if not self.mogile_file_exists_in_bucket(s3_client, bucket):
-            self.put_mogile_content(mogile_client, s3_client, bucket)
-
-    def put_mogile_content(self, mogile_client, s3_client, bucket):
-        """Put content from mogile in S3."""
+    def put(self, mogile_client, s3_client, bucket):
+        """Put content from mogile to S3."""
         with requests.get(
                 self.get_mogile_url(mogile_client), stream=True
         ) as req:
@@ -208,10 +204,21 @@ bucket."""
                 tmp.seek(0)
                 target = s3_client.Object(
                     bucket,
-                    self.make_mogile_path())
+                    self.make_contentrepo_path())
                 target.put(
                     Body=tmp,
                     ContentMD5=md5)
+
+    def migrate(self, mogile_client, s3_client, bucket):
+        """Migrate this mogile file contentrepo."""
+        if self.contentrepo_file_exists_in_bucket(s3_client, bucket):
+            pass  # Migration done!
+        else:
+            if self.mogile_file_exists_in_bucket(s3_client, bucket):
+                # TODO: Copy content from temp location
+                pass
+            else:
+                self.put(mogile_client, s3_client, bucket)
 
 
 if __name__ == "__main__":

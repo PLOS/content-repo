@@ -1,8 +1,8 @@
 import tempfile
+from unittest.mock import Mock
 
 import pytest
 from botocore.exceptions import ClientError
-from unittest.mock import Mock
 
 from migrate import MogileFile, \
     md5_fileobj_hex, sha1_fileobj_hex, md5_fileobj_b64, sha1_fileobj_b64
@@ -79,7 +79,7 @@ class TestMigrate():
 
     def test_contentrepo_path(self, mogile_file):
         assert mogile_file.make_contentrepo_path() == \
-            "/2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
+            "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
 
     def test_exists_in_bucket(self, mogile_file, s3_client):
         s3_client.Object.return_value.content_length = mogile_file.length
@@ -109,12 +109,12 @@ class TestMigrate():
         assert (sha1_fileobj_b64(my_tempfile) ==
                 "Kq5sNclPz7QV2+lfQIuc6R7oRu0=")
 
-    def test_put_mogile_content(self, mogile_file: MogileFile,
-                                mogile_client, s3_client,
-                                requests_mock):
+    def test_put(self, mogile_file: MogileFile,
+                 mogile_client, s3_client,
+                 requests_mock):
         requests_mock.get('http://example.org/1', content=b'hello world')
         requests_mock.get('http://example.org/2', content=b'hello world')
-        mogile_file.put_mogile_content(mogile_client, s3_client, 'my-bucket')
+        mogile_file.put(mogile_client, s3_client, 'my-bucket')
         # Check that `put` was called with the correct MD5 sum.
         _, kwargs = s3_client.Object.return_value.put.call_args_list[0]
         assert kwargs['ContentMD5'] == 'XrY7u+Ae7tCTyyK7j1rNww=='
