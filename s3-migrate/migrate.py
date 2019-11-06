@@ -108,7 +108,8 @@ def main():
         password=config['PASSWORD'],
         db=config['NAME'],
         cursorclass=pymysql.cursors.DictCursor)
-    # Debug logging
+
+    # Uncomment to enable boto debug logging
     # boto3.set_stream_logger(name='botocore')
 
     try:
