@@ -129,7 +129,8 @@ bucket."""
 
     def get_mogile_url(self, client):
         """Get a URL from mogile that we can use to access this file."""
-        random.choice(list(client.get_paths(self.dkey).data['paths'].values()))
+        return random.choice(
+            list(client.get_paths(self.dkey).data['paths'].values()))
 
 
 if __name__ == "__main__":
