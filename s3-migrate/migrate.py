@@ -86,7 +86,7 @@ class MyThread(threading.Thread):
     def run_pool(cls, queue):
         """Run these threads on the data provided in the queue."""
         threads = []
-        for _ in range(5):
+        for _ in range(20):
             thread = cls(queue)
             threads.append(thread)
             thread.start()
