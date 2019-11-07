@@ -63,11 +63,20 @@ class TestMigrate():
         assert file.length == 1593790
         assert (file.dkey ==
                 '2aae6c35c94fcfb415dbe95f408b9ce91ee846ed-mogilefs-prod-repo')
+        assert file.temp is False
+        assert file.orig_bucket == 'mogilefs-prod-repo'
 
     def test_parse_bad_dmid(self, row):
         row['dmid'] = 2
         with pytest.raises(AssertionError, match='Bad domain'):
             MogileFile.parse_row(row)
+
+    def test_parse_temp_file(self, row):
+        row['dkey'] = '8d26b4da-bd3e-47eb-888a-13bb3579c7e9.tmp'
+        file = MogileFile.parse_row(row)
+        assert file.temp is True
+        assert file.orig_bucket is None
+        assert file.sha1sum is None
 
     def test_parse_bad_class(self, row):
         row['classid'] = 1

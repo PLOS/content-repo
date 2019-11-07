@@ -121,7 +121,15 @@ class MogileFile():
         self.length = length
         self.fid = fid
         self.dkey = dkey
-        (self.sha1sum, self.orig_bucket) = dkey.split('-', 1)
+        if dkey.endswith('.tmp'):
+            # These seem to be old junk leftover from failed ingests.
+            # Check later.
+            self.temp = True
+            self.sha1sum = None
+            self.orig_bucket = None
+        else:
+            self.temp = False
+            (self.sha1sum, self.orig_bucket) = dkey.split('-', 1)
 
     @classmethod
     def parse_row(cls, row: dict):
@@ -209,7 +217,9 @@ its final location."""
 
     def migrate(self, mogile_client, s3_client, bucket):
         """Migrate this mogile object to contentrepo."""
-        if self.contentrepo_exists_in_bucket(s3_client, bucket):
+        if self.temp is True:
+            pass  # Do not migrate temporary files.
+        elif self.contentrepo_exists_in_bucket(s3_client, bucket):
             pass  # Migration done!
         else:
             if self.intermediary_exists_in_bucket(s3_client, bucket):
