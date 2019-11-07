@@ -95,45 +95,14 @@ threads to pass to `finish_pool` later."""
 
     @staticmethod
     def finish_pool(queue, threads):
+        """Wait until queue is empty and all threads have finished
+processing."""
         # block until all tasks are done
         queue.join()
 
         # stop workers
         for thread in threads:
             thread.join()
-
-
-def main():
-    """Perform copy of content from mogile to S3."""
-    config = dj_database_url.parse(os.environ['MOGILE_DATABASE_URL'])
-    connection = pymysql.connect(
-        host=config['HOST'],
-        user=config['USER'],
-        password=config['PASSWORD'],
-        db=config['NAME'],
-        cursorclass=pymysql.cursors.DictCursor)
-
-    # Uncomment to enable boto debug logging
-    # boto3.set_stream_logger(name='botocore')
-
-    try:
-        with connection.cursor() as cursor:
-            row_count = 1000
-            sql = "SELECT * FROM file"
-            cursor.execute(sql)
-            queue = Queue()
-            # Ensure the queue has some content for the threads to consume.
-            for row in cursor.fetchmany(row_count):
-                queue.put(MogileFile.parse_row(row))
-            threads = MyThread.start_pool(queue)
-            rows = cursor.fetchmany(row_count)
-            while len(rows) != 0:
-                for row in rows:
-                    queue.put(MogileFile.parse_row(row))
-                rows = cursor.fetchmany(row_count)
-            MyThread.finish_pool(queue, threads)
-    finally:
-        connection.close()
 
 
 class MogileFile():
@@ -240,6 +209,39 @@ its final location."""
                 # Nothing is on S3 yet, copy content directly to the
                 # final location.
                 self.put(mogile_client, s3_client, bucket)
+
+
+def main():
+    """Perform copy of content from mogile to S3."""
+    config = dj_database_url.parse(os.environ['MOGILE_DATABASE_URL'])
+    connection = pymysql.connect(
+        host=config['HOST'],
+        user=config['USER'],
+        password=config['PASSWORD'],
+        db=config['NAME'],
+        cursorclass=pymysql.cursors.DictCursor)
+
+    # Uncomment to enable boto debug logging
+    # boto3.set_stream_logger(name='botocore')
+
+    try:
+        with connection.cursor() as cursor:
+            row_count = 1000
+            sql = "SELECT * FROM file"
+            cursor.execute(sql)
+            queue = Queue()
+            # Ensure the queue has some content for the threads to consume.
+            for row in cursor.fetchmany(row_count):
+                queue.put(MogileFile.parse_row(row))
+            threads = MyThread.start_pool(queue)
+            rows = cursor.fetchmany(row_count)
+            while len(rows) != 0:
+                for row in rows:
+                    queue.put(MogileFile.parse_row(row))
+                rows = cursor.fetchmany(row_count)
+            MyThread.finish_pool(queue, threads)
+    finally:
+        connection.close()
 
 
 if __name__ == "__main__":
