@@ -17,6 +17,15 @@ import requests
 from botocore.exceptions import ClientError
 
 
+def make_bucket_hash(buckets):
+    """Construct a hash from a buckets source string of the form a:b,c:d."""
+    retval = {}
+    for bucket in buckets.split(','):
+        source, target = bucket.split(':')
+        retval[source] = target
+    return retval
+
+
 def hash_fileobj(fileobj, hasher):
     """Efficiently hash a file object using the provided hasher."""
     blocksize = 65536
@@ -213,6 +222,7 @@ its final location."""
 
 def main():
     """Perform copy of content from mogile to S3."""
+    buckets = make_bucket_hash(os.environ["BUCKETS"])
     config = dj_database_url.parse(os.environ['MOGILE_DATABASE_URL'])
     connection = pymysql.connect(
         host=config['HOST'],

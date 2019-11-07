@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 from botocore.exceptions import ClientError
 
-from migrate import MogileFile, \
+from migrate import MogileFile, make_bucket_hash,\
     md5_fileobj_hex, sha1_fileobj_hex, md5_fileobj_b64, sha1_fileobj_b64
 
 
@@ -119,3 +119,6 @@ class TestMigrate():
         # Check that `put` was called with the correct MD5 sum.
         _, kwargs = s3_client.Object.return_value.put.call_args_list[0]
         assert kwargs['ContentMD5'] == 'XrY7u+Ae7tCTyyK7j1rNww=='
+
+    def test_make_bucket_hash(self):
+        assert make_bucket_hash("a:b,c:d") == {"a": "b", "c": "d"}
