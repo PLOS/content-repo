@@ -140,7 +140,7 @@ return a MogileFile."""
 
     def make_intermediary_key(self):
         """Return the key to use for the intermediary, mogile-based storage of
-this file in S3."""
+this object in S3."""
         padded = "{:010d}".format(self.fid)
         return "{first}/{second}/{third}/{padded}.fid".format(
             first=padded[0:1],
@@ -149,7 +149,7 @@ this file in S3."""
             padded=padded)
 
     def make_contentrepo_key(self):
-        """Return the key to use for the final storage of this file in S3."""
+        """Return the key to use for the final storage of this object in S3."""
         return self.sha1sum
 
     def intermediary_exists_in_bucket(self, client, bucket):
@@ -158,7 +158,7 @@ the bucket."""
         return self.exists_in_bucket(client, bucket,
                                      self.make_intermediary_key())
 
-    def contentrepo_file_exists_in_bucket(self, client, bucket):
+    def contentrepo_exists_in_bucket(self, client, bucket):
         """Return True if the final contentrepo object exists in the bucket."""
         return self.exists_in_bucket(client, bucket,
                                      self.make_contentrepo_key())
@@ -199,8 +199,8 @@ its final location."""
                     ContentMD5=md5)
 
     def migrate(self, mogile_client, s3_client, bucket):
-        """Migrate this mogile file contentrepo."""
-        if self.contentrepo_file_exists_in_bucket(s3_client, bucket):
+        """Migrate this mogile object to contentrepo."""
+        if self.contentrepo_exists_in_bucket(s3_client, bucket):
             pass  # Migration done!
         else:
             if self.intermediary_exists_in_bucket(s3_client, bucket):
