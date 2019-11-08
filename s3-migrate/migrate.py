@@ -39,28 +39,36 @@ def hash_fileobj(fileobj, hasher):
 
 
 def md5_fileobj_hex(fileobj):
-    """Efficiently calculate the MD5 sum for a file object. Returns a hex
-string."""
+    """Efficiently calculate the MD5 sum for a file object.
+
+    Returns a hex string.
+    """
     return hash_fileobj(fileobj, hashlib.md5()).hexdigest()
 
 
 def md5_fileobj_b64(fileobj):
-    """Efficiently calculate the MD5 sum for a file object. Returns a
-Base64 encoded string."""
+    """Efficiently calculate the MD5 sum for a file object.
+
+    Returns a Base64 encoded string.
+    """
     return base64.b64encode(
         hash_fileobj(fileobj, hashlib.md5()).digest()
     ).decode("utf-8")
 
 
 def sha1_fileobj_hex(fileobj):
-    """Efficiently calculate the SHA1 sum for a file object. Returns a hex
-string."""
+    """Efficiently calculate the SHA1 sum for a file object.
+
+    Returns a hex string.
+    """
     return hash_fileobj(fileobj, hashlib.sha1()).hexdigest()
 
 
 def sha1_fileobj_b64(fileobj):
-    """Efficiently calculate the SHA1 sum for a file object. Returns a
-Base64 encoded string."""
+    """Efficiently calculate the SHA1 sum for a file object.
+
+    Returns a Base64 encoded string.
+    """
     return base64.b64encode(
         hash_fileobj(fileobj, hashlib.sha1()).digest()
     ).decode("utf-8")
@@ -70,6 +78,7 @@ class MyThread(threading.Thread):
     """Thread worker with s3 and mogile clients available."""
 
     def __init__(self, q: Queue, *args, **kwargs):
+        """Initialize this thread."""
         super(MyThread, self).__init__(*args, **kwargs)
         self.queue = q
         self.mogile_client = pymogilefs.client.Client(
@@ -78,6 +87,7 @@ class MyThread(threading.Thread):
         self.s3_client = boto3.resource('s3')
 
     def run(self):
+        """Run this thread."""
         while True:
             try:
                 mogile_file = self.queue.get_nowait()
@@ -93,8 +103,10 @@ class MyThread(threading.Thread):
 
     @classmethod
     def start_pool(cls, queue):
-        """Run threads on the data provided in the queue. Return a list of
-threads to pass to `finish_pool` later."""
+        """Run threads on the data provided in the queue.
+
+        Returns a list of threads to pass to `finish_pool` later.
+        """
         threads = []
         for _ in range(20):
             thread = cls(queue)
@@ -104,8 +116,7 @@ threads to pass to `finish_pool` later."""
 
     @staticmethod
     def finish_pool(queue, threads):
-        """Wait until queue is empty and all threads have finished
-processing."""
+        """Wait until queue is empty and threads have finished processing."""
         # block until all tasks are done
         queue.join()
 
@@ -118,6 +129,10 @@ class MogileFile():
     """Represents a file stored in mogile."""
 
     def __init__(self, fid: int, dkey: str, length: int):
+        """Initialize a MogileFile.
+
+        Arguments are as stored in the mogile `file` database table.
+        """
         self.length = length
         self.fid = fid
         self.dkey = dkey
@@ -133,8 +148,7 @@ class MogileFile():
 
     @classmethod
     def parse_row(cls, row: dict):
-        """Factory method to take an row as returned from the database and
-return a MogileFile."""
+        """Take a file row and return a MogileFile."""
         # Sanity check, we only use one "domain" and one class
         assert row['dmid'] == 1, "Bad domain"
         assert row['classid'] == 0, "Bad class"
@@ -143,7 +157,7 @@ return a MogileFile."""
                    length=row['length'])
 
     def exists_in_bucket(self, client, bucket, key):
-        """Return True if object exists in the bucket."""
+        """Check if object with key is in the bucket."""
         obj = client.Object(bucket, key)
         try:
             obj.load()
@@ -156,8 +170,7 @@ return a MogileFile."""
         return True
 
     def make_intermediary_key(self):
-        """Return the key to use for the intermediary, mogile-based storage of
-this object in S3."""
+        """Return the key to use for the intermediary storage in S3."""
         padded = "{:010d}".format(self.fid)
         return "{first}/{second}/{third}/{padded}.fid".format(
             first=padded[0:1],
@@ -169,15 +182,14 @@ this object in S3."""
         """Return the key to use for the final storage of this object in S3."""
         return self.sha1sum
 
-    def intermediary_exists_in_bucket(self, client, bucket):
-        """Return True if the intermediary (mogile-style key) object exists in
-the bucket."""
-        return self.exists_in_bucket(client, bucket,
+    def intermediary_exists_in_bucket(self, s3_client, s3_bucket):
+        """Check if the intermediary (mogile-style key) is in the bucket."""
+        return self.exists_in_bucket(s3_client, s3_bucket,
                                      self.make_intermediary_key())
 
-    def contentrepo_exists_in_bucket(self, client, bucket):
-        """Return True if the final contentrepo object exists in the bucket."""
-        return self.exists_in_bucket(client, bucket,
+    def contentrepo_exists_in_bucket(self, s3_client, s3_bucket):
+        """Check if the final contentrepo object is in the bucket."""
+        return self.exists_in_bucket(s3_client, s3_bucket,
                                      self.make_contentrepo_key())
 
     def get_mogile_url(self, client):
@@ -186,8 +198,7 @@ the bucket."""
             list(client.get_paths(self.dkey).data['paths'].values()))
 
     def copy_from_intermediary(self, s3_client, bucket):
-        """Copy content from the intermediary (mogile-style key) location to
-its final location."""
+        """Copy content from the intermediary to the final location."""
         obj = s3_client.Object(
             bucket,
             self.make_contentrepo_key())
