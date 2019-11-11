@@ -253,7 +253,7 @@ def main():
         user=config['USER'],
         password=config['PASSWORD'],
         db=config['NAME'],
-        cursorclass=pymysql.cursors.DictCursor)
+        cursorclass=pymysql.cursors.SSDictCursor)
 
     # Uncomment to enable boto debug logging
     # boto3.set_stream_logger(name='botocore')
