@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 from botocore.exceptions import ClientError
 
-from migrate import MogileFile, make_bucket_hash,\
+from migrate import MogileFile, make_bucket_map,\
     md5_fileobj_hex, sha1_fileobj_hex, md5_fileobj_b64, sha1_fileobj_b64
 
 
@@ -64,7 +64,7 @@ class TestMigrate():
         assert (file.dkey ==
                 '2aae6c35c94fcfb415dbe95f408b9ce91ee846ed-mogilefs-prod-repo')
         assert file.temp is False
-        assert file.orig_bucket == 'mogilefs-prod-repo'
+        assert file.mogile_bucket == 'mogilefs-prod-repo'
 
     def test_parse_bad_dmid(self, row):
         row['dmid'] = 2
@@ -75,7 +75,7 @@ class TestMigrate():
         row['dkey'] = '8d26b4da-bd3e-47eb-888a-13bb3579c7e9.tmp'
         file = MogileFile.parse_row(row)
         assert file.temp is True
-        assert file.orig_bucket is None
+        assert file.mogile_bucket is None
         assert file.sha1sum is None
 
     def test_parse_bad_class(self, row):
@@ -129,5 +129,5 @@ class TestMigrate():
         _, kwargs = s3_client.Object.return_value.put.call_args_list[0]
         assert kwargs['ContentMD5'] == 'XrY7u+Ae7tCTyyK7j1rNww=='
 
-    def test_make_bucket_hash(self):
-        assert make_bucket_hash("a:b,c:d") == {"a": "b", "c": "d"}
+    def test_make_bucket_map(self):
+        assert make_bucket_map("a:b,c:d") == {"a": "b", "c": "d"}

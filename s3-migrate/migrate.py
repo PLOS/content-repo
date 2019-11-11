@@ -17,7 +17,7 @@ import requests
 from botocore.exceptions import ClientError
 
 
-def make_bucket_hash(buckets):
+def make_bucket_map(buckets):
     """Construct a hash from a buckets source string of the form a:b,c:d."""
     retval = {}
     for bucket in buckets.split(','):
@@ -77,10 +77,11 @@ def sha1_fileobj_b64(fileobj):
 class MyThread(threading.Thread):
     """Thread worker with s3 and mogile clients available."""
 
-    def __init__(self, q: Queue, *args, **kwargs):
+    def __init__(self, queue: Queue, bucket_map: dict, *args, **kwargs):
         """Initialize this thread."""
         super(MyThread, self).__init__(*args, **kwargs)
-        self.queue = q
+        self.queue = queue
+        self.bucket_map = bucket_map
         self.mogile_client = pymogilefs.client.Client(
             trackers=os.environ['MOGILE_TRACKERS'].split(','),
             domain='plos_repo')
@@ -91,25 +92,23 @@ class MyThread(threading.Thread):
         while True:
             try:
                 mogile_file = self.queue.get_nowait()
-                print(f"Migrating {mogile_file.fid} to "
-                      f"{mogile_file.make_contentrepo_key()}")
                 mogile_file.migrate(
                     self.mogile_client,
                     self.s3_client,
-                    os.environ['BUCKET'])
+                    self.bucket_map)
                 self.queue.task_done()
             except Empty:
                 break
 
     @classmethod
-    def start_pool(cls, queue):
+    def start_pool(cls, queue: Queue, bucket_map: dict):
         """Run threads on the data provided in the queue.
 
         Returns a list of threads to pass to `finish_pool` later.
         """
         threads = []
         for _ in range(20):
-            thread = cls(queue)
+            thread = cls(queue, bucket_map)
             threads.append(thread)
             thread.start()
         return threads
@@ -141,10 +140,10 @@ class MogileFile():
             # Check later.
             self.temp = True
             self.sha1sum = None
-            self.orig_bucket = None
+            self.mogile_bucket = None
         else:
             self.temp = False
-            (self.sha1sum, self.orig_bucket) = dkey.split('-', 1)
+            (self.sha1sum, self.mogile_bucket) = dkey.split('-', 1)
 
     @classmethod
     def parse_row(cls, row: dict):
@@ -156,9 +155,9 @@ class MogileFile():
                    fid=row['fid'],
                    length=row['length'])
 
-    def exists_in_bucket(self, client, bucket, key):
+    def exists_in_bucket(self, client, s3_bucket, key):
         """Check if object with key is in the bucket."""
-        obj = client.Object(bucket, key)
+        obj = client.Object(s3_bucket, key)
         try:
             obj.load()
             if obj.content_length != self.length:
@@ -192,22 +191,22 @@ class MogileFile():
         return self.exists_in_bucket(s3_client, s3_bucket,
                                      self.make_contentrepo_key())
 
-    def get_mogile_url(self, client):
+    def get_mogile_url(self, mogile_client):
         """Get a URL from mogile that we can use to access this file."""
         return random.choice(
-            list(client.get_paths(self.dkey).data['paths'].values()))
+            list(mogile_client.get_paths(self.dkey).data['paths'].values()))
 
-    def copy_from_intermediary(self, s3_client, bucket):
+    def copy_from_intermediary(self, s3_client, s3_bucket):
         """Copy content from the intermediary to the final location."""
         obj = s3_client.Object(
-            bucket,
+            s3_bucket,
             self.make_contentrepo_key())
         obj.copy({
-            'Bucket': bucket,
+            'Bucket': s3_bucket,
             'Key': self.make_intermediary_key()
         })
 
-    def put(self, mogile_client, s3_client, bucket):
+    def put(self, mogile_client, s3_client, s3_bucket):
         """Put content from mogile to S3."""
         with requests.get(
                 self.get_mogile_url(mogile_client), stream=True
@@ -220,30 +219,34 @@ class MogileFile():
                 md5 = md5_fileobj_b64(tmp)
                 tmp.seek(0)
                 target = s3_client.Object(
-                    bucket,
+                    s3_bucket,
                     self.make_contentrepo_key())
                 target.put(
                     Body=tmp,
                     ContentMD5=md5)
 
-    def migrate(self, mogile_client, s3_client, bucket):
+    def migrate(self, mogile_client, s3_client, bucket_map):
         """Migrate this mogile object to contentrepo."""
         if self.temp is True:
             pass  # Do not migrate temporary files.
-        elif self.contentrepo_exists_in_bucket(s3_client, bucket):
-            pass  # Migration done!
         else:
-            if self.intermediary_exists_in_bucket(s3_client, bucket):
-                self.copy_from_intermediary(s3_client, bucket)
+            s3_bucket = bucket_map[self.mogile_bucket]
+            print(f"Migrating {self.fid} to "
+                  f"s3://{s3_bucket}/{self.make_contentrepo_key()}")
+            if self.contentrepo_exists_in_bucket(s3_client, s3_bucket):
+                pass  # Migration done!
             else:
-                # Nothing is on S3 yet, copy content directly to the
-                # final location.
-                self.put(mogile_client, s3_client, bucket)
+                if self.intermediary_exists_in_bucket(s3_client, s3_bucket):
+                    self.copy_from_intermediary(s3_client, s3_bucket)
+                else:
+                    # Nothing is on S3 yet, copy content directly to the
+                    # final location.
+                    self.put(mogile_client, s3_client, s3_bucket)
 
 
 def main():
     """Perform copy of content from mogile to S3."""
-    buckets = make_bucket_hash(os.environ["BUCKETS"])
+    bucket_map = make_bucket_map(os.environ["BUCKETS"])
     config = dj_database_url.parse(os.environ['MOGILE_DATABASE_URL'])
     connection = pymysql.connect(
         host=config['HOST'],
@@ -264,7 +267,7 @@ def main():
             # Ensure the queue has some content for the threads to consume.
             for row in cursor.fetchmany(row_count):
                 queue.put(MogileFile.parse_row(row))
-            threads = MyThread.start_pool(queue)
+            threads = MyThread.start_pool(queue, bucket_map)
             rows = cursor.fetchmany(row_count)
             while len(rows) != 0:
                 for row in rows:
