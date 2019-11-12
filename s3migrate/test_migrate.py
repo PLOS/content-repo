@@ -108,6 +108,9 @@ class TestMigrate():
         with pytest.raises(ClientError, match=r"An error occurred \(500\)"):
             mogile_file.exists_in_bucket(s3_client, 'my-bucket', 'my-key')
 
+    def test_mogile_file_to_json(self, mogile_file):
+        assert mogile_file == MogileFile.from_json(mogile_file.to_json())
+
     def test_md5_fileobj(self, my_tempfile):
         assert (md5_fileobj_hex(my_tempfile) ==
                 "5eb63bbbe01eeed093cb22bb8f5acdc3")

@@ -2,6 +2,7 @@
 
 import base64
 import hashlib
+import json
 import random
 import shutil
 import tempfile
@@ -87,6 +88,14 @@ class MogileFile():
         else:
             self.temp = False
             (self.sha1sum, self.mogile_bucket) = dkey.split('-', 1)
+
+    def __eq__(self, other):
+        if not isinstance(other, MogileFile):
+            # Delegate comparison to the other instance's __eq__.
+            return NotImplemented
+        return(self.dkey == other.dkey and
+               self.fid == other.fid and
+               self.length == other.length)
 
     @classmethod
     def parse_row(cls, row: dict):
@@ -185,3 +194,15 @@ class MogileFile():
                     # Nothing is on S3 yet, copy content directly to the
                     # final location.
                     self.put(mogile_client, s3_client, s3_bucket)
+
+    def to_json(self):
+        return json.dumps({
+            "length": self.length,
+            "fid": self.fid,
+            "dkey": self.dkey
+            })
+
+    @classmethod
+    def from_json(cls, json_str):
+        print(json_str)
+        return MogileFile(**json.loads(json_str))
