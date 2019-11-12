@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 from botocore.exceptions import ClientError
 
-from migrate import MogileFile, make_bucket_map,\
+from shared import MogileFile, make_bucket_map,\
     md5_fileobj_hex, sha1_fileobj_hex, md5_fileobj_b64, sha1_fileobj_b64
 
 
