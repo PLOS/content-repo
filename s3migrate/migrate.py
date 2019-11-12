@@ -5,11 +5,9 @@ import threading
 from queue import Empty, Queue
 
 import boto3
-import dj_database_url
 import pymogilefs
-import pymysql
 
-from shared import make_bucket_map, MogileFile
+from shared import make_bucket_map, get_mogile_files_from_database
 
 
 class MyThread(threading.Thread):
@@ -64,36 +62,22 @@ class MyThread(threading.Thread):
 
 def main():
     """Perform copy of content from mogile to S3."""
-    bucket_map = make_bucket_map(os.environ["BUCKETS"])
-    config = dj_database_url.parse(os.environ['MOGILE_DATABASE_URL'])
-    connection = pymysql.connect(
-        host=config['HOST'],
-        user=config['USER'],
-        password=config['PASSWORD'],
-        db=config['NAME'],
-        cursorclass=pymysql.cursors.SSDictCursor)
-
     # Uncomment to enable boto debug logging
     # boto3.set_stream_logger(name='botocore')
 
-    try:
-        with connection.cursor() as cursor:
-            row_count = 1000
-            sql = "SELECT * FROM file"
-            cursor.execute(sql)
-            queue = Queue()
-            # Ensure the queue has some content for the threads to consume.
-            for row in cursor.fetchmany(row_count):
-                queue.put(MogileFile.parse_row(row))
+    bucket_map = make_bucket_map(os.environ["BUCKETS"])
+    queue = Queue()
+    counter = 0
+    threads = None
+    for mogile_file in get_mogile_files_from_database(
+            os.environ['MOGILE_DATABASE_URL']):
+        queue.put(mogile_file)
+        counter = counter + 1
+        if counter == 1000:
+            # Start up the consumer threads once we have 1000 entries
             threads = MyThread.start_pool(queue, bucket_map)
-            rows = cursor.fetchmany(row_count)
-            while len(rows) != 0:
-                for row in rows:
-                    queue.put(MogileFile.parse_row(row))
-                rows = cursor.fetchmany(row_count)
-            MyThread.finish_pool(queue, threads)
-    finally:
-        connection.close()
+
+    MyThread.finish_pool(queue, threads)
 
 
 if __name__ == "__main__":

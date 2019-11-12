@@ -7,6 +7,8 @@ import random
 import shutil
 import tempfile
 
+import dj_database_url
+import pymysql
 import requests
 from botocore.exceptions import ClientError
 
@@ -206,3 +208,26 @@ class MogileFile():
     def from_json(cls, json_str):
         print(json_str)
         return MogileFile(**json.loads(json_str))
+
+def get_mogile_files_from_database(database_url):
+    config = dj_database_url.parse(database_url)
+    connection = pymysql.connect(
+        host=config['HOST'],
+        user=config['USER'],
+        password=config['PASSWORD'],
+        db=config['NAME'],
+        cursorclass=pymysql.cursors.SSDictCursor)
+
+    try:
+        with connection.cursor() as cursor:
+            row_count = 1000
+            sql = "SELECT * FROM file"
+            cursor.execute(sql)
+            rows = cursor.fetchmany(row_count)
+            while len(rows) != 0:
+                for row in rows:
+                    yield MogileFile.parse_row(row)
+                rows = cursor.fetchmany(row_count)
+    finally:
+        connection.close()
+
