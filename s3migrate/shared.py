@@ -208,7 +208,7 @@ class MogileFile():
     def from_json(cls, json_str):
         return MogileFile(**json.loads(json_str))
 
-def get_mogile_files_from_database(database_url):
+def get_mogile_files_from_database(database_url, limit=None):
     config = dj_database_url.parse(database_url)
     connection = pymysql.connect(
         host=config['HOST'],
@@ -219,14 +219,15 @@ def get_mogile_files_from_database(database_url):
 
     try:
         with connection.cursor() as cursor:
-            row_count = 1000
-            sql = "SELECT * FROM file"
+            if limit is not None:
+                sql = f"SELECT * FROM file LIMIT {limit}"
+            else:
+                sql = "SELECT * FROM file"
             cursor.execute(sql)
-            rows = cursor.fetchmany(row_count)
-            while len(rows) != 0:
-                for row in rows:
-                    yield MogileFile.parse_row(row)
-                rows = cursor.fetchmany(row_count)
+            row = cursor.fetchone()
+            while row:
+                yield MogileFile.parse_row(row)
+                row = cursor.fetchone()
     finally:
         connection.close()
 
