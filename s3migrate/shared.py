@@ -206,7 +206,6 @@ class MogileFile():
 
     @classmethod
     def from_json(cls, json_str):
-        print(json_str)
         return MogileFile(**json.loads(json_str))
 
 def get_mogile_files_from_database(database_url):
