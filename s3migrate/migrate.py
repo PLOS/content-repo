@@ -77,6 +77,9 @@ def main():
             # Start up the consumer threads once we have 1000 entries
             threads = MyThread.start_pool(queue, bucket_map)
 
+    if threads is None:
+        # In case we did not get 1000 items
+        threads = MyThread.start_pool(queue, bucket_map)
     MyThread.finish_pool(queue, threads)
 
 
