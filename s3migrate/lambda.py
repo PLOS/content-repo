@@ -5,6 +5,7 @@ import pymogilefs
 import boto3
 
 def process(event, context):
+    """Migrate this MogileFile to S3 in AWS Lambda."""
     bucket_map = make_bucket_map(os.environ["BUCKETS"])
     mogile_client = pymogilefs.client.Client(
         trackers=os.environ['MOGILE_TRACKERS'].split(','),

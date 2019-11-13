@@ -92,6 +92,7 @@ class MogileFile():
             (self.sha1sum, self.mogile_bucket) = dkey.split('-', 1)
 
     def __eq__(self, other):
+        """Equality check."""
         if not isinstance(other, MogileFile):
             # Delegate comparison to the other instance's __eq__.
             return NotImplemented
@@ -110,7 +111,10 @@ class MogileFile():
                    length=row['length'])
 
     def exists_in_bucket(self, client, s3_bucket, key):
-        """Check if object with key is in the bucket."""
+        """Check if object with key is in the bucket.
+
+        Returns False if object is not present, otherwise the md5string.
+        """
         obj = client.Object(s3_bucket, key)
         try:
             obj.load()
@@ -180,7 +184,11 @@ class MogileFile():
                     ContentMD5=md5)
 
     def migrate(self, mogile_client, s3_client, bucket_map):
-        """Migrate this mogile object to contentrepo."""
+        """Migrate this mogile object to contentrepo.
+
+        Returns None if the object is a temporary file, otherwise
+        returns the md5 of the migrated file.
+        """
         if self.temp is True:
             pass  # Do not migrate temporary files.
         else:
@@ -198,6 +206,7 @@ class MogileFile():
                     self.put(mogile_client, s3_client, s3_bucket)
 
     def to_json(self):
+        """Serialize as JSON."""
         return json.dumps({
             "length": self.length,
             "fid": self.fid,
@@ -206,9 +215,12 @@ class MogileFile():
 
     @classmethod
     def from_json(cls, json_str):
+        """Create MogileFile from JSON string."""
         return MogileFile(**json.loads(json_str))
 
+
 def get_mogile_files_from_database(database_url, limit=None):
+    """Return a generator for all mogile files in the database."""
     config = dj_database_url.parse(database_url)
     connection = pymysql.connect(
         host=config['HOST'],
