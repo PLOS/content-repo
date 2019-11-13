@@ -10,6 +10,11 @@ from .shared import MogileFile, make_bucket_map,\
 
 # pylint: disable=C0115,C0116,R0201
 class TestMigrate():
+    MD5_HEX = "5eb63bbbe01eeed093cb22bb8f5acdc3"
+    SHA1_HEX = "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
+    MD5_B64 = "XrY7u+Ae7tCTyyK7j1rNww=="
+    SHA1_B64 = "Kq5sNclPz7QV2+lfQIuc6R7oRu0="
+
     @pytest.fixture
     def s3_client(self):
         s3_client = Mock()
@@ -38,7 +43,7 @@ class TestMigrate():
             'fid': 1,
             'dmid': 1,
             'dkey':
-            '2aae6c35c94fcfb415dbe95f408b9ce91ee846ed-mogilefs-prod-repo',
+            f"{self.SHA1_HEX}-mogilefs-prod-repo",
             'length': 1593790,
             'classid': 0,
             'devcount': 2}
@@ -52,17 +57,17 @@ class TestMigrate():
     @pytest.fixture
     def mogile_file(self):
         return MogileFile(
-            dkey='2aae6c35c94fcfb415dbe95f408b9ce91ee846ed-repo',
+            dkey=f"{self.SHA1_HEX}-repo",
             fid=564879786,
             length=1)
 
     def test_parse_row(self, row):
         file = MogileFile.parse_row(row)
-        assert file.sha1sum == '2aae6c35c94fcfb415dbe95f408b9ce91ee846ed'
+        assert file.sha1sum == self.SHA1_HEX
         assert file.fid == 1
         assert file.length == 1593790
         assert (file.dkey ==
-                '2aae6c35c94fcfb415dbe95f408b9ce91ee846ed-mogilefs-prod-repo')
+                f"{self.SHA1_HEX}-mogilefs-prod-repo")
         assert file.temp is False
         assert file.mogile_bucket == 'mogilefs-prod-repo'
 
@@ -88,13 +93,14 @@ class TestMigrate():
                '0/564/879/0564879786.fid')
 
     def test_make_contentrepo_key(self, mogile_file):
-        assert mogile_file.make_contentrepo_key() == \
-            "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
+        assert mogile_file.make_contentrepo_key() == self.SHA1_HEX
 
     def test_exists_in_bucket(self, mogile_file, s3_client):
         s3_client.Object.return_value.content_length = mogile_file.length
+        s3_client.Object.return_value.e_tag = \
+            self.MD5_HEX
         assert(mogile_file.exists_in_bucket(s3_client, 'my-bucket', 'my-key')
-               is True)
+               == self.MD5_HEX)
 
     def test_does_not_exist_in_bucket(self, s3_client, mogile_file):
         ex = ClientError({'Error': {'Code': '404'}}, 'Head')
@@ -112,25 +118,26 @@ class TestMigrate():
         assert mogile_file == MogileFile.from_json(mogile_file.to_json())
 
     def test_md5_fileobj(self, my_tempfile):
-        assert (md5_fileobj_hex(my_tempfile) ==
-                "5eb63bbbe01eeed093cb22bb8f5acdc3")
-        assert md5_fileobj_b64(my_tempfile) == "XrY7u+Ae7tCTyyK7j1rNww=="
+        assert md5_fileobj_hex(my_tempfile) == self.MD5_HEX
+        assert md5_fileobj_b64(my_tempfile) == self.MD5_B64
 
     def test_sha1_fileobj(self, my_tempfile):
-        assert (sha1_fileobj_hex(my_tempfile) ==
-                "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed")
-        assert (sha1_fileobj_b64(my_tempfile) ==
-                "Kq5sNclPz7QV2+lfQIuc6R7oRu0=")
+        assert sha1_fileobj_hex(my_tempfile) == self.SHA1_HEX
+        assert sha1_fileobj_b64(my_tempfile) == self.SHA1_B64
 
     def test_put(self, mogile_file: MogileFile,
                  mogile_client, s3_client,
                  requests_mock):
         requests_mock.get('http://example.org/1', content=b'hello world')
         requests_mock.get('http://example.org/2', content=b'hello world')
-        mogile_file.put(mogile_client, s3_client, 'my-bucket')
+        s3_client.Object.return_value.put.return_value = {
+            "ETag": self.MD5_HEX
+        }
+        md5 = mogile_file.put(mogile_client, s3_client, 'my-bucket')
+        assert md5 == self.MD5_HEX
         # Check that `put` was called with the correct MD5 sum.
         _, kwargs = s3_client.Object.return_value.put.call_args_list[0]
-        assert kwargs['ContentMD5'] == 'XrY7u+Ae7tCTyyK7j1rNww=='
+        assert kwargs['ContentMD5'] == self.MD5_B64
 
     def test_make_bucket_map(self):
         assert make_bucket_map("a:b,c:d") == {"a": "b", "c": "d"}

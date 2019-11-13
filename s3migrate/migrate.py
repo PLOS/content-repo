@@ -28,10 +28,11 @@ class MyThread(threading.Thread):
         while True:
             try:
                 mogile_file = self.queue.get_nowait()
+                s3_bucket = self.bucket_map[mogile_file.mogile_bucket]
                 mogile_file.migrate(
                     self.mogile_client,
                     self.s3_client,
-                    self.bucket_map)
+                    s3_bucket)
                 self.queue.task_done()
             except Empty:
                 break
@@ -76,7 +77,6 @@ def main():
         if counter == 1000:
             # Start up the consumer threads once we have 1000 entries
             threads = MyThread.start_pool(queue, bucket_map)
-
     if threads is None:
         # In case we did not get 1000 items
         threads = MyThread.start_pool(queue, bucket_map)

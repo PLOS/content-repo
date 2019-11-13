@@ -124,7 +124,7 @@ class MogileFile():
             if ex.response['Error']['Code'] == "404":
                 return False
             raise
-        return True
+        return obj.e_tag.replace("\"", "")  # Why does AWS include this?
 
     def make_intermediary_key(self):
         """Return the key to use for the intermediary storage in S3."""
@@ -156,13 +156,14 @@ class MogileFile():
 
     def copy_from_intermediary(self, s3_client, s3_bucket):
         """Copy content from the intermediary to the final location."""
-        obj = s3_client.Object(
-            s3_bucket,
-            self.make_contentrepo_key())
-        obj.copy({
-            'Bucket': s3_bucket,
-            'Key': self.make_intermediary_key()
-        })
+        response = s3_client.copy_object(
+            CopySource={
+                "Bucket": s3_bucket,
+                "Key": self.make_intermediary_key()
+            },
+            Bucket=s3_bucket,
+            Key=self.make_contentrepo_key())
+        return response["CopyObjectResult"]["ETag"].replace("\"", "")
 
     def put(self, mogile_client, s3_client, s3_bucket):
         """Put content from mogile to S3."""
@@ -179,31 +180,29 @@ class MogileFile():
                 target = s3_client.Object(
                     s3_bucket,
                     self.make_contentrepo_key())
-                target.put(
+                response = target.put(
                     Body=tmp,
                     ContentMD5=md5)
+                return response["ETag"].replace("\"", "")
 
-    def migrate(self, mogile_client, s3_client, bucket_map):
+    def migrate(self, mogile_client, s3_client, s3_bucket):
         """Migrate this mogile object to contentrepo.
 
         Returns None if the object is a temporary file, otherwise
         returns the md5 of the migrated file.
         """
         if self.temp is True:
-            pass  # Do not migrate temporary files.
-        else:
-            s3_bucket = bucket_map[self.mogile_bucket]
-            print(f"Migrating {self.fid} to "
-                  f"s3://{s3_bucket}/{self.make_contentrepo_key()}")
-            if self.contentrepo_exists_in_bucket(s3_client, s3_bucket):
-                pass  # Migration done!
-            else:
-                if self.intermediary_exists_in_bucket(s3_client, s3_bucket):
-                    self.copy_from_intermediary(s3_client, s3_bucket)
-                else:
-                    # Nothing is on S3 yet, copy content directly to the
-                    # final location.
-                    self.put(mogile_client, s3_client, s3_bucket)
+            return None  # Do not migrate temporary files.
+        print(f"Migrating {self.fid} to "
+              f"s3://{s3_bucket}/{self.make_contentrepo_key()}")
+        md5 = self.contentrepo_exists_in_bucket(s3_client, s3_bucket)
+        if md5 is not False:
+            return md5  # Migration done!
+        if self.intermediary_exists_in_bucket(s3_client, s3_bucket):
+            return self.copy_from_intermediary(s3_client, s3_bucket)
+        # Nothing is on S3 yet, copy content directly to the
+        # final location.
+        return self.put(mogile_client, s3_client, s3_bucket)
 
     def to_json(self):
         """Serialize as JSON."""
@@ -242,4 +241,3 @@ def get_mogile_files_from_database(database_url, limit=None):
                 row = cursor.fetchone()
     finally:
         connection.close()
-
