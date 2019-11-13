@@ -10,7 +10,7 @@ from shared import get_mogile_files_from_database
 
 CLIENT = boto3.client('sqs', region_name=os.environ["AWS_S3_REGION_NAME"])
 QUEUE_URL = os.environ["SQS_URL"]
-THREADS = 100
+THREADS = 1000
 
 
 def send_message(mogile_file):
