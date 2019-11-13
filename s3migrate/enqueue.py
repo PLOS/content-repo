@@ -27,7 +27,7 @@ def main():
     generator = get_mogile_files_from_database(
         os.environ['MOGILE_DATABASE_URL'])
     pool = ThreadPool(THREADS)
-    pool.map(send_message, generator)
+    pool.imap_unordered(send_message, generator)
     pool.close()
     pool.join()
 
