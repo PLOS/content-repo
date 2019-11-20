@@ -22,6 +22,18 @@ def send_message(mogile_file):
         MessageBody=mogile_file.to_json())
 
 
+def chunked(iterable):
+    """Group into chunks of 10."""
+    result = []
+    for item in iterable:
+        result.append(item)
+        if len(result) == 10:
+            yield result
+            result = []
+    if len(result) > 0:
+        yield result
+
+
 def main():
     """Enqueue mogile files to SQS."""
     generator = get_mogile_files_from_database(
