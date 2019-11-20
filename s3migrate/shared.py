@@ -199,9 +199,12 @@ class MogileFile():
         if md5 is not False:
             return md5  # Migration done!
         if self.intermediary_exists_in_bucket(s3_client, s3_bucket):
+            print(f"  Copying from s3://{s3_bucket}/"
+                  f"{self.make_intermediary_key()}")
             return self.copy_from_intermediary(s3_client, s3_bucket)
         # Nothing is on S3 yet, copy content directly to the
         # final location.
+            print(f"  Putting from mogile.")
         return self.put(mogile_client, s3_client, s3_bucket)
 
     def to_json(self):
