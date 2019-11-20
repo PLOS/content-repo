@@ -13,14 +13,17 @@ QUEUE_URL = os.environ["SQS_URL"]
 THREADS = 1000
 
 
-def send_message(mogile_file):
+def send_message(mogile_file_list):
     """Send the mogile file as an SQS message."""
     sys.stderr.write("*")
     sys.stderr.flush()
-    CLIENT.send_message(
+    entries = [{'Id': str(mogile_file.fid),
+                'MessageBody': mogile_file.to_json()}
+               for mogile_file in mogile_file_list]
+    resp = CLIENT.send_message_batch(
         QueueUrl=QUEUE_URL,
-        MessageBody=mogile_file.to_json())
-
+        Entries=entries)
+    
 
 def chunked(iterable):
     """Group into chunks of 10."""
@@ -36,8 +39,10 @@ def chunked(iterable):
 
 def main():
     """Enqueue mogile files to SQS."""
-    generator = get_mogile_files_from_database(
-        os.environ['MOGILE_DATABASE_URL'])
+    generator = chunked(
+        get_mogile_files_from_database(
+            os.environ['MOGILE_DATABASE_URL'],
+            limit=50))
     pool = ThreadPool(THREADS)
     pool.imap_unordered(send_message, generator)
     pool.close()
