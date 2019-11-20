@@ -18,12 +18,12 @@ class TestMigrate():
     SHA1_B64 = "Kq5sNclPz7QV2+lfQIuc6R7oRu0="
 
     @pytest.fixture
-    def s3_client(self):
-        s3_client = Mock()
+    def s3_resource(self):
+        s3_resource = Mock()
         obj = Mock()
-        s3_client.Object.return_value = obj
+        s3_resource.Object.return_value = obj
         obj.load.return_value = {}
-        return s3_client
+        return s3_resource
 
     @pytest.fixture
     def mogile_client(self):
@@ -97,24 +97,24 @@ class TestMigrate():
     def test_make_contentrepo_key(self, mogile_file):
         assert mogile_file.make_contentrepo_key() == self.SHA1_HEX
 
-    def test_exists_in_bucket(self, mogile_file, s3_client):
-        s3_client.Object.return_value.content_length = mogile_file.length
-        s3_client.Object.return_value.e_tag = \
+    def test_exists_in_bucket(self, mogile_file, s3_resource):
+        s3_resource.Object.return_value.content_length = mogile_file.length
+        s3_resource.Object.return_value.e_tag = \
             self.MD5_HEX
-        assert(mogile_file.exists_in_bucket(s3_client, 'my-bucket', 'my-key')
+        assert(mogile_file.exists_in_bucket(s3_resource, 'my-bucket', 'my-key')
                == self.MD5_HEX)
 
-    def test_does_not_exist_in_bucket(self, s3_client, mogile_file):
+    def test_does_not_exist_in_bucket(self, s3_resource, mogile_file):
         ex = ClientError({'Error': {'Code': '404'}}, 'Head')
-        s3_client.Object.return_value.load.side_effect = ex
-        assert(mogile_file.exists_in_bucket(s3_client, 'my-bucket', 'my-file')
+        s3_resource.Object.return_value.load.side_effect = ex
+        assert(mogile_file.exists_in_bucket(s3_resource, 'my-bucket', 'my-file')
                is False)
 
-    def test_exists_in_bucket_raises_exception(self, s3_client, mogile_file):
+    def test_exists_in_bucket_raises_exception(self, s3_resource, mogile_file):
         ex = ClientError({'Error': {'Code': '500'}}, 'Head')
-        s3_client.Object.return_value.load.side_effect = ex
+        s3_resource.Object.return_value.load.side_effect = ex
         with pytest.raises(ClientError, match=r"An error occurred \(500\)"):
-            mogile_file.exists_in_bucket(s3_client, 'my-bucket', 'my-key')
+            mogile_file.exists_in_bucket(s3_resource, 'my-bucket', 'my-key')
 
     def test_mogile_file_to_json(self, mogile_file):
         assert mogile_file == MogileFile.from_json(mogile_file.to_json())
@@ -128,17 +128,17 @@ class TestMigrate():
         assert sha1_fileobj_b64(my_tempfile) == self.SHA1_B64
 
     def test_put(self, mogile_file: MogileFile,
-                 mogile_client, s3_client,
+                 mogile_client, s3_resource,
                  requests_mock):
         requests_mock.get('http://example.org/1', content=b'hello world')
         requests_mock.get('http://example.org/2', content=b'hello world')
-        s3_client.Object.return_value.put.return_value = {
+        s3_resource.Object.return_value.put.return_value = {
             "ETag": self.MD5_HEX
         }
-        md5 = mogile_file.put(mogile_client, s3_client, 'my-bucket')
+        md5 = mogile_file.put(mogile_client, s3_resource, 'my-bucket')
         assert md5 == self.MD5_HEX
         # Check that `put` was called with the correct MD5 sum.
-        _, kwargs = s3_client.Object.return_value.put.call_args_list[0]
+        _, kwargs = s3_resource.Object.return_value.put.call_args_list[0]
         assert kwargs['ContentMD5'] == self.MD5_B64
 
     def test_make_bucket_map(self):

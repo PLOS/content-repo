@@ -21,7 +21,7 @@ class MyThread(threading.Thread):
         self.mogile_client = pymogilefs.client.Client(
             trackers=os.environ['MOGILE_TRACKERS'].split(','),
             domain='plos_repo')
-        self.s3_client = boto3.resource('s3')
+        self.s3_resource = boto3.resource('s3')
 
     def run(self):
         """Run this thread."""
@@ -31,7 +31,7 @@ class MyThread(threading.Thread):
                 s3_bucket = self.bucket_map[mogile_file.mogile_bucket]
                 mogile_file.migrate(
                     self.mogile_client,
-                    self.s3_client,
+                    self.s3_resource,
                     s3_bucket)
                 self.queue.task_done()
             except Empty:

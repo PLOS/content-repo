@@ -139,14 +139,14 @@ class MogileFile():
         """Return the key to use for the final storage of this object in S3."""
         return self.sha1sum
 
-    def intermediary_exists_in_bucket(self, s3_client, s3_bucket):
+    def intermediary_exists_in_bucket(self, s3_resource, s3_bucket):
         """Check if the intermediary (mogile-style key) is in the bucket."""
-        return self.exists_in_bucket(s3_client, s3_bucket,
+        return self.exists_in_bucket(s3_resource, s3_bucket,
                                      self.make_intermediary_key())
 
-    def contentrepo_exists_in_bucket(self, s3_client, s3_bucket):
+    def contentrepo_exists_in_bucket(self, s3_resource, s3_bucket):
         """Check if the final contentrepo object is in the bucket."""
-        return self.exists_in_bucket(s3_client, s3_bucket,
+        return self.exists_in_bucket(s3_resource, s3_bucket,
                                      self.make_contentrepo_key())
 
     def get_mogile_url(self, mogile_client):
@@ -154,9 +154,9 @@ class MogileFile():
         return random.choice(
             list(mogile_client.get_paths(self.dkey).data['paths'].values()))
 
-    def copy_from_intermediary(self, s3_client, s3_bucket):
+    def copy_from_intermediary(self, s3_resource, s3_bucket):
         """Copy content from the intermediary to the final location."""
-        response = s3_client.copy_object(
+        response = s3_resource.copy_object(
             CopySource={
                 "Bucket": s3_bucket,
                 "Key": self.make_intermediary_key()
@@ -165,7 +165,7 @@ class MogileFile():
             Key=self.make_contentrepo_key())
         return response["CopyObjectResult"]["ETag"].replace("\"", "")
 
-    def put(self, mogile_client, s3_client, s3_bucket):
+    def put(self, mogile_client, s3_resource, s3_bucket):
         """Put content from mogile to S3."""
         with requests.get(
                 self.get_mogile_url(mogile_client), stream=True
@@ -177,7 +177,7 @@ class MogileFile():
                 assert sha1_fileobj_hex(tmp) == self.sha1sum
                 md5 = md5_fileobj_b64(tmp)
                 tmp.seek(0)
-                target = s3_client.Object(
+                target = s3_resource.Object(
                     s3_bucket,
                     self.make_contentrepo_key())
                 response = target.put(
@@ -185,7 +185,7 @@ class MogileFile():
                     ContentMD5=md5)
                 return response["ETag"].replace("\"", "")
 
-    def migrate(self, mogile_client, s3_client, s3_bucket):
+    def migrate(self, mogile_client, s3_resource, s3_bucket):
         """Migrate this mogile object to contentrepo.
 
         Returns None if the object is a temporary file, otherwise
@@ -195,17 +195,17 @@ class MogileFile():
             return None  # Do not migrate temporary files.
         print(f"Migrating {self.fid} to "
               f"s3://{s3_bucket}/{self.make_contentrepo_key()}")
-        md5 = self.contentrepo_exists_in_bucket(s3_client, s3_bucket)
+        md5 = self.contentrepo_exists_in_bucket(s3_resource, s3_bucket)
         if md5 is not False:
             return md5  # Migration done!
-        if self.intermediary_exists_in_bucket(s3_client, s3_bucket):
+        if self.intermediary_exists_in_bucket(s3_resource, s3_bucket):
             print(f"  Copying from s3://{s3_bucket}/"
                   f"{self.make_intermediary_key()}")
-            return self.copy_from_intermediary(s3_client, s3_bucket)
+            return self.copy_from_intermediary(s3_resource, s3_bucket)
         # Nothing is on S3 yet, copy content directly to the
         # final location.
             print(f"  Putting from mogile.")
-        return self.put(mogile_client, s3_client, s3_bucket)
+        return self.put(mogile_client, s3_resource, s3_bucket)
 
     def to_json(self):
         """Serialize as JSON."""

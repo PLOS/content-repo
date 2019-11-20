@@ -13,7 +13,7 @@ def process(event, _context):
     mogile_client = pymogilefs.client.Client(
         trackers=os.environ['MOGILE_TRACKERS'].split(','),
         domain='plos_repo')
-    s3_client = boto3.resource('s3')
+    s3_resource = boto3.resource('s3')
     dynamodb = boto3.resource('dynamodb')
 
     for record in event['Records']:
@@ -21,7 +21,7 @@ def process(event, _context):
         s3_bucket = bucket_map[mogile_file.mogile_bucket]
         md5 = mogile_file.migrate(
             mogile_client,
-            s3_client,
+            s3_resource,
             s3_bucket)
         table = dynamodb.Table(os.environ["DYNAMODB_TABLE"])
         table.put_item(
