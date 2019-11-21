@@ -156,7 +156,7 @@ class MogileFile():
 
     def copy_from_intermediary(self, s3_resource, s3_bucket):
         """Copy content from the intermediary to the final location."""
-        response = s3_resource.copy_object(
+        response = s3_resource.meta.client.copy_object(
             CopySource={
                 "Bucket": s3_bucket,
                 "Key": self.make_intermediary_key()
