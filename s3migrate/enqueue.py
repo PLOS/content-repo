@@ -20,10 +20,10 @@ def send_message(mogile_file_list):
     entries = [{'Id': str(mogile_file.fid),
                 'MessageBody': mogile_file.to_json()}
                for mogile_file in mogile_file_list]
-    resp = CLIENT.send_message_batch(
+    CLIENT.send_message_batch(
         QueueUrl=QUEUE_URL,
         Entries=entries)
-    
+
 
 def chunked(iterable):
     """Group into chunks of 10."""
