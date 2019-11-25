@@ -253,9 +253,9 @@ def get_mogile_files_from_database(database_url, limit=None):
         with connection.cursor() as cursor:
             # Order by dkey, which is deterministic but random.
             if limit is not None:
-                sql = f"SELECT * FROM file LIMIT {limit}"
+                sql = f"SELECT * FROM file ORDER by dmid, dkey LIMIT {limit}"
             else:
-                sql = "SELECT * FROM file"
+                sql = "SELECT * FROM file ORDER by dmid, dkey"
             cursor.execute(sql)
             row = cursor.fetchone()
             while row:
