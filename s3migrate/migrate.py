@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import sys
 import threading
 from queue import Empty, Queue
 
@@ -22,17 +23,18 @@ class MyThread(threading.Thread):
             trackers=os.environ['MOGILE_TRACKERS'].split(','),
             domain='plos_repo')
         self.s3_resource = boto3.resource('s3')
+        self.dynamodb = boto3.resource('dynamodb')
 
     def run(self):
         """Run this thread."""
         while True:
             try:
                 mogile_file = self.queue.get_nowait()
-                s3_bucket = self.bucket_map[mogile_file.mogile_bucket]
                 mogile_file.migrate(
                     self.mogile_client,
+                    self.dynamodb,
                     self.s3_resource,
-                    s3_bucket)
+                    self.bucket_map)
                 self.queue.task_done()
             except Empty:
                 break

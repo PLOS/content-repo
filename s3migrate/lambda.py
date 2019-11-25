@@ -18,16 +18,8 @@ def process(event, _context):
 
     for record in event['Records']:
         mogile_file = MogileFile.from_json(record["body"])
-        s3_bucket = bucket_map[mogile_file.mogile_bucket]
-        md5 = mogile_file.migrate(
+        mogile_file.migrate(
             mogile_client,
+            dynamodb,
             s3_resource,
-            s3_bucket)
-        table = dynamodb.Table(os.environ["DYNAMODB_TABLE"])
-        table.put_item(
-            Item={
-                'fid': mogile_file.fid,
-                'sha1': mogile_file.sha1sum,
-                'md5': md5,
-                'bucket': s3_bucket
-            })
+            bucket_map)
