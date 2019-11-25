@@ -239,7 +239,7 @@ class MogileFile():
         return MogileFile(**json.loads(json_str))
 
 
-def get_mogile_files_from_database(database_url, limit=None):
+def get_mogile_files_from_database(database_url, limit=None, fids=None):
     """Return a generator for all mogile files in the database."""
     config = dj_database_url.parse(database_url)
     connection = pymysql.connect(
@@ -254,6 +254,9 @@ def get_mogile_files_from_database(database_url, limit=None):
             # Order by dkey, which is deterministic but random.
             if limit is not None:
                 sql = f"SELECT * FROM file ORDER by dmid, dkey LIMIT {limit}"
+            elif fids is not None:
+                fids_in = ", ".join(fids)
+                sql = f"SELECT * FROM file WHERE fid IN ({fids_in}) ORDER by dmid, dkey"
             else:
                 sql = "SELECT * FROM file ORDER by dmid, dkey"
             cursor.execute(sql)

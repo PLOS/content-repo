@@ -68,12 +68,17 @@ def main():
     # Uncomment to enable boto debug logging
     # boto3.set_stream_logger(name='botocore')
 
+    if len(sys.argv) > 1:
+        fids = sys.argv[1:]
+    else:
+        fids = None
     bucket_map = make_bucket_map(os.environ["BUCKETS"])
     queue = Queue()
     counter = 0
     threads = None
     for mogile_file in get_mogile_files_from_database(
-            os.environ['MOGILE_DATABASE_URL']):
+            os.environ['MOGILE_DATABASE_URL'],
+            fids=fids):
         queue.put(mogile_file)
         counter = counter + 1
         if counter == 1000:
