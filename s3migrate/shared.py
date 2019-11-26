@@ -82,7 +82,7 @@ class MogileFile():
         self.length = length
         self.fid = fid
         self.dkey = dkey
-        if dkey.endswith('.tmp'):
+        if dkey[36:] == ".tmp":
             # These seem to be old junk leftover from failed ingests.
             # Check later.
             self.temp = True
@@ -90,7 +90,11 @@ class MogileFile():
             self.mogile_bucket = None
         else:
             self.temp = False
-            (self.sha1sum, self.mogile_bucket) = dkey.split('-', 1)
+            self.sha1sum = dkey[0:40]
+            self.mogile_bucket = dkey[41:]
+            assert len(self.sha1sum) == 40
+            assert dkey[40] == "-"
+            assert len(self.mogile_bucket) > 1
 
     def __eq__(self, other):
         """Equality check."""
