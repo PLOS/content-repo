@@ -84,9 +84,8 @@ def main():
     threads = None
     for mogile_file in get_mogile_files_from_database(
             os.environ['MOGILE_DATABASE_URL'],
-            fids=fids):
-        if mogile_file.fid in excluded_fids:
-            continue
+            fids=fids,
+            excluded_fids=excluded_fids):
         queue.put(mogile_file)
 
         counter = counter + 1

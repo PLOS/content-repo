@@ -39,9 +39,16 @@ def chunked(iterable):
 
 def main():
     """Enqueue mogile files to SQS."""
+    excluded_fids = set()
+    if len(sys.argv) > 1:
+        with open(sys.argv[1]) as f:
+            for line in f:
+                excluded_fids.add(int(line))
+        print(f"Excluding {len(excluded_fids)} fids.")
     generator = chunked(
         get_mogile_files_from_database(
-            os.environ['MOGILE_DATABASE_URL']))
+            os.environ['MOGILE_DATABASE_URL'],
+            excluded_fids=excluded_fids))
     pool = ThreadPool(THREADS)
     pool.imap_unordered(send_message, generator)
     pool.close()

@@ -239,7 +239,8 @@ class MogileFile():
         return MogileFile(**json.loads(json_str))
 
 
-def get_mogile_files_from_database(database_url, limit=None, fids=None):
+def get_mogile_files_from_database(database_url, limit=None, fids=None,
+                                   excluded_fids=set()):
     """Return a generator for all mogile files in the database."""
     config = dj_database_url.parse(database_url)
     connection = pymysql.connect(
@@ -261,7 +262,9 @@ def get_mogile_files_from_database(database_url, limit=None, fids=None):
             cursor.execute(sql)
             row = cursor.fetchone()
             while row:
-                yield MogileFile.parse_row(row)
+                mogile_file = MogileFile.parse_row(row)
+                if mogile_file.fid not in excluded_fids:
+                    yield mogile_file
                 row = cursor.fetchone()
     finally:
         connection.close()
