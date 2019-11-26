@@ -256,24 +256,20 @@ def get_mogile_files_from_database(database_url, limit=None, fids=None,
         cursorclass=pymysql.cursors.SSCursor)
 
     try:
-        with connection.cursor() as cursor:
-            if limit is not None:
-                sql = f"SELECT * FROM file LIMIT {limit}"
-            elif fids is not None:
-                fids_in = ", ".join(fids)
-                sql = f"SELECT * FROM file WHERE fid IN ({fids_in})"
-            else:
-                sql = "SELECT * FROM file"
-            cursor.execute(sql)
+        cursor = connection.cursor()
+        if limit is not None:
+            sql = f"SELECT * FROM file LIMIT {limit}"
+        elif fids is not None:
+            fids_in = ", ".join(fids)
+            sql = f"SELECT * FROM file WHERE fid IN ({fids_in})"
+        else:
+            sql = "SELECT * FROM file"
+        cursor.execute(sql)
+        row = cursor.fetchone()
+        while row:
+            if row[0] in excluded_fids:
+                continue
+            yield MogileFile.parse_row(row)
             row = cursor.fetchone()
-            #(fid, dmid, dkey, length, classid, devcount)
-            while row:
-                if row[0] in excluded_fids:
-                    continue
-                if row[2] == 'test':
-                    # who did this?
-                    continue
-                yield MogileFile.parse_row(row)
-                row = cursor.fetchone()
     finally:
         connection.close()
