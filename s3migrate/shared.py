@@ -104,12 +104,13 @@ class MogileFile():
     @classmethod
     def parse_row(cls, row: dict):
         """Take a file row and return a MogileFile."""
+        #(fid, dmid, dkey, length, classid, devcount)
         # Sanity check, we only use one "domain" and one class
-        assert row['dmid'] == 1, "Bad domain"
-        assert row['classid'] == 0, "Bad class"
-        return cls(dkey=row['dkey'],
-                   fid=row['fid'],
-                   length=row['length'])
+        assert row[1] == 1, "Bad domain"
+        assert row[4] == 0, "Bad class"
+        return cls(dkey=row[2],
+                   fid=row[0],
+                   length=row[3])
 
     def exists_in_bucket(self, client, s3_bucket, key):
         """Check if object with key is in the bucket.
@@ -248,7 +249,7 @@ def get_mogile_files_from_database(database_url, limit=None, fids=None,
         user=config['USER'],
         password=config['PASSWORD'],
         db=config['NAME'],
-        cursorclass=pymysql.cursors.SSDictCursor)
+        cursorclass=pymysql.cursors.SSCursor)
 
     try:
         with connection.cursor() as cursor:
@@ -261,10 +262,14 @@ def get_mogile_files_from_database(database_url, limit=None, fids=None,
                 sql = "SELECT * FROM file"
             cursor.execute(sql)
             row = cursor.fetchone()
+            #(fid, dmid, dkey, length, classid, devcount)
             while row:
-                mogile_file = MogileFile.parse_row(row)
-                if mogile_file.fid not in excluded_fids:
-                    yield mogile_file
+                if row[0] in excluded_fids:
+                    continue
+                if row[2] == 'test':
+                    # who did this?
+                    continue
+                yield MogileFile.parse_row(row)
                 row = cursor.fetchone()
     finally:
         connection.close()
