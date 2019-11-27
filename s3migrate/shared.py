@@ -267,9 +267,8 @@ def get_mogile_files_from_database(database_url, limit=None, fids=None,
         cursor.execute(sql)
         row = cursor.fetchone()
         while row:
-            if row[0] in excluded_fids:
-                continue
-            yield MogileFile.parse_row(row)
+            if row[0] not in excluded_fids:
+                yield MogileFile.parse_row(row)
             row = cursor.fetchone()
     finally:
         connection.close()
