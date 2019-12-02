@@ -23,13 +23,16 @@ class FidThread(threading.Thread):
                   "Segment": self.segment,
                   "TotalSegments": self.total_segments}
         response = self.client.scan(**kwargs)
-        while "LastEvaluatedKey" in response:
+        while True:
             values = [int(item["fid"]["N"])
                       for item in response["Items"]]
             with self.lock:
                 self.fids.update(values)
-            response = self.client.scan(
-                ExclusiveStartKey=response["LastEvaluatedKey"], **kwargs)
+            if "LastEvaluatedKey" in response:
+                response = self.client.scan(
+                    ExclusiveStartKey=response["LastEvaluatedKey"], **kwargs)
+            else:
+                break
 
     @classmethod
     def start_pool(cls, fids):
