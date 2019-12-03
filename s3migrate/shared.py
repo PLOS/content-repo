@@ -13,6 +13,8 @@ import pymysql
 import requests
 from botocore.exceptions import ClientError
 
+BUFSIZE = 16*1024*1024  # 16 MiB
+
 
 def make_bucket_map(buckets):
     """Construct a hash from a buckets source string of the form a:b,c:d."""
@@ -179,7 +181,7 @@ class MogileFile():
             req.raise_for_status()
             with tempfile.TemporaryFile() as tmp:
                 req.raw.decode_content = True
-                shutil.copyfileobj(req.raw, tmp)
+                shutil.copyfileobj(req.raw, tmp, length=BUFSIZE)
                 assert sha1_fileobj_hex(tmp) == self.sha1sum
                 md5 = md5_fileobj_b64(tmp)
                 tmp.seek(0)
