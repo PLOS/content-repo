@@ -108,7 +108,7 @@ class MogileFile():
     @classmethod
     def parse_row(cls, row: dict):
         """Take a file row and return a MogileFile."""
-        #(fid, dmid, dkey, length, classid, devcount)
+        # (fid, dmid, dkey, length, classid, devcount)
         # Sanity check, we only use one "domain" and one class
         assert row[1] == 1, "Bad domain"
         assert row[4] == 0, "Bad class"
@@ -217,7 +217,8 @@ class MogileFile():
             print(f"  Putting from mogile.")
             md5 = self.put(mogile_client, s3_resource, s3_bucket)
         finally:
-            self.save_to_dynamodb(dynamodb, md5, s3_bucket)
+            if md5 is not False:
+                self.save_to_dynamodb(dynamodb, md5, s3_bucket)
 
     def save_to_dynamodb(self, dynamodb, md5, s3_bucket):
         """Save record to dynamodb certifying successful migration."""
