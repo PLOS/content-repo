@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS collections (
     versionNumber VARCHAR (255) NOT NULL,
     status TINYINT DEFAULT 0 NOT NULL,
     tag VARCHAR (200),
-    creationDate TIMESTAMP DEFAULT 0,
+    creationDate TIMESTAMP DEFAULT '1970-01-01 00:00:01',
     UNIQUE KEY keySum (bucketId, collkey, versionChecksum),
     PRIMARY KEY (id),
     FOREIGN KEY (bucketId) REFERENCES buckets(bucketId)
@@ -71,7 +71,7 @@ ALTER TABLE buckets
   ADD COLUMN timestamp timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
 
 ALTER TABLE buckets 
-  ADD COLUMN creationDate TIMESTAMP DEFAULT 0;
+  ADD COLUMN creationDate TIMESTAMP DEFAULT '1970-01-01 00:00:01';
 
 UPDATE buckets SET creationDate = CURRENT_TIMESTAMP;
 
@@ -79,7 +79,7 @@ UPDATE buckets SET creationDate = CURRENT_TIMESTAMP;
 # Objects are getting creation dates and a version checksum.
 #
 ALTER TABLE objects 
-  ADD COLUMN creationDate TIMESTAMP DEFAULT 0;
+  ADD COLUMN creationDate TIMESTAMP DEFAULT '1970-01-01 00:00:01';
 
 ALTER TABLE objects 
   ADD COLUMN versionChecksum VARCHAR (255) NOT NULL;
