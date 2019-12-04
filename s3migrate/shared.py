@@ -372,3 +372,14 @@ class QueueWorkerThread(threading.Thread):
             threads = cls.start_pool(threadCount, queue, *args, **kwargs)
         cls.finish_pool(queue, threads)
 
+
+def chunked(iterable, size):
+    """Group into chunks of size."""
+    result = []
+    for item in iterable:
+        result.append(item)
+        if len(result) == size:
+            yield result
+            result = []
+    if len(result) > 0:
+        yield result

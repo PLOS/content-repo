@@ -6,9 +6,8 @@ from botocore.exceptions import ClientError
 
 from .shared import MogileFile, make_bucket_map,\
     md5_fileobj_hex, sha1_fileobj_hex, md5_fileobj_b64, sha1_fileobj_b64, \
-    QueueWorkerThread
+    QueueWorkerThread, chunked
 
-from .enqueue import chunked
 from queue import Queue
 
 
@@ -141,7 +140,7 @@ class TestMigrate():
         assert make_bucket_map("a:b,c:d") == {"a": "b", "c": "d"}
 
     def test_chunked(self):
-        assert list(chunked(range(0, 15))) == [
+        assert list(chunked(range(0, 15), size=10)) == [
             list(range(0, 10)),
             list(range(10, 15))]
 

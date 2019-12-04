@@ -3,7 +3,7 @@
 import os
 import sys
 from multiprocessing.dummy import Pool as ThreadPool
-
+from shared import chunked
 import boto3
 
 from shared import get_mogile_files_from_database, make_generator_from_args
@@ -25,21 +25,9 @@ def send_message(mogile_file_list):
         Entries=entries)
 
 
-def chunked(iterable):
-    """Group into chunks of 10."""
-    result = []
-    for item in iterable:
-        result.append(item)
-        if len(result) == 10:
-            yield result
-            result = []
-    if len(result) > 0:
-        yield result
-
-
 def main():
     """Enqueue mogile files to SQS."""
-    generator = chunked(make_generator_from_args(sys.argv))
+    generator = chunked(make_generator_from_args(sys.argv), size=10)
     pool = ThreadPool(THREADS)
     pool.imap_unordered(send_message, generator)
     pool.close()
