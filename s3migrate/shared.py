@@ -276,7 +276,13 @@ def get_mogile_files_from_database(database_url, limit=None, fids=None,
     finally:
         connection.close()
 
+
 def process_cli_args(args):
+    """Process a set of command line arguments.
+
+    Args are either a list of fids to process or a single file that
+    contains a list of fids to exclude.
+    """
     fids = None
     excluded_fids = set()
     if len(args) > 1:
