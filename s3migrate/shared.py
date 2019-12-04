@@ -12,6 +12,8 @@ import dj_database_url
 import pymysql
 import requests
 from botocore.exceptions import ClientError
+import threading
+from queue import Empty, Queue
 
 BUFSIZE = 16*1024*1024  # 16 MiB
 
@@ -294,3 +296,44 @@ def process_cli_args(args):
                     excluded_fids.add(int(line))
             print(f"Excluding {len(excluded_fids)} fids.")
     return fids, excluded_fids
+
+
+class QueueWorkerThread(threading.Thread):
+    """Generic class for processing a work queue."""
+
+    def __init__(self, queue: Queue, *args, **kwargs):
+        """Initialize this thread."""
+        super().__init__(*args, **kwargs)
+        self.queue = queue
+
+    def run(self):
+        """Run this thread."""
+        while True:
+            try:
+                self.dowork(self.queue.get_nowait())
+                self.queue.task_done()
+            except Empty:
+                break
+
+    @classmethod
+    def start_pool(cls, threadCount: int, queue: Queue, *args, **kwargs):
+        """Run threads on the data provided in the queue.
+
+        Returns a list of threads to pass to `finish_pool` later.
+        """
+        threads = []
+        for _ in range(threadCount):
+            thread = cls(queue, *args, **kwargs)
+            threads.append(thread)
+            thread.start()
+        return threads
+
+    @staticmethod
+    def finish_pool(queue, threads):
+        """Wait until queue is empty and threads have finished processing."""
+        # block until all tasks are done
+        queue.join()
+
+        # stop workers
+        for thread in threads:
+            thread.join()

@@ -5,9 +5,11 @@ import pytest
 from botocore.exceptions import ClientError
 
 from .shared import MogileFile, make_bucket_map,\
-    md5_fileobj_hex, sha1_fileobj_hex, md5_fileobj_b64, sha1_fileobj_b64
+    md5_fileobj_hex, sha1_fileobj_hex, md5_fileobj_b64, sha1_fileobj_b64, \
+    QueueWorkerThread
 
 from .enqueue import chunked
+from queue import Queue
 
 
 # pylint: disable=C0115,C0116,R0201
@@ -142,3 +144,21 @@ class TestMigrate():
         assert list(chunked(range(0, 15))) == [
             list(range(0, 10)),
             list(range(10, 15))]
+
+    def test_queue_worker(self):
+        class MyThread(QueueWorkerThread):
+            def __init__(self, queue: Queue, result, *args, **kwargs):
+                super().__init__(queue, *args, **kwargs)
+                self.result = result
+
+            def dowork(self, what):
+                self.result['result'] += what
+
+        q = Queue()
+        for i in range(1000):
+            q.put(i)
+        # Wrapper for int since we cannot modify an int.
+        result = {'result': 0}
+        threads = MyThread.start_pool(2, q, result)
+        MyThread.finish_pool(q, threads)
+        assert result['result'] == sum(range(1000))
