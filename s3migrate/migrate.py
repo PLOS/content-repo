@@ -8,7 +8,7 @@ import boto3
 import pymogilefs
 
 from shared import make_bucket_map, get_mogile_files_from_database, \
-    process_cli_args, QueueWorkerThread
+    make_generator_from_args, QueueWorkerThread
 
 
 class MyThread(QueueWorkerThread):
@@ -37,12 +37,8 @@ def main():
     """Perform copy of content from mogile to S3."""
     # Uncomment to enable boto debug logging
     # boto3.set_stream_logger(name='botocore')
-    fids, excluded_fids = process_cli_args(sys.argv)
+    generator = make_generator_from_args(sys.argv)
     bucket_map = make_bucket_map(os.environ["BUCKETS"])
-    generator = get_mogile_files_from_database(
-        os.environ['MOGILE_DATABASE_URL'],
-        fids=fids,
-        excluded_fids=excluded_fids)
     MyThread.process_generator(20, generator, bucket_map)
 
 if __name__ == "__main__":

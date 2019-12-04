@@ -6,7 +6,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 
 import boto3
 
-from shared import get_mogile_files_from_database, process_cli_args
+from shared import get_mogile_files_from_database, make_generator_from_args
 
 CLIENT = boto3.client('sqs', region_name=os.environ["AWS_S3_REGION_NAME"])
 QUEUE_URL = os.environ["SQS_URL"]
@@ -39,12 +39,7 @@ def chunked(iterable):
 
 def main():
     """Enqueue mogile files to SQS."""
-    fids, excluded_fids = process_cli_args(sys.argv)
-    generator = chunked(
-        get_mogile_files_from_database(
-            os.environ['MOGILE_DATABASE_URL'],
-            fids=fids,
-            excluded_fids=excluded_fids))
+    generator = chunked(make_generator_from_args(sys.argv))
     pool = ThreadPool(THREADS)
     pool.imap_unordered(send_message, generator)
     pool.close()

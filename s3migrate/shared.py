@@ -279,8 +279,8 @@ def get_mogile_files_from_database(database_url, limit=None, fids=None,
         connection.close()
 
 
-def process_cli_args(args):
-    """Process a set of command line arguments.
+def make_generator_from_args(args):
+    """Make a mogile_file generator from args.
 
     Args are either a list of fids to process or a single file that
     contains a list of fids to exclude.
@@ -295,7 +295,10 @@ def process_cli_args(args):
                 for line in f:
                     excluded_fids.add(int(line))
             print(f"Excluding {len(excluded_fids)} fids.")
-    return fids, excluded_fids
+    return get_mogile_files_from_database(
+        os.environ['MOGILE_DATABASE_URL'],
+        fids=fids,
+        excluded_fids=excluded_fids)
 
 
 class QueueWorkerThread(threading.Thread):
