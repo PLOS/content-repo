@@ -175,3 +175,17 @@ class TestMigrate():
         threads = MyThread.start_pool(2, q)
         with pytest.raises(AssertionError):
             MyThread.finish_pool(q, threads)
+
+    def test_queue_process_generator(self):
+        class MyThread(QueueWorkerThread):
+            def __init__(self, queue: Queue, result, *args, **kwargs):
+                super().__init__(queue, *args, **kwargs)
+                self.result = result
+
+            def dowork(self, item):
+                self.result['result'] += item
+
+        # Wrapper for int since we cannot modify an int.
+        result = {'result': 0}
+        MyThread.process_generator(2, range(1000), result)
+        assert result['result'] == sum(range(1000))

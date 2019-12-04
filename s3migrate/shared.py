@@ -351,3 +351,21 @@ class QueueWorkerThread(threading.Thread):
         # stop workers
         for thread in threads:
             thread.join()
+
+    @classmethod
+    def process_generator(cls, threadCount, generator, *args, **kwargs):
+        queue = Queue()
+        counter = 0
+        threads = None
+        threadCount = 20
+        for item in generator:
+            queue.put(item)
+            counter = counter + 1
+            if counter == 1000:
+                # Start up the consumer threads once we have 1000 entries
+                threads = cls.start_pool(threadCount, queue, *args, **kwargs)
+        if threads is None:
+            # In case we did not get 1000 items
+            threads = cls.start_pool(threadCount, queue, *args, **kwargs)
+        cls.finish_pool(queue, threads)
+

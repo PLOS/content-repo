@@ -39,25 +39,11 @@ def main():
     # boto3.set_stream_logger(name='botocore')
     fids, excluded_fids = process_cli_args(sys.argv)
     bucket_map = make_bucket_map(os.environ["BUCKETS"])
-    queue = Queue()
-    counter = 0
-    threads = None
-    thread_count = 20
-    for mogile_file in get_mogile_files_from_database(
-            os.environ['MOGILE_DATABASE_URL'],
-            fids=fids,
-            excluded_fids=excluded_fids):
-        queue.put(mogile_file)
-
-        counter = counter + 1
-        if counter == 1000:
-            # Start up the consumer threads once we have 1000 entries
-            threads = MyThread.start_pool(thread_count, queue, bucket_map)
-    if threads is None:
-        # In case we did not get 1000 items
-        threads = MyThread.start_pool(thread_count, queue, bucket_map)
-    MyThread.finish_pool(queue, threads)
-
+    generator = get_mogile_files_from_database(
+        os.environ['MOGILE_DATABASE_URL'],
+        fids=fids,
+        excluded_fids=excluded_fids)
+    MyThread.process_generator(20, generator, bucket_map)
 
 if __name__ == "__main__":
     main()
