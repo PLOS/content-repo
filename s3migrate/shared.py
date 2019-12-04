@@ -305,15 +305,23 @@ class QueueWorkerThread(threading.Thread):
         """Initialize this thread."""
         super().__init__(*args, **kwargs)
         self.queue = queue
+        self.caught_exception = None
 
     def run(self):
         """Run this thread."""
         while True:
+            item = None
             try:
-                self.dowork(self.queue.get_nowait())
-                self.queue.task_done()
+                item = self.queue.get_nowait()
+                self.dowork(item)
             except Empty:
                 break
+            except BaseException as ex:
+                self.caught_exception = ex
+                break
+            finally:
+                if item is not None:
+                    self.queue.task_done()
 
     @classmethod
     def start_pool(cls, threadCount: int, queue: Queue, *args, **kwargs):
@@ -327,6 +335,12 @@ class QueueWorkerThread(threading.Thread):
             threads.append(thread)
             thread.start()
         return threads
+
+    def join(self):
+        """Join this thread, and throw exception if one was caught."""
+        super().join()
+        if self.caught_exception is not None:
+            raise self.caught_exception
 
     @staticmethod
     def finish_pool(queue, threads):
