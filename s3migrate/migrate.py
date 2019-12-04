@@ -8,7 +8,7 @@ from queue import Empty, Queue
 import boto3
 import pymogilefs
 
-from shared import make_bucket_map, get_mogile_files_from_database
+from shared import make_bucket_map, get_mogile_files_from_database, process_cli_args
 
 
 class MyThread(threading.Thread):
@@ -67,17 +67,7 @@ def main():
     """Perform copy of content from mogile to S3."""
     # Uncomment to enable boto debug logging
     # boto3.set_stream_logger(name='botocore')
-
-    fids = None
-    excluded_fids = set()
-    if len(sys.argv) > 1:
-        if sys.argv[1].isdigit():
-            fids = sys.argv[1:]
-        else:
-            with open(sys.argv[1]) as f:
-                for line in f:
-                    excluded_fids.add(int(line))
-
+    fids, excluded_fids = process_cli_args(sys.argv)
     bucket_map = make_bucket_map(os.environ["BUCKETS"])
     queue = Queue()
     counter = 0

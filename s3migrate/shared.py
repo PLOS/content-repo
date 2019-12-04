@@ -275,3 +275,16 @@ def get_mogile_files_from_database(database_url, limit=None, fids=None,
             row = cursor.fetchone()
     finally:
         connection.close()
+
+def process_cli_args(args):
+    fids = None
+    excluded_fids = set()
+    if len(args) > 1:
+        if args[1].isdigit():
+            fids = args[1:]
+        else:
+            with open(args[1]) as f:
+                for line in f:
+                    excluded_fids.add(int(line))
+            print(f"Excluding {len(excluded_fids)} fids.")
+    return fids, excluded_fids
