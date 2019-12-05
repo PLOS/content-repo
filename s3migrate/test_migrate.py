@@ -102,8 +102,8 @@ class TestMigrate():
     def test_does_not_exist_in_bucket(self, s3_resource, mogile_file):
         ex = ClientError({'Error': {'Code': '404'}}, 'Head')
         s3_resource.Object.return_value.load.side_effect = ex
-        assert(mogile_file.exists_in_bucket(s3_resource, 'my-bucket', 'my-file')
-               is False)
+        assert(mogile_file.exists_in_bucket(
+            s3_resource, 'my-bucket', 'my-file') is False)
 
     def test_exists_in_bucket_raises_exception(self, s3_resource, mogile_file):
         ex = ClientError({'Error': {'Code': '500'}}, 'Head')

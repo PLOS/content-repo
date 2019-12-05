@@ -6,7 +6,8 @@ from multiprocessing.dummy import Pool as ThreadPool
 from shared import chunked
 import boto3
 
-from shared import get_mogile_files_from_database, make_generator_from_args
+from shared import get_mogile_files_from_database, \
+    make_generator_from_args
 
 CLIENT = boto3.client('sqs', region_name=os.environ["AWS_S3_REGION_NAME"])
 QUEUE_URL = os.environ["SQS_URL"]

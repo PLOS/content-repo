@@ -357,6 +357,7 @@ class QueueWorkerThread(threading.Thread):
 
     @classmethod
     def process_generator(cls, threadCount, generator, *args, **kwargs):
+        """Process all the items in the generator using a threadpool."""
         queue = Queue()
         counter = 0
         threads = None
