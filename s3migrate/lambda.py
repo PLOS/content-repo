@@ -20,7 +20,9 @@ def process(event, _context):
         mogile_file = MogileFile.from_json(record["body"])
 
         if action == "verify":
-            item = table.get_item(Key={'fid': mogile_file.fid})["Item"]
+            response = table.get_item(Key={'fid': mogile_file.fid})
+            assert "Item" in response, f"No db entry for {mogile_file.fid}."
+            item = response["Item"]
             mogile_file.verify(
                 sha1=item['sha1'],
                 md5=item['md5'],
