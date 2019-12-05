@@ -27,8 +27,8 @@ def send_message(mogile_file_list):
 
 
 def main():
-    """Enqueue mogile files to SQS."""
-    generator = chunked(make_generator_from_args(sys.argv), size=10)
+    """Enqueue mogile file jobs to SQS for processing in AWS lambda."""
+    generator = chunked(make_generator_from_args(sys.argv[2:]), size=10)
     pool = ThreadPool(THREADS)
     pool.imap_unordered(send_message, generator)
     pool.close()

@@ -37,7 +37,7 @@ def main():
     """Perform copy of content from mogile to S3."""
     # Uncomment to enable boto debug logging
     # boto3.set_stream_logger(name='botocore')
-    generator = make_generator_from_args(sys.argv)
+    generator = make_generator_from_args(sys.argv[1:])
     MyThread.process_generator(20, generator)
 
 
