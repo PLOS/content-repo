@@ -7,13 +7,13 @@ import os
 import random
 import shutil
 import tempfile
+import threading
+from queue import Empty, Queue
 
 import dj_database_url
 import pymysql
 import requests
 from botocore.exceptions import ClientError
-import threading
-from queue import Empty, Queue
 
 BUFSIZE = 16*1024*1024  # 16 MiB
 
@@ -195,7 +195,7 @@ class MogileFile():
                     ContentMD5=md5)
                 return response["ETag"].replace("\"", "")
 
-    def migrate(self, mogile_client, dynamodb, s3_resource, bucket_map):
+    def migrate(self, mogile_client, table, s3_resource, bucket_map):
         """Migrate this mogile object to contentrepo.
 
         Returns None if the object is a temporary file, otherwise
@@ -222,11 +222,10 @@ class MogileFile():
             md5 = self.put(mogile_client, s3_resource, s3_bucket)
         finally:
             if md5 is not False:
-                self.save_to_dynamodb(dynamodb, md5, s3_bucket)
+                self.save_to_dynamodb(table, md5, s3_bucket)
 
-    def save_to_dynamodb(self, dynamodb, md5, s3_bucket):
+    def save_to_dynamodb(self, table, md5, s3_bucket):
         """Save record to dynamodb certifying successful migration."""
-        table = dynamodb.Table(os.environ["DYNAMODB_TABLE"])
         return table.put_item(
             Item={
                 'fid': self.fid,
@@ -247,6 +246,17 @@ class MogileFile():
     def from_json(cls, json_str):
         """Create MogileFile from JSON string."""
         return MogileFile(**json.loads(json_str))
+
+    def verify(self, fid, md5, sha1, bucket, bucket_map, s3_resource):
+        """Verify (with assert) this mogile file against asserted values."""
+        assert self.fid == fid, \
+            f"fid {self.fid} not migrated"
+        new_bucket = bucket_map[self.mogile_bucket]
+        assert new_bucket == bucket
+        s3_md5 = self.contentrepo_exists_in_bucket(s3_resource, new_bucket)
+        assert (s3_md5 == md5), f"{self.fid} has wrong MD5 sum"
+        assert (self.sha1sum == sha1), \
+            f"{self.fid} has wrong SHA1 sum"
 
 
 def get_mogile_files_from_database(database_url, limit=None, fids=None,

@@ -1,4 +1,3 @@
-import json
 import os
 
 import boto3
@@ -14,12 +13,24 @@ def process(event, _context):
         trackers=os.environ['MOGILE_TRACKERS'].split(','),
         domain='plos_repo')
     s3_resource = boto3.resource('s3')
-    dynamodb = boto3.resource('dynamodb')
+    table = boto3.resource('dynamodb').Table(os.environ["DYNAMODB_TABLE"])
 
     for record in event['Records']:
+        action = record["messageAttributes"]["action"]["stringValue"]
         mogile_file = MogileFile.from_json(record["body"])
-        mogile_file.migrate(
-            mogile_client,
-            dynamodb,
-            s3_resource,
-            bucket_map)
+
+        if action == "verify":
+            item = table.get_item(Key={'fid': mogile_file.fid})["Item"]
+            mogile_file.verify(
+                sha1=item['sha1'],
+                md5=item['md5'],
+                fid=int(item['fid']),
+                bucket=item['bucket'],
+                bucket_map=bucket_map,
+                s3_resource=s3_resource)
+        else:
+            mogile_file.migrate(
+                mogile_client,
+                table,
+                s3_resource,
+                bucket_map)
