@@ -5,6 +5,7 @@ from shared import make_bucket_map, get_mogile_files_from_database
 import boto3
 import dbm.gnu
 import threading
+from tqdm import tqdm
 
 
 class S3ListThread(threading.Thread):
@@ -14,7 +15,7 @@ class S3ListThread(threading.Thread):
     Stores results in a gdbm file.
     """
 
-    def __init__(self, bucket_name, db, prefix, lock, *args, **kwargs):
+    def __init__(self, bucket_name, db, prefix, lock, pbar, *args, **kwargs):
         """Initialize this thread."""
         super().__init__(*args, **kwargs)
         self.prefix = prefix
@@ -23,14 +24,13 @@ class S3ListThread(threading.Thread):
         self.lock = lock
         self.s3 = boto3.client('s3')
         self.caught_exception = None
+        self.pbar = pbar
 
     def run(self):
         """Run this thread."""
         kwargs = {'Bucket': self.bucket_name, "Prefix": self.prefix}
         while True:
             try:
-                sys.stderr.write("*")
-                sys.stderr.flush()
                 resp = self.s3.list_objects_v2(**kwargs)
                 if "Contents" not in resp:
                     break
@@ -40,6 +40,7 @@ class S3ListThread(threading.Thread):
                         # We don't need to know anything, we are just
                         # keeping track of the keys.
                         self.db[key] = ""
+                        self.pbar.update()
                 if resp["IsTruncated"]:
                     kwargs['ContinuationToken'] = resp['NextContinuationToken']
                 else:
@@ -51,18 +52,19 @@ class S3ListThread(threading.Thread):
     @classmethod
     def process(cls, bucket_name):
         """Process this bucket and store results in a gdbm file."""
-        with dbm.gnu.open(bucket_name, 'cf') as db:
-            lock = threading.Lock()
-            threads = []
-            for i in range(0, 16):
-                prefix = format(i, 'x')  # hex digit
-                thread = cls(bucket_name, db, prefix, lock)
-                threads.append(thread)
-                thread.start()
-            for thread in threads:
-                thread.join()
-            db.sync()
-        return True
+        with tqdm(desc=f"{bucket_name} list") as pbar:
+            with dbm.gnu.open(bucket_name, 'cf') as db:
+                lock = threading.Lock()
+                threads = []
+                for i in range(0, 16):
+                    prefix = format(i, 'x')  # hex digit
+                    thread = cls(bucket_name, db, prefix, lock, pbar)
+                    threads.append(thread)
+                    thread.start()
+                for thread in threads:
+                    thread.join()
+                db.sync()
+            return True
 
     def join(self):
         """Join this thread, and throw exception if one was caught."""
@@ -85,8 +87,8 @@ def main():
     for bucket in buckets:
         S3ListThread.process(bucket)
     dbs = {bucket: dbm.open(bucket) for bucket in buckets}
-    for mogile_file in get_mogile_files_from_database(
-            os.environ['MOGILE_DATABASE_URL']):
+    for mogile_file in tqdm(get_mogile_files_from_database(
+            os.environ['MOGILE_DATABASE_URL'])):
         s3_bucket = bucket_map[mogile_file.mogile_bucket]
         assert mogile_file.sha1sum in dbs[s3_bucket], \
             f"{mogile_file.sha1sum} not in {s3_bucket}"

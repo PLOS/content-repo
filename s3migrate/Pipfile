@@ -12,6 +12,7 @@ boto3 = "*"
 PyMySQL = "*"
 dj-database-url = "*"
 pymogilefs = "*"
+tqdm = "*"
 
 [requires]
 python_version = "3.7"

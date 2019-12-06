@@ -249,6 +249,7 @@ class MogileFile():
 
     def verify(self, fid, md5, sha1, bucket, bucket_map, s3_resource):
         """Verify (with assert) this mogile file against asserted values."""
+        print(f"Verifying {self.fid}")
         assert self.fid == fid, \
             f"fid {self.fid} not migrated"
         new_bucket = bucket_map[self.mogile_bucket]

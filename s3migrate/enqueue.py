@@ -5,6 +5,7 @@ import sys
 from multiprocessing.dummy import Pool as ThreadPool
 from shared import chunked
 import boto3
+from tqdm import tqdm
 
 from shared import make_generator_from_args
 
@@ -18,8 +19,6 @@ MIGRATE = {'action': {'StringValue': 'migrate', 'DataType': 'String'}}
 
 def send_message(mogile_file_list, action):
     """Send the mogile file as an SQS message."""
-    sys.stderr.write("*")
-    sys.stderr.flush()
     entries = [{'Id': str(mogile_file.fid),
                 'MessageAttributes': action,
                 'MessageBody': mogile_file.to_json()}
@@ -41,7 +40,7 @@ def queue_verify(mogile_file_list):
 
 def main():
     """Enqueue mogile file jobs to SQS for processing in AWS lambda."""
-    generator = chunked(make_generator_from_args(sys.argv[2:]), size=10)
+    generator = chunked(tqdm(make_generator_from_args(sys.argv[2:])), size=10)
     pool = ThreadPool(THREADS)
     if sys.argv[1] == 'verify':
         pool.imap_unordered(queue_verify, generator)
