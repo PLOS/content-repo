@@ -21,14 +21,14 @@ class MyThread(QueueWorkerThread):
             trackers=os.environ['MOGILE_TRACKERS'].split(','),
             domain='plos_repo')
         self.s3_resource = boto3.resource('s3')
-        self.dynamodb = boto3.resource('dynamodb')
+        self.table = boto3.resource('dynamodb').Table(os.environ["DYNAMODB_TABLE"])
         self.bucket_map = make_bucket_map(os.environ["BUCKETS"])
 
     def dowork(self, mogile_file):
         """Perform the migration."""
         mogile_file.migrate(
             self.mogile_client,
-            self.dynamodb,
+            self.table,
             self.s3_resource,
             self.bucket_map)
 
