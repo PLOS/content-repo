@@ -24,7 +24,7 @@ In broad strokes, the migration from mogile to S3 consists of the following step
 
 1. Create the production bucket, if it doesn’t exist.
 1. Set up access to the production bucket, including a key id and secret key for use by contentrepo.
-1. Create an SQS queue.
+1. Create an SQS queue. Set up a dead letter queue for this to capture errored jobs.
 1. Create a dynamodb table.
 1. Create a lambda function with full access to the SQS queue, the S3 buckets, and the dynamodb table created above.
 1. Build the lambda zip and upload. The `lambda.zip` for upload can be build using: `make`. 
