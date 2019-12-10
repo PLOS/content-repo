@@ -5,16 +5,16 @@ import pymogilefs
 
 from shared import MogileFile, make_bucket_map
 
+bucket_map = make_bucket_map(os.environ["BUCKETS"])
+mogile_client = pymogilefs.client.Client(
+    trackers=os.environ['MOGILE_TRACKERS'].split(','),
+    domain='plos_repo')
+s3_resource = boto3.resource('s3')
+table = boto3.resource('dynamodb').Table(os.environ["DYNAMODB_TABLE"])
+
 
 def process(event, _context):
     """Migrate this MogileFile to S3 in AWS Lambda."""
-    bucket_map = make_bucket_map(os.environ["BUCKETS"])
-    mogile_client = pymogilefs.client.Client(
-        trackers=os.environ['MOGILE_TRACKERS'].split(','),
-        domain='plos_repo')
-    s3_resource = boto3.resource('s3')
-    table = boto3.resource('dynamodb').Table(os.environ["DYNAMODB_TABLE"])
-
     for record in event['Records']:
         action = record["messageAttributes"]["action"]["stringValue"]
         mogile_file = MogileFile.from_json(record["body"])
