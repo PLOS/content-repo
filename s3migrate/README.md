@@ -121,7 +121,7 @@ The logic in this is slightly different to double-check the lambda verification.
 
 ### Update contentrepo and lemur configuration.
 
-Now we will want to update the contenrepo and lemur configuration. (Details to be worked out.)
+Now we will want to update the contentrepo and lemur configuration. (Details to be worked out.)
 
 ### Update data in contentrepo and rhino databases to point to the new, S3 buckets.
 
