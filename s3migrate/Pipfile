@@ -1,0 +1,18 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pytest = "*"
+requests-mock = "*"
+
+[packages]
+boto3 = "*"
+PyMySQL = "*"
+dj-database-url = "*"
+pymogilefs = "*"
+tqdm = "*"
+
+[requires]
+python_version = "3.7"
