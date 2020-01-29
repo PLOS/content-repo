@@ -40,3 +40,5 @@ Thumbs.db
 
 test/.pytest_cache/
 
+
+lambda.tmp/

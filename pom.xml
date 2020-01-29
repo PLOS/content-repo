@@ -27,7 +27,7 @@
   <artifactId>contentrepo</artifactId>
   <name>content-repo</name>
   <packaging>war</packaging>
-  <version>1.2.8</version>
+  <version>1.2.9</version>
 
   <description>Versioning content repository for PLoS data</description>
 
@@ -396,7 +396,7 @@
         <version>0.3.0</version>
         <executions>
           <execution>
-            <phase>package</phase>
+            <phase>install</phase>
             <goals>
               <goal>apt-repo</goal>
             </goals>
