@@ -223,15 +223,6 @@
 
   <repositories>
     <repository>
-      <id>central</id>
-      <name>Maven Repository Switchboard</name>
-      <layout>default</layout>
-      <url>http://repo2.maven.org/maven2</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    <repository>
       <id>ambra</id>
       <name>Maven 2 Release Repository for Ambra</name>
       <url>http://maven.ambraproject.org/maven2/release/</url>
@@ -253,7 +244,6 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
-
   </repositories>
 
 
@@ -278,7 +268,7 @@
           <container>
             <containerId>tomcat8x</containerId>
             <zipUrlInstaller>
-              <url>http://repo1.maven.org/maven2/org/apache/tomcat/tomcat/8.5.37/tomcat-8.5.37.zip</url>
+              <url>https://repo1.maven.org/maven2/org/apache/tomcat/tomcat/8.5.37/tomcat-8.5.37.zip</url>
             </zipUrlInstaller>
             <dependencies>
               <dependency>
