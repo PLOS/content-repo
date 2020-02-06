@@ -268,7 +268,7 @@
           <container>
             <containerId>tomcat8x</containerId>
             <zipUrlInstaller>
-              <url>https://repo1.maven.org/maven2/org/apache/tomcat/tomcat/8.5.37/tomcat-8.5.37.zip</url>
+              <url>https://repo1.maven.org/maven2/org/apache/tomcat/tomcat/8.5.50/tomcat-8.5.50.zip</url>
             </zipUrlInstaller>
             <dependencies>
               <dependency>
@@ -277,17 +277,14 @@
                 <classpath>extra</classpath>
               </dependency>
             </dependencies>
+            <systemProperties>
+              <org.apache.tomcat.util.digester.PROPERTY_SOURCE>org.apache.tomcat.util.digester.Digester$EnvironmentPropertySource</org.apache.tomcat.util.digester.PROPERTY_SOURCE>
+            </systemProperties>
           </container>
           <configuration>
             <properties>
               <cargo.servlet.port>8081</cargo.servlet.port>
             </properties>
-            <files>
-              <file>
-                <file>${contentrepo.configDir}/context.xml</file>
-                <todir>conf</todir>
-              </file>
-            </files>
           </configuration>
           <deployables>
             <deployable>
@@ -330,26 +327,6 @@
               <!-- <snapshotExpand>true</snapshotExpand> -->
               <controlDir>${project.basedir}/src/deb/control</controlDir>
               <dataSet>
-
-                <data>
-                  <src>src/deb/tomcat8/conf/context-mogile.template.xml</src>
-                  <dst>context-mogile.template.xml</dst>
-                  <type>file</type>
-                  <mapper>
-                    <type>perm</type>
-                    <prefix>/opt/plos/contentrepo/conf</prefix>
-                  </mapper>
-                </data>
-
-                <data>
-                  <src>src/deb/tomcat8/conf/context-local.template.xml</src>
-                  <dst>context-local.template.xml</dst>
-                  <type>file</type>
-                  <mapper>
-                    <type>perm</type>
-                    <prefix>/opt/plos/contentrepo/conf</prefix>
-                  </mapper>
-                </data>
 
                 <data>
                   <src>${project.build.directory}/${project.build.finalName}.war</src>

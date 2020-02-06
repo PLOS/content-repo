@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Context>
+  <WatchedResource>WEB-INF/web.xml</WatchedResource>
+
+  <Resource name="jdbc/repoDB"
+            auth="Container"
+            type="javax.sql.DataSource"
+            factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
+            validationQuery="SELECT 1"
+            testOnBorrow="true"
+            driverClassName="com.mysql.jdbc.Driver"
+            url="${DATABASE_URL}"
+            maxActive="300"
+            defaultTransactionIsolation="READ_COMMITTED"
+            />
+
+  <Resource name="repo/objectStoreMogile"
+            type="org.plos.repo.service.ObjectStore"
+            factory="org.plos.repo.config.MogileStoreFactory"
+            domain="plos_repo"
+            trackers="${MOGILE_TRACKERS}"
+            maxTrackerConnections="-1"
+            maxIdleConnections="2"
+            maxIdleTimeMillis="10000"
+            reproxyEnable="true"
+            reproxyCacheSettings="21600; Last-Modified Content-Type Content-Disposition"
+            />
+  
+  <Resource name="repo/objectStoreFS"
+            type="org.plos.repo.service.ObjectStore"
+            factory="org.plos.repo.config.FileSystemStoreFactory"
+            dataDirectory="${DATA_DIRECTORY}"
+            />
+
+  <Resource name="repo/objectStoreS3"
+            type="org.plos.repo.service.ObjectStore"
+            factory="org.plos.repo.config.S3StoreFactory"
+            awsAccessKey="${AWS_ACCESS_KEY_ID}"
+            awsSecretKey="${AWS_SECRET_ACCESS_KEY}"
+            />
+</Context>

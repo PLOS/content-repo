@@ -56,8 +56,6 @@ case "$1" in
 
 ########### END app-specific code ###########
 
-	process_env_template $HOME/conf/context-$CREPO_STORAGE_LOCATION.template.xml $HOME/conf/context.xml
-
 	process_env_template $HOME/conf/server.template.xml $HOME/conf/server.xml
 
 	process_env_template $HOME/bin/setenv.template.sh $HOME/bin/setenv.sh

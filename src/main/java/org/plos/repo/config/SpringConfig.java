@@ -91,8 +91,14 @@ public class SpringConfig {
   public ObjectStore objectStore() throws Exception {
     Context initContext = new InitialContext();
     Context envContext = (Context) initContext.lookup("java:/comp/env");
-    ObjectStore objStore = (ObjectStore) envContext.lookup("repo/objectStore");
-
+    ObjectStore objStore;
+    if (System.getenv("MOGILE_TRACKERS") != null) {
+      objStore = (ObjectStore) envContext.lookup("repo/objectStoreMogile");
+    } else if (System.getenv("DATA_DIRECTORY") != null) {
+      objStore = (ObjectStore) envContext.lookup("repo/objectStoreFS");
+    } else {
+      objStore = (ObjectStore) envContext.lookup("repo/objectStoreS3");
+    }
     log.info("ObjectStore: " + objStore.getClass().toString());
 
     return objStore;
