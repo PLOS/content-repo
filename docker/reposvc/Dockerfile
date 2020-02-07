@@ -26,8 +26,6 @@ RUN echo "JAVA_HOME=/usr/lib/jvm/java-7-oracle" >> /etc/default/tomcat8
 ADD run.sh /root/run.sh
 RUN chmod +x /root/run.sh
 
-ADD context.xml /etc/tomcat8/context.xml
-
 ENV MYSQL_HOSTNAME repodb
 
 EXPOSE 8080

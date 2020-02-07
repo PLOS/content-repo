@@ -223,15 +223,6 @@
 
   <repositories>
     <repository>
-      <id>central</id>
-      <name>Maven Repository Switchboard</name>
-      <layout>default</layout>
-      <url>http://repo2.maven.org/maven2</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    <repository>
       <id>ambra</id>
       <name>Maven 2 Release Repository for Ambra</name>
       <url>http://maven.ambraproject.org/maven2/release/</url>
@@ -253,7 +244,6 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
-
   </repositories>
 
 
@@ -278,7 +268,7 @@
           <container>
             <containerId>tomcat8x</containerId>
             <zipUrlInstaller>
-              <url>http://repo1.maven.org/maven2/org/apache/tomcat/tomcat/8.5.37/tomcat-8.5.37.zip</url>
+              <url>https://repo1.maven.org/maven2/org/apache/tomcat/tomcat/8.5.50/tomcat-8.5.50.zip</url>
             </zipUrlInstaller>
             <dependencies>
               <dependency>
@@ -287,17 +277,14 @@
                 <classpath>extra</classpath>
               </dependency>
             </dependencies>
+            <systemProperties>
+              <org.apache.tomcat.util.digester.PROPERTY_SOURCE>org.apache.tomcat.util.digester.Digester$EnvironmentPropertySource</org.apache.tomcat.util.digester.PROPERTY_SOURCE>
+            </systemProperties>
           </container>
           <configuration>
             <properties>
               <cargo.servlet.port>8081</cargo.servlet.port>
             </properties>
-            <files>
-              <file>
-                <file>${contentrepo.configDir}/context.xml</file>
-                <todir>conf</todir>
-              </file>
-            </files>
           </configuration>
           <deployables>
             <deployable>
@@ -323,88 +310,6 @@
           <showWarnings>true</showWarnings>
           <showDeprecation>true</showDeprecation>
         </configuration>
-      </plugin>
-
-      <plugin>
-        <artifactId>jdeb</artifactId>
-        <groupId>org.vafer</groupId>
-        <version>1.5</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>jdeb</goal>
-            </goals>
-            <configuration>
-              <deb>${project.build.directory}/${project.artifactId}_[[version]]+${build.timestamp}-plos${build.counter}.deb</deb>
-              <!-- <snapshotExpand>true</snapshotExpand> -->
-              <controlDir>${project.basedir}/src/deb/control</controlDir>
-              <dataSet>
-
-                <data>
-                  <src>src/deb/tomcat8/conf/context-mogile.template.xml</src>
-                  <dst>context-mogile.template.xml</dst>
-                  <type>file</type>
-                  <mapper>
-                    <type>perm</type>
-                    <prefix>/opt/plos/contentrepo/conf</prefix>
-                  </mapper>
-                </data>
-
-                <data>
-                  <src>src/deb/tomcat8/conf/context-local.template.xml</src>
-                  <dst>context-local.template.xml</dst>
-                  <type>file</type>
-                  <mapper>
-                    <type>perm</type>
-                    <prefix>/opt/plos/contentrepo/conf</prefix>
-                  </mapper>
-                </data>
-
-                <data>
-                  <src>${project.build.directory}/${project.build.finalName}.war</src>
-                  <type>file</type>
-                  <dst>/opt/plos/contentrepo/webapps/v1.war</dst>
-                </data>
-
-                <data>
-                  <src>${project.basedir}/src/deb/tomcat8</src>
-                  <type>directory</type>
-                  <mapper>
-                    <type>perm</type>
-                    <prefix>/opt/plos/contentrepo</prefix>
-                  </mapper>
-                </data>
-
-                <data>
-                  <src>${project.basedir}/root-index.html</src>
-                  <type>file</type>
-                  <dst>/opt/plos/contentrepo/webapps/ROOT/index.html</dst>
-                  <mapper>
-                    <type>perm</type>
-                    <filemode>755</filemode>
-                  </mapper>
-                </data>
-              </dataSet>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <artifactId>apt-repo</artifactId>
-        <groupId>org.m1theo</groupId>
-        <version>0.3.0</version>
-        <executions>
-          <execution>
-            <phase>install</phase>
-            <goals>
-              <goal>apt-repo</goal>
-            </goals>
-            <configuration>
-              <repoDir>/var/tmp/apt</repoDir>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>
