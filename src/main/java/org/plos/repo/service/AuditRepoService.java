@@ -22,14 +22,13 @@
 
 package org.plos.repo.service;
 
-import com.google.common.util.concurrent.Striped;
-import org.plos.repo.models.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
+import com.google.common.util.concurrent.Striped;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.plos.repo.models.Audit;
 
 /**
  * This service handles all communication to sqlService for audit services
@@ -38,7 +37,7 @@ public class AuditRepoService extends BaseRepoService {
 
   private Striped<ReadWriteLock> rwLocks = Striped.lazyWeakReadWriteLock(32);
 
-  private static final Logger log = LoggerFactory.getLogger(AuditRepoService.class);
+  private static final Logger log = LogManager.getLogger(AuditRepoService.class);
 
   /**
    * List audit records order by creation date, using limit and offset to paginate the response

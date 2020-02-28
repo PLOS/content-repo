@@ -22,23 +22,20 @@
 
 package org.plos.repo.service;
 
-import com.google.common.base.Optional;
-import org.plos.repo.models.Bucket;
-import org.plos.repo.models.RepoObject;
-import org.plos.repo.models.Status;
-import org.plos.repo.util.ChecksumGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.regex.Pattern;
+import com.google.common.base.Optional;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.models.RepoObject;
+import org.plos.repo.models.Status;
 
 public abstract class ObjectStore {
 
-  private static final Logger log = LoggerFactory.getLogger(ObjectStore.class);
+  private static final Logger log = LogManager.getLogger(ObjectStore.class);
 
   public static interface UploadInfo {
     Long getSize();

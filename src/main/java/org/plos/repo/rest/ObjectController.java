@@ -22,26 +22,12 @@
 
 package org.plos.repo.rest;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiParam;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
-import org.apache.http.HttpStatus;
-import org.plos.repo.models.RepoError;
-import org.plos.repo.models.RepoObject;
-import org.plos.repo.models.input.ElementFilter;
-import org.plos.repo.models.input.InputRepoObject;
-import org.plos.repo.models.output.RepoObjectOutput;
-import org.plos.repo.service.RepoException;
-import org.plos.repo.service.RepoInfoService;
-import org.plos.repo.service.RepoService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.io.InputStream;
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -58,19 +44,32 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.InputStream;
-import java.sql.Timestamp;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiParam;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
+import org.apache.http.HttpStatus;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.plos.repo.models.RepoError;
+import org.plos.repo.models.RepoObject;
+import org.plos.repo.models.input.ElementFilter;
+import org.plos.repo.models.input.InputRepoObject;
+import org.plos.repo.models.output.RepoObjectOutput;
+import org.plos.repo.service.RepoException;
+import org.plos.repo.service.RepoInfoService;
+import org.plos.repo.service.RepoService;
 
 
 @Path("/objects")
 @Api(value = "/objects")
 public class ObjectController {
 
-  private static final Logger log = LoggerFactory.getLogger(ObjectController.class);
+  private static final Logger log = LogManager.getLogger(ObjectController.class);
 
   private static final Joiner REPROXY_URL_JOINER = Joiner.on(' ');
 

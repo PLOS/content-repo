@@ -22,6 +22,16 @@
 
 package org.plos.repo.service;
 
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+import javax.inject.Inject;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hsqldb.lib.StringUtil;
 import org.plos.repo.models.Audit;
 import org.plos.repo.models.Bucket;
@@ -34,24 +44,13 @@ import org.plos.repo.models.input.InputCollection;
 import org.plos.repo.models.input.InputObject;
 import org.plos.repo.models.validator.InputCollectionValidator;
 import org.plos.repo.util.UUIDFormatter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * This service handles all communication for collections with sqlservice
  */
 public class CollectionRepoService extends BaseRepoService {
 
-  private static final Logger log = LoggerFactory.getLogger(CollectionRepoService.class);
+  private static final Logger log = LogManager.getLogger(CollectionRepoService.class);
 
   @Inject
   private InputCollectionValidator inputCollectionValidator;

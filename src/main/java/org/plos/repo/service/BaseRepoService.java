@@ -22,12 +22,11 @@
 
 package org.plos.repo.service;
 
-import org.apache.commons.lang.StringUtils;
-import org.plos.repo.models.Audit;
-import org.slf4j.Logger;
-
-import javax.inject.Inject;
 import java.sql.SQLException;
+import javax.inject.Inject;
+import org.apache.commons.lang.StringUtils;
+import org.apache.logging.log4j.Logger;
+import org.plos.repo.models.Audit;
 
 /**
  * This service handles all communication for collections with sqlservice

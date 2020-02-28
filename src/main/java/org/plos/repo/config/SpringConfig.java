@@ -22,13 +22,27 @@
 
 package org.plos.repo.config;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.sql.Connection;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.sql.DataSource;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.plos.repo.models.validator.InputCollectionValidator;
 import org.plos.repo.models.validator.InputRepoObjectValidator;
 import org.plos.repo.models.validator.TimestampInputValidator;
-import org.plos.repo.service.*;
+import org.plos.repo.service.AuditRepoService;
+import org.plos.repo.service.CollectionRepoService;
+import org.plos.repo.service.HsqlService;
+import org.plos.repo.service.MysqlService;
+import org.plos.repo.service.ObjectStore;
+import org.plos.repo.service.RepoInfoService;
+import org.plos.repo.service.RepoService;
+import org.plos.repo.service.ScriptRunner;
+import org.plos.repo.service.SqlService;
 import org.plos.repo.util.ChecksumGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -36,18 +50,11 @@ import org.springframework.core.io.Resource;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.sql.DataSource;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.sql.Connection;
-
 @Configuration
 @EnableTransactionManagement
 public class SpringConfig {
 
-  private static final Logger log = LoggerFactory.getLogger(SpringConfig.class);
+  private static final Logger log = LogManager.getLogger(SpringConfig.class);
 
   @Bean
   public RepoInfoService repoInfoService() {

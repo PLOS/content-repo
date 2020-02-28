@@ -22,25 +22,24 @@
 
 package org.plos.repo.service;
 
-import org.plos.repo.models.Bucket;
-import org.plos.repo.models.ServiceConfigInfo;
-import org.plos.repo.models.output.ServiceStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicLong;
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.models.ServiceConfigInfo;
+import org.plos.repo.models.output.ServiceStatus;
 
 
 public class RepoInfoService {
 
-  private static final Logger log = LoggerFactory.getLogger(RepoInfoService.class);
+  private static final Logger log = LogManager.getLogger(RepoInfoService.class);
 
   @Inject
   private ObjectStore objectStore;

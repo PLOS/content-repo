@@ -22,13 +22,6 @@
 
 package org.plos.repo.service;
 
-import com.google.common.base.Optional;
-import org.plos.repo.models.Bucket;
-import org.plos.repo.models.RepoObject;
-import org.plos.repo.util.ChecksumGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -41,10 +34,16 @@ import java.nio.channels.WritableByteChannel;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.util.UUID;
+import com.google.common.base.Optional;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.models.RepoObject;
+import org.plos.repo.util.ChecksumGenerator;
 
 public class FileSystemStoreService extends ObjectStore {
 
-  private static final Logger log = LoggerFactory.getLogger(FileSystemStoreService.class);
+  private static final Logger log = LogManager.getLogger(FileSystemStoreService.class);
 
   private String dataDirectory;
 
