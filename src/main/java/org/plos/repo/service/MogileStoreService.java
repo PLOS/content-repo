@@ -22,6 +22,11 @@
 
 package org.plos.repo.service;
 
+import java.io.File;
+import java.io.InputStream;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.util.UUID;
 import com.google.common.base.Optional;
 import com.guba.mogilefs.MogileFS;
 import com.guba.mogilefs.PooledMogileFSImpl;
@@ -29,18 +34,8 @@ import org.apache.commons.io.FileUtils;
 import org.plos.repo.models.Bucket;
 import org.plos.repo.models.RepoObject;
 import org.plos.repo.util.ChecksumGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.InputStream;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.util.UUID;
 
 public class MogileStoreService extends ObjectStore {
-
-  private static final Logger log = LoggerFactory.getLogger(MogileStoreService.class);
 
   public static final String mogileFileClass = "";
 

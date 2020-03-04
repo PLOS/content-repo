@@ -22,23 +22,6 @@
 
 package org.plos.repo.service;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.CreateBucketRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.Region;
-import com.amazonaws.services.s3.model.S3Object;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
-import org.plos.repo.models.Bucket;
-import org.plos.repo.models.RepoObject;
-import org.plos.repo.util.ChecksumGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -51,10 +34,26 @@ import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.CreateBucketRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.Region;
+import com.amazonaws.services.s3.model.S3Object;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.models.RepoObject;
+import org.plos.repo.util.ChecksumGenerator;
 
 public class S3StoreService extends ObjectStore {
 
-  private static final Logger log = LoggerFactory.getLogger(S3StoreService.class);
+  private static final Logger log = LogManager.getLogger(S3StoreService.class);
 
   private AmazonS3Client s3Client = null;
 

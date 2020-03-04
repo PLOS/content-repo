@@ -22,14 +22,6 @@
 
 package org.plos.repo.service;
 
-import com.google.common.base.Optional;
-import org.apache.commons.io.IOUtils;
-import org.plos.repo.models.Bucket;
-import org.plos.repo.models.RepoObject;
-import org.plos.repo.util.ChecksumGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.security.MessageDigest;
@@ -37,10 +29,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.base.Optional;
+import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.models.RepoObject;
+import org.plos.repo.util.ChecksumGenerator;
 
 public class InMemoryFileStoreService extends ObjectStore {
 
-  private static final Logger log = LoggerFactory.getLogger(InMemoryFileStoreService.class);
+  private static final Logger log = LogManager.getLogger(InMemoryFileStoreService.class);
 
   // bucketName -> data checksum -> file content
   private Map<String, Map<String, byte[]>> data = new ConcurrentHashMap<>();

@@ -22,18 +22,6 @@
 
 package org.plos.repo.service;
 
-import org.plos.repo.models.Audit;
-import org.plos.repo.models.Bucket;
-import org.plos.repo.models.Operation;
-import org.plos.repo.models.RepoCollection;
-import org.plos.repo.models.RepoObject;
-import org.plos.repo.models.Status;
-import org.plos.repo.util.UUIDFormatter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Required;
-
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -43,10 +31,21 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import javax.sql.DataSource;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.plos.repo.models.Audit;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.models.Operation;
+import org.plos.repo.models.RepoCollection;
+import org.plos.repo.models.RepoObject;
+import org.plos.repo.models.Status;
+import org.plos.repo.util.UUIDFormatter;
+import org.springframework.beans.factory.annotation.Required;
 
 public abstract class SqlService {
 
-  private static final Logger log = LoggerFactory.getLogger(SqlService.class);
+  private static final Logger log = LogManager.getLogger(SqlService.class);
 
   protected DataSource dataSource;
 

@@ -22,17 +22,7 @@
 
 package org.plos.repo.rest;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.wordnik.swagger.annotations.*;
-import org.apache.http.HttpStatus;
-import org.plos.repo.models.Audit;
-import org.plos.repo.models.output.RepoAuditOutput;
-import org.plos.repo.service.AuditRepoService;
-import org.plos.repo.service.RepoException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -41,18 +31,26 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiParam;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
+import org.apache.http.HttpStatus;
+import org.plos.repo.models.Audit;
+import org.plos.repo.models.output.RepoAuditOutput;
+import org.plos.repo.service.AuditRepoService;
+import org.plos.repo.service.RepoException;
 
 
 @Path("/audit")
 @Api(value = "/audit")
 public class AuditController {
 
-  private static final Logger log = LoggerFactory.getLogger(AuditController.class);
-
   @Inject
   private AuditRepoService auditRepoService;
-
 
   @GET
   @ApiOperation(value = "List audit records", response = RepoAuditOutput.class, responseContainer = "List")

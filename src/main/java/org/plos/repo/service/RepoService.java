@@ -22,24 +22,6 @@
 
 package org.plos.repo.service;
 
-import com.google.common.base.Optional;
-import com.google.common.util.concurrent.Striped;
-import org.hsqldb.lib.StringUtil;
-import org.plos.repo.models.Audit;
-import org.plos.repo.models.Bucket;
-import org.plos.repo.models.Operation;
-import org.plos.repo.models.RepoObject;
-import org.plos.repo.models.Status;
-import org.plos.repo.models.input.ElementFilter;
-import org.plos.repo.models.input.InputRepoObject;
-import org.plos.repo.models.validator.InputRepoObjectValidator;
-import org.plos.repo.models.validator.TimestampInputValidator;
-import org.plos.repo.util.UUIDFormatter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
-import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -52,6 +34,23 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
+import javax.inject.Inject;
+import javax.ws.rs.core.MediaType;
+import com.google.common.base.Optional;
+import com.google.common.util.concurrent.Striped;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.hsqldb.lib.StringUtil;
+import org.plos.repo.models.Audit;
+import org.plos.repo.models.Bucket;
+import org.plos.repo.models.Operation;
+import org.plos.repo.models.RepoObject;
+import org.plos.repo.models.Status;
+import org.plos.repo.models.input.ElementFilter;
+import org.plos.repo.models.input.InputRepoObject;
+import org.plos.repo.models.validator.InputRepoObjectValidator;
+import org.plos.repo.models.validator.TimestampInputValidator;
+import org.plos.repo.util.UUIDFormatter;
 
 /**
  * This service handles all communication to the objectstore and sqlservice for objects and buckets
@@ -60,7 +59,7 @@ public class RepoService extends BaseRepoService {
 
   private Striped<ReadWriteLock> rwLocks = Striped.lazyWeakReadWriteLock(32);
 
-  private static final Logger log = LoggerFactory.getLogger(RepoService.class);
+  private static final Logger log = LogManager.getLogger(RepoService.class);
 
   @Inject
   private ObjectStore objectStore;

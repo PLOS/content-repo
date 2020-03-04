@@ -22,18 +22,17 @@
 
 package org.plos.repo.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.PreDestroy;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import javax.annotation.PreDestroy;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class HsqlService extends SqlService {
 
-  private static final Logger log = LoggerFactory.getLogger(HsqlService.class);
+  private static final Logger log = LogManager.getLogger(HsqlService.class);
 
   @PreDestroy
   public void destroy() throws Exception {
