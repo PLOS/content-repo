@@ -13,6 +13,7 @@ PyMySQL = "*"
 dj-database-url = "*"
 pymogilefs = "*"
 tqdm = "*"
+google-cloud-pubsub = "*"
 
 [requires]
 python_version = "3.7"
