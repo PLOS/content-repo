@@ -5,7 +5,7 @@ import sys
 
 from google.cloud import pubsub_v1
 from tqdm import tqdm
-from shared import make_generator_from_args
+from shared import make_generator_from_args, future_waiter
 
 TOPIC_ID = os.environ["TOPIC_ID"]
 PROJECT_ID = os.environ["PROJECT_ID"]
@@ -42,11 +42,15 @@ def main():
     """Enqueue mogile file jobs to SQS for processing in AWS lambda."""
     generator = tqdm(make_generator_from_args(sys.argv[2:]))
     if sys.argv[1] == "verify":
-        futures = [queue_verify(f) for f in generator]
+        func = queue_verify
     else:
-        futures = [queue_migrate(f) for f in generator]
-    for fut in futures:
-        fut.result()
+        func = queue_migrate
+    # Call the function on all these mogile files. Each function should return a future.
+    futures = (func(mogile) for mogile in generator)
+    # Evaluate all the futures using our future_waiter, which will
+    # stop occasionally to clean up any completed futures. This avoids
+    # keeping too many results in memory.
+    list(future_waiter(futures, 10000))
 
 
 if __name__ == "__main__":

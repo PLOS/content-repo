@@ -6,7 +6,7 @@ from botocore.exceptions import ClientError
 
 from .shared import MogileFile, make_bucket_map,\
     md5_fileobj_hex, sha1_fileobj_hex, md5_fileobj_b64, sha1_fileobj_b64, \
-    QueueWorkerThread, chunked
+    QueueWorkerThread, chunked, future_waiter
 
 from queue import Queue
 
@@ -143,6 +143,28 @@ class TestMigrate():
         assert list(chunked(range(0, 15), size=10)) == [
             list(range(0, 10)),
             list(range(10, 15))]
+
+    def test_future_waiter(self):
+        futures_list = []
+        called_times = {}
+        for i in range(0, 100):
+            future = Mock()
+
+            def mk_done(counter):
+                called_times[counter] = 0
+                return_after = counter % 3
+
+                def done():
+                    called_times[counter] += 1
+                    return called_times[counter] > return_after
+                return done
+
+            future.done = mk_done(i)
+            future.result.return_value = None
+            futures_list.append(future)
+        passthrough = future_waiter((f for f in futures_list), 10)
+        leftovers = list(iter(passthrough))
+        assert leftovers == [None]*100
 
     def test_queue_worker(self):
         class MyThread(QueueWorkerThread):

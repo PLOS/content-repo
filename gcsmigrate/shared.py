@@ -8,6 +8,7 @@ import random
 import shutil
 import tempfile
 import threading
+import time
 from queue import Empty, Queue
 
 import dj_database_url
@@ -395,3 +396,28 @@ def chunked(iterable, size):
             result = []
     if len(result) > 0:
         yield result
+
+
+def future_waiter(iterable, max_futures):
+    def cleanup(lst):
+        """Yield the result of any futures from the lst that are done, and delete them from the list."""
+        to_delete = []
+        for i, future in enumerate(lst):
+            if future.done():
+                to_delete.append(i)
+                yield future.result()
+
+        # we need to delete back-to-front to avoid messing up the index
+        to_delete.reverse()
+        for i in to_delete:
+            del lst[i]
+
+    not_done = []
+
+    for future in iterable:
+        not_done.append(future)
+        if len(not_done) > max_futures:
+            yield from cleanup(not_done)
+    while (len(not_done)) > 0:
+        time.sleep(1)
+        yield from cleanup(not_done)
