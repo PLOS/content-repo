@@ -16,6 +16,7 @@ import requests
 from botocore.exceptions import ClientError
 
 BUFSIZE = 16*1024*1024  # 16 MiB
+BLOCKSIZE = 65536
 
 
 def make_bucket_map(buckets):
@@ -29,12 +30,11 @@ def make_bucket_map(buckets):
 
 def hash_fileobj(fileobj, hasher):
     """Efficiently hash a file object using the provided hasher."""
-    blocksize = 65536
     fileobj.seek(0)
-    block = fileobj.read(blocksize)
+    block = fileobj.read(BLOCKSIZE)
     while block:
         hasher.update(block)
-        block = fileobj.read(blocksize)
+        block = fileobj.read(BLOCKSIZE)
     fileobj.seek(0)
     return hasher
 
