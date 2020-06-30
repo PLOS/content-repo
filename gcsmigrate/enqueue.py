@@ -2,52 +2,51 @@
 
 import os
 import sys
-from multiprocessing.dummy import Pool as ThreadPool
-from shared import chunked
-import boto3
-from tqdm import tqdm
 
+from google.cloud import pubsub_v1
+from tqdm import tqdm
 from shared import make_generator_from_args
 
-CLIENT = boto3.client('sqs', region_name=os.environ["AWS_S3_REGION_NAME"])
-QUEUE_URL = os.environ["SQS_URL"]
-THREADS = 1000
+TOPIC_ID = os.environ["TOPIC_ID"]
+PROJECT_ID = os.environ["PROJECT_ID"]
 
-VERIFY = {'action': {'StringValue': 'verify', 'DataType': 'String'}}
-MIGRATE = {'action': {'StringValue': 'migrate', 'DataType': 'String'}}
+VERIFY = b"verify"
+MIGRATE = b"migrate"
 
+# Trying to maximize throughput; we don't care about latency.
+batch_settings = pubsub_v1.types.BatchSettings(
+    max_messages=1000, max_bytes=10 * 1000 * 1000, max_latency=10
+)
 
-def send_message(mogile_file_list, action):
-    """Send the mogile file as an SQS message."""
-    entries = [{'Id': str(mogile_file.fid),
-                'MessageAttributes': action,
-                'MessageBody': mogile_file.to_json()}
-               for mogile_file in mogile_file_list]
-    CLIENT.send_message_batch(
-        QueueUrl=QUEUE_URL,
-        Entries=entries)
+CLIENT = pubsub_v1.PublisherClient(batch_settings=batch_settings)
+
+TOPIC_PATH = CLIENT.topic_path(PROJECT_ID, TOPIC_ID)
 
 
-def queue_migrate(mogile_file_list):
-    """Queue mogile files for migration in SQS."""
-    send_message(mogile_file_list, MIGRATE)
+def send_message(mogile_file, action):
+    """Send the mogile file as an pubsub message."""
+    return CLIENT.publish(TOPIC_PATH, mogile_file.to_json(), action=action)
 
 
-def queue_verify(mogile_file_list):
-    """Queue mogile files for verification in SQS."""
-    send_message(mogile_file_list, VERIFY)
+def queue_migrate(mogile_file):
+    """Queue mogile files for migration in pubsub."""
+    return send_message(mogile_file, MIGRATE)
+
+
+def queue_verify(mogile_file):
+    """Queue mogile files for verification in pubsub."""
+    return send_message(mogile_file, VERIFY)
 
 
 def main():
     """Enqueue mogile file jobs to SQS for processing in AWS lambda."""
-    generator = chunked(tqdm(make_generator_from_args(sys.argv[2:])), size=10)
-    pool = ThreadPool(THREADS)
-    if sys.argv[1] == 'verify':
-        pool.imap_unordered(queue_verify, generator)
+    generator = tqdm(make_generator_from_args(sys.argv[2:]))
+    if sys.argv[1] == "verify":
+        futures = [queue_verify(f) for f in generator]
     else:
-        pool.imap_unordered(queue_migrate, generator)
-    pool.close()
-    pool.join()
+        futures = [queue_migrate(f) for f in generator]
+    for fut in futures:
+        fut.result()
 
 
 if __name__ == "__main__":

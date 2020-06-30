@@ -236,11 +236,11 @@ class MogileFile():
 
     def to_json(self):
         """Serialize as JSON."""
-        return json.dumps({
+        return bytes(json.dumps({
             "length": self.length,
             "fid": self.fid,
             "dkey": self.dkey
-            })
+            }), 'utf-8')
 
     @classmethod
     def from_json(cls, json_str):
