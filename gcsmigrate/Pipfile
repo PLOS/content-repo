@@ -14,6 +14,7 @@ dj-database-url = "*"
 pymogilefs = "*"
 tqdm = "*"
 google-cloud-pubsub = "*"
+google-cloud-firestore = "*"
 
 [requires]
 python_version = "3.7"
