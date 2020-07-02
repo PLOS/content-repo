@@ -15,6 +15,7 @@ pymogilefs = "*"
 tqdm = "*"
 google-cloud-pubsub = "*"
 google-cloud-firestore = "*"
+google-cloud-storage = "*"
 
 [requires]
 python_version = "3.7"
