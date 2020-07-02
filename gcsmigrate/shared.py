@@ -1,4 +1,4 @@
-"""Tools for migrating Mogile content to S3."""
+"""Tools for migrating Mogile content to GCS."""
 
 import base64
 import hashlib
@@ -138,7 +138,7 @@ class MogileFile():
         return obj.e_tag.replace("\"", "")  # Why does AWS include this?
 
     def make_intermediary_key(self):
-        """Return the key to use for the intermediary storage in S3."""
+        """Return the key to use for the intermediary storage in GCS."""
         padded = "{:010d}".format(self.fid)
         return "{first}/{second}/{third}/{padded}.fid".format(
             first=padded[0:1],
@@ -147,7 +147,7 @@ class MogileFile():
             padded=padded)
 
     def make_contentrepo_key(self):
-        """Return the key to use for the final storage of this object in S3."""
+        """Return the key to use for the final storage of this object in GCS."""
         return self.sha1sum
 
     def intermediary_exists_in_bucket(self, s3_resource, s3_bucket):
