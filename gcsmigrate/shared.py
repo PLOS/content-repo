@@ -190,7 +190,7 @@ class MogileFile():
                 assert md5 == blob.md5_hash
                 return md5
 
-    def migrate(self, mogile_client, table, s3_resource, bucket_map):
+    def migrate(self, mogile_client, table, gcs_client, bucket_map):
         """Migrate this mogile object to contentrepo.
 
         Returns None if the object is a temporary file, otherwise
@@ -198,35 +198,35 @@ class MogileFile():
         """
         if self.temp is True:
             return None  # Do not migrate temporary files.
-        s3_bucket = bucket_map[self.mogile_bucket]
+        gcs_bucket = bucket_map[self.mogile_bucket]
         print(f"Migrating {self.fid} to "
-              f"s3://{s3_bucket}/{self.make_contentrepo_key()}")
-        md5 = self.contentrepo_exists_in_bucket(s3_resource, s3_bucket)
+              f"{gcs_bucket}/{self.make_contentrepo_key()}")
+        md5 = self.contentrepo_exists_in_bucket(gcs_client, gcs_bucket)
         try:
             if md5 is not False:
                 # Migration done!
                 return True
-            if self.intermediary_exists_in_bucket(s3_resource, s3_bucket):
-                print(f"  Copying from s3://{s3_bucket}/"
+            if self.intermediary_exists_in_bucket(gcs_client, gcs_bucket):
+                print(f"  Copying from {gcs_bucket}/"
                       f"{self.make_intermediary_key()}")
-                md5 = self.copy_from_intermediary(s3_resource, s3_bucket)
+                md5 = self.copy_from_intermediary(gcs_client, gcs_bucket)
                 return True
-            # Nothing is on S3 yet, copy content directly to the
+            # Nothing is on GCS yet, copy content directly to the
             # final location.
             print(f"  Putting from mogile.")
-            md5 = self.put(mogile_client, s3_resource, s3_bucket)
+            md5 = self.put(mogile_client, gcs_client, gcs_bucket)
         finally:
             if md5 is not False:
-                self.save_to_dynamodb(table, md5, s3_bucket)
+                self.save_to_dynamodb(table, md5, gcs_bucket)
 
-    def save_to_dynamodb(self, table, md5, s3_bucket):
+    def save_to_dynamodb(self, table, md5, gcs_bucket):
         """Save record to dynamodb certifying successful migration."""
         return table.put_item(
             Item={
                 'fid': self.fid,
                 'sha1': self.sha1sum,
                 'md5': md5,
-                'bucket': s3_bucket
+                'bucket': gcs_bucket
             })
 
     def to_json(self):
