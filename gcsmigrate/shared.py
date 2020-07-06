@@ -249,8 +249,8 @@ class MogileFile():
             f"fid {self.fid} not migrated"
         new_bucket = bucket_map[self.mogile_bucket]
         assert new_bucket == bucket
-        s3_md5 = self.contentrepo_exists_in_bucket(gcs_client, new_bucket)
-        assert (s3_md5 == md5), f"{self.fid} has wrong MD5 sum"
+        remote_md5 = self.contentrepo_exists_in_bucket(gcs_client, new_bucket)
+        assert (remote_md5 == md5), f"{self.fid} has wrong MD5 sum"
         assert (self.sha1sum == sha1), \
             f"{self.fid} has wrong SHA1 sum"
 
