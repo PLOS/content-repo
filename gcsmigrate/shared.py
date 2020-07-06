@@ -121,21 +121,19 @@ class MogileFile():
                    fid=row[0],
                    length=row[3])
 
-    def exists_in_bucket(self, client, s3_bucket, key):
+    def exists_in_bucket(self, client, gcs_bucket, key):
         """Check if object with key is in the bucket.
 
         Returns False if object is not present, otherwise the md5string.
         """
-        obj = client.Object(s3_bucket, key)
-        try:
-            obj.load()
-            if obj.content_length != self.length:
-                return False
-        except ClientError as ex:
-            if ex.response['Error']['Code'] == "404":
-                return False
-            raise
-        return obj.e_tag.replace("\"", "")  # Why does AWS include this?
+        bucket = client.get_bucket(gcs_bucket)
+        blob = bucket.get_blob(key)
+        if blob is None:
+            return False
+        blob.reload()
+        if blob.size != self.length:
+            return False
+        return blob.md5_hash
 
     def make_intermediary_key(self):
         """Return the key to use for the intermediary storage in GCS."""
@@ -150,14 +148,14 @@ class MogileFile():
         """Return the key to use for the final storage of this object in GCS."""
         return self.sha1sum
 
-    def intermediary_exists_in_bucket(self, s3_resource, s3_bucket):
+    def intermediary_exists_in_bucket(self, gcs_client, gcs_bucket):
         """Check if the intermediary (mogile-style key) is in the bucket."""
-        return self.exists_in_bucket(s3_resource, s3_bucket,
+        return self.exists_in_bucket(gcs_client, gcs_bucket,
                                      self.make_intermediary_key())
 
-    def contentrepo_exists_in_bucket(self, s3_resource, s3_bucket):
+    def contentrepo_exists_in_bucket(self, gcs_client, gcs_bucket):
         """Check if the final contentrepo object is in the bucket."""
-        return self.exists_in_bucket(s3_resource, s3_bucket,
+        return self.exists_in_bucket(gcs_client, gcs_bucket,
                                      self.make_contentrepo_key())
 
     def get_mogile_url(self, mogile_client):
@@ -248,14 +246,14 @@ class MogileFile():
         """Create MogileFile from JSON string."""
         return MogileFile(**json.loads(json_str))
 
-    def verify(self, fid, md5, sha1, bucket, bucket_map, s3_resource):
+    def verify(self, fid, md5, sha1, bucket, bucket_map, gcs_client):
         """Verify (with assert) this mogile file against asserted values."""
         print(f"Verifying {self.fid}")
         assert self.fid == fid, \
             f"fid {self.fid} not migrated"
         new_bucket = bucket_map[self.mogile_bucket]
         assert new_bucket == bucket
-        s3_md5 = self.contentrepo_exists_in_bucket(s3_resource, new_bucket)
+        s3_md5 = self.contentrepo_exists_in_bucket(gcs_client, new_bucket)
         assert (s3_md5 == md5), f"{self.fid} has wrong MD5 sum"
         assert (self.sha1sum == sha1), \
             f"{self.fid} has wrong SHA1 sum"

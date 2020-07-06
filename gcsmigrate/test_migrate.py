@@ -40,6 +40,15 @@ class TestMigrate():
         return mogile_client
 
     @pytest.fixture
+    def gcs_client(self):
+        gcs_client = Mock()
+        bucket = Mock()
+        blob = Mock()
+        gcs_client.get_bucket.return_value = bucket
+        bucket.get_blob.return_value = blob
+        return gcs_client
+    
+    @pytest.fixture
     def row(self):
         # hello world sha1sum: 2aae6c35c94fcfb415dbe95f408b9ce91ee846ed
         # (fid, dmid, dkey, length, classid, devcount)
@@ -92,24 +101,17 @@ class TestMigrate():
     def test_make_contentrepo_key(self, mogile_file):
         assert mogile_file.make_contentrepo_key() == self.SHA1_HEX
 
-    def test_exists_in_bucket(self, mogile_file, s3_resource):
-        s3_resource.Object.return_value.content_length = mogile_file.length
-        s3_resource.Object.return_value.e_tag = \
-            self.MD5_HEX
-        assert(mogile_file.exists_in_bucket(s3_resource, 'my-bucket', 'my-key')
+    def test_exists_in_bucket(self, mogile_file, gcs_client):
+        blob = gcs_client.get_bucket().get_blob()
+        blob.size = 1
+        blob.md5_hash = self.MD5_HEX
+        assert(mogile_file.exists_in_bucket(gcs_client, 'my-bucket', 'my-key')
                == self.MD5_HEX)
 
-    def test_does_not_exist_in_bucket(self, s3_resource, mogile_file):
-        ex = ClientError({'Error': {'Code': '404'}}, 'Head')
-        s3_resource.Object.return_value.load.side_effect = ex
+    def test_does_not_exist_in_bucket(self, gcs_client, mogile_file):
+        gcs_client.get_bucket().get_blob.return_value = None
         assert(mogile_file.exists_in_bucket(
-            s3_resource, 'my-bucket', 'my-file') is False)
-
-    def test_exists_in_bucket_raises_exception(self, s3_resource, mogile_file):
-        ex = ClientError({'Error': {'Code': '500'}}, 'Head')
-        s3_resource.Object.return_value.load.side_effect = ex
-        with pytest.raises(ClientError, match=r"An error occurred \(500\)"):
-            mogile_file.exists_in_bucket(s3_resource, 'my-bucket', 'my-key')
+            gcs_client, 'my-bucket', 'my-file') is False)
 
     def test_mogile_file_to_json(self, mogile_file):
         assert mogile_file == MogileFile.from_json(mogile_file.to_json())
