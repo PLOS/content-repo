@@ -172,8 +172,8 @@ class MogileFile():
         )
         return blob_copy.md5_hash
 
-    def put(self, mogile_client, s3_resource, s3_bucket):
-        """Put content from mogile to S3."""
+    def put(self, mogile_client, gcs_client, bucket_name):
+        """Put content from mogile to GCS."""
         with requests.get(
                 self.get_mogile_url(mogile_client), stream=True
         ) as req:
@@ -183,14 +183,12 @@ class MogileFile():
                 shutil.copyfileobj(req.raw, tmp, length=BUFSIZE)
                 assert sha1_fileobj_hex(tmp) == self.sha1sum
                 md5 = md5_fileobj_b64(tmp)
-                tmp.seek(0)
-                target = s3_resource.Object(
-                    s3_bucket,
-                    self.make_contentrepo_key())
-                response = target.put(
-                    Body=tmp,
-                    ContentMD5=md5)
-                return response["ETag"].replace("\"", "")
+                bucket = gcs_client.get_bucket(bucket_name)
+                blob = bucket.get_blob(self.make_contentrepo_key())
+                blob.upload_from_file(tmp, rewind=True)
+                blob.reload()
+                assert md5 == blob.md5_hash
+                return md5
 
     def migrate(self, mogile_client, table, s3_resource, bucket_map):
         """Migrate this mogile object to contentrepo.

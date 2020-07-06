@@ -125,18 +125,15 @@ class TestMigrate():
         assert sha1_fileobj_b64(my_tempfile) == self.SHA1_B64
 
     def test_put(self, mogile_file: MogileFile,
-                 mogile_client, s3_resource,
+                 mogile_client, gcs_client,
                  requests_mock):
         requests_mock.get('http://example.org/1', content=b'hello world')
         requests_mock.get('http://example.org/2', content=b'hello world')
-        s3_resource.Object.return_value.put.return_value = {
-            "ETag": self.MD5_HEX
-        }
-        md5 = mogile_file.put(mogile_client, s3_resource, 'my-bucket')
-        assert md5 == self.MD5_HEX
-        # Check that `put` was called with the correct MD5 sum.
-        _, kwargs = s3_resource.Object.return_value.put.call_args_list[0]
-        assert kwargs['ContentMD5'] == self.MD5_B64
+        blob = gcs_client.get_bucket().get_blob()
+        blob.upload_from_file.return_value = 'xyz'
+        blob.md5_hash = self.MD5_B64
+        md5 = mogile_file.put(mogile_client, gcs_client, 'my-bucket')
+        assert md5 == self.MD5_B64
 
     def test_make_bucket_map(self):
         assert make_bucket_map("a:b,c:d") == {"a": "b", "c": "d"}
