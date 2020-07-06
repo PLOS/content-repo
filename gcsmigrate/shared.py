@@ -163,16 +163,14 @@ class MogileFile():
         return random.choice(
             list(mogile_client.get_paths(self.dkey).data['paths'].values()))
 
-    def copy_from_intermediary(self, s3_resource, s3_bucket):
+    def copy_from_intermediary(self, storage_client, bucket_name):
         """Copy content from the intermediary to the final location."""
-        response = s3_resource.meta.client.copy_object(
-            CopySource={
-                "Bucket": s3_bucket,
-                "Key": self.make_intermediary_key()
-            },
-            Bucket=s3_bucket,
-            Key=self.make_contentrepo_key())
-        return response["CopyObjectResult"]["ETag"].replace("\"", "")
+        bucket = storage_client.bucket(bucket_name)
+        source_blob = bucket.blob(self.make_intermediary_key())
+        blob_copy = bucket.copy_blob(
+            source_blob, bucket, self.make_contentrepo_key()
+        )
+        return blob_copy.md5_hash
 
     def put(self, mogile_client, s3_resource, s3_bucket):
         """Put content from mogile to S3."""
