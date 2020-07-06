@@ -19,14 +19,6 @@ class TestMigrate():
     SHA1_B64 = "Kq5sNclPz7QV2+lfQIuc6R7oRu0="
 
     @pytest.fixture
-    def s3_resource(self):
-        s3_resource = Mock()
-        obj = Mock()
-        s3_resource.Object.return_value = obj
-        obj.load.return_value = {}
-        return s3_resource
-
-    @pytest.fixture
     def mogile_client(self):
         mogile_client = Mock()
         paths = Mock()
