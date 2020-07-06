@@ -6,6 +6,7 @@ import boto3
 import dbm.gnu
 import threading
 from tqdm import tqdm
+from google.cloud import storage
 
 
 class S3ListThread(threading.Thread):
@@ -22,29 +23,21 @@ class S3ListThread(threading.Thread):
         self.bucket_name = bucket_name
         self.db = db
         self.lock = lock
-        self.s3 = boto3.client('s3')
+        self.gcs_client = storage.Client()
         self.caught_exception = None
         self.pbar = pbar
 
     def run(self):
         """Run this thread."""
-        kwargs = {'Bucket': self.bucket_name, "Prefix": self.prefix}
-        while True:
+        for page in self.gcs_client.list_blobs(self.bucket_name).pages:
             try:
-                resp = self.s3.list_objects_v2(**kwargs)
-                if "Contents" not in resp:
-                    break
-                new_keys = {obj["Key"] for obj in resp["Contents"]}
+                new_keys = {blob.name for blob in page}
                 with self.lock:
                     for key in new_keys:
                         # We don't need to know anything, we are just
                         # keeping track of the keys.
                         self.db[key] = ""
                         self.pbar.update()
-                if resp["IsTruncated"]:
-                    kwargs['ContinuationToken'] = resp['NextContinuationToken']
-                else:
-                    break
             except BaseException as ex:
                 self.caught_exception = ex
                 break
@@ -89,9 +82,9 @@ def main():
     dbs = {bucket: dbm.open(bucket) for bucket in buckets}
     for mogile_file in tqdm(get_mogile_files_from_database(
             os.environ['MOGILE_DATABASE_URL'])):
-        s3_bucket = bucket_map[mogile_file.mogile_bucket]
-        assert mogile_file.sha1sum in dbs[s3_bucket], \
-            f"{mogile_file.sha1sum} not in {s3_bucket}"
+        remote_bucket = bucket_map[mogile_file.mogile_bucket]
+        assert mogile_file.sha1sum in dbs[remote_bucket], \
+            f"{mogile_file.sha1sum} not in {remote_bucket}"
 
 
 if __name__ == "__main__":

@@ -6,13 +6,14 @@ from queue import Queue
 
 import boto3
 import pymogilefs
+from google.cloud import storage
 
 from shared import make_bucket_map, \
     make_generator_from_args, QueueWorkerThread
 
 
 class MyThread(QueueWorkerThread):
-    """Thread worker with s3 and mogile clients available."""
+    """Thread worker with GCS and mogile clients available."""
 
     def __init__(self, queue: Queue, *args, **kwargs):
         """Initialize this thread."""
@@ -20,7 +21,7 @@ class MyThread(QueueWorkerThread):
         self.mogile_client = pymogilefs.client.Client(
             trackers=os.environ['MOGILE_TRACKERS'].split(','),
             domain='plos_repo')
-        self.s3_resource = boto3.resource('s3')
+        self.gcs_client = storage.Client()
         self.table = boto3.resource('dynamodb').Table(os.environ["DYNAMODB_TABLE"])
         self.bucket_map = make_bucket_map(os.environ["BUCKETS"])
 
@@ -29,7 +30,7 @@ class MyThread(QueueWorkerThread):
         mogile_file.migrate(
             self.mogile_client,
             self.table,
-            self.s3_resource,
+            self.gcs_client,
             self.bucket_map)
 
 
