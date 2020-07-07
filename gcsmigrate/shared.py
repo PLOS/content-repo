@@ -14,7 +14,6 @@ from queue import Empty, Queue
 import dj_database_url
 import pymysql
 import requests
-from botocore.exceptions import ClientError
 
 BUFSIZE = 16*1024*1024  # 16 MiB
 BLOCKSIZE = 65536
@@ -217,17 +216,18 @@ class MogileFile():
             md5 = self.put(mogile_client, gcs_client, gcs_bucket)
         finally:
             if md5 is not False:
-                self.save_to_dynamodb(table, md5, gcs_bucket)
+                self.save_to_firestore(table, md5, gcs_bucket)
 
-    def save_to_dynamodb(self, table, md5, gcs_bucket):
-        """Save record to dynamodb certifying successful migration."""
-        return table.put_item(
-            Item={
-                'fid': self.fid,
-                'sha1': self.sha1sum,
-                'md5': md5,
-                'bucket': gcs_bucket
-            })
+    def save_to_firestore(self, collection, md5, gcs_bucket):
+        """Save record to firestore certifying successful migration."""
+        id =  f"{gcs_bucket}/{md5}"
+        doc_ref = collection.document(id)
+        return doc_ref.set({
+            'fid': self.fid,
+            'sha1': self.sha1sum,
+            'md5': md5,
+            'bucket': gcs_bucket
+        })
 
     def to_json(self):
         """Serialize as JSON."""
