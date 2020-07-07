@@ -6,7 +6,7 @@ _lambda.tmp_dir:
 	mkdir -p lambda.tmp
 
 lambda.tmp/requirements.txt:
-	pipenv lock -r | grep -v docutils |grep -v boto > lambda.tmp/requirements.txt
+	pipenv lock -r | grep -v docutils > lambda.tmp/requirements.txt
 	pip install -r lambda.tmp/requirements.txt --no-deps -t lambda.tmp
 
 clean:

@@ -8,7 +8,6 @@ pytest = "*"
 requests-mock = "*"
 
 [packages]
-boto3 = "*"
 PyMySQL = "*"
 dj-database-url = "*"
 pymogilefs = "*"
