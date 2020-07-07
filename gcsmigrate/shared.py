@@ -220,8 +220,7 @@ class MogileFile():
 
     def save_to_firestore(self, collection, md5, gcs_bucket):
         """Save record to firestore certifying successful migration."""
-        id =  f"{gcs_bucket}/{md5}"
-        doc_ref = collection.document(id)
+        doc_ref = collection.document(self.fid)
         return doc_ref.set({
             'fid': self.fid,
             'sha1': self.sha1sum,
