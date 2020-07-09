@@ -15,15 +15,15 @@ import dj_database_url
 import pymysql
 import requests
 
-BUFSIZE = 16*1024*1024  # 16 MiB
+BUFSIZE = 16 * 1024 * 1024  # 16 MiB
 BLOCKSIZE = 65536
 
 
 def make_bucket_map(buckets):
     """Construct a hash from a buckets source string of the form a:b,c:d."""
     retval = {}
-    for bucket in buckets.split(','):
-        source, target = bucket.split(':')
+    for bucket in buckets.split(","):
+        source, target = bucket.split(":")
         retval[source] = target
     return retval
 
@@ -52,9 +52,9 @@ def md5_fileobj_b64(fileobj):
 
     Returns a Base64 encoded string.
     """
-    return base64.b64encode(
-        hash_fileobj(fileobj, hashlib.md5()).digest()
-    ).decode("utf-8")
+    return base64.b64encode(hash_fileobj(fileobj, hashlib.md5()).digest()).decode(
+        "utf-8"
+    )
 
 
 def sha1_fileobj_hex(fileobj):
@@ -70,12 +70,12 @@ def sha1_fileobj_b64(fileobj):
 
     Returns a Base64 encoded string.
     """
-    return base64.b64encode(
-        hash_fileobj(fileobj, hashlib.sha1()).digest()
-    ).decode("utf-8")
+    return base64.b64encode(hash_fileobj(fileobj, hashlib.sha1()).digest()).decode(
+        "utf-8"
+    )
 
 
-class MogileFile():
+class MogileFile:
     """Represents a file stored in mogile."""
 
     def __init__(self, fid: int, dkey: str, length: int):
@@ -105,9 +105,11 @@ class MogileFile():
         if not isinstance(other, MogileFile):
             # Delegate comparison to the other instance's __eq__.
             return NotImplemented
-        return(self.dkey == other.dkey and
-               self.fid == other.fid and
-               self.length == other.length)
+        return (
+            self.dkey == other.dkey
+            and self.fid == other.fid
+            and self.length == other.length
+        )
 
     @classmethod
     def parse_row(cls, row: dict):
@@ -116,9 +118,7 @@ class MogileFile():
         # Sanity check, we only use one "domain" and one class
         assert row[1] == 1, "Bad domain"
         assert row[4] == 0, "Bad class"
-        return cls(dkey=row[2],
-                   fid=row[0],
-                   length=row[3])
+        return cls(dkey=row[2], fid=row[0], length=row[3])
 
     def exists_in_bucket(self, client, gcs_bucket, key):
         """Check if object with key is in the bucket.
@@ -138,10 +138,8 @@ class MogileFile():
         """Return the key to use for the intermediary storage in GCS."""
         padded = "{:010d}".format(self.fid)
         return "{first}/{second}/{third}/{padded}.fid".format(
-            first=padded[0:1],
-            second=padded[1:4],
-            third=padded[4:7],
-            padded=padded)
+            first=padded[0:1], second=padded[1:4], third=padded[4:7], padded=padded
+        )
 
     def make_contentrepo_key(self):
         """Return the key to use for the final storage of this object in GCS."""
@@ -149,33 +147,32 @@ class MogileFile():
 
     def intermediary_exists_in_bucket(self, gcs_client, gcs_bucket):
         """Check if the intermediary (mogile-style key) is in the bucket."""
-        return self.exists_in_bucket(gcs_client, gcs_bucket,
-                                     self.make_intermediary_key())
+        return self.exists_in_bucket(
+            gcs_client, gcs_bucket, self.make_intermediary_key()
+        )
 
     def contentrepo_exists_in_bucket(self, gcs_client, gcs_bucket):
         """Check if the final contentrepo object is in the bucket."""
-        return self.exists_in_bucket(gcs_client, gcs_bucket,
-                                     self.make_contentrepo_key())
+        return self.exists_in_bucket(
+            gcs_client, gcs_bucket, self.make_contentrepo_key()
+        )
 
     def get_mogile_url(self, mogile_client):
         """Get a URL from mogile that we can use to access this file."""
         return random.choice(
-            list(mogile_client.get_paths(self.dkey).data['paths'].values()))
+            list(mogile_client.get_paths(self.dkey).data["paths"].values())
+        )
 
     def copy_from_intermediary(self, storage_client, bucket_name):
         """Copy content from the intermediary to the final location."""
         bucket = storage_client.bucket(bucket_name)
         source_blob = bucket.blob(self.make_intermediary_key())
-        blob_copy = bucket.copy_blob(
-            source_blob, bucket, self.make_contentrepo_key()
-        )
+        blob_copy = bucket.copy_blob(source_blob, bucket, self.make_contentrepo_key())
         return blob_copy.md5_hash
 
     def put(self, mogile_client, gcs_client, bucket_name):
         """Put content from mogile to GCS."""
-        with requests.get(
-                self.get_mogile_url(mogile_client), stream=True
-        ) as req:
+        with requests.get(self.get_mogile_url(mogile_client), stream=True) as req:
             req.raise_for_status()
             with tempfile.TemporaryFile() as tmp:
                 req.raw.decode_content = True
@@ -198,16 +195,14 @@ class MogileFile():
         if self.temp is True:
             return None  # Do not migrate temporary files.
         gcs_bucket = bucket_map[self.mogile_bucket]
-        print(f"Migrating {self.fid} to "
-              f"{gcs_bucket}/{self.make_contentrepo_key()}")
+        print(f"Migrating {self.fid} to " f"{gcs_bucket}/{self.make_contentrepo_key()}")
         md5 = self.contentrepo_exists_in_bucket(gcs_client, gcs_bucket)
         try:
             if md5 is not False:
                 # Migration done!
                 return True
             if self.intermediary_exists_in_bucket(gcs_client, gcs_bucket):
-                print(f"  Copying from {gcs_bucket}/"
-                      f"{self.make_intermediary_key()}")
+                print(f"  Copying from {gcs_bucket}/" f"{self.make_intermediary_key()}")
                 md5 = self.copy_from_intermediary(gcs_client, gcs_bucket)
                 return True
             # Nothing is on GCS yet, copy content directly to the
@@ -221,20 +216,16 @@ class MogileFile():
     def save_to_firestore(self, collection, md5, gcs_bucket):
         """Save record to firestore certifying successful migration."""
         doc_ref = collection.document(self.fid)
-        return doc_ref.set({
-            'fid': self.fid,
-            'sha1': self.sha1sum,
-            'md5': md5,
-            'bucket': gcs_bucket
-        })
+        return doc_ref.set(
+            {"fid": self.fid, "sha1": self.sha1sum, "md5": md5, "bucket": gcs_bucket}
+        )
 
     def to_json(self):
         """Serialize as JSON."""
-        return bytes(json.dumps({
-            "length": self.length,
-            "fid": self.fid,
-            "dkey": self.dkey
-            }), 'utf-8')
+        return bytes(
+            json.dumps({"length": self.length, "fid": self.fid, "dkey": self.dkey}),
+            "utf-8",
+        )
 
     @classmethod
     def from_json(cls, json_str):
@@ -244,26 +235,26 @@ class MogileFile():
     def verify(self, fid, md5, sha1, bucket, bucket_map, gcs_client):
         """Verify (with assert) this mogile file against asserted values."""
         print(f"Verifying {self.fid}")
-        assert self.fid == fid, \
-            f"fid {self.fid} not migrated"
+        assert self.fid == fid, f"fid {self.fid} not migrated"
         new_bucket = bucket_map[self.mogile_bucket]
         assert new_bucket == bucket
         remote_md5 = self.contentrepo_exists_in_bucket(gcs_client, new_bucket)
-        assert (remote_md5 == md5), f"{self.fid} has wrong MD5 sum"
-        assert (self.sha1sum == sha1), \
-            f"{self.fid} has wrong SHA1 sum"
+        assert remote_md5 == md5, f"{self.fid} has wrong MD5 sum"
+        assert self.sha1sum == sha1, f"{self.fid} has wrong SHA1 sum"
 
 
-def get_mogile_files_from_database(database_url, limit=None, fids=None,
-                                   excluded_fids=set()):
+def get_mogile_files_from_database(
+    database_url, limit=None, fids=None, excluded_fids=set()
+):
     """Return a generator for all mogile files in the database."""
     config = dj_database_url.parse(database_url)
     connection = pymysql.connect(
-        host=config['HOST'],
-        user=config['USER'],
-        password=config['PASSWORD'],
-        db=config['NAME'],
-        cursorclass=pymysql.cursors.SSCursor)
+        host=config["HOST"],
+        user=config["USER"],
+        password=config["PASSWORD"],
+        db=config["NAME"],
+        cursorclass=pymysql.cursors.SSCursor,
+    )
 
     try:
         cursor = connection.cursor()
@@ -301,9 +292,8 @@ def make_generator_from_args(args):
                     excluded_fids.add(int(line))
             print(f"Excluding {len(excluded_fids)} fids.")
     return get_mogile_files_from_database(
-        os.environ['MOGILE_DATABASE_URL'],
-        fids=fids,
-        excluded_fids=excluded_fids)
+        os.environ["MOGILE_DATABASE_URL"], fids=fids, excluded_fids=excluded_fids
+    )
 
 
 class QueueWorkerThread(threading.Thread):

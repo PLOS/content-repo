@@ -3,15 +3,23 @@ from unittest.mock import Mock
 
 import pytest
 
-from .shared import MogileFile, make_bucket_map,\
-    md5_fileobj_hex, sha1_fileobj_hex, md5_fileobj_b64, sha1_fileobj_b64, \
-    QueueWorkerThread, chunked, future_waiter
+from .shared import (
+    MogileFile,
+    make_bucket_map,
+    md5_fileobj_hex,
+    sha1_fileobj_hex,
+    md5_fileobj_b64,
+    sha1_fileobj_b64,
+    QueueWorkerThread,
+    chunked,
+    future_waiter,
+)
 
 from queue import Queue
 
 
 # pylint: disable=C0115,C0116,R0201
-class TestMigrate():
+class TestMigrate:
     MD5_HEX = "5eb63bbbe01eeed093cb22bb8f5acdc3"
     SHA1_HEX = "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
     MD5_B64 = "XrY7u+Ae7tCTyyK7j1rNww=="
@@ -22,12 +30,7 @@ class TestMigrate():
         mogile_client = Mock()
         paths = Mock()
         mogile_client.get_paths.return_value = paths
-        paths.data = {
-            'paths': {
-                1: 'http://example.org/1',
-                2: 'http://example.org/2'
-            }
-        }
+        paths.data = {"paths": {1: "http://example.org/1", 2: "http://example.org/2"}}
         return mogile_client
 
     @pytest.fixture
@@ -38,7 +41,7 @@ class TestMigrate():
         gcs_client.get_bucket.return_value = bucket
         bucket.get_blob.return_value = blob
         return gcs_client
-    
+
     @pytest.fixture
     def row(self):
         # hello world sha1sum: 2aae6c35c94fcfb415dbe95f408b9ce91ee846ed
@@ -53,28 +56,24 @@ class TestMigrate():
 
     @pytest.fixture
     def mogile_file(self):
-        return MogileFile(
-            dkey=f"{self.SHA1_HEX}-repo",
-            fid=564879786,
-            length=1)
+        return MogileFile(dkey=f"{self.SHA1_HEX}-repo", fid=564879786, length=1)
 
     def test_parse_row(self, row):
         file = MogileFile.parse_row(row)
         assert file.sha1sum == self.SHA1_HEX
         assert file.fid == 1
         assert file.length == 1593790
-        assert (file.dkey ==
-                f"{self.SHA1_HEX}-mogilefs-prod-repo")
+        assert file.dkey == f"{self.SHA1_HEX}-mogilefs-prod-repo"
         assert file.temp is False
-        assert file.mogile_bucket == 'mogilefs-prod-repo'
+        assert file.mogile_bucket == "mogilefs-prod-repo"
 
     def test_parse_bad_dmid(self, row):
         row[1] = 2
-        with pytest.raises(AssertionError, match='Bad domain'):
+        with pytest.raises(AssertionError, match="Bad domain"):
             MogileFile.parse_row(row)
 
     def test_parse_temp_file(self, row):
-        row[2] = '8d26b4da-bd3e-47eb-888a-13bb3579c7e9.tmp'
+        row[2] = "8d26b4da-bd3e-47eb-888a-13bb3579c7e9.tmp"
         file = MogileFile.parse_row(row)
         assert file.temp is True
         assert file.mogile_bucket is None
@@ -82,12 +81,11 @@ class TestMigrate():
 
     def test_parse_bad_class(self, row):
         row[4] = 1
-        with pytest.raises(AssertionError, match='Bad class'):
+        with pytest.raises(AssertionError, match="Bad class"):
             MogileFile.parse_row(row)
 
     def test_make_intermediary_key(self, mogile_file):
-        assert(mogile_file.make_intermediary_key() ==
-               '0/564/879/0564879786.fid')
+        assert mogile_file.make_intermediary_key() == "0/564/879/0564879786.fid"
 
     def test_make_contentrepo_key(self, mogile_file):
         assert mogile_file.make_contentrepo_key() == self.SHA1_HEX
@@ -96,13 +94,14 @@ class TestMigrate():
         blob = gcs_client.get_bucket().get_blob()
         blob.size = 1
         blob.md5_hash = self.MD5_HEX
-        assert(mogile_file.exists_in_bucket(gcs_client, 'my-bucket', 'my-key')
-               == self.MD5_HEX)
+        assert (
+            mogile_file.exists_in_bucket(gcs_client, "my-bucket", "my-key")
+            == self.MD5_HEX
+        )
 
     def test_does_not_exist_in_bucket(self, gcs_client, mogile_file):
         gcs_client.get_bucket().get_blob.return_value = None
-        assert(mogile_file.exists_in_bucket(
-            gcs_client, 'my-bucket', 'my-file') is False)
+        assert mogile_file.exists_in_bucket(gcs_client, "my-bucket", "my-file") is False
 
     def test_mogile_file_to_json(self, mogile_file):
         assert mogile_file == MogileFile.from_json(mogile_file.to_json())
@@ -115,15 +114,15 @@ class TestMigrate():
         assert sha1_fileobj_hex(my_tempfile) == self.SHA1_HEX
         assert sha1_fileobj_b64(my_tempfile) == self.SHA1_B64
 
-    def test_put(self, mogile_file: MogileFile,
-                 mogile_client, gcs_client,
-                 requests_mock):
-        requests_mock.get('http://example.org/1', content=b'hello world')
-        requests_mock.get('http://example.org/2', content=b'hello world')
+    def test_put(
+        self, mogile_file: MogileFile, mogile_client, gcs_client, requests_mock
+    ):
+        requests_mock.get("http://example.org/1", content=b"hello world")
+        requests_mock.get("http://example.org/2", content=b"hello world")
         blob = gcs_client.get_bucket().get_blob()
-        blob.upload_from_file.return_value = 'xyz'
+        blob.upload_from_file.return_value = "xyz"
         blob.md5_hash = self.MD5_B64
-        md5 = mogile_file.put(mogile_client, gcs_client, 'my-bucket')
+        md5 = mogile_file.put(mogile_client, gcs_client, "my-bucket")
         assert md5 == self.MD5_B64
 
     def test_make_bucket_map(self):
@@ -132,7 +131,8 @@ class TestMigrate():
     def test_chunked(self):
         assert list(chunked(range(0, 15), size=10)) == [
             list(range(0, 10)),
-            list(range(10, 15))]
+            list(range(10, 15)),
+        ]
 
     def test_future_waiter(self):
         futures_list = []
@@ -147,6 +147,7 @@ class TestMigrate():
                 def done():
                     called_times[counter] += 1
                     return called_times[counter] > return_after
+
                 return done
 
             future.done = mk_done(i)
@@ -154,7 +155,7 @@ class TestMigrate():
             futures_list.append(future)
         passthrough = future_waiter((f for f in futures_list), 10)
         leftovers = list(iter(passthrough))
-        assert leftovers == [None]*100
+        assert leftovers == [None] * 100
 
     def test_queue_worker(self):
         class MyThread(QueueWorkerThread):
@@ -163,16 +164,16 @@ class TestMigrate():
                 self.result = result
 
             def dowork(self, what):
-                self.result['result'] += what
+                self.result["result"] += what
 
         q = Queue()
         for i in range(1000):
             q.put(i)
         # Wrapper for int since we cannot modify an int.
-        result = {'result': 0}
+        result = {"result": 0}
         threads = MyThread.start_pool(2, q, result)
         MyThread.finish_pool(q, threads)
-        assert result['result'] == sum(range(1000))
+        assert result["result"] == sum(range(1000))
 
     def test_queue_worker_except(self):
         class MyThread(QueueWorkerThread):
@@ -194,9 +195,9 @@ class TestMigrate():
                 self.result = result
 
             def dowork(self, item):
-                self.result['result'] += item
+                self.result["result"] += item
 
         # Wrapper for int since we cannot modify an int.
-        result = {'result': 0}
+        result = {"result": 0}
         MyThread.process_generator(2, range(1000), result)
-        assert result['result'] == sum(range(1000))
+        assert result["result"] == sum(range(1000))
