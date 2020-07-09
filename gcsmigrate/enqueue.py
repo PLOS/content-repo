@@ -8,7 +8,7 @@ from tqdm import tqdm
 from shared import make_generator_from_args, future_waiter
 
 TOPIC_ID = os.environ["TOPIC_ID"]
-PROJECT_ID = os.environ["PROJECT_ID"]
+GCP_PROJECT = os.environ["GCP_PROJECT"]
 
 VERIFY = b"verify"
 MIGRATE = b"migrate"
@@ -20,7 +20,7 @@ batch_settings = pubsub_v1.types.BatchSettings(
 
 CLIENT = pubsub_v1.PublisherClient(batch_settings=batch_settings)
 
-TOPIC_PATH = CLIENT.topic_path(PROJECT_ID, TOPIC_ID)
+TOPIC_PATH = CLIENT.topic_path(GCP_PROJECT, TOPIC_ID)
 
 
 def send_message(mogile_file, action):

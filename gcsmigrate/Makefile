@@ -1,13 +1,12 @@
-lambda: _lambda.tmp_dir lambda.tmp/requirements.txt
-	cp *.py lambda.tmp/
-	cd lambda.tmp && zip -r ../lambda.zip *
+function: _function.tmp_dir function.tmp/requirements.txt
+	cp shared.py main.py function.tmp/
+	cd function.tmp && zip -r ../function.zip *
 
-_lambda.tmp_dir:
-	mkdir -p lambda.tmp
+_function.tmp_dir:
+	mkdir -p function.tmp
 
-lambda.tmp/requirements.txt:
-	pipenv lock -r | grep -v docutils > lambda.tmp/requirements.txt
-	pip install -r lambda.tmp/requirements.txt --no-deps -t lambda.tmp
+function.tmp/requirements.txt:
+	pipenv lock -r > function.tmp/requirements.txt
 
 clean:
-	rm -rf lambda.tmp lambda.zip requirements.txt
+	rm -rf function.tmp function.zip requirements.txt
