@@ -2,16 +2,15 @@ import os
 import sys
 
 from shared import make_bucket_map, get_mogile_files_from_database
-import boto3
 import dbm.gnu
 import threading
 from tqdm import tqdm
 from google.cloud import storage
 
 
-class S3ListThread(threading.Thread):
+class GCSListThread(threading.Thread):
     """
-    Class to list an S3 bucket where each object starts with 0-9a-z.
+    Class to list an GCS bucket where each object starts with 0-9a-z.
 
     Stores results in a gdbm file.
     """
@@ -78,7 +77,7 @@ def main():
     bucket_map = make_bucket_map(os.environ["BUCKETS"])
     buckets = bucket_map.values()
     for bucket in buckets:
-        S3ListThread.process(bucket)
+        GCSListThread.process(bucket)
     dbs = {bucket: dbm.open(bucket) for bucket in buckets}
     for mogile_file in tqdm(get_mogile_files_from_database(
             os.environ['MOGILE_DATABASE_URL'])):
