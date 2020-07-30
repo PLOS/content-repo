@@ -186,7 +186,7 @@ class MogileFile:
                 assert md5 == blob.md5_hash
                 return md5
 
-    def migrate(self, mogile_client, table, gcs_client, bucket_map):
+    def migrate(self, mogile_client, collection, gcs_client, bucket_map):
         """Migrate this mogile object to contentrepo.
 
         Returns None if the object is a temporary file, otherwise
@@ -211,7 +211,7 @@ class MogileFile:
             md5 = self.put(mogile_client, gcs_client, gcs_bucket)
         finally:
             if md5 is not False:
-                self.save_to_firestore(table, md5, gcs_bucket)
+                self.save_to_firestore(collection, md5, gcs_bucket)
 
     def save_to_firestore(self, collection, md5, gcs_bucket):
         """Save record to firestore certifying successful migration."""
