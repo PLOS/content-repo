@@ -50,7 +50,8 @@ def main():
     # Evaluate all the futures using our future_waiter, which will
     # stop occasionally to clean up any completed futures. This avoids
     # keeping too many results in memory.
-    list(future_waiter(futures, 10000))
+    for f in future_waiter(futures, 10000):
+        pass
 
 
 if __name__ == "__main__":
