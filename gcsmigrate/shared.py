@@ -180,7 +180,7 @@ class MogileFile:
                 assert sha1_fileobj_hex(tmp) == self.sha1sum
                 md5 = md5_fileobj_b64(tmp)
                 bucket = gcs_client.get_bucket(bucket_name)
-                blob = bucket.get_blob(self.make_contentrepo_key())
+                blob = bucket.blob(self.make_contentrepo_key())
                 blob.upload_from_file(tmp, rewind=True)
                 blob.reload()
                 assert md5 == blob.md5_hash
