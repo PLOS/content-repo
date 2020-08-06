@@ -31,7 +31,7 @@ def main(event, context):
     collection = firestore_client.collection(COLLECTION_NAME)
 
     if action == "verify":
-        doc_ref = collection.document(mogile_file.fid)
+        doc_ref = collection.document(str(mogile_file.fid))
         doc = doc_ref.get()
         assert doc.exists, f"No db entry for {mogile_file.fid}."
         mogile_file.verify(
