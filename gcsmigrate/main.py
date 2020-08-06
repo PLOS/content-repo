@@ -33,7 +33,7 @@ def main(event, context):
     if action == "verify":
         doc_ref = collection.document(mogile_file.fid)
         doc = doc_ref.get()
-        assert doc.exists(), f"No db entry for {mogile_file.fid}."
+        assert doc.exists, f"No db entry for {mogile_file.fid}."
         mogile_file.verify(
             sha1=doc.get("sha1"),
             md5=doc.get("md5"),
