@@ -40,6 +40,7 @@ class TestMigrate:
         blob = Mock()
         gcs_client.get_bucket.return_value = bucket
         bucket.get_blob.return_value = blob
+        bucket.blob.return_value = blob
         return gcs_client
 
     @pytest.fixture
