@@ -10,7 +10,6 @@ from .shared import (
     sha1_fileobj_hex,
     md5_fileobj_b64,
     sha1_fileobj_b64,
-    QueueWorkerThread,
     chunked,
     future_waiter,
 )
@@ -158,47 +157,3 @@ class TestMigrate:
         leftovers = list(iter(passthrough))
         assert leftovers == [None] * 100
 
-    def test_queue_worker(self):
-        class MyThread(QueueWorkerThread):
-            def __init__(self, queue: Queue, result, *args, **kwargs):
-                super().__init__(queue, *args, **kwargs)
-                self.result = result
-
-            def dowork(self, what):
-                self.result["result"] += what
-
-        q = Queue()
-        for i in range(1000):
-            q.put(i)
-        # Wrapper for int since we cannot modify an int.
-        result = {"result": 0}
-        threads = MyThread.start_pool(2, q, result)
-        MyThread.finish_pool(q, threads)
-        assert result["result"] == sum(range(1000))
-
-    def test_queue_worker_except(self):
-        class MyThread(QueueWorkerThread):
-            def dowork(self, item):
-                # Fail in one thread, on one item only.
-                assert item != 5
-
-        q = Queue()
-        for i in range(10):
-            q.put(i)
-        threads = MyThread.start_pool(2, q)
-        with pytest.raises(AssertionError):
-            MyThread.finish_pool(q, threads)
-
-    def test_queue_process_generator(self):
-        class MyThread(QueueWorkerThread):
-            def __init__(self, queue: Queue, result, *args, **kwargs):
-                super().__init__(queue, *args, **kwargs)
-                self.result = result
-
-            def dowork(self, item):
-                self.result["result"] += item
-
-        # Wrapper for int since we cannot modify an int.
-        result = {"result": 0}
-        MyThread.process_generator(2, range(1000), result)
-        assert result["result"] == sum(range(1000))
