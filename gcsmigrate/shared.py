@@ -86,14 +86,14 @@ class MogileFile:
         self.length = length
         self.fid = fid
         self.dkey = dkey
-        if dkey[36:] == ".tmp":
+        if dkey == "test" or dkey[36:] == ".tmp":
             # These seem to be old junk leftover from failed ingests.
             # Check later.
-            self.temp = True
+            self.skip = True
             self.sha1sum = None
             self.mogile_bucket = None
         else:
-            self.temp = False
+            self.skip = False
             self.sha1sum = dkey[0:40]
             self.mogile_bucket = dkey[41:]
             assert len(self.sha1sum) == 40
@@ -192,7 +192,7 @@ class MogileFile:
         Returns None if the object is a temporary file, otherwise
         returns the md5 of the migrated file.
         """
-        if self.temp is True:
+        if self.skip is True:
             return None  # Do not migrate temporary files.
         gcs_bucket = bucket_map[self.mogile_bucket]
         print(f"Migrating {self.fid} to " f"{gcs_bucket}/{self.make_contentrepo_key()}")
