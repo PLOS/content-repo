@@ -96,9 +96,9 @@ class MogileFile:
             self.skip = False
             self.sha1sum = dkey[0:40]
             self.mogile_bucket = dkey[41:]
-            assert len(self.sha1sum) == 40
-            assert dkey[40] == "-"
-            assert len(self.mogile_bucket) > 1
+            assert len(self.sha1sum) == 40, f"bad sha1sum length for {self.dkey}"
+            assert dkey[40] == "-", f"bad dkey for {self.dkey}"
+            assert len(self.mogile_bucket) > 1, f"bad mogile-bucket for {self.dkey}"
 
     def __eq__(self, other):
         """Equality check."""
