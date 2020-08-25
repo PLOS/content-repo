@@ -64,7 +64,7 @@ class TestMigrate:
         assert file.fid == 1
         assert file.length == 1593790
         assert file.dkey == f"{self.SHA1_HEX}-mogilefs-prod-repo"
-        assert file.temp is False
+        assert file.skip is False
         assert file.mogile_bucket == "mogilefs-prod-repo"
 
     def test_parse_bad_dmid(self, row):
@@ -75,7 +75,7 @@ class TestMigrate:
     def test_parse_temp_file(self, row):
         row[2] = "8d26b4da-bd3e-47eb-888a-13bb3579c7e9.tmp"
         file = MogileFile.parse_row(row)
-        assert file.temp is True
+        assert file.skip is True
         assert file.mogile_bucket is None
         assert file.sha1sum is None
 
