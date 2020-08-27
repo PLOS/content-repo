@@ -54,10 +54,8 @@ def main():
         if mogile_bucket in ignore_buckets:
             continue
         remote_bucket = bucket_map[mogile_bucket]
-        assert (
-            sha1sum in dbs[remote_bucket]
-        ), f"{sha1sum} not in {remote_bucket}"
-        
+        assert sha1sum in dbs[remote_bucket], f"{sha1sum} not in {remote_bucket}"
+
         key = mogile_db.nextkey(key)
 
 
