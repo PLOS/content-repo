@@ -46,6 +46,8 @@ def load_mogile():
         for mogile_file in tqdm(
             get_mogile_files_from_database(os.environ["MOGILE_DATABASE_URL"])
         ):
+            if mogile_file.skip:
+                continue
             db[f"{mogile_file.fid}_{mogile_file.sha1sum}_{mogile_file.mogile_bucket}"] = ""
 
 
