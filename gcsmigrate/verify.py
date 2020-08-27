@@ -41,6 +41,7 @@ def main():
     the sha1 item.
     """
     bucket_map = make_bucket_map(os.environ["BUCKETS"])
+    ignore_buckets = os.environ["IGNORE_BUCKETS"].split(",")
     buckets = bucket_map.values()
     for bucket in buckets:
         load_bucket(bucket)
@@ -50,6 +51,8 @@ def main():
     key = mogile_db.firstkey()
     while key is not None:
         sha1sum, mogile_bucket = key.decode("utf-8").split("_")
+        if mogile_bucket in ignore_buckets:
+            continue
         remote_bucket = bucket_map[mogile_bucket]
         assert (
             sha1sum in dbs[remote_bucket]
