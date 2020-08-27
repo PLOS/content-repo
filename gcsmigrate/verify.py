@@ -76,9 +76,6 @@ def main():
             pbar.update()
             if mogile_bucket in ignore_buckets:
                 continue
-            # hack!
-            if fid > 15000000:
-                continue
             remote_bucket = bucket_map[mogile_bucket]
             assert sha1sum in dbs[remote_bucket], f"{sha1sum} not in {remote_bucket}"
 
