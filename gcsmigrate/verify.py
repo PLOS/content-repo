@@ -10,7 +10,7 @@ from shared import get_mogile_files_from_database, make_bucket_map
 def load_bucket(bucket_name):
     gcs_client = storage.Client()
     with tqdm(desc=f"{bucket_name} list") as pbar:
-        with dbm.gnu.open(bucket_name, "cf") as db:
+        with dbm.gnu.open(f"{bucket_name}.db", "cf") as db:
             for page in gcs_client.list_blobs(
                 bucket_name, prefix="", delimiter="/"
             ).pages:
@@ -23,6 +23,13 @@ def load_bucket(bucket_name):
             db.sync()
             return True
 
+def load_mogile():
+    with dbm.gnu.open("mogile.db", "cf") as db:
+        for mogile_file in tqdm(
+                get_mogile_files_from_database(os.environ["MOGILE_DATABASE_URL"])
+        ):
+            db[f"{mogile_file.sha1sum}_{mogile_file.mogile_bucket}"] = ""
+        db.sync()   
 
 def main():
     """
@@ -37,11 +44,11 @@ def main():
     buckets = bucket_map.values()
     for bucket in buckets:
         load_bucket(bucket)
-    dbs = {bucket: dbm.open(bucket) for bucket in buckets}
     for mogile_file in tqdm(
         get_mogile_files_from_database(os.environ["MOGILE_DATABASE_URL"])
     ):
         remote_bucket = bucket_map[mogile_file.mogile_bucket]
+    dbs = {bucket: dbm.open(f"{bucket}.db") for bucket in buckets}
         assert (
             mogile_file.sha1sum in dbs[remote_bucket]
         ), f"{mogile_file.sha1sum} not in {remote_bucket}"
