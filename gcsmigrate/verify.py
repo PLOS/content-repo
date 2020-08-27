@@ -44,14 +44,18 @@ def main():
     buckets = bucket_map.values()
     for bucket in buckets:
         load_bucket(bucket)
-    for mogile_file in tqdm(
-        get_mogile_files_from_database(os.environ["MOGILE_DATABASE_URL"])
-    ):
-        remote_bucket = bucket_map[mogile_file.mogile_bucket]
     dbs = {bucket: dbm.open(f"{bucket}.db") for bucket in buckets}
+    load_mogile()
+    mogile_db = dbm.open("mogile.db")
+    key = mogile_db.firstkey()
+    while key is not None:
+        sha1sum, mogile_bucket = key.decode("utf-8").split("_")
+        remote_bucket = bucket_map[mogile_bucket]
         assert (
-            mogile_file.sha1sum in dbs[remote_bucket]
-        ), f"{mogile_file.sha1sum} not in {remote_bucket}"
+            sha1sum in dbs[remote_bucket]
+        ), f"{sha1sum} not in {remote_bucket}"
+        
+        key = mogile_db.nextkey(key)
 
 
 if __name__ == "__main__":
