@@ -20,7 +20,7 @@ def maybe_db(dbpath):
             except:
                 # Clean up db if there was an error
                 os.unlink(dbpath)
-
+                raise
 
 def load_bucket(bucket_name):
     gcs_client = storage.Client()
