@@ -29,14 +29,16 @@ def load_bucket(bucket_name):
             return
         with tqdm(desc=f"{bucket_name} list") as pbar:
             for page in gcs_client.list_blobs(
-                bucket_name, prefix="", delimiter="/"
+                    bucket_name, prefix="", delimiter="/",
+                    fields="items(name),nextPageToken"
             ).pages:
-                new_keys = {blob.name for blob in page}
-                for key in new_keys:
+                n = 0
+                for blob in page:
+                    n += 1
                     # We don't need to know anything, we are just
                     # keeping track of the keys.
-                    db[key] = ""
-                    pbar.update()
+                    db[blob.name] = ""
+                pbar.update(n)
 
 
 def load_mogile():
