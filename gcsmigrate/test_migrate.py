@@ -123,8 +123,10 @@ class TestMigrate:
         requests_mock.get("http://example.org/1", content=b"hello world")
         requests_mock.get("http://example.org/2", content=b"hello world")
         blob = gcs_client.get_bucket().get_blob()
+
         def upload_from_file(fileobj, *args, **kwargs):
             fileobj.read()
+
         blob.upload_from_file.side_effect = upload_from_file
         blob.upload_from_file.return_value = "xyz"
         blob.md5_hash = self.MD5_B64
