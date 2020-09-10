@@ -22,6 +22,7 @@ def maybe_db(dbpath):
                 os.unlink(dbpath)
                 raise
 
+
 def load_bucket(bucket_name):
     gcs_client = storage.Client()
     with maybe_db(f"{bucket_name}.db") as db:
@@ -29,8 +30,10 @@ def load_bucket(bucket_name):
             return
         with tqdm(desc=f"{bucket_name} list") as pbar:
             for page in gcs_client.list_blobs(
-                    bucket_name, prefix="", delimiter="/",
-                    fields="items(name),nextPageToken"
+                bucket_name,
+                prefix="",
+                delimiter="/",
+                fields="items(name),nextPageToken",
             ).pages:
                 n = 0
                 for blob in page:
@@ -50,7 +53,9 @@ def load_mogile():
         ):
             if mogile_file.skip:
                 continue
-            db[f"{mogile_file.fid}_{mogile_file.sha1sum}_{mogile_file.mogile_bucket}"] = ""
+            db[
+                f"{mogile_file.fid}_{mogile_file.sha1sum}_{mogile_file.mogile_bucket}"
+            ] = ""
 
 
 def main():
@@ -80,6 +85,7 @@ def main():
                 continue
             remote_bucket = bucket_map[mogile_bucket]
             assert sha1sum in dbs[remote_bucket], f"{sha1sum} not in {remote_bucket}"
+
 
 if __name__ == "__main__":
     main()
