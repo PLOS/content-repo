@@ -1,3 +1,4 @@
+import requests
 import base64
 import io
 import tempfile
@@ -122,6 +123,9 @@ class TestMigrate:
         requests_mock.get("http://example.org/1", content=b"hello world")
         requests_mock.get("http://example.org/2", content=b"hello world")
         blob = gcs_client.get_bucket().get_blob()
+        def upload_from_file(fileobj, *args, **kwargs):
+            fileobj.read()
+        blob.upload_from_file.side_effect = upload_from_file
         blob.upload_from_file.return_value = "xyz"
         blob.md5_hash = self.MD5_B64
         md5 = mogile_file.put(mogile_client, gcs_client, "my-bucket")
@@ -165,3 +169,13 @@ class TestMigrate:
         with HashWrap(bio, md5) as pipe:
             assert pipe.read() == b"hello world"
             assert md5.hexdigest() == "5eb63bbbe01eeed093cb22bb8f5acdc3"
+
+    def test_hash_wrap_requests(self, requests_mock):
+        requests_mock.get("http://example.org/1", content=b"hello world")
+        with requests.get("http://example.org/1", stream=True) as req:
+            req.raise_for_status()
+            sha1 = hashlib.sha1()
+            req.raw.decode_content = True
+            with HashWrap(req.raw, sha1) as pipe:
+                assert "hello world" == pipe.read().decode("utf-8")
+                assert sha1.hexdigest() == "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"

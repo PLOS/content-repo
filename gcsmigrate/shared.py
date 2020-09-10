@@ -7,7 +7,6 @@ import json
 import os
 import random
 import shutil
-import tempfile
 import time
 
 import dj_database_url
@@ -24,6 +23,9 @@ class HashWrap(io.RawIOBase):
         self.wrap = wrap
         self.hasher = hasher
         super().__init__()
+
+    def tell(self):
+        return self.wrap.tell()
 
     def readinto(self, b):
         num = self.wrap.readinto(b)
@@ -185,19 +187,25 @@ class MogileFile:
 
     def put(self, mogile_client, gcs_client, bucket_name):
         """Put content from mogile to GCS."""
-        with requests.get(self.get_mogile_url(mogile_client), stream=True) as req:
-            req.raise_for_status()
-            with tempfile.TemporaryFile() as tmp:
+        bucket = gcs_client.get_bucket(bucket_name)
+        blob = bucket.blob(self.make_contentrepo_key())
+        try:
+            with requests.get(self.get_mogile_url(mogile_client), stream=True) as req:
+                req.raise_for_status()
                 req.raw.decode_content = True
-                shutil.copyfileobj(req.raw, tmp, length=BUFSIZE)
-                assert sha1_fileobj_hex(tmp) == self.sha1sum
-                md5 = md5_fileobj_b64(tmp)
-                bucket = gcs_client.get_bucket(bucket_name)
-                blob = bucket.blob(self.make_contentrepo_key())
-                blob.upload_from_file(tmp, rewind=True)
-                blob.reload()
-                assert md5 == blob.md5_hash
-                return md5
+                sha1 = hashlib.sha1()
+                with HashWrap(req.raw, sha1) as sha_pipe:
+                    md5 = hashlib.md5()
+                    with HashWrap(sha_pipe, md5) as md5_pipe:
+                        blob.upload_from_file(md5_pipe, rewind=False)
+                        blob.reload()
+                        md5 = base64.b64encode(md5.digest()).decode("utf-8")
+            assert sha1.hexdigest() == self.sha1sum
+            assert md5 == blob.md5_hash
+            return md5
+        except:
+            blob.delete()
+            raise
 
     def migrate(self, mogile_client, collection, gcs_client, bucket_map):
         """Migrate this mogile object to contentrepo.
