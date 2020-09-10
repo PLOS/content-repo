@@ -1,20 +1,22 @@
+import base64
+import io
 import tempfile
+from queue import Queue
 from unittest.mock import Mock
-
+import hashlib
 import pytest
 
 from .shared import (
+    HashWrap,
     MogileFile,
-    make_bucket_map,
-    md5_fileobj_hex,
-    sha1_fileobj_hex,
-    md5_fileobj_b64,
-    sha1_fileobj_b64,
     chunked,
     future_waiter,
+    make_bucket_map,
+    md5_fileobj_b64,
+    md5_fileobj_hex,
+    sha1_fileobj_b64,
+    sha1_fileobj_hex,
 )
-
-from queue import Queue
 
 
 # pylint: disable=C0115,C0116,R0201
@@ -157,3 +159,9 @@ class TestMigrate:
         leftovers = list(iter(passthrough))
         assert leftovers == [None] * 100
 
+    def test_hash_wrap(self):
+        bio = io.BytesIO(b"hello world")
+        md5 = hashlib.md5()
+        with HashWrap(bio, md5) as pipe:
+            assert pipe.read() == b"hello world"
+            assert md5.hexdigest() == "5eb63bbbe01eeed093cb22bb8f5acdc3"

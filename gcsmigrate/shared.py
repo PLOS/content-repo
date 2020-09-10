@@ -2,21 +2,34 @@
 
 import base64
 import hashlib
+import io
 import json
 import os
 import random
 import shutil
 import tempfile
-import threading
 import time
-from queue import Empty, Queue
 
 import dj_database_url
 import pymysql
 import requests
 
-BUFSIZE = 16 * 1024 * 1024  # 16 MiB
-BLOCKSIZE = 65536
+BUFSIZE = 16 * 1024
+
+
+class HashWrap(io.RawIOBase):
+    """Wrap a raw IO object so that when it is read, a hasher is updated."""
+
+    def __init__(self, wrap, hasher):
+        self.wrap = wrap
+        self.hasher = hasher
+        super().__init__()
+
+    def readinto(self, b):
+        num = self.wrap.readinto(b)
+        if num is not None and num > 0:
+            self.hasher.update(b[0:num])
+        return num
 
 
 def make_bucket_map(buckets):
@@ -31,10 +44,10 @@ def make_bucket_map(buckets):
 def hash_fileobj(fileobj, hasher):
     """Efficiently hash a file object using the provided hasher."""
     fileobj.seek(0)
-    block = fileobj.read(BLOCKSIZE)
+    block = fileobj.read(BUFSIZE)
     while block:
         hasher.update(block)
-        block = fileobj.read(BLOCKSIZE)
+        block = fileobj.read(BUFSIZE)
     fileobj.seek(0)
     return hasher
 
