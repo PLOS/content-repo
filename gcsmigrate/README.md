@@ -141,5 +141,5 @@ We should be able to ingest into the new bucket now.
 ### Deploying
 
 ```
-gcloud functions deploy main --region us-east1 --runtime python37 --trigger-topic=corpus-migration --project=plos-dev --vpc-connector=projects/plos-dev/locations/us-east1/connectors/plos-dev-vpc-acc-1 --max-instances=100 --env-vars-file=dev.env.yaml --timeout=240s
+gcloud functions deploy main --region us-east1 --runtime python37 --trigger-topic=corpus-migration --project=plos-dev --vpc-connector=projects/plos-dev/locations/us-east1/connectors/plos-dev-vpc-acc-1 --max-instances=100 --env-vars-file=dev.env.yaml --timeout=360s --memory=1024MB
 ```
