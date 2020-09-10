@@ -1,5 +1,6 @@
 import dbm.gnu
 import os
+import sys
 from contextlib import contextmanager
 
 from google.cloud import storage
@@ -75,6 +76,7 @@ def main():
     dbs = {bucket: dbm.open(f"{bucket}.db") for bucket in buckets}
     load_mogile()
     mogile_db = dbm.open("mogile.db")
+    failed = False
     with tqdm(desc="verifying") as pbar:
         key = mogile_db.firstkey()
         while key is not None:
@@ -84,7 +86,10 @@ def main():
             if mogile_bucket in ignore_buckets:
                 continue
             remote_bucket = bucket_map[mogile_bucket]
-            assert sha1sum in dbs[remote_bucket], f"{sha1sum} not in {remote_bucket}"
+            if sha1sum not in dbs[remote_bucket]:
+                print(fid)
+                failed = True
+    sys.exit(1 if failed else 0)
 
 
 if __name__ == "__main__":
