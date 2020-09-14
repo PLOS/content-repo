@@ -42,5 +42,7 @@ def main(event, context):
             bucket_map=BUCKET_MAP,
             gcs_client=gcs_client,
         )
-    else:
+    elif action == "migrate":
         mogile_file.migrate(mogile_client, collection, gcs_client, BUCKET_MAP)
+    else:
+        raise Exception(f"Bad action: {action}.")
