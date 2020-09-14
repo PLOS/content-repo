@@ -10,7 +10,6 @@ import pytest
 from .shared import (
     HashWrap,
     MogileFile,
-    chunked,
     future_waiter,
     make_bucket_map,
     md5_fileobj_b64,
@@ -135,12 +134,6 @@ class TestMigrate:
 
     def test_make_bucket_map(self):
         assert make_bucket_map("a:b,c:d") == {"a": "b", "c": "d"}
-
-    def test_chunked(self):
-        assert list(chunked(range(0, 15), size=10)) == [
-            list(range(0, 10)),
-            list(range(10, 15)),
-        ]
 
     def test_future_waiter(self):
         futures_list = []

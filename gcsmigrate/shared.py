@@ -317,18 +317,6 @@ def make_generator_from_args(args):
     )
 
 
-def chunked(iterable, size):
-    """Group into chunks of size."""
-    result = []
-    for item in iterable:
-        result.append(item)
-        if len(result) == size:
-            yield result
-            result = []
-    if len(result) > 0:
-        yield result
-
-
 def future_waiter(iterable, max_futures):
     def cleanup(lst):
         """Yield the result of any futures from the lst that are done, and delete them from the list."""
