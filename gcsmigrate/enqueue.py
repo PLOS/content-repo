@@ -39,7 +39,14 @@ def queue_verify(mogile_file):
 
 
 def main():
-    """Enqueue mogile file jobs to SQS for processing in AWS lambda."""
+    """Enqueue mogile file jobs to SQS for processing in AWS lambda.
+
+    The first command line argument is an action, either verify or
+    migrate. The following arguments are either a list of fids to
+    process or a single file that contains a list of fids to exclude.
+
+    """
+
     generator = tqdm(make_generator_from_args(sys.argv[2:]))
     if sys.argv[1] == "verify":
         func = queue_verify
