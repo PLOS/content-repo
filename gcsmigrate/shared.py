@@ -127,7 +127,7 @@ class MogileFile:
         )
 
     @classmethod
-    def parse_row(cls, row: dict):
+    def parse_row(cls, row):
         """Take a file row and return a MogileFile."""
         # (fid, dmid, dkey, length, classid, devcount)
         # Sanity check, we only use one "domain" and one class
