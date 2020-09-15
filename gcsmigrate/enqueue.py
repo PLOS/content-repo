@@ -48,10 +48,13 @@ def main():
     """
 
     generator = tqdm(make_generator_from_args(sys.argv[2:]))
-    if sys.argv[1] == "verify":
+    action = sys.argv[1]
+    if action == "verify":
         func = queue_verify
-    else:
+    elif action == "migrate":
         func = queue_migrate
+    else:
+        raise Exception(f"Bad action: {action}.")
     # Call the function on all these mogile files. Each function should return a future.
     futures = (func(mogile) for mogile in generator)
     # Evaluate all the futures using our future_waiter, which will
