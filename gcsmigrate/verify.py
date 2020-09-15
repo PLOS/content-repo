@@ -10,25 +10,23 @@ from shared import get_mogile_files_from_database, make_bucket_map
 
 
 @contextmanager
-def maybe_db(dbpath):
-    if os.path.exists(dbpath):
-        yield None
-    else:
-        with dbm.gnu.open(dbpath, "cf") as db:
-            try:
-                yield db
-                db.sync()
-            except:
-                # Clean up db if there was an error
-                os.unlink(dbpath)
-                raise
+def open_db(dbpath):
+    with dbm.gnu.open(dbpath, "cf") as db:
+        try:
+            yield db
+            db.sync()
+        except:
+            # Clean up db if there was an error
+            os.unlink(dbpath)
+            raise
 
 
 def load_bucket(bucket_name):
     gcs_client = storage.Client()
-    with maybe_db(f"{bucket_name}.db") as db:
-        if db is None:
-            return
+    dbpath = f"{bucket_name}.db"
+    if os.path.exists(dbpath):
+        return
+    with open_db(dbpath) as db:
         with tqdm(desc=f"{bucket_name} list") as pbar:
             for page in gcs_client.list_blobs(
                 bucket_name,
@@ -46,9 +44,10 @@ def load_bucket(bucket_name):
 
 
 def load_mogile():
-    with maybe_db("mogile.db") as db:
-        if db is None:
-            return
+    dbpath = "mogile.db"
+    if os.path.exists(dbpath):
+        return
+    with open_db("mogile.db") as db:
         for mogile_file in tqdm(
             get_mogile_files_from_database(os.environ["MOGILE_DATABASE_URL"])
         ):
