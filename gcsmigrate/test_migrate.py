@@ -140,6 +140,7 @@ class TestMigrate:
         called_times = {}
         for i in range(0, 100):
             future = Mock()
+            future.exception.return_value = None
 
             def mk_done(counter):
                 called_times[counter] = 0
@@ -157,6 +158,21 @@ class TestMigrate:
         passthrough = future_waiter((f for f in futures_list), 10)
         leftovers = list(iter(passthrough))
         assert leftovers == [None] * 100
+
+    def test_future_waiter_exception(self):
+        with pytest.raises(Exception, match="huh"):
+            futures_list = []
+            for i in range(0, 10):
+                future = Mock()
+                future.exception.return_value = None
+                future.done.return_value = True
+                future.result.return_value = None
+                if i == 5:
+                    future.exception.return_value = Exception("huh")
+                futures_list.append(future)
+
+            passthrough = future_waiter((f for f in futures_list), 10)
+            leftovers = list(iter(passthrough))
 
     def test_hash_wrap(self):
         bio = io.BytesIO(b"hello world")

@@ -323,6 +323,8 @@ def future_waiter(iterable, max_futures):
         to_delete = []
         for i, future in enumerate(lst):
             if future.done():
+                if future.exception():
+                    raise future.exception()
                 to_delete.append(i)
                 yield future.result()
 
