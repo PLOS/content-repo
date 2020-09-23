@@ -4,12 +4,6 @@ provider "google" {
   version = "3.25"
 }
 
-provider "google-beta" {
-  project = var.project
-  region  = "us-east1"
-  version = "3.25"
-}
-
 terraform {
   backend "gcs" {}
 }
