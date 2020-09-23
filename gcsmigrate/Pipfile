@@ -8,11 +8,13 @@ pytest = "*"
 requests-mock = "*"
 
 [packages]
-boto3 = "*"
 PyMySQL = "*"
 dj-database-url = "*"
 pymogilefs = "*"
 tqdm = "*"
+google-cloud-pubsub = "*"
+google-cloud-firestore = "*"
+google-cloud-storage = "*"
 
 [requires]
 python_version = "3.7"
