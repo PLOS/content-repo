@@ -1,13 +1,14 @@
 """Tools for migrating Mogile content to GCS."""
 
 import base64
+import dbm.gnu
 import hashlib
 import io
 import json
 import os
 import random
-import shutil
 import time
+from contextlib import contextmanager
 
 import dj_database_url
 import pymysql
@@ -32,6 +33,28 @@ class HashWrap(io.RawIOBase):
         if num is not None and num > 0:
             self.hasher.update(b[0:num])
         return num
+
+
+def encode_json(struct):
+    """Encode a structure as JSON bytes."""
+    return bytes(json.dumps(struct), "utf-8")
+
+
+def make_db_connection(db_url):
+    config = dj_database_url.parse(db_url)
+    return pymysql.connect(
+        host=config["HOST"],
+        user=config["USER"],
+        password=config["PASSWORD"],
+        db=config["NAME"],
+        cursorclass=pymysql.cursors.SSCursor,
+    )
+
+
+def copy_object(gcs_client, bucket_name, from_key, to_key):
+    bucket = gcs_client.bucket(bucket_name)
+    source_blob = bucket.blob(from_key)
+    bucket.copy_blob(source_blob, bucket, to_key)
 
 
 def make_bucket_map(buckets):
@@ -243,15 +266,12 @@ class MogileFile:
 
     def to_json(self):
         """Serialize as JSON."""
-        return bytes(
-            json.dumps({"length": self.length, "fid": self.fid, "dkey": self.dkey}),
-            "utf-8",
-        )
+        return encode_json({"length": self.length, "fid": self.fid, "dkey": self.dkey})
 
     @classmethod
-    def from_json(cls, json_str):
+    def from_json(cls, struct):
         """Create MogileFile from JSON string."""
-        return MogileFile(**json.loads(json_str))
+        return MogileFile(**struct)
 
     def verify(self, fid, md5, sha1, bucket, bucket_map, gcs_client):
         """Verify (with assert) this mogile file against asserted values."""
@@ -268,15 +288,7 @@ def get_mogile_files_from_database(
     database_url, limit=None, fids=None, excluded_fids=set()
 ):
     """Return a generator for all mogile files in the database."""
-    config = dj_database_url.parse(database_url)
-    connection = pymysql.connect(
-        host=config["HOST"],
-        user=config["USER"],
-        password=config["PASSWORD"],
-        db=config["NAME"],
-        cursorclass=pymysql.cursors.SSCursor,
-    )
-
+    connection = make_db_connection(database_url)
     try:
         cursor = connection.cursor()
         if limit is not None:
@@ -342,3 +354,15 @@ def future_waiter(iterable, max_futures):
     while (len(not_done)) > 0:
         time.sleep(1)
         yield from cleanup(not_done)
+
+
+@contextmanager
+def open_db(dbpath):
+    with dbm.gnu.open(dbpath, "cf") as db:
+        try:
+            yield db
+            db.sync()
+        except:
+            # Clean up db if there was an error
+            os.unlink(dbpath)
+            raise

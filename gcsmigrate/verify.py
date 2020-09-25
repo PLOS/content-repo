@@ -1,24 +1,11 @@
 import dbm.gnu
 import os
 import sys
-from contextlib import contextmanager
 
 from google.cloud import storage
 from tqdm import tqdm
 
-from shared import get_mogile_files_from_database, make_bucket_map
-
-
-@contextmanager
-def open_db(dbpath):
-    with dbm.gnu.open(dbpath, "cf") as db:
-        try:
-            yield db
-            db.sync()
-        except:
-            # Clean up db if there was an error
-            os.unlink(dbpath)
-            raise
+from shared import get_mogile_files_from_database, make_bucket_map, open_db
 
 
 def load_bucket(bucket_name):

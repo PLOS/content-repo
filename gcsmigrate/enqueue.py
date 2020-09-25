@@ -1,11 +1,19 @@
 #!/usr/bin/env python
 
+import dbm.gnu
 import os
 import sys
 
-from google.cloud import pubsub_v1
+from google.cloud import pubsub_v1, storage
 from tqdm import tqdm
-from shared import make_generator_from_args, future_waiter
+
+from shared import (
+    future_waiter,
+    make_db_connection,
+    make_generator_from_args,
+    open_db,
+    encode_json,
+)
 
 TOPIC_ID = os.environ["TOPIC_ID"]
 GCP_PROJECT = os.environ["GCP_PROJECT"]
@@ -23,6 +31,25 @@ CLIENT = pubsub_v1.PublisherClient(batch_settings=batch_settings)
 TOPIC_PATH = CLIENT.topic_path(GCP_PROJECT, TOPIC_ID)
 
 
+def build_shas_db():
+    """Build a shas.db file where we will store the relationship between a UUID and a sha."""
+    connection = make_db_connection(os.environ["CONTENTREPO_DATABASE_URL"])
+    try:
+        with open_db("shas.db") as db:
+            cursor = connection.cursor()
+            cursor.execute("select uuid, checksum from objects")
+            with tqdm(desc="loading shas") as pbar:
+                row = cursor.fetchone()
+                pbar.update()
+                while row:
+                    (uuid, checksum) = row
+                    db[uuid] = checksum
+                    row = cursor.fetchone()
+                    pbar.update()
+    finally:
+        connection.close()
+
+
 def send_message(mogile_file, action):
     """Send the mogile file as an pubsub message."""
     return CLIENT.publish(TOPIC_PATH, mogile_file.to_json(), action=action)
@@ -38,6 +65,30 @@ def queue_verify(mogile_file):
     return send_message(mogile_file, VERIFY)
 
 
+def queue_final_migrate():
+    """Queue up copies for the final migration step in pubsub."""
+
+    connection = make_db_connection(os.environ["RHINO_DATABASE_URL"])
+    sql = "SELECT doi, ingestionNumber, ingestedFileName, crepoUuid FROM articleFile JOIN articleIngestion ON articleFile.ingestionId = articleIngestion.ingestionId JOIN article ON articleIngestion.articleId = article.articleId;"
+    with dbm.gnu.open("shas.db") as db:
+        try:
+            cursor = connection.cursor()
+            cursor.execute(sql)
+            row = cursor.fetchone()
+            while row:
+                (doi, ingestionNumber, ingestedFileName, uuid) = row
+                sha = db[uuid]
+                json = {
+                    "bucket": "corpus-dev-0242ac130003",
+                    "from_key": sha.decode("utf-8"),
+                    "to_key": f"{doi}/{ingestionNumber}/{ingestedFileName}",
+                }
+                row = cursor.fetchone()
+                yield CLIENT.publish(TOPIC_PATH, encode_json(json), action="copy")
+        finally:
+            connection.close()
+
+
 def main():
     """Enqueue mogile file jobs to SQS for processing in AWS lambda.
 
@@ -47,16 +98,18 @@ def main():
 
     """
 
-    generator = tqdm(make_generator_from_args(sys.argv[2:]))
     action = sys.argv[1]
     if action == "verify":
-        func = queue_verify
+        generator = tqdm(make_generator_from_args(sys.argv[2:]))
+        futures = (queue_verify(mogile) for mogile in generator)
     elif action == "migrate":
-        func = queue_migrate
+        generator = tqdm(make_generator_from_args(sys.argv[2:]))
+        futures = (queue_migrate(mogile) for mogile in generator)
+    elif action == "final_migrate":
+        build_shas_db()
+        futures = tqdm(queue_final_migrate())
     else:
         raise Exception(f"Bad action: {action}.")
-    # Call the function on all these mogile files. Each function should return a future.
-    futures = (func(mogile) for mogile in generator)
     # Evaluate all the futures using our future_waiter, which will
     # stop occasionally to clean up any completed futures. This avoids
     # keeping too many results in memory.
