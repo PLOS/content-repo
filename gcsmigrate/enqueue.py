@@ -27,6 +27,7 @@ batch_settings = pubsub_v1.types.BatchSettings(
 )
 
 CLIENT = pubsub_v1.PublisherClient(batch_settings=batch_settings)
+GCS_CLIENT = storage.Client()
 
 TOPIC_PATH = CLIENT.topic_path(GCP_PROJECT, TOPIC_ID)
 
@@ -67,9 +68,10 @@ def queue_verify(mogile_file):
 
 def queue_final_migrate():
     """Queue up copies for the final migration step in pubsub."""
-
+    bucket_name = "corpus-dev-0242ac130003" # TODO un-hardcode
     connection = make_db_connection(os.environ["RHINO_DATABASE_URL"])
     sql = "SELECT doi, ingestionNumber, ingestedFileName, crepoUuid FROM articleFile JOIN articleIngestion ON articleFile.ingestionId = articleIngestion.ingestionId JOIN article ON articleIngestion.articleId = article.articleId;"
+    bucket = GCS_CLIENT.bucket(bucket_name)
     with dbm.gnu.open("shas.db") as db:
         try:
             cursor = connection.cursor()
@@ -78,13 +80,15 @@ def queue_final_migrate():
             while row:
                 (doi, ingestionNumber, ingestedFileName, uuid) = row
                 sha = db[uuid]
-                json = {
-                    "bucket": "corpus-dev-0242ac130003",
-                    "from_key": sha.decode("utf-8"),
-                    "to_key": f"{doi}/{ingestionNumber}/{ingestedFileName}",
-                }
+                to_key = f"{doi}/{ingestionNumber}/{ingestedFileName}"
+                if not bucket.blob(to_key).exists():
+                    json = {
+                        "bucket": bucket_name,
+                        "from_key": sha.decode("utf-8"),
+                        "to_key": to_key,
+                    }
+                    yield CLIENT.publish(TOPIC_PATH, encode_json(json), action="copy")
                 row = cursor.fetchone()
-                yield CLIENT.publish(TOPIC_PATH, encode_json(json), action="copy")
         finally:
             connection.close()
 
