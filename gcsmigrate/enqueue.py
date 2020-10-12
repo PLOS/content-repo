@@ -17,6 +17,7 @@ from shared import (
 )
 
 BUCKET_MAP = make_bucket_map(os.environ["BUCKETS"])
+IGNORE_BUCKETS = os.environ["IGNORE_BUCKETS"].split(",")
 
 TOPIC_ID = os.environ["TOPIC_ID"]
 GCP_PROJECT = os.environ["GCP_PROJECT"]
@@ -129,14 +130,30 @@ def main():
 
     action = sys.argv[1]
     if action == "verify":
-        generator = tqdm(make_generator_from_args(sys.argv[2:]))
+        generator = tqdm(
+            [
+                mogile
+                for mogile in make_generator_from_args(sys.argv[2:])
+                if mogile.mogile_bucket not in IGNORE_BUCKETS
+            ]
+        )
         futures = (queue_verify(mogile) for mogile in generator)
     elif action == "migrate":
-        generator = tqdm(make_generator_from_args(sys.argv[2:]))
+        generator = tqdm(
+            [
+                mogile
+                for mogile in make_generator_from_args(sys.argv[2:])
+                if mogile.mogile_bucket not in IGNORE_BUCKETS
+            ]
+        )
         futures = (queue_migrate(mogile) for mogile in generator)
     elif action == "final_migrate":
         bucket = next(v for v in BUCKET_MAP.values() if "corpus" in v)
-        non_corpus_buckets = {k: v for k, v in BUCKET_MAP.items() if "corpus" not in v}
+        non_corpus_buckets = {
+            k: v
+            for k, v in BUCKET_MAP.items()
+            if "corpus" not in v and k not in IGNORE_BUCKETS
+        }
         build_shas_db()
         futures = tqdm(queue_rhino_final(bucket))
         futures = tqdm(queue_lemur_final(non_corpus_buckets))
