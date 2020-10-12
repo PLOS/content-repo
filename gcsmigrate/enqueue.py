@@ -9,11 +9,14 @@ from tqdm import tqdm
 
 from shared import (
     future_waiter,
+    make_bucket_map,
     make_db_connection,
     make_generator_from_args,
     open_db,
     encode_json,
 )
+
+BUCKET_MAP = make_bucket_map(os.environ["BUCKETS"])
 
 TOPIC_ID = os.environ["TOPIC_ID"]
 GCP_PROJECT = os.environ["GCP_PROJECT"]
@@ -66,9 +69,8 @@ def queue_verify(mogile_file):
     return send_message(mogile_file, VERIFY)
 
 
-def queue_final_migrate():
-    """Queue up copies for the final migration step in pubsub."""
-    bucket_name = "corpus-dev-0242ac130003" # TODO un-hardcode
+def queue_rhino_final(bucket_name):
+    """Queue up copies for the rhino final migration step in pubsub."""
     connection = make_db_connection(os.environ["RHINO_DATABASE_URL"])
     sql = "SELECT doi, ingestionNumber, ingestedFileName, crepoUuid FROM articleFile JOIN articleIngestion ON articleFile.ingestionId = articleIngestion.ingestionId JOIN article ON articleIngestion.articleId = article.articleId;"
     bucket = GCS_CLIENT.bucket(bucket_name)
@@ -93,6 +95,29 @@ def queue_final_migrate():
             connection.close()
 
 
+def queue_lemur_final(buckets):
+    """Queue up copies for the lemur final migration step in pubsub."""
+    connection = make_db_connection(os.environ["CONTENTREPO_DATABASE_URL"])
+    try:
+        for crepo_bucket_name, gcs_bucket_name in buckets.items():
+            sql = "SELECT objkey, checksum FROM objects WHERE bucketId = (select bucketId from buckets where bucketName = %s);"
+            cursor = connection.cursor()
+            cursor.execute(sql, (crepo_bucket_name,))
+            row = cursor.fetchone()
+            while row:
+                (obj_key, sha) = row
+                to_key = f"{obj_key}"
+                json = {
+                    "bucket": gcs_bucket_name,
+                    "from_key": sha,
+                    "to_key": to_key,
+                }
+                yield CLIENT.publish(TOPIC_PATH, encode_json(json), action="copy")
+                row = cursor.fetchone()
+    finally:
+        connection.close()
+
+
 def main():
     """Enqueue mogile file jobs to SQS for processing in AWS lambda.
 
@@ -110,8 +135,11 @@ def main():
         generator = tqdm(make_generator_from_args(sys.argv[2:]))
         futures = (queue_migrate(mogile) for mogile in generator)
     elif action == "final_migrate":
+        bucket = next(v for v in BUCKET_MAP.values() if "corpus" in v)
+        non_corpus_buckets = {k: v for k, v in BUCKET_MAP.items() if "corpus" not in v}
         build_shas_db()
-        futures = tqdm(queue_final_migrate())
+        futures = tqdm(queue_rhino_final(bucket))
+        futures = tqdm(queue_lemur_final(non_corpus_buckets))
     else:
         raise Exception(f"Bad action: {action}.")
     # Evaluate all the futures using our future_waiter, which will
