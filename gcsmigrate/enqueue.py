@@ -99,11 +99,30 @@ def queue_rhino_final(bucket_name):
 def queue_lemur_final(buckets):
     """Queue up copies for the lemur final migration step in pubsub."""
     connection = make_db_connection(os.environ["CONTENTREPO_DATABASE_URL"])
+    cursor = connection.cursor()
     try:
         for crepo_bucket_name, gcs_bucket_name in buckets.items():
-            sql = "SELECT objkey, checksum FROM objects WHERE bucketId = (select bucketId from buckets where bucketName = %s);"
-            cursor = connection.cursor()
-            cursor.execute(sql, (crepo_bucket_name,))
+            cursor.execute(
+                "select bucketId from buckets where bucketName = %s",
+                (crepo_bucket_name,),
+            )
+            bucket_id = cursor.fetchone()[0]
+            sql = """
+SELECT objects.objKey,
+       checksum
+  FROM (
+        SELECT objKey,
+               MAX(versionNumber) AS latest
+          FROM objects
+         WHERE bucketId = %s
+         GROUP BY objKey
+       ) AS m
+ INNER JOIN objects
+    ON objects.objKey = m.objKey
+   AND objects.versionNumber = m.latest
+   AND objects.bucketId = %s
+"""
+            cursor.execute(sql, (bucket_id, bucket_id))
             row = cursor.fetchone()
             while row:
                 (obj_key, sha) = row
@@ -115,6 +134,7 @@ def queue_lemur_final(buckets):
                 }
                 yield CLIENT.publish(TOPIC_PATH, encode_json(json), action="copy")
                 row = cursor.fetchone()
+            cursor.close()
     finally:
         connection.close()
 
