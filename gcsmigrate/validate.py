@@ -1,5 +1,6 @@
 import argparse
 from datetime import datetime
+import logging
 import queue
 import requests
 from concurrent.futures.thread import ThreadPoolExecutor
@@ -11,6 +12,14 @@ from sqlalchemy.orm import sessionmaker
 from google.cloud import storage, bigquery
 
 from gbq import create_table
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 rowqueue = queue.Queue(maxsize=1000)
@@ -62,95 +71,110 @@ def main():
 def enqueue(host, port, user, password):
     engine = create_engine(f"mysql+pymysql://{user}:{password}@{host}:{port}/ambra")
     metadata = MetaData(engine)
-    ArticleFile = Table("articleFile", metadata, autoload=True)
     mksession = sessionmaker(bind=engine)
     session = mksession()
-    for row in session.query(ArticleFile).yield_per(1000):
-        rowqueue.put(row)
+
+    articleFile = Table("articleFile", metadata, autoload=True)
+    articleIngestion = Table("articleIngestion", metadata, autoload=True)
+    article = Table("article", metadata, autoload=True)
+
+    for row in (
+        session.query(articleFile, articleIngestion, article)
+        .join(
+            articleIngestion,
+            articleIngestion.columns.ingestionId == articleFile.columns.ingestionId,
+        )
+        .join(
+            article,
+            article.columns.articleId == articleIngestion.columns.articleId,
+        )
+        .yield_per(1000)
+    ):
+        rowqueue.put(row._asdict())
     rowqueue.put("DONE")
 
 
 def process_articleFile(row, project, bucket, crepo_host, gbq_client, gbq_table):
-    ambra_file = AmbraFile(
-        row.fileId,
-        row.ingestionId,
-        row.crepoKey,
-        row.crepoUuid,
-        row.fileSize,
-        row.ingestedFileName,
-        row.bucketName,
-        crepo_host,
-    )
-    url, params = ambra_file.crepo_url
+    articlefile = AmbraFile(row, crepo_host)
+    articlefile.gcs_bucket = bucket
+    url, params = articlefile.crepo_url
     response = requests.get(url, params=params)
     if response.status_code == 200:
-        print(f"found crepo object {row.crepoKey} in {row.bucketName}")
+        logger.debug(
+            f"found crepo object {articlefile.ambra_crepoKey} in {articlefile.ambra_bucketName}"
+        )
         crepo_object = response.json()
-        ambra_file.crepo_found = True
-        ambra_file.crepo_filesize = crepo_object["size"]
-        ambra_file.crepo_checksum = crepo_object["checksum"]
-        ambra_file.crepo_content_type = crepo_object["contentType"]
-        ambra_file.crepo_filename = crepo_object["downloadName"]
-        ambra_file.crepo_version = crepo_object["versionNumber"]
+        articlefile.crepo_found = True
+        for key, value in crepo_object.items():
+            if key in [
+                "size",
+                "checksum",
+                "contentType",
+                "downloadName",
+                "versionNumber",
+            ]:
+                key = f"crepo_{key}"
+                setattr(articlefile, key, value)
     else:
-        print(f"no crepo object {row.crepoKey} in {row.bucketName}")
+        logger.warning(f"no crepo object {row.crepoKey} in {row.bucketName}")
     try:
         gcs = storage.Client(project=project)
-        ambra_file.gcs_bucket = bucket
-        bucket = gcs.bucket(ambra_file.gcs_bucket)
-        path = ambra_file.gcs_key
+        bucket = gcs.bucket(articlefile.gcs_bucket)
+        path = articlefile.gcs_key
         blob = bucket.blob(path)
         if blob.exists():
-            print(f"found {ambra_file.gcs_key} in {ambra_file.gcs_bucket}")
-            ambra_file.gcs_found = True
+            logger.debug(f"found {articlefile.gcs_key} in {articlefile.gcs_bucket}")
+            articlefile.gcs_found = True
             blob.reload()
-            ambra_file.gcs_checksum = blob.md5_hash
-            ambra_file.gcs_filesize = blob.size
-            ambra_file.gcs_content_type = blob.content_type
+            articlefile.gcs_checksum = blob.md5_hash
+            articlefile.gcs_size = blob.size
+            articlefile.gcs_contentType = blob.content_type
         else:
-            print(f"blob not found: {ambra_file.gcs_key} in {ambra_file.gcs_bucket}")
+            logger.warning(
+                f"blob not found: {articlefile.gcs_key} in {articlefile.gcs_bucket}"
+            )
     except Exception as ex:
-        print(ex)
+        logger.error(ex)
     try:
-        errors = gbq_client.insert_rows_json(gbq_table, [ambra_file.serialize()])
+        errors = gbq_client.insert_rows_json(gbq_table, [articlefile.serialize()])
         if errors:
-            print(f"errors inserting into GBQ: {errors}")
+            logger.error(f"errors inserting into GBQ: {errors}")
     except Exception as ex:
-        print(f"{ex}")
+        logger.error(f"{ex}")
     return
 
 
 class AmbraFile:
-    def __init__(
-        self,
-        ambra_id,
-        ambra_ingestion,
-        ambra_crepokey,
-        ambra_crepo_uuid,
-        ambra_filesize,
-        ambra_filename,
-        ambra_bucket,
-        crepo_host,
-    ):
-        self.ambra_id = ambra_id
-        self.ambra_ingestion = ambra_ingestion
-        self.ambra_crepokey = ambra_crepokey
-        self.ambra_crepo_uuid = ambra_crepo_uuid
-        self.ambra_filesize = ambra_filesize
-        self.ambra_filename = ambra_filename
-        self.ambra_bucket = ambra_bucket
-        self.crepo_host = crepo_host
-        self.crepo_filesize = None
-        self.crepo_checksum = None
-        self.crepo_content_type = None
-        self.crepo_filename = None
-        self.crepo_version = None
+    def __init__(self, ambra_data, crepo_host):
+        for key, value in ambra_data.items():
+            if key in [
+                "articleId",
+                "articleType",
+                "bucketName",
+                "crepoKey",
+                "crepoUuid",
+                "doi",
+                "fileId",
+                "fileSize",
+                "fileType",
+                "ingestedFileName",
+                "ingestionId",
+                "ingestionNumber",
+            ]:
+                key = f"ambra_{key}"
+                setattr(self, key, value)
         self.crepo_found = False
-        self.gcs_bucket = None
-        self.gcs_filesize = None
-        self.gcs_checksum = None
-        self.gcs_content_type = None
+        self.crepo_host = crepo_host
+        self.crepo_size = None
+        self.crepo_checksum = None
+        self.crepo_contentType = None
+        self.crepo_downloadName = None
+        self.crepo_versionNumber = None
         self.gcs_found = False
+        self.gcs_bucket = None
+        self.gcs_size = None
+        self.gcs_checksum = None
+        self.gcs_contentType = None
 
     def serialize(self):
         serialized = {}
@@ -167,17 +191,17 @@ class AmbraFile:
 
     @property
     def crepo_url(self):
-        url = f"http://{self.crepo_host}:8002/v1/objects/{self.ambra_bucket}"
+        url = f"http://{self.crepo_host}:8002/v1/objects/{self.ambra_bucketName}"
         params = {
-            "key": self.ambra_crepokey,
-            "uuid": self.ambra_crepo_uuid,
+            "key": self.ambra_crepoKey,
+            "uuid": self.ambra_crepoUuid,
             "fetchMetadata": True,
         }
         return url, params
 
     @property
     def gcs_key(self):
-        return f"{self.ambra_crepokey}/{self.ambra_ingestion}/{self.ambra_filename}"
+        return f"{self.ambra_doi}/{self.ambra_ingestionNumber}/{self.ambra_ingestedFileName}"
 
 
 if __name__ == "__main__":
