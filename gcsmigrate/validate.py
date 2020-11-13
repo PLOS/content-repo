@@ -65,7 +65,7 @@ def enqueue(host, port, user, password):
     ArticleFile = Table("articleFile", metadata, autoload=True)
     mksession = sessionmaker(bind=engine)
     session = mksession()
-    for row in session.query(ArticleFile).yield_per(100):
+    for row in session.query(ArticleFile).yield_per(1000):
         rowqueue.put(row)
     rowqueue.put("DONE")
 
