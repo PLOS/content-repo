@@ -20,3 +20,16 @@ This folder contains code for migrating from Mogile to GCS.
 ```
 gcloud functions deploy main --region us-east1 --runtime python37 --trigger-topic=corpus-migration --project=plos-dev --vpc-connector=projects/plos-dev/locations/us-east1/connectors/plos-dev-vpc-acc-1 --max-instances=100 --env-vars-file=dev.env.yaml --timeout=360s --memory=1024MB
 ```
+
+### Validating
+
+Run `validate.py` to generate BigQuery data for validation analysis.
+
+```
+pipenv run python validate.py -H journals-prod1-db1.soma.plos.org -P 3306 \
+ -u ambra_ro -p ******** -C contentrepo-102.soma.plos.org \
+ -B corpus-dev-0242ac130003 -D articleValidation
+```
+
+This will create a timestamped table in the `articleValidation` dataset in
+BigQuery, which can be used to analyze content migration status.
