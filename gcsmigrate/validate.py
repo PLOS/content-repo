@@ -1,4 +1,5 @@
 import argparse
+import base64
 from datetime import datetime
 import logging
 import queue
@@ -126,7 +127,7 @@ def process_articleFile(row, project, bucket, crepo_host, gbq_client, gbq_table)
             logger.debug(f"found {articlefile.gcs_key} in {articlefile.gcs_bucket}")
             articlefile.gcs_found = True
             blob.reload()
-            articlefile.gcs_checksum = blob.md5_hash
+            articlefile.gcs_checksum = base64.b64decode(blob.md5_hash).hex()
             articlefile.gcs_size = blob.size
             articlefile.gcs_contentType = blob.content_type
         else:

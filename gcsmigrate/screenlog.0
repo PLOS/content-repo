@@ -1,0 +1,1540 @@
+[0;1;38;5;45m11-14[m [0;1;38;5;45m07:42:00[m [0;1;38;5;40mwryfi[0;1;38;5;40m@[0;1;38;5;40mthatguy[0;1;37m:[0;1;38;5;45m~/repos/plos/content-repo/gcsmigrate[m [0;1;38;5;40m>[m 0
+[0;1;38;5;45m11-14[m [0;1;38;5;45m07:42:00[m [0;1;38;5;40mwryfi[0;1;38;5;40m@[0;1;38;5;40mthatguy[0;1;37m:[0;1;38;5;45m~/repos/plos/content-repo/gcsmigrate[m [0;1;38;5;40m>[m 0pipenv run python validate.py -H journals-prod1-db1.soma.plos.org -P 3306 -u ambra_ro -p 58Zrf5vo -C contentrepo-102.soma.plos.org -B corpus-dev-0242ac130003 -D articleValidation
+Exception in thread Thread-1:
+Traceback (most recent call last):
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/pymysql/connections.py", line 571, in connect
+    **kwargs)
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/socket.py", line 707, in create_connection
+    for res in getaddrinfo(host, port, 0, SOCK_STREAM):
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/socket.py", line 752, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+socket.gaierror: [Errno 8] nodename nor servname provided, or not known
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/engine/base.py", line 2336, in _wrap_pool_connect
+    return fn()
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/base.py", line 364, in connect
+    return _ConnectionFairy._checkout(self)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/base.py", line 778, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/base.py", line 495, in checkout
+    rec = pool._do_get()
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/impl.py", line 140, in _do_get
+    self._dec_overflow()
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/util/langhelpers.py", line 70, in __exit__
+    with_traceback=exc_tb,
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/util/compat.py", line 182, in raise_
+    raise exception
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/impl.py", line 137, in _do_get
+    return self._create_connection()
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/base.py", line 309, in _create_connection
+    return _ConnectionRecord(self)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/base.py", line 440, in __init__
+    self.__connect(first_connect_check=True)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/base.py", line 661, in __connect
+    pool.logger.debug("Error on connect(): %s", e)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/util/langhelpers.py", line 70, in __exit__
+    with_traceback=exc_tb,
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/util/compat.py", line 182, in raise_
+    raise exception
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/base.py", line 656, in __connect
+    connection = pool._invoke_creator(self)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/engine/strategies.py", line 114, in connect
+    return dialect.connect(*cargs, **cparams)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/engine/default.py", line 493, in connect
+    return self.dbapi.connect(*cargs, **cparams)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/pymysql/__init__.py", line 94, in Connect
+    return Connection(*args, **kwargs)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/pymysql/connections.py", line 327, in __init__
+    self.connect()
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/pymysql/connections.py", line 619, in connect
+    raise exc
+pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on 'journals-prod1-db1.soma.plos.org' ([Errno 8] nodename nor servname provided, or not known)")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/threading.py", line 926, in _bootstrap_inner
+    self.run()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/threading.py", line 870, in run
+    self._target(*self._args, **self._kwargs)
+  File "validate.py", line 77, in enqueue
+    articleFile = Table("articleFile", metadata, autoload=True)
+  File "<string>", line 2, in __new__
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/util/deprecations.py", line 139, in warned
+    return fn(*args, **kwargs)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/sql/schema.py", line 560, in __new__
+    metadata._remove_table(name, schema)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/util/langhelpers.py", line 70, in __exit__
+    with_traceback=exc_tb,
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/util/compat.py", line 182, in raise_
+    raise exception
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/sql/schema.py", line 555, in __new__
+    table._init(name, metadata, *args, **kw)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/sql/schema.py", line 649, in _init
+    resolve_fks=resolve_fks,
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/sql/schema.py", line 690, in _autoload
+    _extend_on=_extend_on,
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/engine/base.py", line 2211, in run_callable
+    with self._contextual_connect() as conn:
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/engine/base.py", line 2302, in _contextual_connect
+    self._wrap_pool_connect(self.pool.connect, None),
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/engine/base.py", line 2340, in _wrap_pool_connect
+    e, dialect, self
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/engine/base.py", line 1584, in _handle_dbapi_exception_noconnection
+    sqlalchemy_exception, with_traceback=exc_info[2], from_=e
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/util/compat.py", line 182, in raise_
+    raise exception
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/engine/base.py", line 2336, in _wrap_pool_connect
+    return fn()
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/base.py", line 364, in connect
+    return _ConnectionFairy._checkout(self)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/base.py", line 778, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/base.py", line 495, in checkout
+    rec = pool._do_get()
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/impl.py", line 140, in _do_get
+    self._dec_overflow()
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/util/langhelpers.py", line 70, in __exit__
+    with_traceback=exc_tb,
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/util/compat.py", line 182, in raise_
+    raise exception
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/impl.py", line 137, in _do_get
+    return self._create_connection()
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/base.py", line 309, in _create_connection
+    return _ConnectionRecord(self)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/base.py", line 440, in __init__
+    self.__connect(first_connect_check=True)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/base.py", line 661, in __connect
+    pool.logger.debug("Error on connect(): %s", e)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/util/langhelpers.py", line 70, in __exit__
+    with_traceback=exc_tb,
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/util/compat.py", line 182, in raise_
+    raise exception
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/pool/base.py", line 656, in __connect
+    connection = pool._invoke_creator(self)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/engine/strategies.py", line 114, in connect
+    return dialect.connect(*cargs, **cparams)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/sqlalchemy/engine/default.py", line 493, in connect
+    return self.dbapi.connect(*cargs, **cparams)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/pymysql/__init__.py", line 94, in Connect
+    return Connection(*args, **kwargs)
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/pymysql/connections.py", line 327, in __init__
+    self.connect()
+  File "/Users/wryfi/.local/share/virtualenvs/gcsmigrate-2fYFFv-v/lib/python3.7/site-packages/pymysql/connections.py", line 619, in connect
+    raise exc
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (2003, "Can't connect to MySQL server on 'journals-prod1-db1.soma.plos.org' ([Errno 8] nodename nor servname provided, or not known)")
+(Background on this error at: http://sqlalche.me/e/13/e3q8)
+
+^CTraceback (most recent call last):
+  File "validate.py", line 208, in <module>
+    main()
+  File "validate.py", line 56, in main
+    row = rowqueue.get()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/queue.py", line 170, in get
+    self.not_empty.wait()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/threading.py", line 296, in wait
+    waiter.acquire()
+KeyboardInterrupt
+[0;1;38;5;45m11-14[m [0;1;38;5;45m07:42:17[m [0;1;38;5;40mwryfi[0;1;38;5;40m@[0;1;38;5;40mthatguy[0;1;37m:[0;1;38;5;45m~/repos/plos/content-repo/gcsmigrate[m [0;1;38;5;40m>[m 0pipenv run python validate.py -H journals-prod1-db1.soma.plos.org -P 3306 -u ambra_ro -p 58Zrf5vo -C contentrepo-102.soma.plos.org -B corpus-dev-0242ac130003 -D articleValidation
+2020-11-14 07:42:53,145 - DEBUG - found crepo object 10.1371/image.pbio.v01.i01.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:42:53,146 - DEBUG - found crepo object 10.1371/image.pbio.v01.i01.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:42:53,148 - DEBUG - found crepo object 10.1371/image.pbio.v01.i01.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:42:53,148 - DEBUG - found crepo object 10.1371/image.pbio.v01.i01.XML in mogilefs-prod-repo
+2020-11-14 07:42:53,151 - DEBUG - found crepo object 10.1371/image.pbio.v01.i01.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:42:54,647 - DEBUG - found 10.1371/image.pbio.v01.i01/1/image.pbio.v01.i01.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:42:54,650 - DEBUG - found 10.1371/image.pbio.v01.i01/1/image.pbio.v01.i01.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:42:54,651 - DEBUG - found 10.1371/image.pbio.v01.i01/1/image.pbio.v01.i01.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:42:54,653 - DEBUG - found 10.1371/image.pbio.v01.i01/1/image.pbio.v01.i01.xml in corpus-dev-0242ac130003
+2020-11-14 07:42:54,673 - DEBUG - found 10.1371/image.pbio.v01.i01/1/image.pbio.v01.i01.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:42:55,082 - DEBUG - found crepo object 10.1371/image.pbio.v01.i02.XML in mogilefs-prod-repo
+2020-11-14 07:42:55,083 - DEBUG - found crepo object 10.1371/image.pbio.v01.i01.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:42:55,090 - DEBUG - found crepo object 10.1371/image.pbio.v01.i02.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:42:55,094 - DEBUG - found crepo object 10.1371/image.pbio.v01.i02.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:42:55,101 - DEBUG - found crepo object 10.1371/image.pbio.v01.i02.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:42:56,533 - DEBUG - found 10.1371/image.pbio.v01.i02/1/image.pbio.v01.i02.xml in corpus-dev-0242ac130003
+2020-11-14 07:42:56,572 - DEBUG - found 10.1371/image.pbio.v01.i02/1/image.pbio.v01.i02.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:42:56,644 - DEBUG - found 10.1371/image.pbio.v01.i02/1/image.pbio.v01.i02.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:42:56,652 - DEBUG - found 10.1371/image.pbio.v01.i01/1/image.pbio.v01.i01.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:42:56,702 - DEBUG - found 10.1371/image.pbio.v01.i02/1/image.pbio.v01.i02.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:42:56,825 - DEBUG - found crepo object 10.1371/image.pbio.v01.i02.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:42:56,844 - DEBUG - found crepo object 10.1371/image.pbio.v01.i02.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:42:56,962 - DEBUG - found crepo object 10.1371/image.pbio.v01.i03.XML in mogilefs-prod-repo
+2020-11-14 07:42:56,973 - DEBUG - found crepo object 10.1371/image.pbio.v01.i03.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:42:56,996 - DEBUG - found crepo object 10.1371/image.pbio.v01.i03.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:42:58,298 - DEBUG - found 10.1371/image.pbio.v01.i02/1/image.pbio.v01.i02.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:42:58,301 - DEBUG - found 10.1371/image.pbio.v01.i02/1/image.pbio.v01.i02.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:42:58,350 - DEBUG - found 10.1371/image.pbio.v01.i03/1/image.pbio.v01.i03.xml in corpus-dev-0242ac130003
+2020-11-14 07:42:58,488 - DEBUG - found 10.1371/image.pbio.v01.i03/1/image.pbio.v01.i03.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:42:58,489 - DEBUG - found 10.1371/image.pbio.v01.i03/1/image.pbio.v01.i03.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:42:58,652 - DEBUG - found crepo object 10.1371/image.pbio.v01.i03.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:42:58,668 - DEBUG - found crepo object 10.1371/image.pbio.v01.i03.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:42:58,821 - DEBUG - found crepo object 10.1371/image.pbio.v01.i03.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:42:58,830 - DEBUG - found crepo object 10.1371/image.pbio.v02.i01.XML in mogilefs-prod-repo
+2020-11-14 07:42:58,832 - DEBUG - found crepo object 10.1371/image.pbio.v02.i01.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:00,708 - DEBUG - found 10.1371/image.pbio.v02.i01/1/image.pbio.v02.i01.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:00,709 - DEBUG - found 10.1371/image.pbio.v02.i01/1/image.pbio.v02.i01.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:00,709 - DEBUG - found 10.1371/image.pbio.v01.i03/1/image.pbio.v01.i03.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:00,710 - DEBUG - found 10.1371/image.pbio.v01.i03/1/image.pbio.v01.i03.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:00,713 - DEBUG - found 10.1371/image.pbio.v01.i03/1/image.pbio.v01.i03.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:01,249 - DEBUG - found crepo object 10.1371/image.pbio.v02.i01.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:01,252 - DEBUG - found crepo object 10.1371/image.pbio.v02.i01.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:01,252 - DEBUG - found crepo object 10.1371/image.pbio.v02.i01.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:01,253 - DEBUG - found crepo object 10.1371/image.pbio.v02.i01.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:01,267 - DEBUG - found crepo object 10.1371/image.pbio.v02.i02.XML in mogilefs-prod-repo
+2020-11-14 07:43:03,159 - DEBUG - found 10.1371/image.pbio.v02.i01/1/image.pbio.v02.i01.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:03,334 - DEBUG - found 10.1371/image.pbio.v02.i01/1/image.pbio.v02.i01.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:03,335 - DEBUG - found 10.1371/image.pbio.v02.i02/1/image.pbio.v02.i02.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:03,336 - DEBUG - found 10.1371/image.pbio.v02.i01/1/image.pbio.v02.i01.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:03,339 - DEBUG - found 10.1371/image.pbio.v02.i01/1/image.pbio.v02.i01.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:03,693 - DEBUG - found crepo object 10.1371/image.pbio.v02.i02.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:03,859 - DEBUG - found crepo object 10.1371/image.pbio.v02.i02.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:03,865 - DEBUG - found crepo object 10.1371/image.pbio.v02.i02.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:03,866 - DEBUG - found crepo object 10.1371/image.pbio.v02.i02.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:03,866 - DEBUG - found crepo object 10.1371/image.pbio.v02.i02.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:05,040 - DEBUG - found 10.1371/image.pbio.v02.i02/1/image.pbio.v02.i02.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:05,317 - DEBUG - found 10.1371/image.pbio.v02.i02/1/image.pbio.v02.i02.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:05,319 - DEBUG - found 10.1371/image.pbio.v02.i02/1/image.pbio.v02.i02.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:05,346 - DEBUG - found 10.1371/image.pbio.v02.i02/1/image.pbio.v02.i02.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:05,363 - DEBUG - found 10.1371/image.pbio.v02.i02/1/image.pbio.v02.i02.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:05,407 - DEBUG - found crepo object 10.1371/image.pbio.v02.i03.XML in mogilefs-prod-repo
+2020-11-14 07:43:05,593 - DEBUG - found crepo object 10.1371/image.pbio.v02.i03.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:05,608 - DEBUG - found crepo object 10.1371/image.pbio.v02.i03.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:05,636 - DEBUG - found crepo object 10.1371/image.pbio.v02.i03.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:05,638 - DEBUG - found crepo object 10.1371/image.pbio.v02.i03.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:07,099 - DEBUG - found 10.1371/image.pbio.v02.i03/1/image.pbio.v02.i03.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:07,204 - DEBUG - found 10.1371/image.pbio.v02.i03/1/image.pbio.v02.i03.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:07,205 - DEBUG - found 10.1371/image.pbio.v02.i03/1/image.pbio.v02.i03.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:07,206 - DEBUG - found 10.1371/image.pbio.v02.i03/1/image.pbio.v02.i03.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:07,211 - DEBUG - found 10.1371/image.pbio.v02.i03/1/image.pbio.v02.i03.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:07,401 - DEBUG - found crepo object 10.1371/image.pbio.v02.i03.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:07,461 - DEBUG - found crepo object 10.1371/image.pbio.v02.i04.XML in mogilefs-prod-repo
+2020-11-14 07:43:07,500 - DEBUG - found crepo object 10.1371/image.pbio.v02.i04.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:07,532 - DEBUG - found crepo object 10.1371/image.pbio.v02.i04.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:07,538 - DEBUG - found crepo object 10.1371/image.pbio.v02.i04.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:08,796 - DEBUG - found 10.1371/image.pbio.v02.i03/1/image.pbio.v02.i03.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:08,944 - DEBUG - found 10.1371/image.pbio.v02.i04/1/image.pbio.v02.i04.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:09,038 - DEBUG - found 10.1371/image.pbio.v02.i04/1/image.pbio.v02.i04.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:09,043 - DEBUG - found 10.1371/image.pbio.v02.i04/1/image.pbio.v02.i04.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:09,047 - DEBUG - found 10.1371/image.pbio.v02.i04/1/image.pbio.v02.i04.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:09,193 - DEBUG - found crepo object 10.1371/image.pbio.v02.i04.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:09,344 - DEBUG - found crepo object 10.1371/image.pbio.v02.i04.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:09,358 - DEBUG - found crepo object 10.1371/image.pbio.v02.i05.XML in mogilefs-prod-repo
+2020-11-14 07:43:09,373 - DEBUG - found crepo object 10.1371/image.pbio.v02.i05.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:09,412 - DEBUG - found crepo object 10.1371/image.pbio.v02.i05.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:10,674 - DEBUG - found 10.1371/image.pbio.v02.i04/1/image.pbio.v02.i04.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:10,966 - DEBUG - found crepo object 10.1371/image.pbio.v02.i05.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:10,996 - DEBUG - found 10.1371/image.pbio.v02.i05/1/image.pbio.v02.i05.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:11,008 - DEBUG - found 10.1371/image.pbio.v02.i04/1/image.pbio.v02.i04.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:11,035 - DEBUG - found 10.1371/image.pbio.v02.i05/1/image.pbio.v02.i05.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:11,087 - DEBUG - found 10.1371/image.pbio.v02.i05/1/image.pbio.v02.i05.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:11,296 - DEBUG - found crepo object 10.1371/image.pbio.v02.i05.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:11,301 - DEBUG - found crepo object 10.1371/image.pbio.v02.i05.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:11,390 - DEBUG - found crepo object 10.1371/image.pbio.v02.i06.XML in mogilefs-prod-repo
+2020-11-14 07:43:11,447 - DEBUG - found crepo object 10.1371/image.pbio.v02.i06.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:12,361 - DEBUG - found 10.1371/image.pbio.v02.i05/1/image.pbio.v02.i05.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:12,682 - DEBUG - found crepo object 10.1371/image.pbio.v02.i06.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:12,824 - DEBUG - found 10.1371/image.pbio.v02.i05/1/image.pbio.v02.i05.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:12,838 - DEBUG - found 10.1371/image.pbio.v02.i05/1/image.pbio.v02.i05.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:12,861 - DEBUG - found 10.1371/image.pbio.v02.i06/1/image.pbio.v02.i06.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:12,948 - DEBUG - found 10.1371/image.pbio.v02.i06/1/image.pbio.v02.i06.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:13,128 - DEBUG - found crepo object 10.1371/image.pbio.v02.i06.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:13,145 - DEBUG - found crepo object 10.1371/image.pbio.v02.i06.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:13,157 - DEBUG - found crepo object 10.1371/image.pbio.v02.i06.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:13,240 - DEBUG - found crepo object 10.1371/image.pbio.v02.i07.XML in mogilefs-prod-repo
+2020-11-14 07:43:14,378 - DEBUG - found 10.1371/image.pbio.v02.i06/1/image.pbio.v02.i06.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:14,580 - DEBUG - found 10.1371/image.pbio.v02.i06/1/image.pbio.v02.i06.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:14,584 - DEBUG - found 10.1371/image.pbio.v02.i06/1/image.pbio.v02.i06.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:14,625 - DEBUG - found 10.1371/image.pbio.v02.i06/1/image.pbio.v02.i06.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:14,681 - DEBUG - found crepo object 10.1371/image.pbio.v02.i07.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:14,712 - DEBUG - found 10.1371/image.pbio.v02.i07/1/image.pbio.v02.i07.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:14,883 - DEBUG - found crepo object 10.1371/image.pbio.v02.i07.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:14,884 - DEBUG - found crepo object 10.1371/image.pbio.v02.i07.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:14,900 - DEBUG - found crepo object 10.1371/image.pbio.v02.i07.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:15,014 - DEBUG - found crepo object 10.1371/image.pbio.v02.i07.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:16,110 - DEBUG - found 10.1371/image.pbio.v02.i07/1/image.pbio.v02.i07.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:16,391 - DEBUG - found 10.1371/image.pbio.v02.i07/1/image.pbio.v02.i07.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:16,393 - DEBUG - found 10.1371/image.pbio.v02.i07/1/image.pbio.v02.i07.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:16,436 - DEBUG - found crepo object 10.1371/image.pbio.v02.i08.XML in mogilefs-prod-repo
+2020-11-14 07:43:16,437 - DEBUG - found 10.1371/image.pbio.v02.i07/1/image.pbio.v02.i07.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:16,579 - DEBUG - found 10.1371/image.pbio.v02.i07/1/image.pbio.v02.i07.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:16,691 - DEBUG - found crepo object 10.1371/image.pbio.v02.i08.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:16,708 - DEBUG - found crepo object 10.1371/image.pbio.v02.i08.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:16,773 - DEBUG - found crepo object 10.1371/image.pbio.v02.i08.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:16,872 - DEBUG - found crepo object 10.1371/image.pbio.v02.i08.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:17,828 - DEBUG - found 10.1371/image.pbio.v02.i08/1/image.pbio.v02.i08.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:18,128 - DEBUG - found crepo object 10.1371/image.pbio.v02.i08.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:18,605 - DEBUG - found 10.1371/image.pbio.v02.i08/1/image.pbio.v02.i08.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:18,606 - DEBUG - found 10.1371/image.pbio.v02.i08/1/image.pbio.v02.i08.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:18,607 - DEBUG - found 10.1371/image.pbio.v02.i08/1/image.pbio.v02.i08.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:18,862 - DEBUG - found 10.1371/image.pbio.v02.i08/1/image.pbio.v02.i08.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:18,870 - DEBUG - found crepo object 10.1371/image.pbio.v02.i09.XML in mogilefs-prod-repo
+2020-11-14 07:43:18,901 - DEBUG - found crepo object 10.1371/image.pbio.v02.i09.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:18,958 - DEBUG - found crepo object 10.1371/image.pbio.v02.i09.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:19,175 - DEBUG - found crepo object 10.1371/image.pbio.v02.i09.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:19,257 - DEBUG - found 10.1371/image.pbio.v02.i08/1/image.pbio.v02.i08.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:19,569 - DEBUG - found crepo object 10.1371/image.pbio.v02.i09.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:20,424 - DEBUG - found 10.1371/image.pbio.v02.i09/1/image.pbio.v02.i09.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:20,425 - DEBUG - found 10.1371/image.pbio.v02.i09/1/image.pbio.v02.i09.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:20,499 - DEBUG - found 10.1371/image.pbio.v02.i09/1/image.pbio.v02.i09.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:20,643 - DEBUG - found 10.1371/image.pbio.v02.i09/1/image.pbio.v02.i09.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:20,722 - DEBUG - found crepo object 10.1371/image.pbio.v02.i09.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:20,730 - DEBUG - found crepo object 10.1371/image.pbio.v02.i10.XML in mogilefs-prod-repo
+2020-11-14 07:43:20,804 - DEBUG - found crepo object 10.1371/image.pbio.v02.i10.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:20,999 - DEBUG - found crepo object 10.1371/image.pbio.v02.i10.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:21,075 - DEBUG - found 10.1371/image.pbio.v02.i09/1/image.pbio.v02.i09.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:21,415 - DEBUG - found crepo object 10.1371/image.pbio.v02.i10.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:22,297 - DEBUG - found 10.1371/image.pbio.v02.i09/1/image.pbio.v02.i09.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:22,300 - DEBUG - found 10.1371/image.pbio.v02.i10/1/image.pbio.v02.i10.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:22,311 - DEBUG - found 10.1371/image.pbio.v02.i10/1/image.pbio.v02.i10.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:22,527 - DEBUG - found 10.1371/image.pbio.v02.i10/1/image.pbio.v02.i10.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:22,585 - DEBUG - found crepo object 10.1371/image.pbio.v02.i10.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:22,597 - DEBUG - found crepo object 10.1371/image.pbio.v02.i10.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:22,735 - DEBUG - found crepo object 10.1371/image.pbio.v02.i11.XML in mogilefs-prod-repo
+2020-11-14 07:43:22,785 - DEBUG - found crepo object 10.1371/image.pbio.v02.i11.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:22,832 - DEBUG - found 10.1371/image.pbio.v02.i10/1/image.pbio.v02.i10.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:23,173 - DEBUG - found crepo object 10.1371/image.pbio.v02.i11.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:24,660 - DEBUG - found 10.1371/image.pbio.v02.i11/1/image.pbio.v02.i11.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:24,662 - DEBUG - found 10.1371/image.pbio.v02.i10/1/image.pbio.v02.i10.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:24,663 - DEBUG - found 10.1371/image.pbio.v02.i10/1/image.pbio.v02.i10.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:24,670 - DEBUG - found 10.1371/image.pbio.v02.i11/1/image.pbio.v02.i11.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:24,675 - DEBUG - found 10.1371/image.pbio.v02.i11/1/image.pbio.v02.i11.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:24,905 - DEBUG - found crepo object 10.1371/image.pbio.v02.i11.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:24,923 - DEBUG - found crepo object 10.1371/image.pbio.v02.i11.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:24,925 - DEBUG - found crepo object 10.1371/image.pbio.v02.i11.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:24,947 - DEBUG - found crepo object 10.1371/image.pbio.v02.i12.XML in mogilefs-prod-repo
+2020-11-14 07:43:24,994 - DEBUG - found crepo object 10.1371/image.pbio.v02.i12.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:26,470 - DEBUG - found 10.1371/image.pbio.v02.i11/1/image.pbio.v02.i11.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:26,499 - DEBUG - found 10.1371/image.pbio.v02.i11/1/image.pbio.v02.i11.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:26,511 - DEBUG - found 10.1371/image.pbio.v02.i11/1/image.pbio.v02.i11.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:26,566 - DEBUG - found 10.1371/image.pbio.v02.i12/1/image.pbio.v02.i12.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:26,573 - DEBUG - found 10.1371/image.pbio.v02.i12/1/image.pbio.v02.i12.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:26,760 - DEBUG - found crepo object 10.1371/image.pbio.v02.i12.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:26,776 - DEBUG - found crepo object 10.1371/image.pbio.v02.i12.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:26,832 - DEBUG - found crepo object 10.1371/image.pbio.v02.i12.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:26,934 - DEBUG - found crepo object 10.1371/image.pbio.v02.i12.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:26,954 - DEBUG - found crepo object 10.1371/image.pbio.v03.i01.XML in mogilefs-prod-repo
+2020-11-14 07:43:28,332 - DEBUG - found 10.1371/image.pbio.v02.i12/1/image.pbio.v02.i12.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:28,341 - DEBUG - found 10.1371/image.pbio.v02.i12/1/image.pbio.v02.i12.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:28,494 - DEBUG - found 10.1371/image.pbio.v03.i01/1/image.pbio.v03.i01.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:28,494 - DEBUG - found 10.1371/image.pbio.v02.i12/1/image.pbio.v02.i12.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:28,515 - DEBUG - found 10.1371/image.pbio.v02.i12/1/image.pbio.v02.i12.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:28,619 - DEBUG - found crepo object 10.1371/image.pbio.v03.i01.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:28,631 - DEBUG - found crepo object 10.1371/image.pbio.v03.i01.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:28,891 - DEBUG - found crepo object 10.1371/image.pbio.v03.i01.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:28,893 - DEBUG - found crepo object 10.1371/image.pbio.v03.i01.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:28,894 - DEBUG - found crepo object 10.1371/image.pbio.v03.i01.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:30,078 - DEBUG - found 10.1371/image.pbio.v03.i01/1/image.pbio.v03.i01.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:30,104 - DEBUG - found 10.1371/image.pbio.v03.i01/1/image.pbio.v03.i01.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:30,339 - DEBUG - found crepo object 10.1371/image.pbio.v03.i02.XML in mogilefs-prod-repo
+2020-11-14 07:43:30,399 - DEBUG - found crepo object 10.1371/image.pbio.v03.i02.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:30,446 - DEBUG - found 10.1371/image.pbio.v03.i01/1/image.pbio.v03.i01.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:30,449 - DEBUG - found 10.1371/image.pbio.v03.i01/1/image.pbio.v03.i01.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:30,452 - DEBUG - found 10.1371/image.pbio.v03.i01/1/image.pbio.v03.i01.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:30,722 - DEBUG - found crepo object 10.1371/image.pbio.v03.i02.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:30,746 - DEBUG - found crepo object 10.1371/image.pbio.v03.i02.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:30,767 - DEBUG - found crepo object 10.1371/image.pbio.v03.i02.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:32,047 - DEBUG - found 10.1371/image.pbio.v03.i02/1/image.pbio.v03.i02.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:32,087 - DEBUG - found 10.1371/image.pbio.v03.i02/1/image.pbio.v03.i02.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:32,091 - DEBUG - found 10.1371/image.pbio.v03.i02/1/image.pbio.v03.i02.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:32,132 - DEBUG - found 10.1371/image.pbio.v03.i02/1/image.pbio.v03.i02.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:32,322 - DEBUG - found crepo object 10.1371/image.pbio.v03.i02.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:32,381 - DEBUG - found crepo object 10.1371/image.pbio.v03.i03.XML in mogilefs-prod-repo
+2020-11-14 07:43:32,404 - DEBUG - found crepo object 10.1371/image.pbio.v03.i03.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:32,559 - DEBUG - found crepo object 10.1371/image.pbio.v03.i03.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:32,903 - DEBUG - found 10.1371/image.pbio.v03.i02/1/image.pbio.v03.i02.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:33,235 - DEBUG - found crepo object 10.1371/image.pbio.v03.i03.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:33,822 - DEBUG - found 10.1371/image.pbio.v03.i02/1/image.pbio.v03.i02.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:33,900 - DEBUG - found 10.1371/image.pbio.v03.i03/1/image.pbio.v03.i03.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:33,979 - DEBUG - found 10.1371/image.pbio.v03.i03/1/image.pbio.v03.i03.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:34,021 - DEBUG - found 10.1371/image.pbio.v03.i03/1/image.pbio.v03.i03.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:34,181 - DEBUG - found crepo object 10.1371/image.pbio.v03.i03.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:34,197 - DEBUG - found crepo object 10.1371/image.pbio.v03.i03.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:34,336 - DEBUG - found crepo object 10.1371/image.pbio.v03.i04.XML in mogilefs-prod-repo
+2020-11-14 07:43:34,337 - DEBUG - found crepo object 10.1371/image.pbio.v03.i04.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:34,799 - DEBUG - found 10.1371/image.pbio.v03.i03/1/image.pbio.v03.i03.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:35,100 - DEBUG - found crepo object 10.1371/image.pbio.v03.i04.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:35,755 - DEBUG - found 10.1371/image.pbio.v03.i03/1/image.pbio.v03.i03.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:35,783 - DEBUG - found 10.1371/image.pbio.v03.i03/1/image.pbio.v03.i03.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:35,945 - DEBUG - found 10.1371/image.pbio.v03.i04/1/image.pbio.v03.i04.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:35,966 - DEBUG - found 10.1371/image.pbio.v03.i04/1/image.pbio.v03.i04.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:36,082 - DEBUG - found crepo object 10.1371/image.pbio.v03.i04.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:36,086 - DEBUG - found crepo object 10.1371/image.pbio.v03.i04.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:36,236 - DEBUG - found crepo object 10.1371/image.pbio.v03.i04.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:36,344 - DEBUG - found crepo object 10.1371/image.pbio.v03.i05.XML in mogilefs-prod-repo
+2020-11-14 07:43:36,743 - DEBUG - found 10.1371/image.pbio.v03.i04/1/image.pbio.v03.i04.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:37,101 - DEBUG - found crepo object 10.1371/image.pbio.v03.i05.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:37,767 - DEBUG - found 10.1371/image.pbio.v03.i04/1/image.pbio.v03.i04.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:37,767 - DEBUG - found 10.1371/image.pbio.v03.i04/1/image.pbio.v03.i04.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:37,845 - DEBUG - found 10.1371/image.pbio.v03.i04/1/image.pbio.v03.i04.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:37,947 - DEBUG - found 10.1371/image.pbio.v03.i05/1/image.pbio.v03.i05.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:38,102 - DEBUG - found crepo object 10.1371/image.pbio.v03.i05.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:38,102 - DEBUG - found crepo object 10.1371/image.pbio.v03.i05.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:38,163 - DEBUG - found crepo object 10.1371/image.pbio.v03.i05.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:38,273 - DEBUG - found crepo object 10.1371/image.pbio.v03.i05.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:38,557 - DEBUG - found 10.1371/image.pbio.v03.i05/1/image.pbio.v03.i05.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:38,927 - DEBUG - found crepo object 10.1371/image.pbio.v03.i06.XML in mogilefs-prod-repo
+2020-11-14 07:43:39,657 - DEBUG - found 10.1371/image.pbio.v03.i05/1/image.pbio.v03.i05.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:39,673 - DEBUG - found 10.1371/image.pbio.v03.i05/1/image.pbio.v03.i05.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:39,740 - DEBUG - found 10.1371/image.pbio.v03.i05/1/image.pbio.v03.i05.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:39,897 - DEBUG - found 10.1371/image.pbio.v03.i05/1/image.pbio.v03.i05.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:39,961 - DEBUG - found crepo object 10.1371/image.pbio.v03.i06.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:39,963 - DEBUG - found crepo object 10.1371/image.pbio.v03.i06.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:40,058 - DEBUG - found crepo object 10.1371/image.pbio.v03.i06.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:40,203 - DEBUG - found crepo object 10.1371/image.pbio.v03.i06.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:41,562 - DEBUG - found 10.1371/image.pbio.v03.i06/1/image.pbio.v03.i06.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:41,758 - DEBUG - found 10.1371/image.pbio.v03.i06/1/image.pbio.v03.i06.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:41,766 - DEBUG - found 10.1371/image.pbio.v03.i06/1/image.pbio.v03.i06.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:41,783 - DEBUG - found 10.1371/image.pbio.v03.i06/1/image.pbio.v03.i06.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:41,788 - DEBUG - found 10.1371/image.pbio.v03.i06/1/image.pbio.v03.i06.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:41,871 - DEBUG - found crepo object 10.1371/image.pbio.v03.i06.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:42,101 - DEBUG - found crepo object 10.1371/image.pbio.v03.i07.XML in mogilefs-prod-repo
+2020-11-14 07:43:42,104 - DEBUG - found crepo object 10.1371/image.pbio.v03.i07.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:42,138 - DEBUG - found crepo object 10.1371/image.pbio.v03.i07.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:42,145 - DEBUG - found crepo object 10.1371/image.pbio.v03.i07.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:43,422 - DEBUG - found 10.1371/image.pbio.v03.i06/1/image.pbio.v03.i06.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:43,667 - DEBUG - found 10.1371/image.pbio.v03.i07/1/image.pbio.v03.i07.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:43,672 - DEBUG - found 10.1371/image.pbio.v03.i07/1/image.pbio.v03.i07.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:43,678 - DEBUG - found 10.1371/image.pbio.v03.i07/1/image.pbio.v03.i07.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:43,751 - DEBUG - found 10.1371/image.pbio.v03.i07/1/image.pbio.v03.i07.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:43,789 - DEBUG - found crepo object 10.1371/image.pbio.v03.i07.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:43,941 - DEBUG - found crepo object 10.1371/image.pbio.v03.i07.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:43,944 - DEBUG - found crepo object 10.1371/image.pbio.v03.i08.XML in mogilefs-prod-repo
+2020-11-14 07:43:43,973 - DEBUG - found crepo object 10.1371/image.pbio.v03.i08.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:44,046 - DEBUG - found crepo object 10.1371/image.pbio.v03.i08.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:45,334 - DEBUG - found 10.1371/image.pbio.v03.i07/1/image.pbio.v03.i07.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:45,577 - DEBUG - found 10.1371/image.pbio.v03.i08/1/image.pbio.v03.i08.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:45,592 - DEBUG - found 10.1371/image.pbio.v03.i07/1/image.pbio.v03.i07.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:45,600 - DEBUG - found crepo object 10.1371/image.pbio.v03.i08.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:45,642 - DEBUG - found 10.1371/image.pbio.v03.i08/1/image.pbio.v03.i08.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:45,720 - DEBUG - found 10.1371/image.pbio.v03.i08/1/image.pbio.v03.i08.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:45,860 - DEBUG - found crepo object 10.1371/image.pbio.v03.i08.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:45,912 - DEBUG - found crepo object 10.1371/image.pbio.v03.i08.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:46,081 - DEBUG - found crepo object 10.1371/image.pbio.v03.i09.XML in mogilefs-prod-repo
+2020-11-14 07:43:46,084 - DEBUG - found crepo object 10.1371/image.pbio.v03.i09.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:47,378 - DEBUG - found 10.1371/image.pbio.v03.i08/1/image.pbio.v03.i08.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:47,694 - DEBUG - found crepo object 10.1371/image.pbio.v03.i09.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:47,777 - DEBUG - found 10.1371/image.pbio.v03.i08/1/image.pbio.v03.i08.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:47,788 - DEBUG - found 10.1371/image.pbio.v03.i08/1/image.pbio.v03.i08.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:47,969 - DEBUG - found 10.1371/image.pbio.v03.i09/1/image.pbio.v03.i09.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:47,971 - DEBUG - found 10.1371/image.pbio.v03.i09/1/image.pbio.v03.i09.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:48,119 - DEBUG - found crepo object 10.1371/image.pbio.v03.i09.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:48,140 - DEBUG - found crepo object 10.1371/image.pbio.v03.i09.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:48,284 - DEBUG - found crepo object 10.1371/image.pbio.v03.i09.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:48,287 - DEBUG - found crepo object 10.1371/image.pbio.v03.i10.XML in mogilefs-prod-repo
+2020-11-14 07:43:49,262 - DEBUG - found 10.1371/image.pbio.v03.i09/1/image.pbio.v03.i09.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:49,608 - DEBUG - found crepo object 10.1371/image.pbio.v03.i10.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:49,740 - DEBUG - found 10.1371/image.pbio.v03.i09/1/image.pbio.v03.i09.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:49,792 - DEBUG - found 10.1371/image.pbio.v03.i09/1/image.pbio.v03.i09.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:49,981 - DEBUG - found 10.1371/image.pbio.v03.i09/1/image.pbio.v03.i09.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:50,107 - DEBUG - found crepo object 10.1371/image.pbio.v03.i10.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:50,131 - DEBUG - found 10.1371/image.pbio.v03.i10/1/image.pbio.v03.i10.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:50,135 - DEBUG - found crepo object 10.1371/image.pbio.v03.i10.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:50,358 - DEBUG - found crepo object 10.1371/image.pbio.v03.i10.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:50,459 - DEBUG - found crepo object 10.1371/image.pbio.v03.i10.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:51,224 - DEBUG - found 10.1371/image.pbio.v03.i10/1/image.pbio.v03.i10.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:51,540 - DEBUG - found crepo object 10.1371/image.pbio.v03.i11.XML in mogilefs-prod-repo
+2020-11-14 07:43:51,817 - DEBUG - found 10.1371/image.pbio.v03.i10/1/image.pbio.v03.i10.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:51,893 - DEBUG - found 10.1371/image.pbio.v03.i10/1/image.pbio.v03.i10.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:52,166 - DEBUG - found crepo object 10.1371/image.pbio.v03.i11.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:52,190 - DEBUG - found 10.1371/image.pbio.v03.i10/1/image.pbio.v03.i10.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:52,236 - DEBUG - found 10.1371/image.pbio.v03.i10/1/image.pbio.v03.i10.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:52,254 - DEBUG - found crepo object 10.1371/image.pbio.v03.i11.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:52,508 - DEBUG - found crepo object 10.1371/image.pbio.v03.i11.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:52,554 - DEBUG - found crepo object 10.1371/image.pbio.v03.i11.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:54,386 - DEBUG - found 10.1371/image.pbio.v03.i11/1/image.pbio.v03.i11.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:54,388 - DEBUG - found 10.1371/image.pbio.v03.i11/1/image.pbio.v03.i11.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:54,390 - DEBUG - found 10.1371/image.pbio.v03.i11/1/image.pbio.v03.i11.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:54,395 - DEBUG - found 10.1371/image.pbio.v03.i11/1/image.pbio.v03.i11.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:54,407 - DEBUG - found 10.1371/image.pbio.v03.i11/1/image.pbio.v03.i11.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:54,692 - DEBUG - found crepo object 10.1371/image.pbio.v03.i11.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:54,715 - DEBUG - found crepo object 10.1371/image.pbio.v03.i12.XML in mogilefs-prod-repo
+2020-11-14 07:43:54,723 - DEBUG - found crepo object 10.1371/image.pbio.v03.i12.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:54,730 - DEBUG - found crepo object 10.1371/image.pbio.v03.i12.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:54,741 - DEBUG - found crepo object 10.1371/image.pbio.v03.i12.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:56,211 - DEBUG - found 10.1371/image.pbio.v03.i11/1/image.pbio.v03.i11.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:56,217 - DEBUG - found 10.1371/image.pbio.v03.i12/1/image.pbio.v03.i12.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:56,249 - DEBUG - found 10.1371/image.pbio.v03.i12/1/image.pbio.v03.i12.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:56,250 - DEBUG - found 10.1371/image.pbio.v03.i12/1/image.pbio.v03.i12.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:56,297 - DEBUG - found 10.1371/image.pbio.v03.i12/1/image.pbio.v03.i12.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:56,508 - DEBUG - found crepo object 10.1371/image.pbio.v03.i12.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:56,511 - DEBUG - found crepo object 10.1371/image.pbio.v03.i12.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:56,551 - DEBUG - found crepo object 10.1371/image.pbio.v04.i01.XML in mogilefs-prod-repo
+2020-11-14 07:43:56,599 - DEBUG - found crepo object 10.1371/image.pbio.v04.i01.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:56,623 - DEBUG - found crepo object 10.1371/image.pbio.v04.i01.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:43:57,967 - DEBUG - found 10.1371/image.pbio.v03.i12/1/image.pbio.v03.i12.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:43:58,113 - DEBUG - found 10.1371/image.pbio.v03.i12/1/image.pbio.v03.i12.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:58,134 - DEBUG - found 10.1371/image.pbio.v04.i01/1/image.pbio.v04.i01.xml in corpus-dev-0242ac130003
+2020-11-14 07:43:58,172 - DEBUG - found 10.1371/image.pbio.v04.i01/1/image.pbio.v04.i01.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:43:58,225 - DEBUG - found 10.1371/image.pbio.v04.i01/1/image.pbio.v04.i01.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:43:58,301 - DEBUG - found crepo object 10.1371/image.pbio.v04.i01.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:43:58,441 - DEBUG - found crepo object 10.1371/image.pbio.v04.i01.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:43:58,442 - DEBUG - found crepo object 10.1371/image.pbio.v04.i01.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:43:58,473 - DEBUG - found crepo object 10.1371/image.pbio.v04.i02.XML in mogilefs-prod-repo
+2020-11-14 07:43:58,589 - DEBUG - found crepo object 10.1371/image.pbio.v04.i02.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:43:59,740 - DEBUG - found 10.1371/image.pbio.v04.i01/1/image.pbio.v04.i01.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:43:59,984 - DEBUG - found 10.1371/image.pbio.v04.i01/1/image.pbio.v04.i01.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:43:59,989 - DEBUG - found 10.1371/image.pbio.v04.i01/1/image.pbio.v04.i01.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:00,053 - DEBUG - found 10.1371/image.pbio.v04.i02/1/image.pbio.v04.i02.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:00,109 - DEBUG - found crepo object 10.1371/image.pbio.v04.i02.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:00,162 - DEBUG - found 10.1371/image.pbio.v04.i02/1/image.pbio.v04.i02.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:00,296 - DEBUG - found crepo object 10.1371/image.pbio.v04.i02.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:00,521 - DEBUG - found crepo object 10.1371/image.pbio.v04.i02.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:00,794 - DEBUG - found crepo object 10.1371/image.pbio.v04.i02.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:00,887 - DEBUG - found crepo object 10.1371/image.pbio.v04.i03.XML in mogilefs-prod-repo
+2020-11-14 07:44:02,139 - DEBUG - found 10.1371/image.pbio.v04.i02/1/image.pbio.v04.i02.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:02,498 - DEBUG - found 10.1371/image.pbio.v04.i02/1/image.pbio.v04.i02.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:02,503 - DEBUG - found 10.1371/image.pbio.v04.i02/1/image.pbio.v04.i02.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:02,694 - DEBUG - found crepo object 10.1371/image.pbio.v04.i03.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:03,173 - DEBUG - found 10.1371/image.pbio.v04.i02/1/image.pbio.v04.i02.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:03,176 - DEBUG - found crepo object 10.1371/image.pbio.v04.i03.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:03,178 - DEBUG - found crepo object 10.1371/image.pbio.v04.i03.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:03,180 - DEBUG - found 10.1371/image.pbio.v04.i03/1/image.pbio.v04.i03.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:03,895 - DEBUG - found crepo object 10.1371/image.pbio.v04.i03.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:03,895 - DEBUG - found crepo object 10.1371/image.pbio.v04.i03.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:04,507 - DEBUG - found 10.1371/image.pbio.v04.i03/1/image.pbio.v04.i03.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:04,651 - DEBUG - found 10.1371/image.pbio.v04.i03/1/image.pbio.v04.i03.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:04,662 - DEBUG - found 10.1371/image.pbio.v04.i03/1/image.pbio.v04.i03.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:04,837 - DEBUG - found crepo object 10.1371/image.pbio.v04.i04.XML in mogilefs-prod-repo
+2020-11-14 07:44:05,021 - DEBUG - found crepo object 10.1371/image.pbio.v04.i04.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:05,025 - DEBUG - found crepo object 10.1371/image.pbio.v04.i04.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:05,163 - DEBUG - found 10.1371/image.pbio.v04.i03/1/image.pbio.v04.i03.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:05,182 - DEBUG - found 10.1371/image.pbio.v04.i03/1/image.pbio.v04.i03.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:05,422 - DEBUG - found crepo object 10.1371/image.pbio.v04.i04.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:05,489 - DEBUG - found crepo object 10.1371/image.pbio.v04.i04.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:06,335 - DEBUG - found 10.1371/image.pbio.v04.i04/1/image.pbio.v04.i04.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:06,560 - DEBUG - found 10.1371/image.pbio.v04.i04/1/image.pbio.v04.i04.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:06,583 - DEBUG - found 10.1371/image.pbio.v04.i04/1/image.pbio.v04.i04.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:06,644 - DEBUG - found crepo object 10.1371/image.pbio.v04.i04.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:06,837 - DEBUG - found crepo object 10.1371/image.pbio.v04.i05.XML in mogilefs-prod-repo
+2020-11-14 07:44:06,869 - DEBUG - found crepo object 10.1371/image.pbio.v04.i05.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:06,949 - DEBUG - found 10.1371/image.pbio.v04.i04/1/image.pbio.v04.i04.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:07,086 - DEBUG - found 10.1371/image.pbio.v04.i04/1/image.pbio.v04.i04.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:07,229 - DEBUG - found crepo object 10.1371/image.pbio.v04.i05.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:07,370 - DEBUG - found crepo object 10.1371/image.pbio.v04.i05.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:08,090 - DEBUG - found 10.1371/image.pbio.v04.i04/1/image.pbio.v04.i04.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:09,421 - DEBUG - found 10.1371/image.pbio.v04.i05/1/image.pbio.v04.i05.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:09,425 - DEBUG - found 10.1371/image.pbio.v04.i05/1/image.pbio.v04.i05.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:09,710 - DEBUG - found crepo object 10.1371/image.pbio.v04.i05.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:09,825 - DEBUG - found crepo object 10.1371/image.pbio.v04.i05.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:09,851 - DEBUG - found crepo object 10.1371/image.pbio.v04.i06.XML in mogilefs-prod-repo
+2020-11-14 07:44:09,858 - DEBUG - found 10.1371/image.pbio.v04.i05/1/image.pbio.v04.i05.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:09,886 - DEBUG - found 10.1371/image.pbio.v04.i05/1/image.pbio.v04.i05.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:10,190 - DEBUG - found crepo object 10.1371/image.pbio.v04.i06.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:10,205 - DEBUG - found crepo object 10.1371/image.pbio.v04.i06.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:11,024 - DEBUG - found 10.1371/image.pbio.v04.i05/1/image.pbio.v04.i05.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:11,145 - DEBUG - found 10.1371/image.pbio.v04.i05/1/image.pbio.v04.i05.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:11,269 - DEBUG - found 10.1371/image.pbio.v04.i06/1/image.pbio.v04.i06.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:11,299 - DEBUG - found crepo object 10.1371/image.pbio.v04.i06.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:11,404 - DEBUG - found crepo object 10.1371/image.pbio.v04.i06.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:11,551 - DEBUG - found crepo object 10.1371/image.pbio.v04.i06.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:11,716 - DEBUG - found 10.1371/image.pbio.v04.i06/1/image.pbio.v04.i06.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:11,756 - DEBUG - found 10.1371/image.pbio.v04.i06/1/image.pbio.v04.i06.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:11,988 - DEBUG - found crepo object 10.1371/image.pbio.v04.i07.XML in mogilefs-prod-repo
+2020-11-14 07:44:12,063 - DEBUG - found crepo object 10.1371/image.pbio.v04.i07.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:12,840 - DEBUG - found 10.1371/image.pbio.v04.i06/1/image.pbio.v04.i06.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:12,931 - DEBUG - found 10.1371/image.pbio.v04.i06/1/image.pbio.v04.i06.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:13,026 - DEBUG - found 10.1371/image.pbio.v04.i06/1/image.pbio.v04.i06.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:13,161 - DEBUG - found crepo object 10.1371/image.pbio.v04.i07.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:13,161 - DEBUG - found crepo object 10.1371/image.pbio.v04.i07.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:13,340 - DEBUG - found crepo object 10.1371/image.pbio.v04.i07.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:13,450 - DEBUG - found 10.1371/image.pbio.v04.i07/1/image.pbio.v04.i07.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:13,475 - DEBUG - found 10.1371/image.pbio.v04.i07/1/image.pbio.v04.i07.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:13,726 - DEBUG - found crepo object 10.1371/image.pbio.v04.i07.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:14,032 - DEBUG - found crepo object 10.1371/image.pbio.v04.i08.XML in mogilefs-prod-repo
+2020-11-14 07:44:14,661 - DEBUG - found 10.1371/image.pbio.v04.i07/1/image.pbio.v04.i07.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:14,662 - DEBUG - found 10.1371/image.pbio.v04.i07/1/image.pbio.v04.i07.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:14,811 - DEBUG - found 10.1371/image.pbio.v04.i07/1/image.pbio.v04.i07.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:14,994 - DEBUG - found crepo object 10.1371/image.pbio.v04.i08.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:14,995 - DEBUG - found crepo object 10.1371/image.pbio.v04.i08.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:15,089 - DEBUG - found crepo object 10.1371/image.pbio.v04.i08.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:15,183 - DEBUG - found 10.1371/image.pbio.v04.i07/1/image.pbio.v04.i07.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:15,563 - DEBUG - found 10.1371/image.pbio.v04.i08/1/image.pbio.v04.i08.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:15,596 - DEBUG - found crepo object 10.1371/image.pbio.v04.i08.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:15,858 - DEBUG - found crepo object 10.1371/image.pbio.v04.i08.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:16,589 - DEBUG - found 10.1371/image.pbio.v04.i08/1/image.pbio.v04.i08.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:16,627 - DEBUG - found 10.1371/image.pbio.v04.i08/1/image.pbio.v04.i08.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:16,685 - DEBUG - found 10.1371/image.pbio.v04.i08/1/image.pbio.v04.i08.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:16,909 - DEBUG - found crepo object 10.1371/image.pbio.v04.i09.XML in mogilefs-prod-repo
+2020-11-14 07:44:16,927 - DEBUG - found crepo object 10.1371/image.pbio.v04.i09.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:16,996 - DEBUG - found crepo object 10.1371/image.pbio.v04.i09.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:17,269 - DEBUG - found 10.1371/image.pbio.v04.i08/1/image.pbio.v04.i08.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:17,561 - DEBUG - found 10.1371/image.pbio.v04.i08/1/image.pbio.v04.i08.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:17,588 - DEBUG - found crepo object 10.1371/image.pbio.v04.i09.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:17,841 - DEBUG - found crepo object 10.1371/image.pbio.v04.i09.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:18,492 - DEBUG - found 10.1371/image.pbio.v04.i09/1/image.pbio.v04.i09.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:18,523 - DEBUG - found 10.1371/image.pbio.v04.i09/1/image.pbio.v04.i09.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:18,558 - DEBUG - found 10.1371/image.pbio.v04.i09/1/image.pbio.v04.i09.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:18,806 - DEBUG - found crepo object 10.1371/image.pbio.v04.i09.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:18,825 - DEBUG - found crepo object 10.1371/image.pbio.v04.i10.XML in mogilefs-prod-repo
+2020-11-14 07:44:18,886 - DEBUG - found crepo object 10.1371/image.pbio.v04.i10.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:19,098 - DEBUG - found 10.1371/image.pbio.v04.i09/1/image.pbio.v04.i09.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:19,414 - DEBUG - found 10.1371/image.pbio.v04.i09/1/image.pbio.v04.i09.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:19,484 - DEBUG - found crepo object 10.1371/image.pbio.v04.i10.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:19,720 - DEBUG - found crepo object 10.1371/image.pbio.v04.i10.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:20,356 - DEBUG - found 10.1371/image.pbio.v04.i09/1/image.pbio.v04.i09.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:20,422 - DEBUG - found 10.1371/image.pbio.v04.i10/1/image.pbio.v04.i10.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:20,445 - DEBUG - found 10.1371/image.pbio.v04.i10/1/image.pbio.v04.i10.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:20,639 - DEBUG - found crepo object 10.1371/image.pbio.v04.i10.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:20,721 - DEBUG - found crepo object 10.1371/image.pbio.v04.i10.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:20,739 - DEBUG - found crepo object 10.1371/image.pbio.v04.i11.XML in mogilefs-prod-repo
+2020-11-14 07:44:20,994 - DEBUG - found 10.1371/image.pbio.v04.i10/1/image.pbio.v04.i10.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:21,198 - DEBUG - found 10.1371/image.pbio.v04.i10/1/image.pbio.v04.i10.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:21,279 - DEBUG - found crepo object 10.1371/image.pbio.v04.i11.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:21,483 - DEBUG - found crepo object 10.1371/image.pbio.v04.i11.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:22,278 - DEBUG - found 10.1371/image.pbio.v04.i10/1/image.pbio.v04.i10.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:22,284 - DEBUG - found 10.1371/image.pbio.v04.i10/1/image.pbio.v04.i10.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:22,311 - DEBUG - found 10.1371/image.pbio.v04.i11/1/image.pbio.v04.i11.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:22,569 - DEBUG - found crepo object 10.1371/image.pbio.v04.i11.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:22,619 - DEBUG - found crepo object 10.1371/image.pbio.v04.i11.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:22,646 - DEBUG - found crepo object 10.1371/image.pbio.v04.i11.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:22,830 - DEBUG - found 10.1371/image.pbio.v04.i11/1/image.pbio.v04.i11.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:23,097 - DEBUG - found 10.1371/image.pbio.v04.i11/1/image.pbio.v04.i11.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:23,212 - DEBUG - found crepo object 10.1371/image.pbio.v04.i12.XML in mogilefs-prod-repo
+2020-11-14 07:44:23,421 - DEBUG - found crepo object 10.1371/image.pbio.v04.i12.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:24,046 - DEBUG - found 10.1371/image.pbio.v04.i11/1/image.pbio.v04.i11.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:24,083 - DEBUG - found 10.1371/image.pbio.v04.i11/1/image.pbio.v04.i11.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:24,159 - DEBUG - found 10.1371/image.pbio.v04.i11/1/image.pbio.v04.i11.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:24,354 - DEBUG - found crepo object 10.1371/image.pbio.v04.i12.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:24,415 - DEBUG - found crepo object 10.1371/image.pbio.v04.i12.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:24,716 - DEBUG - found crepo object 10.1371/image.pbio.v04.i12.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:24,759 - DEBUG - found 10.1371/image.pbio.v04.i12/1/image.pbio.v04.i12.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:24,936 - DEBUG - found 10.1371/image.pbio.v04.i12/1/image.pbio.v04.i12.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:25,000 - DEBUG - found crepo object 10.1371/image.pbio.v04.i12.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:26,822 - DEBUG - found crepo object 10.1371/image.pbio.v05.i01.XML in mogilefs-prod-repo
+2020-11-14 07:44:27,293 - DEBUG - found 10.1371/image.pbio.v04.i12/1/image.pbio.v04.i12.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:27,305 - DEBUG - found 10.1371/image.pbio.v04.i12/1/image.pbio.v04.i12.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:27,314 - DEBUG - found 10.1371/image.pbio.v04.i12/1/image.pbio.v04.i12.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:27,315 - DEBUG - found 10.1371/image.pbio.v04.i12/1/image.pbio.v04.i12.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:27,562 - DEBUG - found crepo object 10.1371/image.pbio.v05.i01.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:27,565 - DEBUG - found crepo object 10.1371/image.pbio.v05.i01.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:27,592 - DEBUG - found crepo object 10.1371/image.pbio.v05.i01.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:27,617 - DEBUG - found crepo object 10.1371/image.pbio.v05.i01.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:28,001 - DEBUG - found 10.1371/image.pbio.v05.i01/1/image.pbio.v05.i01.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:28,308 - DEBUG - found crepo object 10.1371/image.pbio.v05.i01.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:29,017 - DEBUG - found 10.1371/image.pbio.v05.i01/1/image.pbio.v05.i01.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:29,039 - DEBUG - found 10.1371/image.pbio.v05.i01/1/image.pbio.v05.i01.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:29,041 - DEBUG - found 10.1371/image.pbio.v05.i01/1/image.pbio.v05.i01.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:29,044 - DEBUG - found 10.1371/image.pbio.v05.i01/1/image.pbio.v05.i01.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:29,279 - DEBUG - found crepo object 10.1371/image.pbio.v05.i02.XML in mogilefs-prod-repo
+2020-11-14 07:44:29,297 - DEBUG - found crepo object 10.1371/image.pbio.v05.i02.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:29,398 - DEBUG - found crepo object 10.1371/image.pbio.v05.i02.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:29,410 - DEBUG - found crepo object 10.1371/image.pbio.v05.i02.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:29,838 - DEBUG - found 10.1371/image.pbio.v05.i01/1/image.pbio.v05.i01.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:30,169 - DEBUG - found crepo object 10.1371/image.pbio.v05.i02.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:30,735 - DEBUG - found 10.1371/image.pbio.v05.i02/1/image.pbio.v05.i02.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:30,755 - DEBUG - found 10.1371/image.pbio.v05.i02/1/image.pbio.v05.i02.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:30,885 - DEBUG - found 10.1371/image.pbio.v05.i02/1/image.pbio.v05.i02.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:30,915 - DEBUG - found 10.1371/image.pbio.v05.i02/1/image.pbio.v05.i02.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:31,054 - DEBUG - found crepo object 10.1371/image.pbio.v05.i02.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:31,054 - DEBUG - found crepo object 10.1371/image.pbio.v05.i03.XML in mogilefs-prod-repo
+2020-11-14 07:44:31,173 - DEBUG - found crepo object 10.1371/image.pbio.v05.i03.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:31,173 - DEBUG - found crepo object 10.1371/image.pbio.v05.i03.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:31,729 - DEBUG - found 10.1371/image.pbio.v05.i02/1/image.pbio.v05.i02.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:32,023 - DEBUG - found crepo object 10.1371/image.pbio.v05.i03.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:32,591 - DEBUG - found 10.1371/image.pbio.v05.i02/1/image.pbio.v05.i02.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:32,595 - DEBUG - found 10.1371/image.pbio.v05.i03/1/image.pbio.v05.i03.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:32,676 - DEBUG - found 10.1371/image.pbio.v05.i03/1/image.pbio.v05.i03.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:32,678 - DEBUG - found 10.1371/image.pbio.v05.i03/1/image.pbio.v05.i03.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:32,923 - DEBUG - found crepo object 10.1371/image.pbio.v05.i03.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:32,924 - DEBUG - found crepo object 10.1371/image.pbio.v05.i03.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:32,984 - DEBUG - found crepo object 10.1371/image.pbio.v05.i04.XML in mogilefs-prod-repo
+2020-11-14 07:44:33,004 - DEBUG - found crepo object 10.1371/image.pbio.v05.i04.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:33,403 - DEBUG - found 10.1371/image.pbio.v05.i03/1/image.pbio.v05.i03.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:33,732 - DEBUG - found crepo object 10.1371/image.pbio.v05.i04.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:34,436 - DEBUG - found 10.1371/image.pbio.v05.i03/1/image.pbio.v05.i03.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:34,461 - DEBUG - found 10.1371/image.pbio.v05.i03/1/image.pbio.v05.i03.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:34,494 - DEBUG - found 10.1371/image.pbio.v05.i04/1/image.pbio.v05.i04.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:34,507 - DEBUG - found 10.1371/image.pbio.v05.i04/1/image.pbio.v05.i04.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:34,715 - DEBUG - found crepo object 10.1371/image.pbio.v05.i04.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:34,740 - DEBUG - found crepo object 10.1371/image.pbio.v05.i04.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:34,763 - DEBUG - found crepo object 10.1371/image.pbio.v05.i04.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:34,831 - DEBUG - found crepo object 10.1371/image.pbio.v05.i05.XML in mogilefs-prod-repo
+2020-11-14 07:44:35,312 - DEBUG - found 10.1371/image.pbio.v05.i04/1/image.pbio.v05.i04.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:35,622 - DEBUG - found crepo object 10.1371/image.pbio.v05.i05.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:36,338 - DEBUG - found 10.1371/image.pbio.v05.i04/1/image.pbio.v05.i04.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:36,342 - DEBUG - found 10.1371/image.pbio.v05.i04/1/image.pbio.v05.i04.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:36,366 - DEBUG - found 10.1371/image.pbio.v05.i04/1/image.pbio.v05.i04.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:36,444 - DEBUG - found 10.1371/image.pbio.v05.i05/1/image.pbio.v05.i05.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:36,665 - DEBUG - found crepo object 10.1371/image.pbio.v05.i05.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:36,690 - DEBUG - found crepo object 10.1371/image.pbio.v05.i05.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:36,704 - DEBUG - found crepo object 10.1371/image.pbio.v05.i05.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:36,708 - DEBUG - found crepo object 10.1371/image.pbio.v05.i05.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:37,330 - DEBUG - found 10.1371/image.pbio.v05.i05/1/image.pbio.v05.i05.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:37,695 - DEBUG - found crepo object 10.1371/image.pbio.v05.i06.XML in mogilefs-prod-repo
+2020-11-14 07:44:38,317 - DEBUG - found 10.1371/image.pbio.v05.i05/1/image.pbio.v05.i05.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:38,335 - DEBUG - found 10.1371/image.pbio.v05.i05/1/image.pbio.v05.i05.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:38,339 - DEBUG - found 10.1371/image.pbio.v05.i05/1/image.pbio.v05.i05.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:38,339 - DEBUG - found 10.1371/image.pbio.v05.i05/1/image.pbio.v05.i05.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:38,596 - DEBUG - found crepo object 10.1371/image.pbio.v05.i06.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:38,596 - DEBUG - found crepo object 10.1371/image.pbio.v05.i06.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:38,618 - DEBUG - found crepo object 10.1371/image.pbio.v05.i06.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:38,687 - DEBUG - found crepo object 10.1371/image.pbio.v05.i06.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:39,140 - DEBUG - found 10.1371/image.pbio.v05.i06/1/image.pbio.v05.i06.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:39,480 - DEBUG - found crepo object 10.1371/image.pbio.v05.i06.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:40,124 - DEBUG - found 10.1371/image.pbio.v05.i06/1/image.pbio.v05.i06.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:40,154 - DEBUG - found 10.1371/image.pbio.v05.i06/1/image.pbio.v05.i06.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:40,155 - DEBUG - found 10.1371/image.pbio.v05.i06/1/image.pbio.v05.i06.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:40,230 - DEBUG - found 10.1371/image.pbio.v05.i06/1/image.pbio.v05.i06.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:40,411 - DEBUG - found crepo object 10.1371/image.pbio.v05.i07.XML in mogilefs-prod-repo
+2020-11-14 07:44:40,445 - DEBUG - found crepo object 10.1371/image.pbio.v05.i07.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:40,468 - DEBUG - found crepo object 10.1371/image.pbio.v05.i07.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:40,578 - DEBUG - found crepo object 10.1371/image.pbio.v05.i07.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:41,015 - DEBUG - found 10.1371/image.pbio.v05.i06/1/image.pbio.v05.i06.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:41,283 - DEBUG - found crepo object 10.1371/image.pbio.v05.i07.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:42,051 - DEBUG - found 10.1371/image.pbio.v05.i07/1/image.pbio.v05.i07.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:42,062 - DEBUG - found 10.1371/image.pbio.v05.i07/1/image.pbio.v05.i07.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:42,085 - DEBUG - found 10.1371/image.pbio.v05.i07/1/image.pbio.v05.i07.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:42,138 - DEBUG - found 10.1371/image.pbio.v05.i07/1/image.pbio.v05.i07.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:42,394 - DEBUG - found crepo object 10.1371/image.pbio.v05.i07.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:42,396 - DEBUG - found crepo object 10.1371/image.pbio.v05.i08.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:42,397 - DEBUG - found crepo object 10.1371/image.pbio.v05.i08.XML in mogilefs-prod-repo
+2020-11-14 07:44:42,401 - DEBUG - found crepo object 10.1371/image.pbio.v05.i08.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:42,772 - DEBUG - found 10.1371/image.pbio.v05.i07/1/image.pbio.v05.i07.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:43,142 - DEBUG - found crepo object 10.1371/image.pbio.v05.i08.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:43,920 - DEBUG - found 10.1371/image.pbio.v05.i08/1/image.pbio.v05.i08.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:43,940 - DEBUG - found 10.1371/image.pbio.v05.i07/1/image.pbio.v05.i07.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:43,942 - DEBUG - found 10.1371/image.pbio.v05.i08/1/image.pbio.v05.i08.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:43,945 - DEBUG - found 10.1371/image.pbio.v05.i08/1/image.pbio.v05.i08.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:44,179 - DEBUG - found crepo object 10.1371/image.pbio.v05.i08.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:44,245 - DEBUG - found crepo object 10.1371/image.pbio.v05.i08.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:44,265 - DEBUG - found crepo object 10.1371/image.pbio.v05.i09.XML in mogilefs-prod-repo
+2020-11-14 07:44:44,356 - DEBUG - found crepo object 10.1371/image.pbio.v05.i09.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:44,643 - DEBUG - found 10.1371/image.pbio.v05.i08/1/image.pbio.v05.i08.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:44,962 - DEBUG - found crepo object 10.1371/image.pbio.v05.i09.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:47,569 - DEBUG - found 10.1371/image.pbio.v05.i09/1/image.pbio.v05.i09.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:47,572 - DEBUG - found 10.1371/image.pbio.v05.i08/1/image.pbio.v05.i08.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:47,577 - DEBUG - found 10.1371/image.pbio.v05.i08/1/image.pbio.v05.i08.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:47,582 - DEBUG - found 10.1371/image.pbio.v05.i09/1/image.pbio.v05.i09.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:47,587 - DEBUG - found 10.1371/image.pbio.v05.i09/1/image.pbio.v05.i09.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:47,859 - DEBUG - found crepo object 10.1371/image.pbio.v05.i09.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:47,895 - DEBUG - found crepo object 10.1371/image.pbio.v05.i09.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:47,935 - DEBUG - found crepo object 10.1371/image.pbio.v05.i09.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:47,937 - DEBUG - found crepo object 10.1371/image.pbio.v05.i10.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:47,940 - DEBUG - found crepo object 10.1371/image.pbio.v05.i10.XML in mogilefs-prod-repo
+2020-11-14 07:44:49,311 - DEBUG - found 10.1371/image.pbio.v05.i09/1/image.pbio.v05.i09.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:49,359 - DEBUG - found 10.1371/image.pbio.v05.i09/1/image.pbio.v05.i09.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:49,361 - DEBUG - found 10.1371/image.pbio.v05.i10/1/image.pbio.v05.i10.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:49,433 - DEBUG - found 10.1371/image.pbio.v05.i10/1/image.pbio.v05.i10.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:49,448 - DEBUG - found 10.1371/image.pbio.v05.i09/1/image.pbio.v05.i09.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:49,617 - DEBUG - found crepo object 10.1371/image.pbio.v05.i10.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:49,619 - DEBUG - found crepo object 10.1371/image.pbio.v05.i10.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:49,622 - DEBUG - found crepo object 10.1371/image.pbio.v05.i10.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:49,693 - DEBUG - found crepo object 10.1371/image.pbio.v05.i10.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:49,839 - DEBUG - found crepo object 10.1371/image.pbio.v05.i11.XML in mogilefs-prod-repo
+2020-11-14 07:44:51,081 - DEBUG - found 10.1371/image.pbio.v05.i10/1/image.pbio.v05.i10.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:51,087 - DEBUG - found 10.1371/image.pbio.v05.i10/1/image.pbio.v05.i10.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:51,094 - DEBUG - found 10.1371/image.pbio.v05.i10/1/image.pbio.v05.i10.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:51,241 - DEBUG - found 10.1371/image.pbio.v05.i10/1/image.pbio.v05.i10.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:51,312 - DEBUG - found 10.1371/image.pbio.v05.i11/1/image.pbio.v05.i11.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:51,383 - DEBUG - found crepo object 10.1371/image.pbio.v05.i11.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:51,383 - DEBUG - found crepo object 10.1371/image.pbio.v05.i11.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:51,397 - DEBUG - found crepo object 10.1371/image.pbio.v05.i11.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:51,519 - DEBUG - found crepo object 10.1371/image.pbio.v05.i11.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:51,646 - DEBUG - found crepo object 10.1371/image.pbio.v05.i11.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:52,904 - DEBUG - found 10.1371/image.pbio.v05.i11/1/image.pbio.v05.i11.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:52,909 - DEBUG - found 10.1371/image.pbio.v05.i11/1/image.pbio.v05.i11.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:52,916 - DEBUG - found 10.1371/image.pbio.v05.i11/1/image.pbio.v05.i11.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:53,027 - DEBUG - found 10.1371/image.pbio.v05.i11/1/image.pbio.v05.i11.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:53,093 - DEBUG - found 10.1371/image.pbio.v05.i11/1/image.pbio.v05.i11.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:53,183 - DEBUG - found crepo object 10.1371/image.pbio.v05.i12.XML in mogilefs-prod-repo
+2020-11-14 07:44:53,184 - DEBUG - found crepo object 10.1371/image.pbio.v05.i12.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:53,186 - DEBUG - found crepo object 10.1371/image.pbio.v05.i12.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:53,366 - DEBUG - found crepo object 10.1371/image.pbio.v05.i12.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:53,368 - DEBUG - found crepo object 10.1371/image.pbio.v05.i12.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:54,659 - DEBUG - found 10.1371/image.pbio.v05.i12/1/image.pbio.v05.i12.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:54,661 - DEBUG - found 10.1371/image.pbio.v05.i12/1/image.pbio.v05.i12.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:54,666 - DEBUG - found 10.1371/image.pbio.v05.i12/1/image.pbio.v05.i12.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:54,833 - DEBUG - found 10.1371/image.pbio.v05.i12/1/image.pbio.v05.i12.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:54,856 - DEBUG - found 10.1371/image.pbio.v05.i12/1/image.pbio.v05.i12.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:54,954 - DEBUG - found crepo object 10.1371/image.pbio.v05.i12.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:54,958 - DEBUG - found crepo object 10.1371/image.pbio.v06.i01.XML in mogilefs-prod-repo
+2020-11-14 07:44:55,004 - DEBUG - found crepo object 10.1371/image.pbio.v06.i01.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:55,104 - DEBUG - found crepo object 10.1371/image.pbio.v06.i01.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:55,139 - DEBUG - found crepo object 10.1371/image.pbio.v06.i01.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:56,602 - DEBUG - found 10.1371/image.pbio.v06.i01/1/image.pbio.v06.i01.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:56,618 - DEBUG - found 10.1371/image.pbio.v06.i01/1/image.pbio.v06.i01.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:56,631 - DEBUG - found 10.1371/image.pbio.v05.i12/1/image.pbio.v05.i12.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:56,750 - DEBUG - found 10.1371/image.pbio.v06.i01/1/image.pbio.v06.i01.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:56,813 - DEBUG - found 10.1371/image.pbio.v06.i01/1/image.pbio.v06.i01.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:44:56,882 - DEBUG - found crepo object 10.1371/image.pbio.v06.i01.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:56,947 - DEBUG - found crepo object 10.1371/image.pbio.v06.i01.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:56,951 - DEBUG - found crepo object 10.1371/image.pbio.v06.i02.XML in mogilefs-prod-repo
+2020-11-14 07:44:57,066 - DEBUG - found crepo object 10.1371/image.pbio.v06.i02.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:44:57,104 - DEBUG - found crepo object 10.1371/image.pbio.v06.i02.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:44:58,443 - DEBUG - found 10.1371/image.pbio.v06.i01/1/image.pbio.v06.i01.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:44:58,533 - DEBUG - found 10.1371/image.pbio.v06.i02/1/image.pbio.v06.i02.xml in corpus-dev-0242ac130003
+2020-11-14 07:44:58,574 - DEBUG - found 10.1371/image.pbio.v06.i01/1/image.pbio.v06.i01.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:44:58,670 - DEBUG - found 10.1371/image.pbio.v06.i02/1/image.pbio.v06.i02.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:44:58,676 - DEBUG - found 10.1371/image.pbio.v06.i02/1/image.pbio.v06.i02.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:44:58,755 - DEBUG - found crepo object 10.1371/image.pbio.v06.i02.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:44:58,820 - DEBUG - found crepo object 10.1371/image.pbio.v06.i02.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:44:58,837 - DEBUG - found crepo object 10.1371/image.pbio.v06.i02.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:44:58,966 - DEBUG - found crepo object 10.1371/image.pbio.v06.i03.XML in mogilefs-prod-repo
+2020-11-14 07:44:58,966 - DEBUG - found crepo object 10.1371/image.pbio.v06.i03.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:00,308 - DEBUG - found 10.1371/image.pbio.v06.i02/1/image.pbio.v06.i02.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:00,427 - DEBUG - found 10.1371/image.pbio.v06.i02/1/image.pbio.v06.i02.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:00,432 - DEBUG - found 10.1371/image.pbio.v06.i02/1/image.pbio.v06.i02.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:00,551 - DEBUG - found 10.1371/image.pbio.v06.i03/1/image.pbio.v06.i03.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:00,580 - DEBUG - found 10.1371/image.pbio.v06.i03/1/image.pbio.v06.i03.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:00,662 - DEBUG - found crepo object 10.1371/image.pbio.v06.i03.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:00,699 - DEBUG - found crepo object 10.1371/image.pbio.v06.i03.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:00,749 - DEBUG - found crepo object 10.1371/image.pbio.v06.i03.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:01,016 - DEBUG - found crepo object 10.1371/image.pbio.v06.i03.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:01,017 - DEBUG - found crepo object 10.1371/image.pbio.v06.i04.XML in mogilefs-prod-repo
+2020-11-14 07:45:02,746 - DEBUG - found 10.1371/image.pbio.v06.i03/1/image.pbio.v06.i03.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:02,924 - DEBUG - found 10.1371/image.pbio.v06.i03/1/image.pbio.v06.i03.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:02,927 - DEBUG - found 10.1371/image.pbio.v06.i04/1/image.pbio.v06.i04.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:02,935 - DEBUG - found 10.1371/image.pbio.v06.i03/1/image.pbio.v06.i03.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:03,105 - DEBUG - found 10.1371/image.pbio.v06.i03/1/image.pbio.v06.i03.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:03,321 - DEBUG - found crepo object 10.1371/image.pbio.v06.i04.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:03,796 - DEBUG - found crepo object 10.1371/image.pbio.v06.i04.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:03,800 - DEBUG - found crepo object 10.1371/image.pbio.v06.i04.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:03,802 - DEBUG - found crepo object 10.1371/image.pbio.v06.i04.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:03,802 - DEBUG - found crepo object 10.1371/image.pbio.v06.i04.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:04,940 - DEBUG - found 10.1371/image.pbio.v06.i04/1/image.pbio.v06.i04.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:05,147 - DEBUG - found 10.1371/image.pbio.v06.i04/1/image.pbio.v06.i04.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:05,147 - DEBUG - found 10.1371/image.pbio.v06.i04/1/image.pbio.v06.i04.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:05,157 - DEBUG - found 10.1371/image.pbio.v06.i04/1/image.pbio.v06.i04.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:05,160 - DEBUG - found 10.1371/image.pbio.v06.i04/1/image.pbio.v06.i04.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:05,256 - DEBUG - found crepo object 10.1371/image.pbio.v06.i05.XML in mogilefs-prod-repo
+2020-11-14 07:45:05,406 - DEBUG - found crepo object 10.1371/image.pbio.v06.i05.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:05,433 - DEBUG - found crepo object 10.1371/image.pbio.v06.i05.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:05,483 - DEBUG - found crepo object 10.1371/image.pbio.v06.i05.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:05,484 - DEBUG - found crepo object 10.1371/image.pbio.v06.i05.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:06,814 - DEBUG - found 10.1371/image.pbio.v06.i05/1/image.pbio.v06.i05.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:06,992 - DEBUG - found 10.1371/image.pbio.v06.i05/1/image.pbio.v06.i05.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:07,088 - DEBUG - found 10.1371/image.pbio.v06.i05/1/image.pbio.v06.i05.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:07,123 - DEBUG - found 10.1371/image.pbio.v06.i05/1/image.pbio.v06.i05.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:07,124 - DEBUG - found 10.1371/image.pbio.v06.i05/1/image.pbio.v06.i05.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:07,141 - DEBUG - found crepo object 10.1371/image.pbio.v06.i05.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:07,296 - DEBUG - found crepo object 10.1371/image.pbio.v06.i06.XML in mogilefs-prod-repo
+2020-11-14 07:45:07,324 - DEBUG - found crepo object 10.1371/image.pbio.v06.i06.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:07,413 - DEBUG - found crepo object 10.1371/image.pbio.v06.i06.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:07,453 - DEBUG - found crepo object 10.1371/image.pbio.v06.i06.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:08,579 - DEBUG - found 10.1371/image.pbio.v06.i05/1/image.pbio.v06.i05.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:08,791 - DEBUG - found 10.1371/image.pbio.v06.i06/1/image.pbio.v06.i06.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:08,794 - DEBUG - found 10.1371/image.pbio.v06.i06/1/image.pbio.v06.i06.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:08,902 - DEBUG - found crepo object 10.1371/image.pbio.v06.i06.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:08,954 - DEBUG - found 10.1371/image.pbio.v06.i06/1/image.pbio.v06.i06.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:08,960 - DEBUG - found 10.1371/image.pbio.v06.i06/1/image.pbio.v06.i06.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:09,077 - DEBUG - found crepo object 10.1371/image.pbio.v06.i06.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:09,103 - DEBUG - found crepo object 10.1371/image.pbio.v06.i07.XML in mogilefs-prod-repo
+2020-11-14 07:45:09,224 - DEBUG - found crepo object 10.1371/image.pbio.v06.i07.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:09,309 - DEBUG - found crepo object 10.1371/image.pbio.v06.i07.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:10,308 - DEBUG - found 10.1371/image.pbio.v06.i06/1/image.pbio.v06.i06.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:10,557 - DEBUG - found crepo object 10.1371/image.pbio.v06.i07.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:10,609 - DEBUG - found 10.1371/image.pbio.v06.i06/1/image.pbio.v06.i06.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:10,673 - DEBUG - found 10.1371/image.pbio.v06.i07/1/image.pbio.v06.i07.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:10,792 - DEBUG - found 10.1371/image.pbio.v06.i07/1/image.pbio.v06.i07.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:10,865 - DEBUG - found crepo object 10.1371/image.pbio.v06.i07.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:10,897 - DEBUG - found 10.1371/image.pbio.v06.i07/1/image.pbio.v06.i07.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:11,016 - DEBUG - found crepo object 10.1371/image.pbio.v06.i07.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:11,091 - DEBUG - found crepo object 10.1371/image.pbio.v06.i08.XML in mogilefs-prod-repo
+2020-11-14 07:45:11,232 - DEBUG - found crepo object 10.1371/image.pbio.v06.i08.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:14,384 - DEBUG - found 10.1371/image.pbio.v06.i08/1/image.pbio.v06.i08.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:14,386 - DEBUG - found 10.1371/image.pbio.v06.i07/1/image.pbio.v06.i07.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:14,400 - DEBUG - found 10.1371/image.pbio.v06.i07/1/image.pbio.v06.i07.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:14,423 - DEBUG - found 10.1371/image.pbio.v06.i08/1/image.pbio.v06.i08.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:14,424 - DEBUG - found 10.1371/image.pbio.v06.i07/1/image.pbio.v06.i07.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:14,632 - DEBUG - found crepo object 10.1371/image.pbio.v06.i08.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:14,645 - DEBUG - found crepo object 10.1371/image.pbio.v06.i08.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:14,698 - DEBUG - found crepo object 10.1371/image.pbio.v06.i08.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:14,738 - DEBUG - found crepo object 10.1371/image.pbio.v06.i08.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:14,767 - DEBUG - found crepo object 10.1371/image.pbio.v06.i09.XML in mogilefs-prod-repo
+2020-11-14 07:45:16,050 - DEBUG - found 10.1371/image.pbio.v06.i08/1/image.pbio.v06.i08.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:16,112 - DEBUG - found 10.1371/image.pbio.v06.i08/1/image.pbio.v06.i08.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:16,138 - DEBUG - found 10.1371/image.pbio.v06.i08/1/image.pbio.v06.i08.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:16,181 - DEBUG - found 10.1371/image.pbio.v06.i08/1/image.pbio.v06.i08.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:16,272 - DEBUG - found 10.1371/image.pbio.v06.i09/1/image.pbio.v06.i09.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:16,323 - DEBUG - found crepo object 10.1371/image.pbio.v06.i09.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:16,422 - DEBUG - found crepo object 10.1371/image.pbio.v06.i09.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:16,423 - DEBUG - found crepo object 10.1371/image.pbio.v06.i09.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:16,565 - DEBUG - found crepo object 10.1371/image.pbio.v06.i09.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:16,582 - DEBUG - found crepo object 10.1371/image.pbio.v06.i09.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:17,844 - DEBUG - found 10.1371/image.pbio.v06.i09/1/image.pbio.v06.i09.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:17,970 - DEBUG - found 10.1371/image.pbio.v06.i09/1/image.pbio.v06.i09.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:18,004 - DEBUG - found 10.1371/image.pbio.v06.i09/1/image.pbio.v06.i09.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:18,095 - DEBUG - found 10.1371/image.pbio.v06.i09/1/image.pbio.v06.i09.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:18,120 - DEBUG - found 10.1371/image.pbio.v06.i09/1/image.pbio.v06.i09.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:18,193 - DEBUG - found crepo object 10.1371/image.pbio.v06.i10.XML in mogilefs-prod-repo
+2020-11-14 07:45:18,316 - DEBUG - found crepo object 10.1371/image.pbio.v06.i10.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:18,318 - DEBUG - found crepo object 10.1371/image.pbio.v06.i10.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:18,375 - DEBUG - found crepo object 10.1371/image.pbio.v06.i10.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:18,435 - DEBUG - found crepo object 10.1371/image.pbio.v06.i10.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:19,570 - DEBUG - found 10.1371/image.pbio.v06.i10/1/image.pbio.v06.i10.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:19,802 - DEBUG - found 10.1371/image.pbio.v06.i10/1/image.pbio.v06.i10.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:19,846 - DEBUG - found 10.1371/image.pbio.v06.i10/1/image.pbio.v06.i10.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:19,878 - DEBUG - found crepo object 10.1371/image.pbio.v06.i10.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:19,901 - DEBUG - found 10.1371/image.pbio.v06.i10/1/image.pbio.v06.i10.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:19,903 - DEBUG - found 10.1371/image.pbio.v06.i10/1/image.pbio.v06.i10.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:20,079 - DEBUG - found crepo object 10.1371/image.pbio.v06.i11.XML in mogilefs-prod-repo
+2020-11-14 07:45:20,096 - DEBUG - found crepo object 10.1371/image.pbio.v06.i11.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:20,178 - DEBUG - found crepo object 10.1371/image.pbio.v06.i11.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:20,210 - DEBUG - found crepo object 10.1371/image.pbio.v06.i11.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:21,443 - DEBUG - found 10.1371/image.pbio.v06.i10/1/image.pbio.v06.i10.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:21,689 - DEBUG - found crepo object 10.1371/image.pbio.v06.i11.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:21,703 - DEBUG - found 10.1371/image.pbio.v06.i11/1/image.pbio.v06.i11.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:21,835 - DEBUG - found 10.1371/image.pbio.v06.i11/1/image.pbio.v06.i11.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:21,903 - DEBUG - found 10.1371/image.pbio.v06.i11/1/image.pbio.v06.i11.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:21,988 - DEBUG - found 10.1371/image.pbio.v06.i11/1/image.pbio.v06.i11.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:22,002 - DEBUG - found crepo object 10.1371/image.pbio.v06.i11.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:22,125 - DEBUG - found crepo object 10.1371/image.pbio.v06.i12.XML in mogilefs-prod-repo
+2020-11-14 07:45:22,183 - DEBUG - found crepo object 10.1371/image.pbio.v06.i12.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:22,316 - DEBUG - found crepo object 10.1371/image.pbio.v06.i12.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:23,222 - DEBUG - found 10.1371/image.pbio.v06.i11/1/image.pbio.v06.i11.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:23,513 - DEBUG - found crepo object 10.1371/image.pbio.v06.i12.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:23,628 - DEBUG - found 10.1371/image.pbio.v06.i11/1/image.pbio.v06.i11.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:23,781 - DEBUG - found 10.1371/image.pbio.v06.i12/1/image.pbio.v06.i12.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:23,808 - DEBUG - found 10.1371/image.pbio.v06.i12/1/image.pbio.v06.i12.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:23,940 - DEBUG - found crepo object 10.1371/image.pbio.v06.i12.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:23,957 - DEBUG - found 10.1371/image.pbio.v06.i12/1/image.pbio.v06.i12.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:24,057 - DEBUG - found crepo object 10.1371/image.pbio.v06.i12.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:24,153 - DEBUG - found crepo object 10.1371/image.pbio.v07.i01.XML in mogilefs-prod-repo
+2020-11-14 07:45:24,258 - DEBUG - found crepo object 10.1371/image.pbio.v07.i01.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:25,009 - DEBUG - found 10.1371/image.pbio.v06.i12/1/image.pbio.v06.i12.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:25,319 - DEBUG - found crepo object 10.1371/image.pbio.v07.i01.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:25,572 - DEBUG - found 10.1371/image.pbio.v06.i12/1/image.pbio.v06.i12.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:25,731 - DEBUG - found 10.1371/image.pbio.v06.i12/1/image.pbio.v06.i12.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:25,857 - DEBUG - found 10.1371/image.pbio.v07.i01/1/image.pbio.v07.i01.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:25,869 - DEBUG - found 10.1371/image.pbio.v07.i01/1/image.pbio.v07.i01.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:25,897 - DEBUG - found crepo object 10.1371/image.pbio.v07.i01.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:26,012 - DEBUG - found crepo object 10.1371/image.pbio.v07.i01.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:26,145 - DEBUG - found crepo object 10.1371/image.pbio.v07.i02.XML in mogilefs-prod-repo
+2020-11-14 07:45:26,195 - DEBUG - found crepo object 10.1371/image.pbio.v07.i02.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:26,812 - DEBUG - found 10.1371/image.pbio.v07.i01/1/image.pbio.v07.i01.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:27,111 - DEBUG - found crepo object 10.1371/image.pbio.v07.i02.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:27,507 - DEBUG - found 10.1371/image.pbio.v07.i01/1/image.pbio.v07.i01.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:27,671 - DEBUG - found 10.1371/image.pbio.v07.i01/1/image.pbio.v07.i01.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:27,735 - DEBUG - found crepo object 10.1371/image.pbio.v07.i02.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:27,850 - DEBUG - found 10.1371/image.pbio.v07.i02/1/image.pbio.v07.i02.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:27,874 - DEBUG - found 10.1371/image.pbio.v07.i02/1/image.pbio.v07.i02.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:27,973 - DEBUG - found crepo object 10.1371/image.pbio.v07.i02.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:28,140 - DEBUG - found crepo object 10.1371/image.pbio.v07.i02.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:28,148 - DEBUG - found crepo object 10.1371/image.pbio.v07.i03.XML in mogilefs-prod-repo
+2020-11-14 07:45:28,727 - DEBUG - found 10.1371/image.pbio.v07.i02/1/image.pbio.v07.i02.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:29,284 - DEBUG - found 10.1371/image.pbio.v07.i02/1/image.pbio.v07.i02.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:29,511 - DEBUG - found 10.1371/image.pbio.v07.i02/1/image.pbio.v07.i02.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:29,512 - DEBUG - found crepo object 10.1371/image.pbio.v07.i03.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:29,653 - DEBUG - found 10.1371/image.pbio.v07.i02/1/image.pbio.v07.i02.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:29,668 - DEBUG - found 10.1371/image.pbio.v07.i03/1/image.pbio.v07.i03.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:29,672 - DEBUG - found crepo object 10.1371/image.pbio.v07.i03.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:29,778 - DEBUG - found crepo object 10.1371/image.pbio.v07.i03.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:29,932 - DEBUG - found crepo object 10.1371/image.pbio.v07.i03.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:30,019 - DEBUG - found crepo object 10.1371/image.pbio.v07.i03.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:30,977 - DEBUG - found 10.1371/image.pbio.v07.i03/1/image.pbio.v07.i03.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:31,264 - DEBUG - found 10.1371/image.pbio.v07.i03/1/image.pbio.v07.i03.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:31,297 - DEBUG - found 10.1371/image.pbio.v07.i03/1/image.pbio.v07.i03.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:31,335 - DEBUG - found crepo object 10.1371/image.pbio.v07.i04.XML in mogilefs-prod-repo
+2020-11-14 07:45:31,509 - DEBUG - found 10.1371/image.pbio.v07.i03/1/image.pbio.v07.i03.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:31,559 - DEBUG - found crepo object 10.1371/image.pbio.v07.i04.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:31,584 - DEBUG - found crepo object 10.1371/image.pbio.v07.i04.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:31,627 - DEBUG - found 10.1371/image.pbio.v07.i03/1/image.pbio.v07.i03.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:31,814 - DEBUG - found crepo object 10.1371/image.pbio.v07.i04.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:31,952 - DEBUG - found crepo object 10.1371/image.pbio.v07.i04.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:32,790 - DEBUG - found 10.1371/image.pbio.v07.i04/1/image.pbio.v07.i04.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:33,056 - DEBUG - found crepo object 10.1371/image.pbio.v07.i04.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:33,094 - DEBUG - found 10.1371/image.pbio.v07.i04/1/image.pbio.v07.i04.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:33,129 - DEBUG - found 10.1371/image.pbio.v07.i04/1/image.pbio.v07.i04.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:33,329 - DEBUG - found crepo object 10.1371/image.pbio.v07.i05.XML in mogilefs-prod-repo
+2020-11-14 07:45:33,361 - DEBUG - found 10.1371/image.pbio.v07.i04/1/image.pbio.v07.i04.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:33,409 - DEBUG - found crepo object 10.1371/image.pbio.v07.i05.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:33,494 - DEBUG - found 10.1371/image.pbio.v07.i04/1/image.pbio.v07.i04.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:33,690 - DEBUG - found crepo object 10.1371/image.pbio.v07.i05.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:33,832 - DEBUG - found crepo object 10.1371/image.pbio.v07.i05.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:34,498 - DEBUG - found 10.1371/image.pbio.v07.i04/1/image.pbio.v07.i04.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:34,802 - DEBUG - found crepo object 10.1371/image.pbio.v07.i05.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:34,925 - DEBUG - found 10.1371/image.pbio.v07.i05/1/image.pbio.v07.i05.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:34,951 - DEBUG - found 10.1371/image.pbio.v07.i05/1/image.pbio.v07.i05.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:35,168 - DEBUG - found 10.1371/image.pbio.v07.i05/1/image.pbio.v07.i05.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:35,199 - DEBUG - found crepo object 10.1371/image.pbio.v07.i05.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:35,220 - DEBUG - found crepo object 10.1371/image.pbio.v07.i06.XML in mogilefs-prod-repo
+2020-11-14 07:45:35,323 - DEBUG - found 10.1371/image.pbio.v07.i05/1/image.pbio.v07.i05.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:35,442 - DEBUG - found crepo object 10.1371/image.pbio.v07.i06.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:35,674 - DEBUG - found crepo object 10.1371/image.pbio.v07.i06.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:36,265 - DEBUG - found 10.1371/image.pbio.v07.i05/1/image.pbio.v07.i05.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:36,557 - DEBUG - found crepo object 10.1371/image.pbio.v07.i06.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:36,878 - DEBUG - found 10.1371/image.pbio.v07.i06/1/image.pbio.v07.i06.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:36,892 - DEBUG - found 10.1371/image.pbio.v07.i05/1/image.pbio.v07.i05.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:37,088 - DEBUG - found 10.1371/image.pbio.v07.i06/1/image.pbio.v07.i06.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:37,142 - DEBUG - found crepo object 10.1371/image.pbio.v07.i06.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:37,143 - DEBUG - found crepo object 10.1371/image.pbio.v07.i06.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:37,299 - DEBUG - found 10.1371/image.pbio.v07.i06/1/image.pbio.v07.i06.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:37,376 - DEBUG - found crepo object 10.1371/image.pbio.v07.i07.XML in mogilefs-prod-repo
+2020-11-14 07:45:37,628 - DEBUG - found crepo object 10.1371/image.pbio.v07.i07.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:38,030 - DEBUG - found 10.1371/image.pbio.v07.i06/1/image.pbio.v07.i06.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:38,380 - DEBUG - found crepo object 10.1371/image.pbio.v07.i07.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:38,622 - DEBUG - found 10.1371/image.pbio.v07.i06/1/image.pbio.v07.i06.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:38,662 - DEBUG - found 10.1371/image.pbio.v07.i06/1/image.pbio.v07.i06.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:38,868 - DEBUG - found 10.1371/image.pbio.v07.i07/1/image.pbio.v07.i07.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:38,918 - DEBUG - found crepo object 10.1371/image.pbio.v07.i07.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:38,986 - DEBUG - found crepo object 10.1371/image.pbio.v07.i07.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:39,091 - DEBUG - found 10.1371/image.pbio.v07.i07/1/image.pbio.v07.i07.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:39,161 - DEBUG - found crepo object 10.1371/image.pbio.v07.i07.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:39,443 - DEBUG - found crepo object 10.1371/image.pbio.v07.i08.XML in mogilefs-prod-repo
+2020-11-14 07:45:39,846 - DEBUG - found 10.1371/image.pbio.v07.i07/1/image.pbio.v07.i07.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:40,164 - DEBUG - found crepo object 10.1371/image.pbio.v07.i08.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:40,356 - DEBUG - found 10.1371/image.pbio.v07.i07/1/image.pbio.v07.i07.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:40,456 - DEBUG - found 10.1371/image.pbio.v07.i07/1/image.pbio.v07.i07.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:40,601 - DEBUG - found crepo object 10.1371/image.pbio.v07.i08.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:40,691 - DEBUG - found 10.1371/image.pbio.v07.i07/1/image.pbio.v07.i07.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:40,800 - DEBUG - found crepo object 10.1371/image.pbio.v07.i08.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:40,970 - DEBUG - found 10.1371/image.pbio.v07.i08/1/image.pbio.v07.i08.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:41,055 - DEBUG - found crepo object 10.1371/image.pbio.v07.i08.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:41,316 - DEBUG - found crepo object 10.1371/image.pbio.v07.i08.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:41,686 - DEBUG - found 10.1371/image.pbio.v07.i08/1/image.pbio.v07.i08.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:41,976 - DEBUG - found crepo object 10.1371/image.pbio.v07.i09.XML in mogilefs-prod-repo
+2020-11-14 07:45:42,149 - DEBUG - found 10.1371/image.pbio.v07.i08/1/image.pbio.v07.i08.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:42,338 - DEBUG - found 10.1371/image.pbio.v07.i08/1/image.pbio.v07.i08.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:42,473 - DEBUG - found crepo object 10.1371/image.pbio.v07.i09.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:42,672 - DEBUG - found crepo object 10.1371/image.pbio.v07.i09.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:42,675 - DEBUG - found 10.1371/image.pbio.v07.i08/1/image.pbio.v07.i08.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:42,864 - DEBUG - found 10.1371/image.pbio.v07.i08/1/image.pbio.v07.i08.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:42,964 - DEBUG - found crepo object 10.1371/image.pbio.v07.i09.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:43,166 - DEBUG - found crepo object 10.1371/image.pbio.v07.i09.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:43,464 - DEBUG - found 10.1371/image.pbio.v07.i09/1/image.pbio.v07.i09.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:46,598 - DEBUG - found 10.1371/image.pbio.v07.i09/1/image.pbio.v07.i09.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:47,047 - DEBUG - found 10.1371/image.pbio.v07.i09/1/image.pbio.v07.i09.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:47,048 - DEBUG - found 10.1371/image.pbio.v07.i09/1/image.pbio.v07.i09.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:47,049 - DEBUG - found 10.1371/image.pbio.v07.i09/1/image.pbio.v07.i09.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:47,082 - DEBUG - found crepo object 10.1371/image.pbio.v07.i09.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:47,146 - DEBUG - found crepo object 10.1371/image.pbio.v07.i10.XML in mogilefs-prod-repo
+2020-11-14 07:45:47,339 - DEBUG - found crepo object 10.1371/image.pbio.v07.i10.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:47,371 - DEBUG - found crepo object 10.1371/image.pbio.v07.i10.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:47,380 - DEBUG - found crepo object 10.1371/image.pbio.v07.i10.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:48,602 - DEBUG - found 10.1371/image.pbio.v07.i10/1/image.pbio.v07.i10.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:48,610 - DEBUG - found 10.1371/image.pbio.v07.i09/1/image.pbio.v07.i09.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:48,775 - DEBUG - found 10.1371/image.pbio.v07.i10/1/image.pbio.v07.i10.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:48,786 - DEBUG - found 10.1371/image.pbio.v07.i10/1/image.pbio.v07.i10.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:48,859 - DEBUG - found 10.1371/image.pbio.v07.i10/1/image.pbio.v07.i10.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:48,863 - DEBUG - found crepo object 10.1371/image.pbio.v07.i10.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:48,888 - DEBUG - found crepo object 10.1371/image.pbio.v07.i10.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:49,020 - DEBUG - found crepo object 10.1371/image.pbio.v07.i11.XML in mogilefs-prod-repo
+2020-11-14 07:45:49,073 - DEBUG - found crepo object 10.1371/image.pbio.v07.i11.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:49,091 - DEBUG - found crepo object 10.1371/image.pbio.v07.i11.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:50,238 - DEBUG - found 10.1371/image.pbio.v07.i10/1/image.pbio.v07.i10.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:50,319 - DEBUG - found 10.1371/image.pbio.v07.i10/1/image.pbio.v07.i10.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:50,499 - DEBUG - found crepo object 10.1371/image.pbio.v07.i11.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:50,523 - DEBUG - found 10.1371/image.pbio.v07.i11/1/image.pbio.v07.i11.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:50,561 - DEBUG - found crepo object 10.1371/image.pbio.v07.i11.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:50,564 - DEBUG - found 10.1371/image.pbio.v07.i11/1/image.pbio.v07.i11.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:50,567 - DEBUG - found 10.1371/image.pbio.v07.i11/1/image.pbio.v07.i11.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:50,766 - DEBUG - found crepo object 10.1371/image.pbio.v07.i11.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:50,854 - DEBUG - found crepo object 10.1371/image.pbio.v07.i12.XML in mogilefs-prod-repo
+2020-11-14 07:45:50,897 - DEBUG - found crepo object 10.1371/image.pbio.v07.i12.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:51,901 - DEBUG - found 10.1371/image.pbio.v07.i11/1/image.pbio.v07.i11.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:52,021 - DEBUG - found 10.1371/image.pbio.v07.i11/1/image.pbio.v07.i11.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:52,142 - DEBUG - found crepo object 10.1371/image.pbio.v07.i12.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:52,273 - DEBUG - found 10.1371/image.pbio.v07.i11/1/image.pbio.v07.i11.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:52,310 - DEBUG - found crepo object 10.1371/image.pbio.v07.i12.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:52,378 - DEBUG - found 10.1371/image.pbio.v07.i12/1/image.pbio.v07.i12.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:52,428 - DEBUG - found 10.1371/image.pbio.v07.i12/1/image.pbio.v07.i12.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:52,503 - DEBUG - found crepo object 10.1371/image.pbio.v07.i12.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:52,671 - DEBUG - found crepo object 10.1371/image.pbio.v07.i12.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:52,729 - DEBUG - found crepo object 10.1371/image.pbio.v08.i01.XML in mogilefs-prod-repo
+2020-11-14 07:45:53,451 - DEBUG - found 10.1371/image.pbio.v07.i12/1/image.pbio.v07.i12.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:53,702 - DEBUG - found crepo object 10.1371/image.pbio.v08.i01.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:53,741 - DEBUG - found 10.1371/image.pbio.v07.i12/1/image.pbio.v07.i12.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:53,988 - DEBUG - found 10.1371/image.pbio.v07.i12/1/image.pbio.v07.i12.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:54,060 - DEBUG - found crepo object 10.1371/image.pbio.v08.i01.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:54,232 - DEBUG - found 10.1371/image.pbio.v07.i12/1/image.pbio.v07.i12.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:54,272 - DEBUG - found 10.1371/image.pbio.v08.i01/1/image.pbio.v08.i01.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:54,334 - DEBUG - found crepo object 10.1371/image.pbio.v08.i01.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:54,540 - DEBUG - found crepo object 10.1371/image.pbio.v08.i01.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:54,620 - DEBUG - found crepo object 10.1371/image.pbio.v08.i01.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:55,192 - DEBUG - found 10.1371/image.pbio.v08.i01/1/image.pbio.v08.i01.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:55,438 - DEBUG - found crepo object 10.1371/image.pbio.v08.i02.XML in mogilefs-prod-repo
+2020-11-14 07:45:55,439 - DEBUG - found 10.1371/image.pbio.v08.i01/1/image.pbio.v08.i01.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:55,784 - DEBUG - found crepo object 10.1371/image.pbio.v08.i02.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:55,898 - DEBUG - found 10.1371/image.pbio.v08.i01/1/image.pbio.v08.i01.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:56,100 - DEBUG - found 10.1371/image.pbio.v08.i01/1/image.pbio.v08.i01.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:56,173 - DEBUG - found 10.1371/image.pbio.v08.i01/1/image.pbio.v08.i01.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:56,184 - DEBUG - found crepo object 10.1371/image.pbio.v08.i02.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:56,377 - DEBUG - found crepo object 10.1371/image.pbio.v08.i02.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:56,508 - DEBUG - found crepo object 10.1371/image.pbio.v08.i02.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:57,155 - DEBUG - found 10.1371/image.pbio.v08.i02/1/image.pbio.v08.i02.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:57,370 - DEBUG - found 10.1371/image.pbio.v08.i02/1/image.pbio.v08.i02.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:57,418 - DEBUG - found crepo object 10.1371/image.pbio.v08.i02.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:57,681 - DEBUG - found crepo object 10.1371/image.pbio.v08.i03.XML in mogilefs-prod-repo
+2020-11-14 07:45:57,757 - DEBUG - found 10.1371/image.pbio.v08.i02/1/image.pbio.v08.i02.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:57,983 - DEBUG - found 10.1371/image.pbio.v08.i02/1/image.pbio.v08.i02.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:58,015 - DEBUG - found 10.1371/image.pbio.v08.i02/1/image.pbio.v08.i02.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:45:58,111 - DEBUG - found crepo object 10.1371/image.pbio.v08.i03.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:45:58,244 - DEBUG - found crepo object 10.1371/image.pbio.v08.i03.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:45:58,276 - DEBUG - found crepo object 10.1371/image.pbio.v08.i03.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:45:58,922 - DEBUG - found 10.1371/image.pbio.v08.i02/1/image.pbio.v08.i02.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:45:59,160 - DEBUG - found 10.1371/image.pbio.v08.i03/1/image.pbio.v08.i03.xml in corpus-dev-0242ac130003
+2020-11-14 07:45:59,216 - DEBUG - found crepo object 10.1371/image.pbio.v08.i03.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:45:59,494 - DEBUG - found crepo object 10.1371/image.pbio.v08.i03.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:45:59,646 - DEBUG - found 10.1371/image.pbio.v08.i03/1/image.pbio.v08.i03.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:45:59,827 - DEBUG - found 10.1371/image.pbio.v08.i03/1/image.pbio.v08.i03.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:45:59,875 - DEBUG - found 10.1371/image.pbio.v08.i03/1/image.pbio.v08.i03.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:45:59,908 - DEBUG - found crepo object 10.1371/image.pbio.v08.i04.XML in mogilefs-prod-repo
+2020-11-14 07:46:00,109 - DEBUG - found crepo object 10.1371/image.pbio.v08.i04.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:00,147 - DEBUG - found crepo object 10.1371/image.pbio.v08.i04.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:00,747 - DEBUG - found 10.1371/image.pbio.v08.i03/1/image.pbio.v08.i03.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:00,893 - DEBUG - found 10.1371/image.pbio.v08.i03/1/image.pbio.v08.i03.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:01,090 - DEBUG - found crepo object 10.1371/image.pbio.v08.i04.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:01,167 - DEBUG - found crepo object 10.1371/image.pbio.v08.i04.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:01,608 - DEBUG - found 10.1371/image.pbio.v08.i04/1/image.pbio.v08.i04.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:02,372 - DEBUG - found crepo object 10.1371/image.pbio.v08.i04.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:02,533 - DEBUG - found 10.1371/image.pbio.v08.i04/1/image.pbio.v08.i04.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:02,535 - DEBUG - found 10.1371/image.pbio.v08.i04/1/image.pbio.v08.i04.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:02,893 - DEBUG - found 10.1371/image.pbio.v08.i04/1/image.pbio.v08.i04.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:02,894 - DEBUG - found 10.1371/image.pbio.v08.i04/1/image.pbio.v08.i04.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:03,078 - DEBUG - found crepo object 10.1371/image.pbio.v08.i05.XML in mogilefs-prod-repo
+2020-11-14 07:46:03,226 - DEBUG - found crepo object 10.1371/image.pbio.v08.i05.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:03,567 - DEBUG - found crepo object 10.1371/image.pbio.v08.i05.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:03,578 - DEBUG - found crepo object 10.1371/image.pbio.v08.i05.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:04,107 - DEBUG - found 10.1371/image.pbio.v08.i04/1/image.pbio.v08.i04.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:04,825 - DEBUG - found crepo object 10.1371/image.pbio.v08.i05.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:04,961 - DEBUG - found 10.1371/image.pbio.v08.i05/1/image.pbio.v08.i05.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:04,992 - DEBUG - found 10.1371/image.pbio.v08.i05/1/image.pbio.v08.i05.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:05,278 - DEBUG - found 10.1371/image.pbio.v08.i05/1/image.pbio.v08.i05.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:05,588 - DEBUG - found 10.1371/image.pbio.v08.i05/1/image.pbio.v08.i05.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:05,612 - DEBUG - found crepo object 10.1371/image.pbio.v08.i05.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:05,688 - DEBUG - found crepo object 10.1371/image.pbio.v08.i06.XML in mogilefs-prod-repo
+2020-11-14 07:46:05,719 - DEBUG - found crepo object 10.1371/image.pbio.v08.i06.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:05,878 - DEBUG - found 10.1371/image.pbio.v08.i05/1/image.pbio.v08.i05.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:05,923 - DEBUG - found crepo object 10.1371/image.pbio.v08.i06.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:06,194 - DEBUG - found crepo object 10.1371/image.pbio.v08.i06.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:07,080 - DEBUG - found 10.1371/image.pbio.v08.i05/1/image.pbio.v08.i05.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:07,170 - DEBUG - found 10.1371/image.pbio.v08.i06/1/image.pbio.v08.i06.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:07,186 - DEBUG - found 10.1371/image.pbio.v08.i06/1/image.pbio.v08.i06.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:07,369 - DEBUG - found crepo object 10.1371/image.pbio.v08.i06.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:07,371 - DEBUG - found 10.1371/image.pbio.v08.i06/1/image.pbio.v08.i06.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:07,400 - DEBUG - found crepo object 10.1371/image.pbio.v08.i06.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:07,527 - DEBUG - found crepo object 10.1371/image.pbio.v08.i07.XML in mogilefs-prod-repo
+2020-11-14 07:46:07,613 - DEBUG - found 10.1371/image.pbio.v08.i06/1/image.pbio.v08.i06.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:07,622 - DEBUG - found crepo object 10.1371/image.pbio.v08.i07.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:07,937 - DEBUG - found crepo object 10.1371/image.pbio.v08.i07.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:08,835 - DEBUG - found 10.1371/image.pbio.v08.i06/1/image.pbio.v08.i06.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:08,837 - DEBUG - found 10.1371/image.pbio.v08.i06/1/image.pbio.v08.i06.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:09,015 - DEBUG - found 10.1371/image.pbio.v08.i07/1/image.pbio.v08.i07.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:09,025 - DEBUG - found 10.1371/image.pbio.v08.i07/1/image.pbio.v08.i07.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:09,147 - DEBUG - found crepo object 10.1371/image.pbio.v08.i07.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:09,147 - DEBUG - found crepo object 10.1371/image.pbio.v08.i07.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:09,329 - DEBUG - found crepo object 10.1371/image.pbio.v08.i07.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:09,343 - DEBUG - found crepo object 10.1371/image.pbio.v08.i08.XML in mogilefs-prod-repo
+2020-11-14 07:46:09,379 - DEBUG - found 10.1371/image.pbio.v08.i07/1/image.pbio.v08.i07.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:09,679 - DEBUG - found crepo object 10.1371/image.pbio.v08.i08.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:10,683 - DEBUG - found 10.1371/image.pbio.v08.i07/1/image.pbio.v08.i07.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:10,693 - DEBUG - found 10.1371/image.pbio.v08.i07/1/image.pbio.v08.i07.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:10,866 - DEBUG - found 10.1371/image.pbio.v08.i08/1/image.pbio.v08.i08.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:10,867 - DEBUG - found 10.1371/image.pbio.v08.i07/1/image.pbio.v08.i07.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:10,955 - DEBUG - found crepo object 10.1371/image.pbio.v08.i08.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:10,982 - DEBUG - found crepo object 10.1371/image.pbio.v08.i08.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:11,155 - DEBUG - found crepo object 10.1371/image.pbio.v08.i08.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:11,163 - DEBUG - found crepo object 10.1371/image.pbio.v08.i08.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:11,204 - DEBUG - found 10.1371/image.pbio.v08.i08/1/image.pbio.v08.i08.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:11,547 - DEBUG - found crepo object 10.1371/image.pbio.v08.i09.XML in mogilefs-prod-repo
+2020-11-14 07:46:12,427 - DEBUG - found 10.1371/image.pbio.v08.i08/1/image.pbio.v08.i08.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:12,496 - DEBUG - found 10.1371/image.pbio.v08.i08/1/image.pbio.v08.i08.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:12,685 - DEBUG - found 10.1371/image.pbio.v08.i08/1/image.pbio.v08.i08.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:12,690 - DEBUG - found crepo object 10.1371/image.pbio.v08.i09.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:12,717 - DEBUG - found 10.1371/image.pbio.v08.i08/1/image.pbio.v08.i08.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:12,763 - DEBUG - found crepo object 10.1371/image.pbio.v08.i09.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:12,965 - DEBUG - found crepo object 10.1371/image.pbio.v08.i09.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:12,997 - DEBUG - found crepo object 10.1371/image.pbio.v08.i09.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:13,060 - DEBUG - found 10.1371/image.pbio.v08.i09/1/image.pbio.v08.i09.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:13,376 - DEBUG - found crepo object 10.1371/image.pbio.v08.i09.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:14,143 - DEBUG - found 10.1371/image.pbio.v08.i09/1/image.pbio.v08.i09.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:14,268 - DEBUG - found 10.1371/image.pbio.v08.i09/1/image.pbio.v08.i09.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:14,392 - DEBUG - found crepo object 10.1371/image.pbio.v08.i10.XML in mogilefs-prod-repo
+2020-11-14 07:46:14,528 - DEBUG - found 10.1371/image.pbio.v08.i09/1/image.pbio.v08.i09.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:14,540 - DEBUG - found 10.1371/image.pbio.v08.i09/1/image.pbio.v08.i09.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:14,571 - DEBUG - found crepo object 10.1371/image.pbio.v08.i10.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:14,846 - DEBUG - found crepo object 10.1371/image.pbio.v08.i10.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:14,850 - DEBUG - found crepo object 10.1371/image.pbio.v08.i10.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:14,919 - DEBUG - found 10.1371/image.pbio.v08.i09/1/image.pbio.v08.i09.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:15,226 - DEBUG - found crepo object 10.1371/image.pbio.v08.i10.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:15,857 - DEBUG - found 10.1371/image.pbio.v08.i10/1/image.pbio.v08.i10.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:16,120 - DEBUG - found 10.1371/image.pbio.v08.i10/1/image.pbio.v08.i10.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:16,222 - DEBUG - found crepo object 10.1371/image.pbio.v08.i10.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:16,444 - DEBUG - found crepo object 10.1371/image.pbio.v08.i11.XML in mogilefs-prod-repo
+2020-11-14 07:46:16,475 - DEBUG - found 10.1371/image.pbio.v08.i10/1/image.pbio.v08.i10.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:16,512 - DEBUG - found 10.1371/image.pbio.v08.i10/1/image.pbio.v08.i10.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:16,788 - DEBUG - found 10.1371/image.pbio.v08.i10/1/image.pbio.v08.i10.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:16,790 - DEBUG - found crepo object 10.1371/image.pbio.v08.i11.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:16,848 - DEBUG - found crepo object 10.1371/image.pbio.v08.i11.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:17,064 - DEBUG - found crepo object 10.1371/image.pbio.v08.i11.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:17,608 - DEBUG - found 10.1371/image.pbio.v08.i10/1/image.pbio.v08.i10.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:17,833 - DEBUG - found 10.1371/image.pbio.v08.i11/1/image.pbio.v08.i11.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:17,856 - DEBUG - found crepo object 10.1371/image.pbio.v08.i11.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:18,086 - DEBUG - found crepo object 10.1371/image.pbio.v08.i11.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:18,356 - DEBUG - found 10.1371/image.pbio.v08.i11/1/image.pbio.v08.i11.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:18,428 - DEBUG - found 10.1371/image.pbio.v08.i11/1/image.pbio.v08.i11.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:18,585 - DEBUG - found 10.1371/image.pbio.v08.i11/1/image.pbio.v08.i11.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:18,664 - DEBUG - found crepo object 10.1371/image.pbio.v08.i12.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:18,665 - DEBUG - found crepo object 10.1371/image.pbio.v08.i12.XML in mogilefs-prod-repo
+2020-11-14 07:46:18,861 - DEBUG - found crepo object 10.1371/image.pbio.v08.i12.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:19,358 - DEBUG - found 10.1371/image.pbio.v08.i11/1/image.pbio.v08.i11.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:19,479 - DEBUG - found 10.1371/image.pbio.v08.i11/1/image.pbio.v08.i11.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:19,626 - DEBUG - found crepo object 10.1371/image.pbio.v08.i12.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:19,769 - DEBUG - found crepo object 10.1371/image.pbio.v08.i12.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:20,191 - DEBUG - found 10.1371/image.pbio.v08.i12/1/image.pbio.v08.i12.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:20,218 - DEBUG - found 10.1371/image.pbio.v08.i12/1/image.pbio.v08.i12.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:20,335 - DEBUG - found 10.1371/image.pbio.v08.i12/1/image.pbio.v08.i12.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:20,433 - DEBUG - found crepo object 10.1371/image.pbio.v08.i12.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:20,495 - DEBUG - found crepo object 10.1371/image.pbio.v09.i01.XML in mogilefs-prod-repo
+2020-11-14 07:46:20,589 - DEBUG - found crepo object 10.1371/image.pbio.v09.i01.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:21,328 - DEBUG - found 10.1371/image.pbio.v08.i12/1/image.pbio.v08.i12.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:21,333 - DEBUG - found 10.1371/image.pbio.v08.i12/1/image.pbio.v08.i12.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:21,593 - DEBUG - found crepo object 10.1371/image.pbio.v09.i01.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:21,674 - DEBUG - found crepo object 10.1371/image.pbio.v09.i01.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:22,252 - DEBUG - found 10.1371/image.pbio.v08.i12/1/image.pbio.v08.i12.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:22,287 - DEBUG - found 10.1371/image.pbio.v09.i01/1/image.pbio.v09.i01.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:22,307 - DEBUG - found 10.1371/image.pbio.v09.i01/1/image.pbio.v09.i01.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:22,467 - DEBUG - found crepo object 10.1371/image.pbio.v09.i01.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:22,567 - DEBUG - found crepo object 10.1371/image.pbio.v09.i02.XML in mogilefs-prod-repo
+2020-11-14 07:46:22,569 - DEBUG - found crepo object 10.1371/image.pbio.v09.i01.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:23,162 - DEBUG - found 10.1371/image.pbio.v09.i01/1/image.pbio.v09.i01.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:23,163 - DEBUG - found 10.1371/image.pbio.v09.i01/1/image.pbio.v09.i01.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:23,386 - DEBUG - found crepo object 10.1371/image.pbio.v09.i02.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:23,387 - DEBUG - found crepo object 10.1371/image.pbio.v09.i02.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:23,968 - DEBUG - found 10.1371/image.pbio.v09.i01/1/image.pbio.v09.i01.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:24,061 - DEBUG - found 10.1371/image.pbio.v09.i02/1/image.pbio.v09.i02.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:24,089 - DEBUG - found 10.1371/image.pbio.v09.i01/1/image.pbio.v09.i01.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:24,266 - DEBUG - found crepo object 10.1371/image.pbio.v09.i02.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:24,350 - DEBUG - found crepo object 10.1371/image.pbio.v09.i02.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:24,371 - DEBUG - found crepo object 10.1371/image.pbio.v09.i02.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:28,648 - DEBUG - found 10.1371/image.pbio.v09.i02/1/image.pbio.v09.i02.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:28,749 - DEBUG - found 10.1371/image.pbio.v09.i02/1/image.pbio.v09.i02.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:28,902 - DEBUG - found 10.1371/image.pbio.v09.i02/1/image.pbio.v09.i02.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:28,916 - DEBUG - found 10.1371/image.pbio.v09.i02/1/image.pbio.v09.i02.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:28,917 - DEBUG - found crepo object 10.1371/image.pbio.v09.i03.XML in mogilefs-prod-repo
+2020-11-14 07:46:28,940 - DEBUG - found 10.1371/image.pbio.v09.i02/1/image.pbio.v09.i02.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:29,028 - DEBUG - found crepo object 10.1371/image.pbio.v09.i03.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:29,187 - DEBUG - found crepo object 10.1371/image.pbio.v09.i03.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:29,260 - DEBUG - found crepo object 10.1371/image.pbio.v09.i03.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:29,270 - DEBUG - found crepo object 10.1371/image.pbio.v09.i03.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:30,330 - DEBUG - found 10.1371/image.pbio.v09.i03/1/image.pbio.v09.i03.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:30,418 - DEBUG - found 10.1371/image.pbio.v09.i03/1/image.pbio.v09.i03.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:30,577 - DEBUG - found 10.1371/image.pbio.v09.i03/1/image.pbio.v09.i03.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:30,607 - DEBUG - found crepo object 10.1371/image.pbio.v09.i03.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:30,700 - DEBUG - found 10.1371/image.pbio.v09.i03/1/image.pbio.v09.i03.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:30,721 - DEBUG - found 10.1371/image.pbio.v09.i03/1/image.pbio.v09.i03.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:30,769 - DEBUG - found crepo object 10.1371/image.pbio.v09.i04.XML in mogilefs-prod-repo
+2020-11-14 07:46:30,837 - DEBUG - found crepo object 10.1371/image.pbio.v09.i04.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:30,985 - DEBUG - found crepo object 10.1371/image.pbio.v09.i04.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:31,049 - DEBUG - found crepo object 10.1371/image.pbio.v09.i04.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:32,096 - DEBUG - found 10.1371/image.pbio.v09.i03/1/image.pbio.v09.i03.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:32,330 - DEBUG - found 10.1371/image.pbio.v09.i04/1/image.pbio.v09.i04.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:32,378 - DEBUG - found 10.1371/image.pbio.v09.i04/1/image.pbio.v09.i04.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:32,408 - DEBUG - found crepo object 10.1371/image.pbio.v09.i04.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:32,515 - DEBUG - found 10.1371/image.pbio.v09.i04/1/image.pbio.v09.i04.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:32,541 - DEBUG - found 10.1371/image.pbio.v09.i04/1/image.pbio.v09.i04.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:32,577 - DEBUG - found crepo object 10.1371/image.pbio.v09.i04.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:32,659 - DEBUG - found crepo object 10.1371/image.pbio.v09.i05.XML in mogilefs-prod-repo
+2020-11-14 07:46:32,827 - DEBUG - found crepo object 10.1371/image.pbio.v09.i05.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:32,845 - DEBUG - found crepo object 10.1371/image.pbio.v09.i05.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:33,769 - DEBUG - found 10.1371/image.pbio.v09.i04/1/image.pbio.v09.i04.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:33,980 - DEBUG - found 10.1371/image.pbio.v09.i04/1/image.pbio.v09.i04.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:34,063 - DEBUG - found crepo object 10.1371/image.pbio.v09.i05.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:34,135 - DEBUG - found 10.1371/image.pbio.v09.i05/1/image.pbio.v09.i05.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:34,297 - DEBUG - found 10.1371/image.pbio.v09.i05/1/image.pbio.v09.i05.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:34,303 - DEBUG - found 10.1371/image.pbio.v09.i05/1/image.pbio.v09.i05.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:34,437 - DEBUG - found crepo object 10.1371/image.pbio.v09.i05.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:34,465 - DEBUG - found crepo object 10.1371/image.pbio.v09.i05.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:34,572 - DEBUG - found crepo object 10.1371/image.pbio.v09.i06.XML in mogilefs-prod-repo
+2020-11-14 07:46:34,613 - DEBUG - found crepo object 10.1371/image.pbio.v09.i06.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:35,356 - DEBUG - found 10.1371/image.pbio.v09.i05/1/image.pbio.v09.i05.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:35,629 - DEBUG - found crepo object 10.1371/image.pbio.v09.i06.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:35,905 - DEBUG - found 10.1371/image.pbio.v09.i05/1/image.pbio.v09.i05.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:35,947 - DEBUG - found 10.1371/image.pbio.v09.i05/1/image.pbio.v09.i05.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:36,105 - DEBUG - found 10.1371/image.pbio.v09.i06/1/image.pbio.v09.i06.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:36,142 - DEBUG - found crepo object 10.1371/image.pbio.v09.i06.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:36,162 - DEBUG - found 10.1371/image.pbio.v09.i06/1/image.pbio.v09.i06.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:36,206 - DEBUG - found crepo object 10.1371/image.pbio.v09.i06.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:36,356 - DEBUG - found crepo object 10.1371/image.pbio.v09.i06.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:36,497 - DEBUG - found crepo object 10.1371/image.pbio.v09.i07.XML in mogilefs-prod-repo
+2020-11-14 07:46:37,155 - DEBUG - found 10.1371/image.pbio.v09.i06/1/image.pbio.v09.i06.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:37,438 - DEBUG - found crepo object 10.1371/image.pbio.v09.i07.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:37,771 - DEBUG - found 10.1371/image.pbio.v09.i06/1/image.pbio.v09.i06.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:37,774 - DEBUG - found 10.1371/image.pbio.v09.i06/1/image.pbio.v09.i06.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:37,952 - DEBUG - found 10.1371/image.pbio.v09.i06/1/image.pbio.v09.i06.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:38,020 - DEBUG - found 10.1371/image.pbio.v09.i07/1/image.pbio.v09.i07.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:38,044 - DEBUG - found crepo object 10.1371/image.pbio.v09.i07.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:38,045 - DEBUG - found crepo object 10.1371/image.pbio.v09.i07.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:38,230 - DEBUG - found crepo object 10.1371/image.pbio.v09.i07.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:38,347 - DEBUG - found crepo object 10.1371/image.pbio.v09.i07.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:38,959 - DEBUG - found 10.1371/image.pbio.v09.i07/1/image.pbio.v09.i07.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:39,248 - DEBUG - found crepo object 10.1371/image.pbio.v09.i08.XML in mogilefs-prod-repo
+2020-11-14 07:46:39,672 - DEBUG - found 10.1371/image.pbio.v09.i07/1/image.pbio.v09.i07.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:39,682 - DEBUG - found 10.1371/image.pbio.v09.i07/1/image.pbio.v09.i07.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:39,839 - DEBUG - found 10.1371/image.pbio.v09.i07/1/image.pbio.v09.i07.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:39,981 - DEBUG - found 10.1371/image.pbio.v09.i07/1/image.pbio.v09.i07.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:39,999 - DEBUG - found crepo object 10.1371/image.pbio.v09.i08.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:40,003 - DEBUG - found crepo object 10.1371/image.pbio.v09.i08.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:40,121 - DEBUG - found crepo object 10.1371/image.pbio.v09.i08.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:40,366 - DEBUG - found crepo object 10.1371/image.pbio.v09.i08.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:40,693 - DEBUG - found 10.1371/image.pbio.v09.i08/1/image.pbio.v09.i08.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:40,979 - DEBUG - found crepo object 10.1371/image.pbio.v09.i08.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:41,709 - DEBUG - found 10.1371/image.pbio.v09.i08/1/image.pbio.v09.i08.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:41,733 - DEBUG - found 10.1371/image.pbio.v09.i08/1/image.pbio.v09.i08.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:41,868 - DEBUG - found 10.1371/image.pbio.v09.i08/1/image.pbio.v09.i08.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:41,975 - DEBUG - found 10.1371/image.pbio.v09.i08/1/image.pbio.v09.i08.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:41,990 - DEBUG - found crepo object 10.1371/image.pbio.v09.i09.XML in mogilefs-prod-repo
+2020-11-14 07:46:41,991 - DEBUG - found crepo object 10.1371/image.pbio.v09.i09.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:42,187 - DEBUG - found crepo object 10.1371/image.pbio.v09.i09.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:42,275 - DEBUG - found crepo object 10.1371/image.pbio.v09.i09.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:42,738 - DEBUG - found 10.1371/image.pbio.v09.i08/1/image.pbio.v09.i08.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:43,023 - DEBUG - found crepo object 10.1371/image.pbio.v09.i09.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:43,604 - DEBUG - found 10.1371/image.pbio.v09.i09/1/image.pbio.v09.i09.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:43,606 - DEBUG - found 10.1371/image.pbio.v09.i09/1/image.pbio.v09.i09.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:43,811 - DEBUG - found 10.1371/image.pbio.v09.i09/1/image.pbio.v09.i09.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:43,862 - DEBUG - found 10.1371/image.pbio.v09.i09/1/image.pbio.v09.i09.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:43,895 - DEBUG - found crepo object 10.1371/image.pbio.v09.i09.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:43,915 - DEBUG - found crepo object 10.1371/image.pbio.v09.i10.XML in mogilefs-prod-repo
+2020-11-14 07:46:44,098 - DEBUG - found crepo object 10.1371/image.pbio.v09.i10.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:44,173 - DEBUG - found crepo object 10.1371/image.pbio.v09.i10.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:44,588 - DEBUG - found 10.1371/image.pbio.v09.i09/1/image.pbio.v09.i09.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:44,875 - DEBUG - found crepo object 10.1371/image.pbio.v09.i10.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:45,476 - DEBUG - found 10.1371/image.pbio.v09.i09/1/image.pbio.v09.i09.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:45,549 - DEBUG - found 10.1371/image.pbio.v09.i10/1/image.pbio.v09.i10.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:45,715 - DEBUG - found 10.1371/image.pbio.v09.i10/1/image.pbio.v09.i10.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:45,742 - DEBUG - found 10.1371/image.pbio.v09.i10/1/image.pbio.v09.i10.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:45,794 - DEBUG - found crepo object 10.1371/image.pbio.v09.i10.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:45,866 - DEBUG - found crepo object 10.1371/image.pbio.v09.i10.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:46,004 - DEBUG - found crepo object 10.1371/image.pbio.v09.i11.XML in mogilefs-prod-repo
+2020-11-14 07:46:46,026 - DEBUG - found crepo object 10.1371/image.pbio.v09.i11.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:46,477 - DEBUG - found 10.1371/image.pbio.v09.i10/1/image.pbio.v09.i10.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:46,716 - DEBUG - found crepo object 10.1371/image.pbio.v09.i11.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:47,499 - DEBUG - found 10.1371/image.pbio.v09.i10/1/image.pbio.v09.i10.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:47,559 - DEBUG - found 10.1371/image.pbio.v09.i10/1/image.pbio.v09.i10.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:47,676 - DEBUG - found 10.1371/image.pbio.v09.i11/1/image.pbio.v09.i11.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:47,692 - DEBUG - found 10.1371/image.pbio.v09.i11/1/image.pbio.v09.i11.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:47,745 - DEBUG - found crepo object 10.1371/image.pbio.v09.i11.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:47,858 - DEBUG - found crepo object 10.1371/image.pbio.v09.i11.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:47,957 - DEBUG - found crepo object 10.1371/image.pbio.v09.i11.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:47,982 - DEBUG - found crepo object 10.1371/image.pbio.v09.i12.XML in mogilefs-prod-repo
+2020-11-14 07:46:48,344 - DEBUG - found 10.1371/image.pbio.v09.i11/1/image.pbio.v09.i11.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:48,666 - DEBUG - found crepo object 10.1371/image.pbio.v09.i12.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:49,249 - DEBUG - found 10.1371/image.pbio.v09.i11/1/image.pbio.v09.i11.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:49,378 - DEBUG - found 10.1371/image.pbio.v09.i11/1/image.pbio.v09.i11.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:49,487 - DEBUG - found 10.1371/image.pbio.v09.i12/1/image.pbio.v09.i12.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:49,490 - DEBUG - found 10.1371/image.pbio.v09.i11/1/image.pbio.v09.i11.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:49,531 - DEBUG - found crepo object 10.1371/image.pbio.v09.i12.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:49,650 - DEBUG - found crepo object 10.1371/image.pbio.v09.i12.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:49,755 - DEBUG - found crepo object 10.1371/image.pbio.v09.i12.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:49,800 - DEBUG - found crepo object 10.1371/image.pbio.v09.i12.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:50,120 - DEBUG - found 10.1371/image.pbio.v09.i12/1/image.pbio.v09.i12.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:50,447 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i01.XML in mogilefs-prod-repo
+2020-11-14 07:46:51,078 - DEBUG - found 10.1371/image.pbio.v09.i12/1/image.pbio.v09.i12.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:51,197 - DEBUG - found 10.1371/image.pbio.v09.i12/1/image.pbio.v09.i12.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:51,357 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i01.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:51,441 - DEBUG - found 10.1371/image.pbio.v09.i12/1/image.pbio.v09.i12.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:51,451 - DEBUG - found 10.1371/image.pbio.v09.i12/1/image.pbio.v09.i12.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:51,499 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i01.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:51,698 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i01.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:51,759 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i01.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:52,851 - DEBUG - found 10.1371/image.pcbi.v01.i01/1/image.pcbi.v01.i01.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:53,131 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i01.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:53,946 - DEBUG - found 10.1371/image.pcbi.v01.i01/1/image.pcbi.v01.i01.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:53,949 - DEBUG - found 10.1371/image.pcbi.v01.i01/1/image.pcbi.v01.i01.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:54,083 - DEBUG - found 10.1371/image.pcbi.v01.i01/1/image.pcbi.v01.i01.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:54,144 - DEBUG - found 10.1371/image.pcbi.v01.i01/1/image.pcbi.v01.i01.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:54,194 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i02.XML in mogilefs-prod-repo
+2020-11-14 07:46:54,281 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i02.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:54,452 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i02.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:54,476 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i02.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:55,209 - DEBUG - found 10.1371/image.pcbi.v01.i01/1/image.pcbi.v01.i01.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:55,461 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i02.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:56,267 - DEBUG - found 10.1371/image.pcbi.v01.i02/1/image.pcbi.v01.i02.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:56,272 - DEBUG - found 10.1371/image.pcbi.v01.i02/1/image.pcbi.v01.i02.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:56,491 - DEBUG - found 10.1371/image.pcbi.v01.i02/1/image.pcbi.v01.i02.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:46:56,561 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i02.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:56,595 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i03.XML in mogilefs-prod-repo
+2020-11-14 07:46:56,632 - DEBUG - found 10.1371/image.pcbi.v01.i02/1/image.pcbi.v01.i02.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:56,774 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i03.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:56,871 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i03.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:46:57,485 - DEBUG - found 10.1371/image.pcbi.v01.i02/1/image.pcbi.v01.i02.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:46:57,800 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i03.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:46:58,541 - DEBUG - found 10.1371/image.pcbi.v01.i02/1/image.pcbi.v01.i02.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:46:58,600 - DEBUG - found 10.1371/image.pcbi.v01.i03/1/image.pcbi.v01.i03.xml in corpus-dev-0242ac130003
+2020-11-14 07:46:58,834 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i03.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:46:58,853 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i03.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:46:58,890 - DEBUG - found 10.1371/image.pcbi.v01.i03/1/image.pcbi.v01.i03.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:46:58,908 - DEBUG - found 10.1371/image.pcbi.v01.i03/1/image.pcbi.v01.i03.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:46:59,145 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i04.XML in mogilefs-prod-repo
+2020-11-14 07:46:59,213 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i04.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:46:59,847 - DEBUG - found 10.1371/image.pcbi.v01.i03/1/image.pcbi.v01.i03.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:47:00,127 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i04.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:47:00,706 - DEBUG - found 10.1371/image.pcbi.v01.i03/1/image.pcbi.v01.i03.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:47:00,735 - DEBUG - found 10.1371/image.pcbi.v01.i03/1/image.pcbi.v01.i03.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:47:00,967 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i04.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:47:01,007 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i04.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:47:01,042 - DEBUG - found 10.1371/image.pcbi.v01.i04/1/image.pcbi.v01.i04.xml in corpus-dev-0242ac130003
+2020-11-14 07:47:01,048 - DEBUG - found 10.1371/image.pcbi.v01.i04/1/image.pcbi.v01.i04.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:47:01,346 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i05.XML in mogilefs-prod-repo
+2020-11-14 07:47:01,346 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i04.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:47:02,048 - DEBUG - found 10.1371/image.pcbi.v01.i04/1/image.pcbi.v01.i04.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:47:02,778 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i05.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:47:02,959 - DEBUG - found 10.1371/image.pcbi.v01.i04/1/image.pcbi.v01.i04.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:47:03,140 - DEBUG - found 10.1371/image.pcbi.v01.i04/1/image.pcbi.v01.i04.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:47:03,313 - DEBUG - found 10.1371/image.pcbi.v01.i05/1/image.pcbi.v01.i05.xml in corpus-dev-0242ac130003
+2020-11-14 07:47:03,314 - DEBUG - found 10.1371/image.pcbi.v01.i04/1/image.pcbi.v01.i04.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:47:03,648 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i05.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:47:03,673 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i05.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:47:03,993 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i05.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:47:04,020 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i05.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:47:04,531 - DEBUG - found 10.1371/image.pcbi.v01.i05/1/image.pcbi.v01.i05.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:47:05,206 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i06.XML in mogilefs-prod-repo
+2020-11-14 07:47:05,386 - DEBUG - found 10.1371/image.pcbi.v01.i05/1/image.pcbi.v01.i05.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:47:05,702 - DEBUG - found 10.1371/image.pcbi.v01.i05/1/image.pcbi.v01.i05.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:47:05,893 - DEBUG - found 10.1371/image.pcbi.v01.i05/1/image.pcbi.v01.i05.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:47:05,933 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i06.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:47:06,001 - DEBUG - found 10.1371/image.pcbi.v01.i05/1/image.pcbi.v01.i05.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:47:06,075 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i06.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:47:06,214 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i06.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:47:06,367 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i06.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:47:06,473 - DEBUG - found 10.1371/image.pcbi.v01.i06/1/image.pcbi.v01.i06.xml in corpus-dev-0242ac130003
+2020-11-14 07:47:06,744 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i06.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:47:07,658 - DEBUG - found 10.1371/image.pcbi.v01.i06/1/image.pcbi.v01.i06.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:47:07,729 - DEBUG - found 10.1371/image.pcbi.v01.i06/1/image.pcbi.v01.i06.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:47:07,805 - DEBUG - found 10.1371/image.pcbi.v01.i06/1/image.pcbi.v01.i06.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:47:07,882 - DEBUG - found 10.1371/image.pcbi.v01.i06/1/image.pcbi.v01.i06.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:47:07,939 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i07.XML in mogilefs-prod-repo
+2020-11-14 07:47:08,062 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i07.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:47:08,106 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i07.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:47:08,179 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i07.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:47:08,360 - DEBUG - found 10.1371/image.pcbi.v01.i06/1/image.pcbi.v01.i06.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:47:08,639 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i07.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:47:09,565 - DEBUG - found 10.1371/image.pcbi.v01.i07/1/image.pcbi.v01.i07.xml in corpus-dev-0242ac130003
+2020-11-14 07:47:09,728 - DEBUG - found 10.1371/image.pcbi.v01.i07/1/image.pcbi.v01.i07.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:47:09,739 - DEBUG - found 10.1371/image.pcbi.v01.i07/1/image.pcbi.v01.i07.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:47:09,834 - DEBUG - found 10.1371/image.pcbi.v01.i07/1/image.pcbi.v01.i07.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:47:09,858 - DEBUG - found crepo object 10.1371/image.pcbi.v01.i07.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:47:10,052 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i01.XML in mogilefs-prod-repo
+2020-11-14 07:47:10,075 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i01.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:47:10,142 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i01.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:47:10,285 - DEBUG - found 10.1371/image.pcbi.v01.i07/1/image.pcbi.v01.i07.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:47:10,590 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i01.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:47:11,547 - DEBUG - found 10.1371/image.pcbi.v01.i07/1/image.pcbi.v01.i07.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:47:11,822 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i01.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:47:11,895 - DEBUG - found 10.1371/image.pcbi.v02.i01/1/image.pcbi.v02.i01.xml in corpus-dev-0242ac130003
+2020-11-14 07:47:11,970 - DEBUG - found 10.1371/image.pcbi.v02.i01/1/image.pcbi.v02.i01.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:47:12,013 - DEBUG - found 10.1371/image.pcbi.v02.i01/1/image.pcbi.v02.i01.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:47:12,185 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i01.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:47:12,287 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i02.XML in mogilefs-prod-repo
+2020-11-14 07:47:12,287 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i02.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:47:12,426 - DEBUG - found 10.1371/image.pcbi.v02.i01/1/image.pcbi.v02.i01.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:47:12,756 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i02.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:47:13,477 - DEBUG - found 10.1371/image.pcbi.v02.i01/1/image.pcbi.v02.i01.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:47:13,736 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i02.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:47:13,790 - DEBUG - found 10.1371/image.pcbi.v02.i01/1/image.pcbi.v02.i01.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:47:14,013 - DEBUG - found 10.1371/image.pcbi.v02.i02/1/image.pcbi.v02.i02.xml in corpus-dev-0242ac130003
+2020-11-14 07:47:14,025 - DEBUG - found 10.1371/image.pcbi.v02.i02/1/image.pcbi.v02.i02.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:47:14,087 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i02.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:47:14,290 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i02.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:47:14,314 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i03.XML in mogilefs-prod-repo
+2020-11-14 07:47:14,344 - DEBUG - found 10.1371/image.pcbi.v02.i02/1/image.pcbi.v02.i02.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:47:14,597 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i03.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:47:15,291 - DEBUG - found 10.1371/image.pcbi.v02.i02/1/image.pcbi.v02.i02.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:47:15,573 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i03.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:47:15,678 - DEBUG - found 10.1371/image.pcbi.v02.i02/1/image.pcbi.v02.i02.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:47:15,863 - ERROR - HTTPSConnectionPool(host='storage.googleapis.com', port=443): Max retries exceeded with url: /storage/v1/b/corpus-dev-0242ac130003/o/10.1371%2Fimage.pcbi.v02.i02%2F1%2Fimage.pcbi.v02.i02.g001.PNG_S?fields=name&prettyPrint=false (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1ee089110>: Failed to establish a new connection: [Errno 24] Too many open files'))
+2020-11-14 07:47:15,915 - ERROR - HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x10a722f10>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+2020-11-14 07:47:15,960 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i03.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:47:16,054 - DEBUG - found 10.1371/image.pcbi.v02.i03/1/image.pcbi.v02.i03.xml in corpus-dev-0242ac130003
+2020-11-14 07:47:16,129 - ERROR - HTTPSConnectionPool(host='storage.googleapis.com', port=443): Max retries exceeded with url: /storage/v1/b/corpus-dev-0242ac130003/o/10.1371%2Fimage.pcbi.v02.i03%2F1%2Fimage.pcbi.v02.i03.g001.PNG_S?fields=name&prettyPrint=false (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1ee42bc10>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+2020-11-14 07:47:16,319 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i10.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:47:16,351 - ERROR - HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1ee6cde10>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+2020-11-14 07:47:16,372 - DEBUG - found crepo object 10.1371/image.pcbi.v02.i12.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:47:16,412 - DEBUG - found crepo object 10.1371/image.pcbi.v03.i01.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:47:16,433 - ERROR - HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1ee742a10>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+2020-11-14 07:47:16,465 - ERROR - HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1ee790dd0>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+2020-11-14 07:47:16,776 - ERROR - HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Max retries exceeded with url: /token (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1eeacb810>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known'))
+2020-11-14 07:47:24,065 - DEBUG - found crepo object 10.1371/image.pgen.v08.i01.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:47:24,067 - DEBUG - found crepo object 10.1371/image.pgen.v08.i01.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:47:24,073 - DEBUG - found crepo object 10.1371/image.pgen.v08.i01.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:47:25,485 - DEBUG - found 10.1371/image.pgen.v08.i01/1/image.pgen.v08.i01.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:47:25,492 - DEBUG - found 10.1371/image.pgen.v08.i01/1/image.pgen.v08.i01.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:47:25,496 - DEBUG - found 10.1371/image.pgen.v08.i01/1/image.pgen.v08.i01.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:47:25,717 - DEBUG - found crepo object 10.1371/image.pmed.v01.i01.XML in mogilefs-prod-repo
+2020-11-14 07:47:25,760 - DEBUG - found crepo object 10.1371/image.pmed.v01.i01.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:47:25,796 - DEBUG - found crepo object 10.1371/image.pmed.v01.i01.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:47:27,176 - DEBUG - found 10.1371/image.pmed.v01.i01/1/image.pmed.v01.i01.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:47:27,177 - DEBUG - found 10.1371/image.pmed.v01.i01/1/image.pmed.v01.i01.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:47:27,190 - DEBUG - found 10.1371/image.pmed.v01.i01/1/image.pmed.v01.i01.xml in corpus-dev-0242ac130003
+2020-11-14 07:47:27,451 - DEBUG - found crepo object 10.1371/image.pmed.v01.i01.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:47:27,496 - DEBUG - found crepo object 10.1371/image.pmed.v01.i01.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:47:27,518 - DEBUG - found crepo object 10.1371/image.pmed.v01.i01.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:47:28,812 - DEBUG - found 10.1371/image.pmed.v01.i01/1/image.pmed.v01.i01.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:47:28,872 - DEBUG - found 10.1371/image.pmed.v01.i01/1/image.pmed.v01.i01.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:47:28,874 - DEBUG - found 10.1371/image.pmed.v01.i01/1/image.pmed.v01.i01.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:47:29,069 - DEBUG - found crepo object 10.1371/image.pmed.v01.i02.XML in mogilefs-prod-repo
+2020-11-14 07:47:29,125 - DEBUG - found crepo object 10.1371/image.pmed.v01.i02.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:47:29,226 - DEBUG - found crepo object 10.1371/image.pmed.v01.i02.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:47:30,403 - DEBUG - found 10.1371/image.pmed.v01.i02/1/image.pmed.v01.i02.xml in corpus-dev-0242ac130003
+2020-11-14 07:47:30,433 - DEBUG - found 10.1371/image.pmed.v01.i02/1/image.pmed.v01.i02.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:47:30,572 - DEBUG - found 10.1371/image.pmed.v01.i02/1/image.pmed.v01.i02.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:47:30,689 - DEBUG - found crepo object 10.1371/image.pmed.v01.i02.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:47:30,711 - DEBUG - found crepo object 10.1371/image.pmed.v01.i02.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:47:30,926 - DEBUG - found crepo object 10.1371/image.pmed.v01.i02.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:47:32,094 - DEBUG - found 10.1371/image.pmed.v01.i02/1/image.pmed.v01.i02.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:47:32,104 - DEBUG - found 10.1371/image.pmed.v01.i02/1/image.pmed.v01.i02.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:47:32,353 - DEBUG - found 10.1371/image.pmed.v01.i02/1/image.pmed.v01.i02.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:47:32,387 - DEBUG - found crepo object 10.1371/image.pmed.v01.i03.XML in mogilefs-prod-repo
+2020-11-14 07:47:32,390 - DEBUG - found crepo object 10.1371/image.pmed.v01.i03.g001.PNG_I in mogilefs-prod-repo
+2020-11-14 07:47:32,617 - DEBUG - found crepo object 10.1371/image.pmed.v01.i03.g001.PNG_L in mogilefs-prod-repo
+2020-11-14 07:47:33,851 - DEBUG - found 10.1371/image.pmed.v01.i03/1/image.pmed.v01.i03.xml in corpus-dev-0242ac130003
+2020-11-14 07:47:33,882 - DEBUG - found 10.1371/image.pmed.v01.i03/1/image.pmed.v01.i03.g001.PNG_I in corpus-dev-0242ac130003
+2020-11-14 07:47:34,021 - DEBUG - found 10.1371/image.pmed.v01.i03/1/image.pmed.v01.i03.g001.PNG_L in corpus-dev-0242ac130003
+2020-11-14 07:47:34,147 - DEBUG - found crepo object 10.1371/image.pmed.v01.i03.g001.PNG_M in mogilefs-prod-repo
+2020-11-14 07:47:34,196 - DEBUG - found crepo object 10.1371/image.pmed.v01.i03.g001.TIF in mogilefs-prod-repo
+2020-11-14 07:47:34,411 - DEBUG - found crepo object 10.1371/image.pmed.v01.i03.g001.PNG_S in mogilefs-prod-repo
+2020-11-14 07:47:35,841 - DEBUG - found 10.1371/image.pmed.v01.i03/1/image.pmed.v01.i03.g001.PNG_M in corpus-dev-0242ac130003
+2020-11-14 07:47:35,845 - DEBUG - found 10.1371/image.pmed.v01.i03/1/image.pmed.v01.i03.g001.tif in corpus-dev-0242ac130003
+2020-11-14 07:47:36,083 - DEBUG - found crepo object 10.1371/image.pmed.v02.i01.XML in mogilefs-prod-repo
+2020-11-14 07:47:36,150 - DEBUG - found 10.1371/image.pmed.v01.i03/1/image.pmed.v01.i03.g001.PNG_S in corpus-dev-0242ac130003
+2020-11-14 07:47:36,173 - DEBUG - found crepo object 10.1371/image.pmed.v02.i01.g001.PNG_I in mogilefs-prod-repo
+^C^CTraceback (most recent call last):
+  File "validate.py", line 56, in main
+2020-11-14 07:47:36,413 - DEBUG - found crepo object 10.1371/image.pmed.v02.i01.g001.PNG_L in mogilefs-prod-repo
+    row = rowqueue.get()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/queue.py", line 170, in get
+    self.not_empty.wait()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/threading.py", line 296, in wait
+    waiter.acquire()
+KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "validate.py", line 208, in <module>
+    main()
+  File "validate.py", line 68, in main
+    rowqueue.task_done()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/concurrent/futures/_base.py", line 623, in __exit__
+    self.shutdown(wait=True)
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/concurrent/futures/thread.py", line 216, in shutdown
+    t.join()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/threading.py", line 1044, in join
+    self._wait_for_tstate_lock()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/threading.py", line 1060, in _wait_for_tstate_lock
+    elif lock.acquire(block, timeout):
+KeyboardInterrupt
+^CError in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/concurrent/futures/thread.py", line 40, in _python_exit
+    t.join()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/threading.py", line 1044, in join
+    self._wait_for_tstate_lock()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/threading.py", line 1060, in _wait_for_tstate_lock
+    elif lock.acquire(block, timeout):
+KeyboardInterrupt
+^C^C^C^C
+[0;1;38;5;45m11-14[m [0;1;38;5;45m07:47:37[m [0;1;38;5;40mwryfi[0;1;38;5;40m@[0;1;38;5;40mthatguy[0;1;37m:[0;1;38;5;45m~/repos/plos/content-repo/gcsmigrate[m [0;1;38;5;40m>[m 0pipenv run python validate.py -H journals-prod1-db1.soma.plos.org -P 3306 -u ambra_ro -p 58Zrf5vo -C contentrepo-102.soma.plos.org -B corpus-dev-0242ac130003 -D articleValidationM[0;1;38;5;45m11-14[m [0;1;38;5;45m07:47:37[m [0;1;38;5;40mwryfi[0;1;38;5;40m@[0;1;38;5;40mthatguy[0;1;37m:[0;1;38;5;45m~/repos/plos/content-repo/gcsmigrate[m [0;1;38;5;40m>[m 0[81P/opt/local/lib/mysql57/bin/mysql -h journals-prod1-db1.soma.plos.org -u ambra_ro -p
+[KM[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[1Pdev[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[50Psudo lsof -i -n -P | grep mysql /opt/local/lib/mysql57/bin/mysql -h journals-dev1-db1.soma.plos.org -u ambra_ro -p r3ad0nlyambra[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[46Pfind /opt/local -name "*mysql*" -type f | grep bin[K[5Pmysql-select[22Pmysql-selectfind /opt/local/ -name mysql[11Pport search[C[C[C[C[C[C-clientmysql[Kssh journals-dev1-db1.soma.plos.orgplop multidig nedcas-integration.plos.org A dig @ns-101.soma.plos.org ned-integration.plos.org[6@resolver[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[29Pdi[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cplop multidig ned-integration.soma.plos.org A[5P[C[C[C[C[C[C[C[C[C[C[8Pdev[C[C[C[C[C[C[C[C[C[C[C[3Pdig @8.8.4.4 ned-dev.plos.org8.8[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[8Phistory | grep gcloud[Kgcloud services enable bigquery.googleapis.com[19Plist --help[Kalpha billing accounts projects link $project --account-id=$billing[1Pount-id=$billing[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cbilling=$(gcloud beta billing accounts list | grep "PLOS Test" | awk '{print $1}')[1P[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[8Pgcloud alpha billing accounts projects link $project --acount-id=$billingconfig set project[Kprojects create $projectbilling=$(gcloud beta billing accounts list | grep PLOS Test" | awk '{print $1}')[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[8Pgcloud alpha billing accounts projects link $project --acount-id=$billingconfig set project[Kprojects create $projectbilling=$(gcloud beta billing accounts list | grep PLOS Test" | awk '{print $1}')[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cgcloud config set $account[K[5Pproject=wryfi-sandboxgcloud projects create wryfi-sandbox[3Pdelete chaumesser[1P[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[1Pconfig get-value projectbeta compute ssh --zone "us-east1-b" "mgmt-1" --project "plos-mgmt"[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Ccat README.md [Kls[Kcd ~/repos/plos/plos-help/git commit -m 'ENG-484 update queries and data'branch[Kadd -A[2Pdiffpipenv run python validate.py -H journals-prod1-db1.soma.plos.org -P 3306 -u ambra_ro -p 58Zrf5vo -C contentrepo-102.soma.plos.org -B corpus-dev-0242ac130003 -D articleValidationM[0;1;38;5;45m11-14[m [0;1;38;5;45m07:47:37[m [0;1;38;5;40mwryfi[0;1;38;5;40m@[0;1;38;5;40mthatguy[0;1;37m:[0;1;38;5;45m~/repos/plos/content-repo/gcsmigrate[m [0;1;38;5;40m>[m 0git diff[K
+[KM[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cpipenv run python validate.py -H journals-prod1-db1.soma.plos.org -P 3306 -u ambra_ro -p 58Zrf5vo -C contentrepo-102.soma.plos.org -B corpus-dev-0242ac130003 -D articleValidationM[0;1;38;5;45m11-14[m [0;1;38;5;45m07:47:37[m [0;1;38;5;40mwryfi[0;1;38;5;40m@[0;1;38;5;40mthatguy[0;1;37m:[0;1;38;5;45m~/repos/plos/content-repo/gcsmigrate[m [0;1;38;5;40m>[m 0git diff[K
+[KM[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cstatuspipenv run python validate.py -H journals-prod1-db1.soma.plos.org -P 3306 -u ambra_ro -p 58Zrf5vo -C contentrepo-102.soma.plos.org -B corpus-dev-0242ac130003 -D articleValidationM[0;1;38;5;45m11-14[m [0;1;38;5;45m07:47:37[m [0;1;38;5;40mwryfi[0;1;38;5;40m@[0;1;38;5;40mthatguy[0;1;37m:[0;1;38;5;45m~/repos/plos/content-repo/gcsmigrate[m [0;1;38;5;40m>[m 0[B[A[K
+[KM[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cpipenv run python validate.py -H journals-prod1-db1.soma.plos.org -P 3306 -u ambra_ro -p 58Zrf5vo -C contentrepo-102.soma.plos.org -B corpus-dev-0242ac130003 -D articleValidationM[0;1;38;5;45m11-14[m [0;1;38;5;45m07:47:37[m [0;1;38;5;40mwryfi[0;1;38;5;40m@[0;1;38;5;40mthatguy[0;1;37m:[0;1;38;5;45m~/repos/plos/content-repo/gcsmigrate[m [0;1;38;5;40m>[m 0git checkout -b ENG-484[K
+[KM[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cls[Kgit checkout -b ENG-484pipenv run python validate.py -H journals-prod1-db1.soma.plos.org -P 3306 -u ambra_ro -p 58Zrf5vo -C contentrepo-102.soma.plos.org -B corpus-dev-0242ac130003 -D articleValidationM[0;1;38;5;45m11-14[m [0;1;38;5;45m07:47:37[m [0;1;38;5;40mwryfi[0;1;38;5;40m@[0;1;38;5;40mthatguy[0;1;37m:[0;1;38;5;45m~/repos/plos/content-repo/gcsmigrate[m [0;1;38;5;40m>[m 0[B[A[K
+[KM[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cpipenv run python validate.py -H journals-prod1-db1.soma.plos.org -P 3306 -u ambra_ro -p 58Zrf5vo -C contentrepo-102.soma.plos.org -B corpus-dev-0242ac130003 -D articleValidationM[0;1;38;5;45m11-14[m [0;1;38;5;45m07:47:37[m [0;1;38;5;40mwryfi[0;1;38;5;40m@[0;1;38;5;40mthatguy[0;1;37m:[0;1;38;5;45m~/repos/plos/content-repo/gcsmigrate[m [0;1;38;5;40m>[m 0git status[K
+[KM[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[2Pdiffpipenv run python validate.py -H journals-prod1-db1.soma.plos.org -P 3306 -u ambra_ro -p 58Zrf5vo -C contentrepo-102.soma.plos.org -B corpus-dev-0242ac130003 -D articleValidationM[0;1;38;5;45m11-14[m [0;1;38;5;45m07:47:37[m [0;1;38;5;40mwryfi[0;1;38;5;40m@[0;1;38;5;40mthatguy[0;1;37m:[0;1;38;5;45m~/repos/plos/content-repo/gcsmigrate[m [0;1;38;5;40m>[m 0git diff[K
+[KM[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cpipenv run python validate.py -H journals-prod1-db1.soma.plos.org -P 3306 -u ambra_ro -p 58Zrf5vo -C contentrepo-102.soma.plos.org -B corpus-dev-0242ac130003 -D articleValidationM[0;1;38;5;45m11-14[m [0;1;38;5;45m07:47:37[m [0;1;38;5;40mwryfi[0;1;38;5;40m@[0;1;38;5;40mthatguy[0;1;37m:[0;1;38;5;45m~/repos/plos/content-repo/gcsmigrate[m [0;1;38;5;40m>[m 0git diff[K
+[KM[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cadd -Abranchcommit -m 'ENG-484 update queries and data'[21Pcd ~/repos/plos/plos-help/ls[Kcat README.md gcloud beta compute ssh --zone "us-east1-b" "mgmt-1" --project "plos-mgmt"[43Pconfig get-value projectproject delete chaumesser[1@s[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Ccreate wryfi-sandbox[15Pproject=wryfi-sandboxgcloud config set $accountbilling=$(gcloud beta billing accounts list | grep PLOS Test" | awk '{print $1}')[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[50Pgcloud projects create $project[6Pconfig set projectalpha billing accounts projects link $project --acount-id=$billing[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cbilling=$(gcloud beta billing accounts list | grep PLOS Test" | awk '{print $1}')[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[50Pgcloud projects create $project[6Pconfig set projectalpha billing accounts projects link $project --acount-id=$billing[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cbilling=$(gcloud beta billing accounts list | grep PLOS Test" | awk '{print $1}')[1@"[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[9Pgcloud alpha billing accounts projects link $project --acount-id=$billingcount-id=$billingservices list[K --helpenable bigquery.googleapis.comhistory[K | grep gclouddig @8.8.8.8 ned-dev.plos.org4.4[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cplop multidig ned-dev.plos.org A[8@integration[C[C[C[C[C[C[C[C[C[C[C[5@soma.[C[C[C[C[C[C[C[C[C[C[17Pdig ned-integration.plos.org[29@ dig @resolver-101.soma.plos.or[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[6Pns[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[8Pplop multidig nedcas-integration.plos.org A[8Pssh journals-dev1-db1.soma.plos.orgmysql[Kport search mysql-client[K[11@find /opt/local/ -name[C[C[C[C[C[C[16Pmysql-selectfind /opt/local -name mysql-select"*mysql*" -type f | grep bin/opt/local/lib/mysql57/bin/mysql -h journals-dev1-db1.soma.plos.org -u ambra_ro -p r3ad0nlyambra[K[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[50Psudo lsof -i -n -P | grep mysql /opt/local/lib/mysql57/bin/mysql -h journals-dev1-db1.soma.plos.org -u ambra_ro -p[1@prod[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cpipenv run python validate.py -H journals-prod1-db1.soma.plos.org -P 3306 -u ambra_ro -p 58Zrf5vo -C contentrepo-102.soma.plos.org -B corpus-dev-0242ac130003 -D articleValidationM[0;1;38;5;45m11-14[m [0;1;38;5;45m07:47:37[m [0;1;38;5;40mwryfi[0;1;38;5;40m@[0;1;38;5;40mthatguy[0;1;37m:[0;1;38;5;45m~/repos/plos/content-repo/gcsmigrate[m [0;1;38;5;40m>[m 0[K
+[KM[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cexit
