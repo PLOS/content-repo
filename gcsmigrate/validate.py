@@ -42,6 +42,7 @@ def main():
 
     args = parser.parse_args()
 
+    gcs = storage.Client(project=args.gcs_project)
     gbq = bigquery.Client(project=args.gbq_project)
     table_id = f"{args.gbq_project}.{args.gbq_dataset}.{datetime.now().strftime('%s')}"
     create_table(gbq, table_id)
@@ -63,6 +64,7 @@ def main():
                 args.gcs_project,
                 args.gcs_bucket,
                 args.crepo_host,
+                gcs,
                 gbq,
                 table_id,
             )
@@ -95,7 +97,9 @@ def enqueue(host, port, user, password):
     rowqueue.put("DONE")
 
 
-def process_articleFile(row, project, bucket, crepo_host, gbq_client, gbq_table):
+def process_articleFile(
+    row, project, bucket, crepo_host, gcs_client, gbq_client, gbq_table
+):
     articlefile = AmbraFile(row, crepo_host)
     articlefile.gcs_bucket = bucket
     url, params = articlefile.crepo_url
@@ -119,8 +123,7 @@ def process_articleFile(row, project, bucket, crepo_host, gbq_client, gbq_table)
     else:
         logger.warning(f"no crepo object {row.crepoKey} in {row.bucketName}")
     try:
-        gcs = storage.Client(project=project)
-        bucket = gcs.bucket(articlefile.gcs_bucket)
+        bucket = gcs_client.bucket(articlefile.gcs_bucket)
         path = articlefile.gcs_key
         blob = bucket.blob(path)
         if blob.exists():
