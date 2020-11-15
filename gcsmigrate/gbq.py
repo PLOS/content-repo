@@ -1,18 +1,18 @@
 from google.cloud import bigquery
 
 schema = [
-    bigquery.SchemaField("ambra_articleId", "INTEGER", mode="REQUIRED"),
-    bigquery.SchemaField("ambra_articleType", "STRING"),
+    bigquery.SchemaField("ambra_fileId", "INTEGER", mode="REQUIRED"),
     bigquery.SchemaField("ambra_bucketName", "STRING", mode="REQUIRED"),
     bigquery.SchemaField("ambra_crepoKey", "STRING", mode="REQUIRED"),
     bigquery.SchemaField("ambra_crepoUuid", "STRING", mode="REQUIRED"),
-    bigquery.SchemaField("ambra_doi", "STRING", mode="REQUIRED"),
-    bigquery.SchemaField("ambra_fileId", "INTEGER", mode="REQUIRED"),
     bigquery.SchemaField("ambra_fileSize", "INTEGER", mode="REQUIRED"),
-    bigquery.SchemaField("ambra_fileType", "STRING", mode="REQUIRED"),
+    bigquery.SchemaField("ambra_fileType", "STRING"),
     bigquery.SchemaField("ambra_ingestedFileName", "STRING", mode="REQUIRED"),
     bigquery.SchemaField("ambra_ingestionId", "INTEGER", mode="REQUIRED"),
     bigquery.SchemaField("ambra_ingestionNumber", "INTEGER", mode="REQUIRED"),
+    bigquery.SchemaField("ambra_articleId", "INTEGER", mode="REQUIRED"),
+    bigquery.SchemaField("ambra_doi", "STRING", mode="REQUIRED"),
+    bigquery.SchemaField("ambra_articleType", "STRING"),
     bigquery.SchemaField("crepo_found", "BOOL", mode="REQUIRED"),
     bigquery.SchemaField("crepo_host", "STRING"),
     bigquery.SchemaField("crepo_size", "INTEGER"),
