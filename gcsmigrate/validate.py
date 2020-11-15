@@ -53,22 +53,22 @@ def main():
         daemon=True,
     ).start()
 
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    # using a standard ThreadPoolExecutor here eventually leads to OOM
+    with BoundedThreadPoolExecutor(max_workers=5) as executor:
         while True:
             row = rowqueue.get()
             if row == "DONE":
+                rowqueue.join()
                 break
             executor.submit(
                 process_articleFile,
                 row,
-                args.gcs_project,
                 args.gcs_bucket,
                 args.crepo_host,
                 gcs,
                 gbq,
                 table_id,
             )
-            rowqueue.task_done()
 
 
 def enqueue(host, port, user, password):
@@ -97,9 +97,7 @@ def enqueue(host, port, user, password):
     rowqueue.put("DONE")
 
 
-def process_articleFile(
-    row, project, bucket, crepo_host, gcs_client, gbq_client, gbq_table
-):
+def process_articleFile(row, bucket, crepo_host, gcs_client, gbq_client, gbq_table):
     articlefile = AmbraFile(row, crepo_host)
     articlefile.gcs_bucket = bucket
     url, params = articlefile.crepo_url
@@ -145,7 +143,7 @@ def process_articleFile(
             logger.error(f"errors inserting into GBQ: {errors}")
     except Exception as ex:
         logger.error(f"{ex}")
-    return
+    rowqueue.task_done()
 
 
 class AmbraFile:
@@ -206,6 +204,26 @@ class AmbraFile:
     @property
     def gcs_key(self):
         return f"{self.ambra_doi}/{self.ambra_ingestionNumber}/{self.ambra_ingestedFileName}"
+
+
+class BoundedThreadPoolExecutor(ThreadPoolExecutor):
+    semaphore = None
+
+    def __init__(self, max_workers=None):
+        super().__init__(max_workers)
+        self.semaphore = threading.BoundedSemaphore(max_workers)
+
+    def acquire(self):
+        self.semaphore.acquire()
+
+    def release(self, fn):
+        self.semaphore.release()
+
+    def submit(self, fn, *args, **kwargs):
+        self.acquire()
+        future = super().submit(fn, *args, **kwargs)
+        future.add_done_callback(self.release)
+        return future
 
 
 if __name__ == "__main__":
