@@ -19,6 +19,7 @@ pymogilefs = "*"
 requests = "*"
 sqlalchemy = "*"
 tqdm = "*"
+mysqlclient = "*"
 
 [requires]
 python_version = "3.7"

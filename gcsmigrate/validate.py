@@ -72,7 +72,7 @@ def main():
 
 
 def enqueue(host, port, user, password):
-    engine = create_engine(f"mysql+pymysql://{user}:{password}@{host}:{port}/ambra")
+    engine = create_engine(f"mysql://{user}:{password}@{host}:{port}/ambra")
     metadata = MetaData(engine)
     mksession = sessionmaker(bind=engine)
     session = mksession()
