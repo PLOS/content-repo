@@ -54,7 +54,7 @@ def main():
     ).start()
 
     # using a standard ThreadPoolExecutor here eventually leads to OOM
-    with BoundedThreadPoolExecutor(max_workers=7) as executor:
+    with BoundedThreadPoolExecutor(max_workers=30) as executor:
         while True:
             row = rowqueue.get()
             if row == "DONE":
