@@ -54,7 +54,7 @@ def main():
     ).start()
 
     # using a standard ThreadPoolExecutor here eventually leads to OOM
-    with BoundedThreadPoolExecutor(max_workers=5) as executor:
+    with BoundedThreadPoolExecutor(max_workers=7) as executor:
         while True:
             row = rowqueue.get()
             if row == "DONE":
@@ -72,7 +72,8 @@ def main():
 
 
 def enqueue(host, port, user, password):
-    engine = create_engine(f"mysql://{user}:{password}@{host}:{port}/ambra")
+    engine = create_engine(f"mysql://{user}:{password}@{host}:{port}/ambra", pool_recycle=5)
+    engine.execute("SET wait_timeout=30")
     metadata = MetaData(engine)
     mksession = sessionmaker(bind=engine)
     session = mksession()
@@ -91,6 +92,7 @@ def enqueue(host, port, user, password):
             article,
             article.columns.articleId == articleIngestion.columns.articleId,
         )
+        .execution_options(stream_results=True)
         .yield_per(1000)
     ):
         rowqueue.put(row._asdict())
