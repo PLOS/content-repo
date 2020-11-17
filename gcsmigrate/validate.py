@@ -23,9 +23,6 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-rowqueue = queue.Queue(maxsize=1000)
-
-
 def main():
     parser = argparse.ArgumentParser(description="verify GCS data from rhino")
     parser.add_argument("--host", "-H", help="mysql host")
@@ -47,9 +44,11 @@ def main():
     table_id = f"{args.gbq_project}.{args.gbq_dataset}.{datetime.now().strftime('%s')}"
     create_table(gbq, table_id)
 
+    rowqueue = queue.Queue(maxsize=1000)
+
     threading.Thread(
         target=enqueue,
-        args=(args.host, args.port, args.user, args.password),
+        args=(args.host, args.port, args.user, args.password, rowqueue),
         daemon=True,
     ).start()
 
@@ -63,16 +62,19 @@ def main():
             executor.submit(
                 process_articleFile,
                 row,
-                args.gcs_bucket,
                 args.crepo_host,
+                args.gcs_bucket,
                 gcs,
-                gbq,
                 table_id,
+                gbq,
+                rowqueue,
             )
 
 
-def enqueue(host, port, user, password):
-    engine = create_engine(f"mysql://{user}:{password}@{host}:{port}/ambra", pool_recycle=5)
+def enqueue(host, port, user, password, rowqueue):
+    engine = create_engine(
+        f"mysql://{user}:{password}@{host}:{port}/ambra", pool_recycle=5
+    )
     engine.execute("SET wait_timeout=30")
     metadata = MetaData(engine)
     mksession = sessionmaker(bind=engine)
@@ -99,57 +101,17 @@ def enqueue(host, port, user, password):
     rowqueue.put("DONE")
 
 
-def process_articleFile(row, bucket, crepo_host, gcs_client, gbq_client, gbq_table):
-    articlefile = AmbraFile(row, crepo_host)
-    articlefile.gcs_bucket = bucket
-    url, params = articlefile.crepo_url
-    response = requests.get(url, params=params)
-    if response.status_code == 200:
-        logger.debug(
-            f"found crepo object {articlefile.ambra_crepoKey} in {articlefile.ambra_bucketName}"
-        )
-        crepo_object = response.json()
-        articlefile.crepo_found = True
-        for key, value in crepo_object.items():
-            if key in [
-                "size",
-                "checksum",
-                "contentType",
-                "downloadName",
-                "versionNumber",
-            ]:
-                key = f"crepo_{key}"
-                setattr(articlefile, key, value)
-    else:
-        logger.warning(f"no crepo object {row.crepoKey} in {row.bucketName}")
-    try:
-        bucket = gcs_client.bucket(articlefile.gcs_bucket)
-        path = articlefile.gcs_key
-        blob = bucket.blob(path)
-        if blob.exists():
-            logger.debug(f"found {articlefile.gcs_key} in {articlefile.gcs_bucket}")
-            articlefile.gcs_found = True
-            blob.reload()
-            articlefile.gcs_checksum = base64.b64decode(blob.md5_hash).hex()
-            articlefile.gcs_size = blob.size
-            articlefile.gcs_contentType = blob.content_type
-        else:
-            logger.warning(
-                f"blob not found: {articlefile.gcs_key} in {articlefile.gcs_bucket}"
-            )
-    except Exception as ex:
-        logger.error(ex)
-    try:
-        errors = gbq_client.insert_rows_json(gbq_table, [articlefile.serialize()])
-        if errors:
-            logger.error(f"errors inserting into GBQ: {errors}")
-    except Exception as ex:
-        logger.error(f"{ex}")
+def process_articleFile(row, crepo_host, gcs_bucket, gcs, gbq_table, gbq, rowqueue):
+    articlefile = AmbraFile(row, crepo_host, gcs_bucket)
+    articlefile.get_crepo_data()
+    if articlefile.crepo_found:
+        articlefile.get_gcs_data(gcs)
+        articlefile.save_to_gbq(gbq, gbq_table)
     rowqueue.task_done()
 
 
 class AmbraFile:
-    def __init__(self, ambra_data, crepo_host):
+    def __init__(self, ambra_data, crepo_host, gcs_bucket):
         for key, value in ambra_data.items():
             if key in [
                 "articleId",
@@ -175,10 +137,64 @@ class AmbraFile:
         self.crepo_downloadName = None
         self.crepo_versionNumber = None
         self.gcs_found = False
-        self.gcs_bucket = None
+        self.gcs_bucket = gcs_bucket
         self.gcs_size = None
         self.gcs_checksum = None
         self.gcs_contentType = None
+
+    def get_crepo_data(self):
+        url, params = self.crepo_url
+        response = requests.get(url, params=params)
+        if response.status_code == 200:
+            logger.debug(
+                f"found crepo object {self.ambra_crepoKey} in {self.ambra_bucketName}"
+            )
+            crepo_object = response.json()
+            self.crepo_found = True
+            for key, value in crepo_object.items():
+                if key in [
+                    "size",
+                    "checksum",
+                    "contentType",
+                    "downloadName",
+                    "versionNumber",
+                ]:
+                    key = f"crepo_{key}"
+                    setattr(self, key, value)
+        else:
+            logger.warning(
+                f"no crepo object {self.ambra_crepoKey} in {self.ambra_bucketName}"
+            )
+
+    def get_gcs_blob(self, gcs_client):
+        try:
+            bucket = gcs_client.bucket(self.gcs_bucket)
+            path = self.gcs_key
+            blob = bucket.blob(path)
+            if blob.exists():
+                logger.debug(f"found {self.gcs_key} in {self.gcs_bucket}")
+                self.gcs_found = True
+                return blob
+        except Exception as ex:
+            logger.warning(f"blob not found: {self.gcs_key} in {self.gcs_bucket}")
+
+    def get_gcs_data(self, gcs_client):
+        blob = self.get_gcs_blob(gcs_client)
+        try:
+            blob.reload()
+            self.gcs_checksum = base64.b64decode(blob.md5_hash).hex()
+            self.gcs_size = blob.size
+            self.gcs_contentType = blob.content_type
+        except Exception as ex:
+            logger.error(ex)
+
+    def save_to_gbq(self, gbq_client, gbq_table):
+        try:
+            errors = gbq_client.insert_rows_json(gbq_table, [self.serialize()])
+            if errors:
+                logger.error(f"errors inserting into GBQ: {errors}")
+        except Exception as ex:
+            logger.error(f"{ex}")
 
     def serialize(self):
         serialized = {}
