@@ -15,9 +15,11 @@ from google.cloud import storage, bigquery
 from gbq import create_table
 
 
+level = logging.INFO
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(level)
 handler = logging.StreamHandler()
+handler.setLevel(logger.level)
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 handler.setFormatter(formatter)
 logger.addHandler(handler)
@@ -29,6 +31,7 @@ def main():
     parser.add_argument("--port", "-P", help="mysql port")
     parser.add_argument("--user", "-u", help="mysql user")
     parser.add_argument("--password", "-p", help="mysql password")
+    parser.add_argument("--limit", "-l", help="limit mysql results to L users")
     parser.add_argument("--crepo-host", "-C", help="crepo host name")
     parser.add_argument("--gcs-project", "-G", help="gcp project", default="plos-dev")
     parser.add_argument("--gcs-bucket", "-B", help="gcs bucket name")
@@ -36,8 +39,10 @@ def main():
     parser.add_argument(
         "--gbq-project", "-Q", help="BigQuery project", default="plos-dev"
     )
+    parser.add_argument("--log-level", "-L", default="info")
 
     args = parser.parse_args()
+    set_level(logger, args.log_level)
 
     gcs = storage.Client(project=args.gcs_project)
     gbq = bigquery.Client(project=args.gbq_project)
@@ -49,6 +54,7 @@ def main():
     threading.Thread(
         target=enqueue,
         args=(args.host, args.port, args.user, args.password, rowqueue),
+        kwargs={"limit": args.limit},
         daemon=True,
     ).start()
 
@@ -57,7 +63,7 @@ def main():
         while True:
             row = rowqueue.get()
             if row == "DONE":
-                rowqueue.join()
+                rowqueue.task_done()
                 break
             executor.submit(
                 process_articleFile,
@@ -69,9 +75,10 @@ def main():
                 gbq,
                 rowqueue,
             )
+    rowqueue.join()
 
 
-def enqueue(host, port, user, password, rowqueue):
+def enqueue(host, port, user, password, rowqueue, limit=None):
     engine = create_engine(
         f"mysql://{user}:{password}@{host}:{port}/ambra", pool_recycle=5
     )
@@ -84,19 +91,22 @@ def enqueue(host, port, user, password, rowqueue):
     articleIngestion = Table("articleIngestion", metadata, autoload=True)
     article = Table("article", metadata, autoload=True)
 
-    for row in (
-        session.query(articleFile, articleIngestion, article)
-        .join(
-            articleIngestion,
-            articleIngestion.columns.ingestionId == articleFile.columns.ingestionId,
-        )
-        .join(
-            article,
-            article.columns.articleId == articleIngestion.columns.articleId,
+    query = (
+        (
+            session.query(articleFile, articleIngestion, article)
+            .join(
+                articleIngestion,
+                articleIngestion.columns.ingestionId == articleFile.columns.ingestionId,
+            )
+            .join(
+                article,
+                article.columns.articleId == articleIngestion.columns.articleId,
+            )
         )
         .execution_options(stream_results=True)
-        .yield_per(1000)
-    ):
+        .limit(limit)
+    )
+    for row in query.yield_per(1000):
         rowqueue.put(row._asdict())
     rowqueue.put("DONE")
 
@@ -247,6 +257,22 @@ class BoundedThreadPoolExecutor(ThreadPoolExecutor):
         future = super().submit(fn, *args, **kwargs)
         future.add_done_callback(self.release)
         return future
+
+
+def get_level(levelname):
+    return {
+        "debug": logging.DEBUG,
+        "info": logging.INFO,
+        "warning": logging.WARNING,
+        "error": logging.ERROR,
+    }.get(levelname, logging.INFO)
+
+
+def set_level(logger_, levelname):
+    level_ = get_level(levelname)
+    logger_.setLevel(level_)
+    for handler in logger_.handlers:
+        handler.setLevel(level_)
 
 
 if __name__ == "__main__":
