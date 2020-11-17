@@ -102,12 +102,16 @@ def enqueue(host, port, user, password, rowqueue):
 
 
 def process_articleFile(row, crepo_host, gcs_bucket, gcs, gbq_table, gbq, rowqueue):
-    articlefile = AmbraFile(row, crepo_host, gcs_bucket)
-    articlefile.get_crepo_data()
-    if articlefile.crepo_found:
-        articlefile.get_gcs_data(gcs)
-        articlefile.save_to_gbq(gbq, gbq_table)
-    rowqueue.task_done()
+    try:
+        articlefile = AmbraFile(row, crepo_host, gcs_bucket)
+        articlefile.get_crepo_data()
+        if articlefile.crepo_found:
+            articlefile.get_gcs_data(gcs)
+            articlefile.save_to_gbq(gbq, gbq_table)
+    except Exception as ex:
+        logger.error(f"error processing file {ex}")
+    finally:
+        rowqueue.task_done()
 
 
 class AmbraFile:
@@ -180,13 +184,14 @@ class AmbraFile:
 
     def get_gcs_data(self, gcs_client):
         blob = self.get_gcs_blob(gcs_client)
-        try:
-            blob.reload()
-            self.gcs_checksum = base64.b64decode(blob.md5_hash).hex()
-            self.gcs_size = blob.size
-            self.gcs_contentType = blob.content_type
-        except Exception as ex:
-            logger.error(ex)
+        if self.gcs_found:
+            try:
+                blob.reload()
+                self.gcs_checksum = base64.b64decode(blob.md5_hash).hex()
+                self.gcs_size = blob.size
+                self.gcs_contentType = blob.content_type
+            except Exception as ex:
+                logger.error(ex)
 
     def save_to_gbq(self, gbq_client, gbq_table):
         try:

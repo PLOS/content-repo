@@ -55,14 +55,18 @@ def main():
 
 
 def process_articleFile(row, crepo_host, gcs_bucket, gcs_client, rowqueue):
-    articlefile = AmbraFile(row, crepo_host, gcs_bucket)
-    articlefile.get_crepo_data()
-    if articlefile.crepo_found and articlefile.crepo_contentType:
-        blob = articlefile.get_gcs_blob(gcs_client)
-        if articlefile.gcs_found:
-            blob.content_type = articlefile.crepo_contentType
-            blob.patch()
-    rowqueue.task_done()
+    try:
+        articlefile = AmbraFile(row, crepo_host, gcs_bucket)
+        articlefile.get_crepo_data()
+        if articlefile.crepo_found and articlefile.crepo_contentType:
+            blob = articlefile.get_gcs_blob(gcs_client)
+            if articlefile.gcs_found:
+                blob.content_type = articlefile.crepo_contentType
+                blob.patch()
+    except Exception as ex:
+        logger.error(f"error processing file: {ex}")
+    finally:
+        rowqueue.task_done()
 
 
 if __name__ == "__main__":
