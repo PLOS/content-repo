@@ -50,11 +50,11 @@ def main():
                 args.crepo_host,
                 args.gcs_bucket,
                 gcs,
+                rowqueue,
             )
-            rowqueue.task_done()
 
 
-def process_articleFile(row, crepo_host, gcs_bucket, gcs_client):
+def process_articleFile(row, crepo_host, gcs_bucket, gcs_client, rowqueue):
     articlefile = AmbraFile(row, crepo_host, gcs_bucket)
     articlefile.get_crepo_data()
     if articlefile.crepo_found and articlefile.crepo_contentType:
@@ -62,6 +62,7 @@ def process_articleFile(row, crepo_host, gcs_bucket, gcs_client):
         if articlefile.gcs_found:
             blob.content_type = articlefile.crepo_contentType
             blob.patch()
+    rowqueue.task_done()
 
 
 if __name__ == "__main__":
