@@ -1,8 +1,7 @@
 import requests
-import base64
+import json
 import io
 import tempfile
-from queue import Queue
 from unittest.mock import Mock
 import hashlib
 import pytest
@@ -106,7 +105,7 @@ class TestMigrate:
         assert mogile_file.exists_in_bucket(gcs_client, "my-bucket", "my-file") is False
 
     def test_mogile_file_to_json(self, mogile_file):
-        assert mogile_file == MogileFile.from_json(mogile_file.to_json())
+        assert mogile_file == MogileFile.from_json(json.loads(mogile_file.to_json()))
 
     def test_md5_fileobj(self, my_tempfile):
         assert md5_fileobj_hex(my_tempfile) == self.MD5_HEX
