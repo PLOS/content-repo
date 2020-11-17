@@ -1,14 +1,17 @@
-import requests
-import json
-import io
-import tempfile
-from unittest.mock import Mock
 import hashlib
+import io
+import json
+import tempfile
+from random import randint
+from unittest.mock import Mock
+
 import pytest
+import requests
 
 from .shared import (
     HashWrap,
     MogileFile,
+    encode_int,
     future_waiter,
     make_bucket_map,
     md5_fileobj_b64,
@@ -189,3 +192,8 @@ class TestMigrate:
             with HashWrap(req.raw, sha1) as pipe:
                 assert "hello world" == pipe.read().decode("utf-8")
                 assert sha1.hexdigest() == "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
+
+    def test_encode_int(self):
+        assert b"100" == encode_int(100)
+        i = randint(0, 100000000000)
+        assert i == int(encode_int(i))

@@ -8,13 +8,16 @@ from google.cloud import pubsub_v1, storage
 from tqdm import tqdm
 
 from shared import (
+    encode_int,
+    encode_json,
     future_waiter,
     get_mogile_files_from_database,
     make_bucket_map,
     make_db_connection,
     open_db,
-    encode_json,
 )
+
+LATEST_FID_KEY = "latest_fid"
 
 BUCKET_MAP = make_bucket_map(os.environ["BUCKETS"])
 IGNORE_BUCKETS = os.environ["IGNORE_BUCKETS"].split(",")
@@ -60,8 +63,10 @@ def send_message(mogile_file, action):
     return CLIENT.publish(TOPIC_PATH, mogile_file.to_json(), action=action)
 
 
-def queue_migrate(mogile_file):
+def queue_migrate(mogile_file, db):
     """Queue mogile files for migration in pubsub."""
+    if (LATEST_FID_KEY not in db) or (mogile_file.fid > int(db[LATEST_FID_KEY])):
+        db[LATEST_FID_KEY] = encode_int(mogile_file.fid)
     return send_message(mogile_file, MIGRATE)
 
 
@@ -149,6 +154,7 @@ def main():
     process or a single file that contains a list of fids to exclude.
 
     """
+    state_db = dbm.gnu.open("state.db", "cf")
 
     action = sys.argv[1]
     if action == "verify":
@@ -163,16 +169,20 @@ def main():
         )
         futures = (queue_verify(mogile) for mogile in generator)
     elif action == "migrate":
+        if LATEST_FID_KEY in state_db:
+            latest_fid = int(state_db[LATEST_FID_KEY])
+        else:
+            latest_fid = None
         generator = tqdm(
             [
                 mogile
                 for mogile in get_mogile_files_from_database(
-                    os.environ["MOGILE_DATABASE_URL"]
+                    os.environ["MOGILE_DATABASE_URL"], initial_fid=latest_fid
                 )
                 if mogile.mogile_bucket not in IGNORE_BUCKETS
             ]
         )
-        futures = (queue_migrate(mogile) for mogile in generator)
+        futures = (queue_migrate(mogile, state_db) for mogile in generator)
     elif action == "final_migrate":
         bucket = next(v for v in BUCKET_MAP.values() if "corpus" in v)
         non_corpus_buckets = {
@@ -190,6 +200,8 @@ def main():
     # keeping too many results in memory.
     for f in future_waiter(futures, 10000):
         pass
+    state_db.sync()
+    state_db.close()
 
 
 if __name__ == "__main__":

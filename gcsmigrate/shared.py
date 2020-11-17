@@ -339,3 +339,8 @@ def open_db(dbpath):
             # Clean up db if there was an error
             os.unlink(dbpath)
             raise
+
+
+def encode_int(i):
+    """Encode an integer for a bytes database."""
+    return bytes(str(i), "utf-8")
