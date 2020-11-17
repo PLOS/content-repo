@@ -284,49 +284,22 @@ class MogileFile:
         assert self.sha1sum == sha1, f"{self.fid} has wrong SHA1 sum"
 
 
-def get_mogile_files_from_database(
-    database_url, limit=None, fids=None, excluded_fids=set()
-):
+def get_mogile_files_from_database(database_url, initial_fid=None):
     """Return a generator for all mogile files in the database."""
     connection = make_db_connection(database_url)
     try:
         cursor = connection.cursor()
-        if limit is not None:
-            sql = f"SELECT * FROM file LIMIT {limit}"
-        elif fids is not None:
-            fids_in = ", ".join(fids)
-            sql = f"SELECT * FROM file WHERE fid IN ({fids_in})"
+        if initial_fid is not None:
+            sql = f"SELECT * FROM file WHERE fid >= {initial_fid}"
         else:
             sql = "SELECT * FROM file"
         cursor.execute(sql)
         row = cursor.fetchone()
         while row:
-            if row[0] not in excluded_fids:
-                yield MogileFile.parse_row(row)
+            yield MogileFile.parse_row(row)
             row = cursor.fetchone()
     finally:
         connection.close()
-
-
-def make_generator_from_args(args):
-    """Make a mogile_file generator from args.
-
-    Args are either a list of fids to process or a single file that
-    contains a list of fids to exclude.
-    """
-    fids = None
-    excluded_fids = set()
-    if len(args) > 0:
-        if args[0].isdigit():
-            fids = args
-        else:
-            with open(args[0]) as f:
-                for line in f:
-                    excluded_fids.add(int(line))
-            print(f"Excluding {len(excluded_fids)} fids.")
-    return get_mogile_files_from_database(
-        os.environ["MOGILE_DATABASE_URL"], fids=fids, excluded_fids=excluded_fids
-    )
 
 
 def future_waiter(iterable, max_futures):

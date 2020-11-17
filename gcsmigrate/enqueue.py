@@ -9,9 +9,9 @@ from tqdm import tqdm
 
 from shared import (
     future_waiter,
+    get_mogile_files_from_database,
     make_bucket_map,
     make_db_connection,
-    make_generator_from_args,
     open_db,
     encode_json,
 )
@@ -155,7 +155,9 @@ def main():
         generator = tqdm(
             [
                 mogile
-                for mogile in make_generator_from_args(sys.argv[2:])
+                for mogile in get_mogile_files_from_database(
+                    os.environ["MOGILE_DATABASE_URL"]
+                )
                 if mogile.mogile_bucket not in IGNORE_BUCKETS
             ]
         )
@@ -164,7 +166,9 @@ def main():
         generator = tqdm(
             [
                 mogile
-                for mogile in make_generator_from_args(sys.argv[2:])
+                for mogile in get_mogile_files_from_database(
+                    os.environ["MOGILE_DATABASE_URL"]
+                )
                 if mogile.mogile_bucket not in IGNORE_BUCKETS
             ]
         )
