@@ -18,6 +18,7 @@ from shared import (
 )
 
 LATEST_FID_KEY = "latest_fid"
+LATEST_CREPO_ID_KEY = "latest_crepo_id"
 
 BUCKET_MAP = make_bucket_map(os.environ["BUCKETS"])
 IGNORE_BUCKETS = os.environ["IGNORE_BUCKETS"].split(",")
@@ -39,21 +40,23 @@ GCS_CLIENT = storage.Client()
 TOPIC_PATH = CLIENT.topic_path(GCP_PROJECT, TOPIC_ID)
 
 
-def build_shas_db():
+def build_shas_db(state_db, initial_id=0):
     """Build a shas.db file where we will store the relationship between a UUID and a sha."""
     connection = make_db_connection(os.environ["CONTENTREPO_DATABASE_URL"])
     try:
         with open_db("shas.db") as db:
             cursor = connection.cursor()
-            cursor.execute("select uuid, checksum from objects")
+            query = f"SELECT id, uuid, checksum FROM objects WHERE id > {initial_id}"
+            cursor.execute(query)
             with tqdm(desc="loading shas") as pbar:
                 row = cursor.fetchone()
                 pbar.update()
                 while row:
-                    (uuid, checksum) = row
+                    (crepo_id, uuid, checksum) = row
                     db[uuid] = checksum
                     row = cursor.fetchone()
                     pbar.update()
+                    maybe_update_max(state_db, LATEST_CREPO_ID_KEY, crepo_id)
     finally:
         connection.close()
 
@@ -100,7 +103,7 @@ def queue_rhino_final(bucket_name):
             connection.close()
 
 
-def queue_lemur_final(buckets):
+def queue_lemur_final(buckets, initial_id=0):
     """Queue up copies for the lemur final migration step in pubsub."""
     connection = make_db_connection(os.environ["CONTENTREPO_DATABASE_URL"])
     try:
@@ -120,6 +123,7 @@ SELECT objects.objKey,
                MAX(versionNumber) AS latest
           FROM objects
          WHERE bucketId = %s
+           AND id > %s
          GROUP BY objKey
        ) AS m
  INNER JOIN objects
@@ -128,7 +132,7 @@ SELECT objects.objKey,
    AND objects.bucketId = %s
 """
             cursor = connection.cursor()
-            cursor.execute(sql, (bucket_id, bucket_id))
+            cursor.execute(sql, (bucket_id, bucket_id, initial_id))
             row = cursor.fetchone()
             while row:
                 (obj_key, sha) = row
@@ -154,53 +158,64 @@ def main():
 
     """
     state_db = dbm.gnu.open("state.db", "cf")
-
-    action = sys.argv[1]
-    if action == "verify":
-        generator = tqdm(
-            [
-                mogile
-                for mogile in get_mogile_files_from_database(
-                    os.environ["MOGILE_DATABASE_URL"]
-                )
-                if mogile.mogile_bucket not in IGNORE_BUCKETS
-            ]
-        )
-        futures = (queue_verify(mogile) for mogile in generator)
-    elif action == "migrate":
-        if LATEST_FID_KEY in state_db:
-            latest_fid = int(state_db[LATEST_FID_KEY])
-        else:
-            latest_fid = None
-        generator = tqdm(
-            [
-                mogile
-                for mogile in get_mogile_files_from_database(
-                    os.environ["MOGILE_DATABASE_URL"], initial_fid=latest_fid
-                )
-                if mogile.mogile_bucket not in IGNORE_BUCKETS
-            ]
-        )
-        futures = (queue_migrate(mogile, state_db) for mogile in generator)
-    elif action == "final_migrate":
-        bucket = next(v for v in BUCKET_MAP.values() if "corpus" in v)
+    try:
+        action = sys.argv[1]
+        corpus_bucket = next(v for v in BUCKET_MAP.values() if "corpus" in v)
         non_corpus_buckets = {
             k: v
             for k, v in BUCKET_MAP.items()
             if "corpus" not in v and k not in IGNORE_BUCKETS
         }
-        build_shas_db()
-        futures = tqdm(queue_rhino_final(bucket))
-        futures = tqdm(queue_lemur_final(non_corpus_buckets))
-    else:
-        raise Exception(f"Bad action: {action}.")
-    # Evaluate all the futures using our future_waiter, which will
-    # stop occasionally to clean up any completed futures. This avoids
-    # keeping too many results in memory.
-    for f in future_waiter(futures, 10000):
-        pass
-    state_db.sync()
-    state_db.close()
+        if LATEST_CREPO_ID_KEY in state_db:
+            latest_crepo_id = int(state_db[LATEST_CREPO_ID_KEY])
+        else:
+            latest_crepo_id = 0
+        if action == "verify":
+            generator = tqdm(
+                [
+                    mogile
+                    for mogile in get_mogile_files_from_database(
+                        os.environ["MOGILE_DATABASE_URL"]
+                    )
+                    if mogile.mogile_bucket not in IGNORE_BUCKETS
+                ]
+            )
+            futures = (queue_verify(mogile) for mogile in generator)
+        elif action == "migrate":
+            if LATEST_FID_KEY in state_db:
+                latest_fid = int(state_db[LATEST_FID_KEY])
+            else:
+                latest_fid = 0
+            generator = tqdm(
+                [
+                    mogile
+                    for mogile in get_mogile_files_from_database(
+                        os.environ["MOGILE_DATABASE_URL"], initial_fid=latest_fid
+                    )
+                    if mogile.mogile_bucket not in IGNORE_BUCKETS
+                ]
+            )
+            futures = (queue_migrate(mogile, state_db) for mogile in generator)
+        elif action == "final_migrate_rhino":
+            build_shas_db(state_db, initial_id=latest_crepo_id)
+            futures = tqdm(queue_rhino_final(corpus_bucket))
+        elif action == "final_migrate_lemur":
+            build_shas_db(state_db, initial_id=latest_crepo_id)
+            futures = tqdm(queue_lemur_final(non_corpus_buckets, initial_id=latest_crepo_id))
+        else:
+            raise Exception(f"Bad action: {action}.")
+        # Evaluate all the futures using our future_waiter, which will
+        # stop occasionally to clean up any completed futures. This avoids
+        # keeping too many results in memory.
+        for f in future_waiter(futures, 10000):
+            pass
+        state_db.sync()
+        state_db.close()
+    except:
+        state_db.close()
+        # Clean up db if there was an error
+        os.unlink("state.db")
+        raise
 
 
 if __name__ == "__main__":

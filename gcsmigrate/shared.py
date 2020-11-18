@@ -284,15 +284,12 @@ class MogileFile:
         assert self.sha1sum == sha1, f"{self.fid} has wrong SHA1 sum"
 
 
-def get_mogile_files_from_database(database_url, initial_fid=None):
+def get_mogile_files_from_database(database_url, initial_fid=0):
     """Return a generator for all mogile files in the database."""
     connection = make_db_connection(database_url)
     try:
         cursor = connection.cursor()
-        if initial_fid is not None:
-            sql = f"SELECT * FROM file WHERE fid >= {initial_fid}"
-        else:
-            sql = "SELECT * FROM file"
+        sql = f"SELECT * FROM file WHERE fid > {initial_fid}"
         cursor.execute(sql)
         row = cursor.fetchone()
         while row:
