@@ -8,6 +8,7 @@ from google.cloud import pubsub_v1, storage
 from tqdm import tqdm
 
 from shared import (
+    encode_int,
     encode_json,
     future_waiter,
     get_mogile_files_from_database,
@@ -159,6 +160,7 @@ def main():
     """
     state_db = dbm.gnu.open("state.db", "cf")
     try:
+        futures = None
         action = sys.argv[1]
         corpus_bucket = next(v for v in BUCKET_MAP.values() if "corpus" in v)
         non_corpus_buckets = {
@@ -202,13 +204,18 @@ def main():
         elif action == "final_migrate_lemur":
             build_shas_db(state_db, initial_id=latest_crepo_id)
             futures = tqdm(queue_lemur_final(non_corpus_buckets, initial_id=latest_crepo_id))
+        elif action == "update_state_fid":
+            state_db[LATEST_FID_KEY] = encode_int(int(sys.argv[2]))
+        elif action == "update_crepo_id":
+            state_db[LATEST_CREPO_ID_KEY] = encode_int(int(sys.argv[2]))
         else:
             raise Exception(f"Bad action: {action}.")
         # Evaluate all the futures using our future_waiter, which will
         # stop occasionally to clean up any completed futures. This avoids
         # keeping too many results in memory.
-        for f in future_waiter(futures, 10000):
-            pass
+        if futures is not None:
+            for f in future_waiter(futures, 10000):
+                pass
         state_db.sync()
         state_db.close()
     except:
