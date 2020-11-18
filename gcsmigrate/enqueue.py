@@ -8,12 +8,12 @@ from google.cloud import pubsub_v1, storage
 from tqdm import tqdm
 
 from shared import (
-    encode_int,
     encode_json,
     future_waiter,
     get_mogile_files_from_database,
     make_bucket_map,
     make_db_connection,
+    maybe_update_max,
     open_db,
 )
 
@@ -63,10 +63,9 @@ def send_message(mogile_file, action):
     return CLIENT.publish(TOPIC_PATH, mogile_file.to_json(), action=action)
 
 
-def queue_migrate(mogile_file, db):
+def queue_migrate(mogile_file, state_db):
     """Queue mogile files for migration in pubsub."""
-    if (LATEST_FID_KEY not in db) or (mogile_file.fid > int(db[LATEST_FID_KEY])):
-        db[LATEST_FID_KEY] = encode_int(mogile_file.fid)
+    maybe_update_max(state_db, LATEST_FID_KEY, mogile_file.fid)
     return send_message(mogile_file, MIGRATE)
 
 

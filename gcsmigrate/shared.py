@@ -344,3 +344,9 @@ def open_db(dbpath):
 def encode_int(i):
     """Encode an integer for a bytes database."""
     return bytes(str(i), "utf-8")
+
+
+def maybe_update_max(db, key, i):
+    """Set a value i in db with key if i is greater than the current value, or if it is not set. Stored as bytes."""
+    if (key not in db) or (i > int(db[key])):
+        db[key] = encode_int(i)

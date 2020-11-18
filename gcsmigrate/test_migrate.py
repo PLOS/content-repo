@@ -14,6 +14,7 @@ from .shared import (
     encode_int,
     future_waiter,
     make_bucket_map,
+    maybe_update_max,
     md5_fileobj_b64,
     md5_fileobj_hex,
     sha1_fileobj_b64,
@@ -197,3 +198,17 @@ class TestMigrate:
         assert b"100" == encode_int(100)
         i = randint(0, 100000000000)
         assert i == int(encode_int(i))
+
+    def test_maybe_update_max(self):
+        db = {}
+        maybe_update_max(db, "last", 1)
+        assert db["last"] == b"1"
+
+        db = {"last": b"1"}
+        maybe_update_max(db, "last", 2)
+        assert db["last"] == b"2"
+
+        db = {"last": b"2"}
+        maybe_update_max(db, "last", 1)
+        assert db["last"] == b"2"
+
