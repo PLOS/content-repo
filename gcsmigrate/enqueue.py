@@ -2,6 +2,7 @@
 
 import dbm.gnu
 import os
+import os.path
 import sys
 
 from google.cloud import pubsub_v1, storage
@@ -27,6 +28,8 @@ IGNORE_BUCKETS = os.environ["IGNORE_BUCKETS"].split(",")
 TOPIC_ID = os.environ["TOPIC_ID"]
 GCP_PROJECT = os.environ["GCP_PROJECT"]
 
+STATE_DIR = os.environ.get("STATE_DIR", os.getcwd())
+
 VERIFY = b"verify"
 MIGRATE = b"migrate"
 
@@ -45,7 +48,7 @@ def build_shas_db(state_db, initial_id=0):
     """Build a shas.db file where we will store the relationship between a UUID and a sha."""
     connection = make_db_connection(os.environ["CONTENTREPO_DATABASE_URL"])
     try:
-        with open_db("shas.db") as db:
+        with open_db(os.path.join(STATE_DIR, "shas.db")) as db:
             cursor = connection.cursor()
             query = f"SELECT id, uuid, checksum FROM objects WHERE id > {initial_id}"
             cursor.execute(query)
@@ -83,7 +86,7 @@ def queue_rhino_final(bucket_name):
     connection = make_db_connection(os.environ["RHINO_DATABASE_URL"])
     sql = "SELECT doi, ingestionNumber, ingestedFileName, crepoUuid FROM articleFile JOIN articleIngestion ON articleFile.ingestionId = articleIngestion.ingestionId JOIN article ON articleIngestion.articleId = article.articleId;"
     bucket = GCS_CLIENT.bucket(bucket_name)
-    with dbm.gnu.open("shas.db") as db:
+    with dbm.gnu.open(os.path.join(STATE_DIR, "shas.db")) as db:
         try:
             cursor = connection.cursor()
             cursor.execute(sql)
@@ -158,7 +161,7 @@ def main():
     process or a single file that contains a list of fids to exclude.
 
     """
-    state_db = dbm.gnu.open("state.db", "cf")
+    state_db = dbm.gnu.open(os.path.join(STATE_DIR, "state.db"), "cf")
     try:
         futures = None
         action = sys.argv[1]
