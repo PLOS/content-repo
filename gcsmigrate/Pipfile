@@ -6,15 +6,20 @@ verify_ssl = true
 [dev-packages]
 pytest = "*"
 requests-mock = "*"
+ipython = "*"
 
 [packages]
 PyMySQL = "*"
 dj-database-url = "*"
-pymogilefs = "*"
-tqdm = "*"
-google-cloud-pubsub = "*"
+google-cloud-bigquery = "*"
 google-cloud-firestore = "*"
+google-cloud-pubsub = "*"
 google-cloud-storage = "*"
+pymogilefs = "*"
+requests = "*"
+sqlalchemy = "*"
+tqdm = "*"
+mysqlclient = "*"
 
 [requires]
 python_version = "3.7"
