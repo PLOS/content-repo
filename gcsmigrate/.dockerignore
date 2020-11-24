@@ -1,0 +1,7 @@
+.env
+.git
+.mypy_cache
+.pytest_cache
+k8s
+plos-dev*.json
+**/__pycache__
