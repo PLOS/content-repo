@@ -1,27 +1,31 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: hello
+  name: lemursync
 spec:
-  schedule: "*/1 * * * *"
+  schedule: "*/15 * * * *"
   jobTemplate:
     spec:
       template:
         spec:
           serviceAccountName: rhino-sa
           containers:
-          - name: hello
-            image: gcr.io/plos-mgmt/eng-462
-            args:
-            - /bin/sh
-            - -c
-            - "echo -n new: ; date; echo -n old: ; cat /lemursync/date;date > /lemursync/date"
-            volumeMounts:
-              - mountPath: /lemursync
-                name: lemursyncstore
+            - name: lemursync
+              image: gcr.io/plos-mgmt/eng-462
+              args:
+                - /bin/sh
+                - -c
+                - "python /code/enqueue.py xyz"
+              volumeMounts:
+                - mountPath: /lemursync
+                  name: lemursync-data
+              envFrom:
+                - configMapRef:
+                    name: lemursync-configmap
+                - secretRef:
+                    name: lemursync
           restartPolicy: OnFailure
           volumes:
-            - name: lemursyncstore
-              gcePersistentDisk:
-                pdName: lemursyncstore
-                fsType: ext4
+            - name: lemursync-data
+              persistentVolumeClaim:
+                claimName: lemursync-data

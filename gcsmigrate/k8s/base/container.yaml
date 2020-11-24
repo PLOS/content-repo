@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lemursync-shell
+spec:
+  replicas: 1
+  template:
+    spec:
+      serviceAccountName: rhino-sa
+      containers:
+        - name: lemursync-shell
+          image: gcr.io/plos-mgmt/eng-462
+          command: ["/bin/bash", "-c", "--"]
+          args: ["while true; do sleep 30; done;"]
+          volumeMounts:
+            - mountPath: /lemursync
+              name: lemursync-data
+          envFrom:
+            - configMapRef:
+                name: lemursync-configmap
+            - secretRef:
+                name: lemursync
+      volumes:
+        - name: lemursync-data
+          persistentVolumeClaim:
+            claimName: lemursync-data

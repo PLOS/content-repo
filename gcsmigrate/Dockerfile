@@ -6,3 +6,4 @@ COPY Pipfile* /code/
 RUN cd /code
 RUN pipenv lock --requirements | pip install -r /dev/stdin
 COPY . /code
+ENV STATE_DIR=/lemursync
