@@ -42,3 +42,4 @@ test/.pytest_cache/
 
 
 lambda.tmp/
+screenlog.*
