@@ -84,7 +84,15 @@ def queue_verify(mogile_file):
 def queue_rhino_final(bucket_name):
     """Queue up copies for the rhino final migration step in pubsub."""
     connection = make_db_connection(os.environ["RHINO_DATABASE_URL"])
-    sql = "SELECT doi, ingestionNumber, ingestedFileName, crepoUuid FROM articleFile JOIN articleIngestion ON articleFile.ingestionId = articleIngestion.ingestionId JOIN article ON articleIngestion.articleId = article.articleId;"
+    sql = """
+SELECT doi,
+       ingestionNumber,
+       ingestedFileName,
+       crepoUuid
+FROM articleFile
+JOIN articleIngestion ON articleFile.ingestionId = articleIngestion.ingestionId
+JOIN article ON articleIngestion.articleId = article.articleId;
+"""
     bucket = GCS_CLIENT.bucket(bucket_name)
     with dbm.gnu.open(os.path.join(STATE_DIR, "shas.db")) as db:
         try:
