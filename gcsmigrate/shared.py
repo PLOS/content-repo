@@ -1,5 +1,6 @@
 """Tools for migrating Mogile content to GCS."""
 
+import mimetypes
 import base64
 import dbm.gnu
 import hashlib
@@ -347,3 +348,14 @@ def maybe_update_max(db, key, i):
     """Set a value i in db with key if i is greater than the current value, or if it is not set. Stored as bytes."""
     if (key not in db) or (i > int(db[key])):
         db[key] = encode_int(i)
+
+
+def guess_mimetype(filename):
+    """Replicate the articleadmin logic for guessing mime types."""
+    _, ext = os.path.splitext(filename)
+    if ext.lower() in [".png_i", ".png_s", ".png_m", ".png_l"]:
+        return "image/png"
+    mimetype, _ = mimetypes.guess_type(filename, strict=False)
+    if not mimetype:
+        return 'application/octet-stream'
+    return mimetype

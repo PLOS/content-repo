@@ -9,6 +9,7 @@ import pytest
 import requests
 
 from .shared import (
+    guess_mimetype,
     HashWrap,
     MogileFile,
     encode_int,
@@ -212,3 +213,16 @@ class TestMigrate:
         maybe_update_max(db, "last", 1)
         assert db["last"] == b"2"
 
+    def test_guess_mimetype(self):
+        assert "image/png" == guess_mimetype(
+            "corpus-dev-0242ac130003/10.1371/image.pbio.v01.i01/1/image.pbio.v01.i01.g001.PNG_I"
+        )
+        assert "image/png" == guess_mimetype(
+            "gs:///corpus-dev-0242ac130003/10.1371/image.pbio.v01.i01/1/image.pbio.v01.i01.g001.PNG_I"
+        )
+        assert "image/png" == guess_mimetype("image.pbio.v01.i01.g001.PNG_I")
+        assert "image/png" == guess_mimetype("image.pbio.v01.i01.g001.PNG")
+        assert "image/png" == guess_mimetype("image.pbio.v01.i01.g001.PNG_I")
+        assert "application/octet-stream" == guess_mimetype("foo")
+        assert "text/csv" == guess_mimetype("foo.csv")
+        assert "text/html" == guess_mimetype("foo.html")
