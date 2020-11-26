@@ -5,7 +5,7 @@ import time
 import pymogilefs
 from google.cloud import firestore, storage
 
-from shared import MogileFile, make_bucket_map, make_db_connection, copy_object, guess_mimetype
+from shared import MogileFile, make_bucket_map, make_db_connection, copy_object
 
 COLLECTION_NAME = os.environ["COLLECTION_NAME"]
 BUCKET_MAP = make_bucket_map(os.environ["BUCKETS"])
@@ -60,9 +60,7 @@ WHERE uuid = %s;
             gcs_client,
             gcs_bucket,
             checksum,
-            f"{doi}/{ingestionNumber}/{ingestedFileName}",
-            guess_mimetype(ingestedFileName)
-        )
+            f"{doi}/{ingestionNumber}/{ingestedFileName}")
     finally:
         crepo_cursor.close()
         mogile_cursor.close()

@@ -52,15 +52,15 @@ def make_db_connection(db_url):
     )
 
 
-def copy_object(gcs_client, bucket_name, from_key, to_key, mimetype=None):
+def copy_object(gcs_client, bucket_name, from_key, to_key):
     bucket = gcs_client.bucket(bucket_name)
     source_blob = bucket.blob(from_key)
     bucket.copy_blob(source_blob, bucket, to_key)
-    if mimetype:
-        target_blob = bucket.blob(to_key)
-        target_blob.content_type = mimetype
-        target_blob.patch()
-    
+    mimetype = guess_mimetype(to_key)
+    target_blob = bucket.blob(to_key)
+    target_blob.content_type = mimetype
+    target_blob.patch()
+
 
 def make_bucket_map(buckets):
     """Construct a hash from a buckets source string of the form a:b,c:d."""
