@@ -54,8 +54,8 @@ def build_shas_db(state_db, initial_id=0):
     try:
         with open_db(SHAS_DB_PATH) as db:
             cursor = connection.cursor()
-            query = f"SELECT id, uuid, checksum FROM objects WHERE id > {initial_id}"
-            cursor.execute(query)
+            query = "SELECT id, uuid, checksum FROM objects WHERE id > %s"
+            cursor.execute(query, initial_id)
             with tqdm(desc="loading shas") as pbar:
                 row = cursor.fetchone()
                 pbar.update()
