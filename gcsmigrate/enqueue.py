@@ -219,7 +219,7 @@ def main():
         elif action == "final_migrate_lemur":
             build_shas_db(state_db, initial_id=latest_crepo_id)
             futures = tqdm(queue_lemur_final(non_corpus_buckets, initial_id=latest_crepo_id))
-        elif action == "update_state_fid":
+        elif action == "update_mogile_fid":
             state_db[LATEST_FID_KEY] = encode_int(int(sys.argv[2]))
         elif action == "update_crepo_id":
             state_db[LATEST_CREPO_ID_KEY] = encode_int(int(sys.argv[2]))
