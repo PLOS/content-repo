@@ -29,6 +29,7 @@ TOPIC_ID = os.environ["TOPIC_ID"]
 GCP_PROJECT = os.environ["GCP_PROJECT"]
 
 STATE_DIR = os.environ.get("STATE_DIR", os.getcwd())
+SHAS_DB_PATH = os.path.join(STATE_DIR, "shas.db")
 
 VERIFY = b"verify"
 MIGRATE = b"migrate"
@@ -48,7 +49,7 @@ def build_shas_db(state_db, initial_id=0):
     """Build a shas.db file where we will store the relationship between a UUID and a sha."""
     connection = make_db_connection(os.environ["CONTENTREPO_DATABASE_URL"])
     try:
-        with open_db(os.path.join(STATE_DIR, "shas.db")) as db:
+        with open_db(SHAS_DB_PATH) as db:
             cursor = connection.cursor()
             query = f"SELECT id, uuid, checksum FROM objects WHERE id > {initial_id}"
             cursor.execute(query)
@@ -94,7 +95,7 @@ JOIN articleIngestion ON articleFile.ingestionId = articleIngestion.ingestionId
 JOIN article ON articleIngestion.articleId = article.articleId;
 """
     bucket = GCS_CLIENT.bucket(bucket_name)
-    with dbm.gnu.open(os.path.join(STATE_DIR, "shas.db")) as db:
+    with dbm.gnu.open(SHAS_DB_PATH) as db:
         try:
             cursor = connection.cursor()
             cursor.execute(sql)
