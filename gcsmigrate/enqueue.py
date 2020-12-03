@@ -48,6 +48,9 @@ TOPIC_PATH = CLIENT.topic_path(GCP_PROJECT, TOPIC_ID)
 def build_shas_db(state_db, initial_id=0):
     """Build a shas.db file where we will store the relationship between a UUID and a sha."""
     connection = make_db_connection(os.environ["CONTENTREPO_DATABASE_URL"])
+    if not os.path.exists(SHAS_DB_PATH):
+        # Need to regenerate from the beginning
+        initial_id = 0
     try:
         with open_db(SHAS_DB_PATH) as db:
             cursor = connection.cursor()
