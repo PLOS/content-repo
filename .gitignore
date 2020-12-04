@@ -43,3 +43,7 @@ test/.pytest_cache/
 
 lambda.tmp/
 screenlog.*
+
+# terraform state files
+.terraform
+
