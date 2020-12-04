@@ -5,3 +5,4 @@
 k8s
 plos-dev*.json
 **/__pycache__
+*.db
