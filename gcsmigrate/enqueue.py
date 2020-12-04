@@ -111,13 +111,12 @@ ORDER BY articleFile.fileId asc
                 (file_id, doi, ingestionNumber, ingestedFileName, uuid) = row
                 sha = db[uuid]
                 to_key = f"{doi}/{ingestionNumber}/{ingestedFileName}"
-                if not bucket.blob(to_key).exists():
-                    json = {
-                        "bucket": bucket_name,
-                        "from_key": sha.decode("utf-8"),
-                        "to_key": to_key,
-                    }
-                    yield CLIENT.publish(TOPIC_PATH, encode_json(json), action="copy")
+                json = {
+                    "bucket": bucket_name,
+                    "from_key": sha.decode("utf-8"),
+                    "to_key": to_key,
+                }
+                yield CLIENT.publish(TOPIC_PATH, encode_json(json), action="copy")
                 maybe_update_max(state_db, LATEST_FILE_ID_KEY, file_id)
                 row = cursor.fetchone()
         finally:
