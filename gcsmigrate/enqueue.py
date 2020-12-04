@@ -249,8 +249,6 @@ def main():
         state_db.close()
     except:
         state_db.close()
-        # Clean up db if there was an error
-        os.unlink("state.db")
         raise
 
 
