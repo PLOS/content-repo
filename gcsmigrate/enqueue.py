@@ -21,6 +21,7 @@ from shared import (
 
 LATEST_FID_KEY = "latest_fid"
 LATEST_CREPO_ID_KEY = "latest_crepo_id"
+LATEST_FILE_ID_KEY = "latest_file_id"
 
 BUCKET_MAP = make_bucket_map(os.environ["BUCKETS"])
 IGNORE_BUCKETS = os.environ["IGNORE_BUCKETS"].split(",")
@@ -85,26 +86,29 @@ def queue_verify(mogile_file):
     return send_message(mogile_file, VERIFY)
 
 
-def queue_rhino_final(bucket_name):
+def queue_rhino_final(bucket_name, state_db, initial_id=0):
     """Queue up copies for the rhino final migration step in pubsub."""
     connection = make_db_connection(os.environ["RHINO_DATABASE_URL"])
     sql = """
-SELECT doi,
+SELECT articleFile.fileId,
+       doi,
        ingestionNumber,
        ingestedFileName,
        crepoUuid
 FROM articleFile
 JOIN articleIngestion ON articleFile.ingestionId = articleIngestion.ingestionId
-JOIN article ON articleIngestion.articleId = article.articleId;
+JOIN article ON articleIngestion.articleId = article.articleId
+WHERE articleFile.fileId > %s
+ORDER BY articleFile.fileId asc
 """
     bucket = GCS_CLIENT.bucket(bucket_name)
     with dbm.gnu.open(SHAS_DB_PATH) as db:
         try:
             cursor = connection.cursor()
-            cursor.execute(sql)
+            cursor.execute(sql, initial_id)
             row = cursor.fetchone()
             while row:
-                (doi, ingestionNumber, ingestedFileName, uuid) = row
+                (file_id, doi, ingestionNumber, ingestedFileName, uuid) = row
                 sha = db[uuid]
                 to_key = f"{doi}/{ingestionNumber}/{ingestedFileName}"
                 if not bucket.blob(to_key).exists():
@@ -114,6 +118,7 @@ JOIN article ON articleIngestion.articleId = article.articleId;
                         "to_key": to_key,
                     }
                     yield CLIENT.publish(TOPIC_PATH, encode_json(json), action="copy")
+                maybe_update_max(state_db, LATEST_FILE_ID_KEY, file_id)
                 row = cursor.fetchone()
         finally:
             connection.close()
@@ -214,8 +219,12 @@ def main():
             )
             futures = (queue_migrate(mogile, state_db) for mogile in generator)
         elif action == "final_migrate_rhino":
+            if LATEST_FILE_ID_KEY in state_db:
+                latest_file_id = int(state_db[LATEST_FILE_ID_KEY])
+            else:
+                latest_file_id = 0
             build_shas_db(state_db, initial_id=latest_crepo_id)
-            futures = tqdm(queue_rhino_final(corpus_bucket))
+            futures = tqdm(queue_rhino_final(corpus_bucket, state_db, initial_id=latest_file_id))
         elif action == "final_migrate_lemur":
             build_shas_db(state_db, initial_id=latest_crepo_id)
             futures = tqdm(queue_lemur_final(non_corpus_buckets, initial_id=latest_crepo_id))
@@ -223,6 +232,8 @@ def main():
             state_db[LATEST_FID_KEY] = encode_int(int(sys.argv[2]))
         elif action == "update_crepo_id":
             state_db[LATEST_CREPO_ID_KEY] = encode_int(int(sys.argv[2]))
+        elif action == "update_file_id":
+            state_db[LATEST_FILE_ID_KEY] = encode_int(int(sys.argv[2]))
         elif action == "dump_state":
             for key in state_db.keys():
                 print(f"{key} = {state_db[key]}")
