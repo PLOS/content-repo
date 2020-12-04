@@ -223,6 +223,9 @@ def main():
             state_db[LATEST_FID_KEY] = encode_int(int(sys.argv[2]))
         elif action == "update_crepo_id":
             state_db[LATEST_CREPO_ID_KEY] = encode_int(int(sys.argv[2]))
+        elif action == "dump_state":
+            for key in state_db.keys():
+                print(f"{key} = {state_db[key]}")
         else:
             raise Exception(f"Bad action: {action}.")
         # Evaluate all the futures using our future_waiter, which will
