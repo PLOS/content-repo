@@ -21,6 +21,7 @@ from shared import (
 )
 
 LATEST_FID_KEY = "latest_fid"
+LATEST_CREPO_ID_FOR_SHA_KEY = "latest_sha_crepo_id"
 LATEST_CREPO_ID_KEY = "latest_crepo_id"
 LATEST_FILE_ID_KEY = "latest_file_id"
 
@@ -47,8 +48,9 @@ GCS_CLIENT = storage.Client()
 TOPIC_PATH = CLIENT.topic_path(GCP_PROJECT, TOPIC_ID)
 
 
-def build_shas_db(state_db, initial_id=0):
+def build_shas_db(state_db):
     """Build a shas.db file where we will store the relationship between a UUID and a sha."""
+    initial_id = get_state_int(state_db, LATEST_CREPO_ID_FOR_SHA_KEY)
     connection = make_db_connection(os.environ["CONTENTREPO_DATABASE_URL"])
     if not os.path.exists(SHAS_DB_PATH):
         # Need to regenerate from the beginning
@@ -66,7 +68,7 @@ def build_shas_db(state_db, initial_id=0):
                     db[uuid] = checksum
                     row = cursor.fetchone()
                     pbar.update()
-                    maybe_update_max(state_db, LATEST_CREPO_ID_KEY, crepo_id)
+                    maybe_update_max(state_db, LATEST_CREPO_ID_FOR_SHA_KEY, crepo_id)
     finally:
         connection.close()
 
@@ -179,9 +181,6 @@ def main():
 
     """
     state_db = dbm.gnu.open(os.path.join(STATE_DIR, "state.db"), "cf")
-    latest_crepo_id = get_state_int(state_db, LATEST_CREPO_ID_KEY)
-    latest_fid = get_state_int(state_db, LATEST_FID_KEY)
-    latest_file_id = get_state_int(state_db, LATEST_FILE_ID_KEY)
     try:
         futures = None
         action = sys.argv[1]
@@ -203,6 +202,7 @@ def main():
             )
             futures = (queue_verify(mogile) for mogile in generator)
         elif action == "migrate":
+            latest_fid = get_state_int(state_db, LATEST_FID_KEY)
             generator = tqdm(
                 [
                     mogile
@@ -214,12 +214,14 @@ def main():
             )
             futures = (queue_migrate(mogile, state_db) for mogile in generator)
         elif action == "final_migrate_rhino":
-            build_shas_db(state_db, initial_id=latest_crepo_id)
+            build_shas_db(state_db)
+            latest_file_id = get_state_int(state_db, LATEST_FILE_ID_KEY)
             futures = tqdm(
                 queue_rhino_final(corpus_bucket, state_db, initial_id=latest_file_id)
             )
         elif action == "final_migrate_lemur":
-            build_shas_db(state_db, initial_id=latest_crepo_id)
+            build_shas_db(state_db)
+            latest_crepo_id = get_state_int(state_db, LATEST_CREPO_ID_KEY)
             futures = tqdm(
                 queue_lemur_final(non_corpus_buckets, initial_id=latest_crepo_id)
             )
