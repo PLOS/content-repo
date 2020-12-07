@@ -354,6 +354,14 @@ def maybe_update_max(db, key, i):
         db[key] = encode_int(i)
 
 
+def get_state_int(db, key):
+    """Return the integer value of the key in db, or else 0."""
+    if key in db:
+        return int(db[key])
+    else:
+        return 0
+
+
 def guess_mimetype(filename):
     """Replicate the articleadmin logic for guessing mime types."""
     _, ext = os.path.splitext(filename)
@@ -361,5 +369,5 @@ def guess_mimetype(filename):
         return "image/png"
     mimetype, _ = mimetypes.guess_type(filename, strict=False)
     if not mimetype:
-        return 'application/octet-stream'
+        return "application/octet-stream"
     return mimetype

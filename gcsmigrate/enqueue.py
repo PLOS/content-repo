@@ -13,6 +13,7 @@ from shared import (
     encode_json,
     future_waiter,
     get_mogile_files_from_database,
+    get_state_int,
     make_bucket_map,
     make_db_connection,
     maybe_update_max,
@@ -178,6 +179,9 @@ def main():
 
     """
     state_db = dbm.gnu.open(os.path.join(STATE_DIR, "state.db"), "cf")
+    latest_crepo_id = get_state_int(state_db, LATEST_CREPO_ID_KEY)
+    latest_fid = get_state_int(state_db, LATEST_FID_KEY)
+    latest_file_id = get_state_int(state_db, LATEST_FILE_ID_KEY)
     try:
         futures = None
         action = sys.argv[1]
@@ -187,10 +191,6 @@ def main():
             for k, v in BUCKET_MAP.items()
             if "corpus" not in v and k not in IGNORE_BUCKETS
         }
-        if LATEST_CREPO_ID_KEY in state_db:
-            latest_crepo_id = int(state_db[LATEST_CREPO_ID_KEY])
-        else:
-            latest_crepo_id = 0
         if action == "verify":
             generator = tqdm(
                 [
@@ -203,10 +203,6 @@ def main():
             )
             futures = (queue_verify(mogile) for mogile in generator)
         elif action == "migrate":
-            if LATEST_FID_KEY in state_db:
-                latest_fid = int(state_db[LATEST_FID_KEY])
-            else:
-                latest_fid = 0
             generator = tqdm(
                 [
                     mogile
@@ -218,15 +214,16 @@ def main():
             )
             futures = (queue_migrate(mogile, state_db) for mogile in generator)
         elif action == "final_migrate_rhino":
-            if LATEST_FILE_ID_KEY in state_db:
-                latest_file_id = int(state_db[LATEST_FILE_ID_KEY])
-            else:
-                latest_file_id = 0
+
             build_shas_db(state_db, initial_id=latest_crepo_id)
-            futures = tqdm(queue_rhino_final(corpus_bucket, state_db, initial_id=latest_file_id))
+            futures = tqdm(
+                queue_rhino_final(corpus_bucket, state_db, initial_id=latest_file_id)
+            )
         elif action == "final_migrate_lemur":
             build_shas_db(state_db, initial_id=latest_crepo_id)
-            futures = tqdm(queue_lemur_final(non_corpus_buckets, initial_id=latest_crepo_id))
+            futures = tqdm(
+                queue_lemur_final(non_corpus_buckets, initial_id=latest_crepo_id)
+            )
         elif action == "update_mogile_fid":
             state_db[LATEST_FID_KEY] = encode_int(int(sys.argv[2]))
         elif action == "update_crepo_id":
