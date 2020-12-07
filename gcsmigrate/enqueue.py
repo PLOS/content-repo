@@ -20,10 +20,10 @@ from shared import (
     open_db,
 )
 
-LATEST_FID_KEY = "latest_fid"
-LATEST_CREPO_ID_FOR_SHA_KEY = "latest_sha_crepo_id"
-LATEST_CREPO_ID_KEY = "latest_crepo_id"
-LATEST_FILE_ID_KEY = "latest_file_id"
+LATEST_MOGILE_FID_KEY = "mogile_fid"
+LATEST_CREPO_ID_FOR_SHA_KEY = "sha_crepo_id"
+LATEST_CREPO_ID_KEY = "crepo_id"
+LATEST_RHINO_FILE_ID_KEY = "rhino_file_id"
 
 BUCKET_MAP = make_bucket_map(os.environ["BUCKETS"])
 IGNORE_BUCKETS = os.environ["IGNORE_BUCKETS"].split(",")
@@ -80,7 +80,7 @@ def send_message(mogile_file, action):
 
 def queue_migrate(mogile_file, state_db):
     """Queue mogile files for migration in pubsub."""
-    maybe_update_max(state_db, LATEST_FID_KEY, mogile_file.fid)
+    maybe_update_max(state_db, LATEST_MOGILE_FID_KEY, mogile_file.fid)
     return send_message(mogile_file, MIGRATE)
 
 
@@ -120,7 +120,7 @@ ORDER BY articleFile.fileId asc
                     "to_key": to_key,
                 }
                 yield CLIENT.publish(TOPIC_PATH, encode_json(json), action="copy")
-                maybe_update_max(state_db, LATEST_FILE_ID_KEY, file_id)
+                maybe_update_max(state_db, LATEST_RHINO_FILE_ID_KEY, file_id)
                 row = cursor.fetchone()
         finally:
             connection.close()
@@ -202,7 +202,7 @@ def main():
             )
             futures = (queue_verify(mogile) for mogile in generator)
         elif action == "migrate":
-            latest_fid = get_state_int(state_db, LATEST_FID_KEY)
+            latest_fid = get_state_int(state_db, LATEST_MOGILE_FID_KEY)
             generator = tqdm(
                 [
                     mogile
@@ -215,7 +215,7 @@ def main():
             futures = (queue_migrate(mogile, state_db) for mogile in generator)
         elif action == "final_migrate_rhino":
             build_shas_db(state_db)
-            latest_file_id = get_state_int(state_db, LATEST_FILE_ID_KEY)
+            latest_file_id = get_state_int(state_db, LATEST_RHINO_FILE_ID_KEY)
             futures = tqdm(
                 queue_rhino_final(corpus_bucket, state_db, initial_id=latest_file_id)
             )
@@ -227,7 +227,7 @@ def main():
             )
         elif action.startswith("update_"):
             key = action[7:]
-            assert key in [LATEST_CREPO_ID_KEY, LATEST_FID_KEY, LATEST_FILE_ID_KEY]
+            assert key in [LATEST_CREPO_ID_KEY, LATEST_MOGILE_FID_KEY, LATEST_RHINO_FILE_ID_KEY]
             state_db[key] = encode_int(int(sys.argv[2]))
         elif action == "dump_state":
             for key in state_db.keys():
