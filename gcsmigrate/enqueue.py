@@ -126,9 +126,10 @@ ORDER BY articleFile.fileId asc
             connection.close()
 
 
-def queue_lemur_final(buckets, initial_id=0):
+def queue_lemur_final(buckets, state_db):
     """Queue up copies for the lemur final migration step in pubsub."""
     connection = make_db_connection(os.environ["CONTENTREPO_DATABASE_URL"])
+    initial_id = get_state_int(state_db, LATEST_CREPO_ID_KEY)
     try:
         for crepo_bucket_name, gcs_bucket_name in buckets.items():
             cursor = connection.cursor()
@@ -139,7 +140,8 @@ def queue_lemur_final(buckets, initial_id=0):
             bucket_id = cursor.fetchone()[0]
             cursor.close()
             sql = """
-SELECT objects.objKey,
+SELECT id,
+       objects.objKey,
        checksum
   FROM (
         SELECT objKey,
@@ -158,7 +160,7 @@ SELECT objects.objKey,
             cursor.execute(sql, (bucket_id, initial_id, bucket_id))
             row = cursor.fetchone()
             while row:
-                (obj_key, sha) = row
+                (crepo_file_id, obj_key, sha) = row
                 to_key = f"{obj_key}"
                 json = {
                     "bucket": gcs_bucket_name,
@@ -166,6 +168,7 @@ SELECT objects.objKey,
                     "to_key": to_key,
                 }
                 yield CLIENT.publish(TOPIC_PATH, encode_json(json), action="copy")
+                maybe_update_max(state_db, LATEST_CREPO_ID_KEY, crepo_file_id)
                 row = cursor.fetchone()
             cursor.close()
     finally:
@@ -220,9 +223,8 @@ def main():
             )
         elif action == "final_migrate_lemur":
             build_shas_db(state_db)
-            latest_crepo_id = get_state_int(state_db, LATEST_CREPO_ID_KEY)
             futures = tqdm(
-                queue_lemur_final(non_corpus_buckets, initial_id=latest_crepo_id)
+                queue_lemur_final(non_corpus_buckets, state_db)
             )
         elif action.startswith("update_"):
             key = action[7:]
