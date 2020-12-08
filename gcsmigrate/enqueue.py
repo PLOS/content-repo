@@ -89,9 +89,10 @@ def queue_verify(mogile_file):
     return send_message(mogile_file, VERIFY)
 
 
-def queue_rhino_final(bucket_name, state_db, initial_id=0):
+def queue_rhino_final(bucket_name, state_db):
     """Queue up copies for the rhino final migration step in pubsub."""
     connection = make_db_connection(os.environ["RHINO_DATABASE_URL"])
+    initial_id = get_state_int(state_db, LATEST_RHINO_FILE_ID_KEY)
     sql = """
 SELECT articleFile.fileId,
        doi,
@@ -104,7 +105,6 @@ JOIN article ON articleIngestion.articleId = article.articleId
 WHERE articleFile.fileId > %s
 ORDER BY articleFile.fileId asc
 """
-    bucket = GCS_CLIENT.bucket(bucket_name)
     with dbm.gnu.open(SHAS_DB_PATH) as db:
         try:
             cursor = connection.cursor()
@@ -215,9 +215,8 @@ def main():
             futures = (queue_migrate(mogile, state_db) for mogile in generator)
         elif action == "final_migrate_rhino":
             build_shas_db(state_db)
-            latest_file_id = get_state_int(state_db, LATEST_RHINO_FILE_ID_KEY)
             futures = tqdm(
-                queue_rhino_final(corpus_bucket, state_db, initial_id=latest_file_id)
+                queue_rhino_final(corpus_bucket, state_db)
             )
         elif action == "final_migrate_lemur":
             build_shas_db(state_db)
