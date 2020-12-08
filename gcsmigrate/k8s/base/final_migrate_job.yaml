@@ -1,21 +1,21 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: lemursync
+  name: lemursync-final
 spec:
-  schedule: "*/15 * * * *"
+  schedule: "5,15,25,35,45,55 * * * *"
   jobTemplate:
     spec:
       template:
         spec:
           serviceAccountName: rhino-sa
           containers:
-            - name: lemursync
+            - name: lemursync-final
               image: gcr.io/plos-mgmt/eng-462
               args:
                 - /bin/sh
                 - -c
-                - "python /code/enqueue.py xyz"
+                - "python enqueue.py final_migrate_rhino && python enqueue.py final_migrate_lemur"
               volumeMounts:
                 - mountPath: /lemursync
                   name: lemursync-data

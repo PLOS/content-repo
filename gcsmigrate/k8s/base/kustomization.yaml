@@ -6,7 +6,8 @@ commonLabels:
   app.kubernetes.io/component: "backend"
 namespace: default
 resources:
-  - container.yaml
+  - migrate_job.yaml
+  - final_migrate_job.yaml
   - storage.yaml
 configMapGenerator:
   - name: lemursync-configmap
