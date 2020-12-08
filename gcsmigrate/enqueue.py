@@ -155,7 +155,7 @@ SELECT objects.objKey,
    AND objects.bucketId = %s
 """
             cursor = connection.cursor()
-            cursor.execute(sql, (bucket_id, bucket_id, initial_id))
+            cursor.execute(sql, (bucket_id, initial_id, bucket_id))
             row = cursor.fetchone()
             while row:
                 (obj_key, sha) = row
