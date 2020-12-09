@@ -1,11 +1,11 @@
 """Tools for migrating Mogile content to GCS."""
 
-import mimetypes
 import base64
 import dbm.gnu
 import hashlib
 import io
 import json
+import mimetypes
 import os
 import random
 import time
@@ -14,6 +14,8 @@ from contextlib import contextmanager
 import dj_database_url
 import pymysql
 import requests
+from google.cloud import storage
+from tqdm import tqdm
 
 BUFSIZE = 16 * 1024
 
@@ -371,3 +373,23 @@ def guess_mimetype(filename):
     if not mimetype:
         return "application/octet-stream"
     return mimetype
+
+
+def load_bucket(bucket_name, dbpath, prefix="", delimiter="/"):
+    """Load all keys in a bucket a prefix into a db."""
+    gcs_client = storage.Client()
+    if os.path.exists(dbpath):
+        return
+    with open_db(dbpath) as db:
+        with tqdm(desc=f"{bucket_name} list") as pbar:
+            for page in gcs_client.list_blobs(
+                bucket_name,
+                prefix=prefix,
+                delimiter=delimiter,
+                fields="items(name),items(size),nextPageToken",
+            ).pages:
+                n = 0
+                for blob in page:
+                    n += 1
+                    db[blob.name] = blob.size.to_bytes(4, byteorder="little")
+                pbar.update(n)
