@@ -50,7 +50,7 @@ WHERE uuid = %s;
         crepo_cursor.execute(crepo_sql, (uuid,))
         (checksum, bucket) = crepo_cursor.fetchone()
 
-        mogile_sql = "SELECT * FROM file WHERE dkey = %s"
+        mogile_sql = "SELECT * FROM file WHERE dkey = %s and dmid = 1"
         mogile_cursor.execute(mogile_sql, (f"{checksum}-{bucket}"))
         mogile_file = MogileFile.parse_row(mogile_cursor.fetchone())
 
