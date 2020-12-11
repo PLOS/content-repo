@@ -18,6 +18,9 @@ from shared import (
     make_db_connection,
     maybe_update_max,
     open_db,
+    BATCH_SETTINGS,
+    MIGRATE,
+    VERIFY
 )
 
 LATEST_MOGILE_FID_KEY = "mogile_fid"
@@ -34,15 +37,7 @@ GCP_PROJECT = os.environ["GCP_PROJECT"]
 STATE_DIR = os.environ.get("STATE_DIR", os.getcwd())
 SHAS_DB_PATH = os.path.join(STATE_DIR, "shas.db")
 
-VERIFY = b"verify"
-MIGRATE = b"migrate"
-
-# Trying to maximize throughput; we don't care about latency.
-batch_settings = pubsub_v1.types.BatchSettings(
-    max_messages=1000, max_bytes=10 * 1000 * 1000, max_latency=10
-)
-
-CLIENT = pubsub_v1.PublisherClient(batch_settings=batch_settings)
+CLIENT = pubsub_v1.PublisherClient(batch_settings=BATCH_SETTINGS)
 GCS_CLIENT = storage.Client()
 
 TOPIC_PATH = CLIENT.topic_path(GCP_PROJECT, TOPIC_ID)

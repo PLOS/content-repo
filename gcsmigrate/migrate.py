@@ -3,12 +3,22 @@ import sys
 import time
 
 import pymogilefs
-from google.cloud import firestore, storage
+from google.cloud import firestore, pubsub_v1, storage
 
-from shared import MogileFile, make_bucket_map, make_db_connection, copy_object
+from shared import (
+    BATCH_SETTINGS,
+    MIGRATE,
+    MogileFile,
+    copy_object,
+    encode_json,
+    make_bucket_map,
+    make_db_connection,
+)
 
 COLLECTION_NAME = os.environ["COLLECTION_NAME"]
 BUCKET_MAP = make_bucket_map(os.environ["BUCKETS"])
+TOPIC_ID = os.environ["TOPIC_ID"]
+GCP_PROJECT = os.environ["GCP_PROJECT"]
 
 mogile_client = pymogilefs.client.Client(
     trackers=os.environ["MOGILE_TRACKERS"].split(","), domain="plos_repo"
@@ -16,11 +26,12 @@ mogile_client = pymogilefs.client.Client(
 firestore_client = firestore.Client()
 gcs_client = storage.Client()
 collection = firestore_client.collection(COLLECTION_NAME)
+pubsub_client = pubsub_v1.PublisherClient(batch_settings=BATCH_SETTINGS)
+TOPIC_PATH = pubsub_client.topic_path(GCP_PROJECT, TOPIC_ID)
 
 
 def main():
     """Migrate a single crepo UUID to GCS."""
-    uuid = sys.argv[1]
     crepo_connection = make_db_connection(os.environ["CONTENTREPO_DATABASE_URL"])
     mogile_connection = make_db_connection(os.environ["MOGILE_DATABASE_URL"])
     rhino_connection = make_db_connection(os.environ["RHINO_DATABASE_URL"])
@@ -29,38 +40,48 @@ def main():
         mogile_cursor = mogile_connection.cursor()
         rhino_cursor = rhino_connection.cursor()
 
-        rhino_sql = """
+        uuid = sys.stdin.readline().strip()
+        while uuid:
+            rhino_sql = """
 SELECT doi,
        ingestionNumber,
-       ingestedFileName
+       ingestedFileName,
+       crepoKey
 FROM articleFile
 JOIN articleIngestion ON articleFile.ingestionId = articleIngestion.ingestionId
 JOIN article ON articleIngestion.articleId = article.articleId
 WHERE crepoUuid = %s;
 """
-        rhino_cursor.execute(rhino_sql, (uuid,))
-        (doi, ingestionNumber, ingestedFileName) = rhino_cursor.fetchone()
+            rhino_cursor.execute(rhino_sql, (uuid,))
+            (doi, ingestionNumber, ingestedFileName, crepoKey) = rhino_cursor.fetchone()
 
-        crepo_sql = """
-SELECT checksum, bucketName
+            crepo_sql = """
+SELECT checksum,
+       bucketName
 FROM objects
 JOIN buckets ON objects.bucketId = buckets.bucketId
-WHERE uuid = %s;
+WHERE uuid = %s
+  AND objKey = %s
+  AND objects.bucketId = 1
 """
-        crepo_cursor.execute(crepo_sql, (uuid,))
-        (checksum, bucket) = crepo_cursor.fetchone()
+            crepo_cursor.execute(crepo_sql, (uuid, crepoKey))
+            (checksum, bucket) = crepo_cursor.fetchone()
 
-        mogile_sql = "SELECT * FROM file WHERE dkey = %s and dmid = 1"
-        mogile_cursor.execute(mogile_sql, (f"{checksum}-{bucket}"))
-        mogile_file = MogileFile.parse_row(mogile_cursor.fetchone())
-
-        mogile_file.migrate(mogile_client, collection, gcs_client, BUCKET_MAP)
-        gcs_bucket = BUCKET_MAP[bucket]
-        copy_object(
-            gcs_client,
-            gcs_bucket,
-            checksum,
-            f"{doi}/{ingestionNumber}/{ingestedFileName}")
+            mogile_sql = "SELECT * FROM file WHERE dkey = %s and dmid = 1"
+            mogile_cursor.execute(mogile_sql, (f"{checksum}-{bucket}"))
+            row = mogile_cursor.fetchone()
+            print(uuid)
+            if row:
+                mogile_file = MogileFile.parse_row(row)
+                pubsub_client.publish(TOPIC_PATH, mogile_file.to_json(), action=MIGRATE)
+                gcs_bucket = BUCKET_MAP[bucket]
+                json = {
+                    "bucket": gcs_bucket,
+                    "from_key": checksum,
+                    "to_key": f"{doi}/{ingestionNumber}/{ingestedFileName}",
+                }
+                pubsub_client.publish(TOPIC_PATH, encode_json(json), action="copy")
+            uuid = sys.stdin.readline().strip()
     finally:
         crepo_cursor.close()
         mogile_cursor.close()

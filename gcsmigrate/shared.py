@@ -10,6 +10,7 @@ import os
 import random
 import time
 from contextlib import contextmanager
+from google.cloud import pubsub_v1
 
 import dj_database_url
 import pymysql
@@ -18,6 +19,13 @@ from google.cloud import storage
 from tqdm import tqdm
 
 BUFSIZE = 16 * 1024
+VERIFY = b"verify"
+MIGRATE = b"migrate"
+
+# Trying to maximize throughput; we don't care about latency.
+BATCH_SETTINGS = pubsub_v1.types.BatchSettings(
+    max_messages=1000, max_bytes=10 * 1000 * 1000, max_latency=10
+)
 
 
 class HashWrap(io.RawIOBase):
