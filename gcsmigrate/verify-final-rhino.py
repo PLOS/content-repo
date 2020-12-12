@@ -40,11 +40,9 @@ with tqdm() as pbar:
         pbar.update()
         (key, size, uuid) = row
         if key in db:
-            assert key in db, f"{key} not in GCS"
             gcs_size = int.from_bytes(db[key], byteorder="little")
-            assert (
-                size == gcs_size
-            ), f"{key} has wrong size: {gcs_size}, expected {size}"
+            if size != gcs_size:
+                print(uuid)
         else:
             print(uuid)
         row = cursor.fetchone()
