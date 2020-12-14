@@ -15,7 +15,7 @@ spec:
               args:
                 - /bin/sh
                 - -c
-                - "python enqueue.py final_migrate_rhino && python enqueue.py final_migrate_lemur"
+                - "python enqueue.py final_migrate_lemur"
               volumeMounts:
                 - mountPath: /lemursync
                   name: lemursync-data
