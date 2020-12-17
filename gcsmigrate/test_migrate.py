@@ -1,17 +1,21 @@
-import requests
-import base64
-import io
-import tempfile
-from queue import Queue
-from unittest.mock import Mock
 import hashlib
+import io
+import json
+import tempfile
+from random import randint
+from unittest.mock import Mock
+
 import pytest
+import requests
 
 from .shared import (
+    guess_mimetype,
     HashWrap,
     MogileFile,
+    encode_int,
     future_waiter,
     make_bucket_map,
+    maybe_update_max,
     md5_fileobj_b64,
     md5_fileobj_hex,
     sha1_fileobj_b64,
@@ -106,7 +110,7 @@ class TestMigrate:
         assert mogile_file.exists_in_bucket(gcs_client, "my-bucket", "my-file") is False
 
     def test_mogile_file_to_json(self, mogile_file):
-        assert mogile_file == MogileFile.from_json(mogile_file.to_json())
+        assert mogile_file == MogileFile.from_json(json.loads(mogile_file.to_json()))
 
     def test_md5_fileobj(self, my_tempfile):
         assert md5_fileobj_hex(my_tempfile) == self.MD5_HEX
@@ -190,3 +194,35 @@ class TestMigrate:
             with HashWrap(req.raw, sha1) as pipe:
                 assert "hello world" == pipe.read().decode("utf-8")
                 assert sha1.hexdigest() == "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
+
+    def test_encode_int(self):
+        assert b"100" == encode_int(100)
+        i = randint(0, 100000000000)
+        assert i == int(encode_int(i))
+
+    def test_maybe_update_max(self):
+        db = {}
+        maybe_update_max(db, "last", 1)
+        assert db["last"] == b"1"
+
+        db = {"last": b"1"}
+        maybe_update_max(db, "last", 2)
+        assert db["last"] == b"2"
+
+        db = {"last": b"2"}
+        maybe_update_max(db, "last", 1)
+        assert db["last"] == b"2"
+
+    def test_guess_mimetype(self):
+        assert "image/png" == guess_mimetype(
+            "corpus-dev-0242ac130003/10.1371/image.pbio.v01.i01/1/image.pbio.v01.i01.g001.PNG_I"
+        )
+        assert "image/png" == guess_mimetype(
+            "gs:///corpus-dev-0242ac130003/10.1371/image.pbio.v01.i01/1/image.pbio.v01.i01.g001.PNG_I"
+        )
+        assert "image/png" == guess_mimetype("image.pbio.v01.i01.g001.PNG_I")
+        assert "image/png" == guess_mimetype("image.pbio.v01.i01.g001.PNG")
+        assert "image/png" == guess_mimetype("image.pbio.v01.i01.g001.PNG_I")
+        assert "application/octet-stream" == guess_mimetype("foo")
+        assert "text/csv" == guess_mimetype("foo.csv")
+        assert "text/html" == guess_mimetype("foo.html")

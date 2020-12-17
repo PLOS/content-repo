@@ -1,0 +1,31 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: lemursync
+spec:
+  schedule: "5,15,25,35,45,55 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: rhino-sa
+          containers:
+            - name: lemursync
+              image: gcr.io/plos-mgmt/eng-462
+              args:
+                - /bin/sh
+                - -c
+                - "python enqueue.py migrate"
+              volumeMounts:
+                - mountPath: /lemursync
+                  name: lemursync-data
+              envFrom:
+                - configMapRef:
+                    name: lemursync-configmap
+                - secretRef:
+                    name: lemursync
+          restartPolicy: OnFailure
+          volumes:
+            - name: lemursync-data
+              persistentVolumeClaim:
+                claimName: lemursync-data

@@ -1,19 +1,31 @@
 """Tools for migrating Mogile content to GCS."""
 
 import base64
+import dbm.gnu
 import hashlib
 import io
 import json
+import mimetypes
 import os
 import random
-import shutil
 import time
+from contextlib import contextmanager
+from google.cloud import pubsub_v1
 
 import dj_database_url
 import pymysql
 import requests
+from google.cloud import storage
+from tqdm import tqdm
 
 BUFSIZE = 16 * 1024
+VERIFY = b"verify"
+MIGRATE = b"migrate"
+
+# Trying to maximize throughput; we don't care about latency.
+BATCH_SETTINGS = pubsub_v1.types.BatchSettings(
+    max_messages=1000, max_bytes=10 * 1000 * 1000, max_latency=10
+)
 
 
 class HashWrap(io.RawIOBase):
@@ -32,6 +44,32 @@ class HashWrap(io.RawIOBase):
         if num is not None and num > 0:
             self.hasher.update(b[0:num])
         return num
+
+
+def encode_json(struct):
+    """Encode a structure as JSON bytes."""
+    return bytes(json.dumps(struct), "utf-8")
+
+
+def make_db_connection(db_url):
+    config = dj_database_url.parse(db_url)
+    return pymysql.connect(
+        host=config["HOST"],
+        user=config["USER"],
+        password=config["PASSWORD"],
+        db=config["NAME"],
+        cursorclass=pymysql.cursors.SSCursor,
+    )
+
+
+def copy_object(gcs_client, bucket_name, from_key, to_key):
+    bucket = gcs_client.bucket(bucket_name)
+    source_blob = bucket.blob(from_key)
+    bucket.copy_blob(source_blob, bucket, to_key)
+    mimetype = guess_mimetype(to_key)
+    target_blob = bucket.blob(to_key)
+    target_blob.content_type = mimetype
+    target_blob.patch()
 
 
 def make_bucket_map(buckets):
@@ -243,15 +281,12 @@ class MogileFile:
 
     def to_json(self):
         """Serialize as JSON."""
-        return bytes(
-            json.dumps({"length": self.length, "fid": self.fid, "dkey": self.dkey}),
-            "utf-8",
-        )
+        return encode_json({"length": self.length, "fid": self.fid, "dkey": self.dkey})
 
     @classmethod
-    def from_json(cls, json_str):
+    def from_json(cls, struct):
         """Create MogileFile from JSON string."""
-        return MogileFile(**json.loads(json_str))
+        return MogileFile(**struct)
 
     def verify(self, fid, md5, sha1, bucket, bucket_map, gcs_client):
         """Verify (with assert) this mogile file against asserted values."""
@@ -264,57 +299,19 @@ class MogileFile:
         assert self.sha1sum == sha1, f"{self.fid} has wrong SHA1 sum"
 
 
-def get_mogile_files_from_database(
-    database_url, limit=None, fids=None, excluded_fids=set()
-):
+def get_mogile_files_from_database(database_url, initial_fid=0):
     """Return a generator for all mogile files in the database."""
-    config = dj_database_url.parse(database_url)
-    connection = pymysql.connect(
-        host=config["HOST"],
-        user=config["USER"],
-        password=config["PASSWORD"],
-        db=config["NAME"],
-        cursorclass=pymysql.cursors.SSCursor,
-    )
-
+    connection = make_db_connection(database_url)
     try:
         cursor = connection.cursor()
-        if limit is not None:
-            sql = f"SELECT * FROM file LIMIT {limit}"
-        elif fids is not None:
-            fids_in = ", ".join(fids)
-            sql = f"SELECT * FROM file WHERE fid IN ({fids_in})"
-        else:
-            sql = "SELECT * FROM file"
+        sql = f"SELECT * FROM file WHERE fid > {initial_fid}"
         cursor.execute(sql)
         row = cursor.fetchone()
         while row:
-            if row[0] not in excluded_fids:
-                yield MogileFile.parse_row(row)
+            yield MogileFile.parse_row(row)
             row = cursor.fetchone()
     finally:
         connection.close()
-
-
-def make_generator_from_args(args):
-    """Make a mogile_file generator from args.
-
-    Args are either a list of fids to process or a single file that
-    contains a list of fids to exclude.
-    """
-    fids = None
-    excluded_fids = set()
-    if len(args) > 0:
-        if args[0].isdigit():
-            fids = args
-        else:
-            with open(args[0]) as f:
-                for line in f:
-                    excluded_fids.add(int(line))
-            print(f"Excluding {len(excluded_fids)} fids.")
-    return get_mogile_files_from_database(
-        os.environ["MOGILE_DATABASE_URL"], fids=fids, excluded_fids=excluded_fids
-    )
 
 
 def future_waiter(iterable, max_futures):
@@ -342,3 +339,65 @@ def future_waiter(iterable, max_futures):
     while (len(not_done)) > 0:
         time.sleep(1)
         yield from cleanup(not_done)
+
+
+@contextmanager
+def open_db(dbpath):
+    with dbm.gnu.open(dbpath, "cf") as db:
+        try:
+            yield db
+            db.sync()
+        except:
+            # Clean up db if there was an error
+            os.unlink(dbpath)
+            raise
+
+
+def encode_int(i):
+    """Encode an integer for a bytes database."""
+    return bytes(str(i), "utf-8")
+
+
+def maybe_update_max(db, key, i):
+    """Set a value i in db with key if i is greater than the current value, or if it is not set. Stored as bytes."""
+    if (key not in db) or (i > int(db[key])):
+        db[key] = encode_int(i)
+
+
+def get_state_int(db, key):
+    """Return the integer value of the key in db, or else 0."""
+    if key in db:
+        return int(db[key])
+    else:
+        return 0
+
+
+def guess_mimetype(filename):
+    """Replicate the articleadmin logic for guessing mime types."""
+    _, ext = os.path.splitext(filename)
+    if ext.lower() in [".png_i", ".png_s", ".png_m", ".png_l"]:
+        return "image/png"
+    mimetype, _ = mimetypes.guess_type(filename, strict=False)
+    if not mimetype:
+        return "application/octet-stream"
+    return mimetype
+
+
+def load_bucket(bucket_name, dbpath, prefix="", delimiter="/"):
+    """Load all keys in a bucket a prefix into a db."""
+    gcs_client = storage.Client()
+    if os.path.exists(dbpath):
+        return
+    with open_db(dbpath) as db:
+        with tqdm(desc=f"{bucket_name} list") as pbar:
+            for page in gcs_client.list_blobs(
+                bucket_name,
+                prefix=prefix,
+                delimiter=delimiter,
+                fields="items(name),items(size),nextPageToken",
+            ).pages:
+                n = 0
+                for blob in page:
+                    n += 1
+                    db[blob.name] = blob.size.to_bytes(4, byteorder="little")
+                pbar.update(n)

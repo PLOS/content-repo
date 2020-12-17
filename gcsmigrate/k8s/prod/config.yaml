@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lemursync-configmap
+data:
+  COLLECTION_NAME: corpus-migration
+  TOPIC_ID: corpus-migration
+  MOGILE_TRACKERS: mogile-101.soma.plos.org:7001,mogile-102.soma.plos.org:7001,mogile-103.soma.plos.org:7001
+  BUCKETS: mogilefs-prod-repo:plos-corpus-prod,plive:plos-published-prod
+  IGNORE_BUCKETS: corgi,corgi-bucket,corpus,plive-salt,lemur-application-assets-prod-salt,lemur-application-assets
+  # TODO: How to do this automatically?
+  GCP_PROJECT: plos-prod
+
