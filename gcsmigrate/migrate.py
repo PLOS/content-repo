@@ -3,7 +3,7 @@ import sys
 import time
 
 import pymogilefs
-from google.cloud import firestore, pubsub_v1, storage
+from google.cloud import pubsub_v1, storage
 
 from shared import (
     BATCH_SETTINGS,
@@ -15,7 +15,6 @@ from shared import (
     make_db_connection,
 )
 
-COLLECTION_NAME = os.environ["COLLECTION_NAME"]
 BUCKET_MAP = make_bucket_map(os.environ["BUCKETS"])
 TOPIC_ID = os.environ["TOPIC_ID"]
 GCP_PROJECT = os.environ["GCP_PROJECT"]
@@ -23,9 +22,7 @@ GCP_PROJECT = os.environ["GCP_PROJECT"]
 mogile_client = pymogilefs.client.Client(
     trackers=os.environ["MOGILE_TRACKERS"].split(","), domain="plos_repo"
 )
-firestore_client = firestore.Client()
 gcs_client = storage.Client()
-collection = firestore_client.collection(COLLECTION_NAME)
 pubsub_client = pubsub_v1.PublisherClient(batch_settings=BATCH_SETTINGS)
 TOPIC_PATH = pubsub_client.topic_path(GCP_PROJECT, TOPIC_ID)
 

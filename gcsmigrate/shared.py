@@ -245,7 +245,7 @@ class MogileFile:
             blob.delete()
             raise
 
-    def migrate(self, mogile_client, collection, gcs_client, bucket_map):
+    def migrate(self, mogile_client, gcs_client, bucket_map):
         """Migrate this mogile object to contentrepo.
 
         Returns None if the object is a temporary file, otherwise
@@ -256,28 +256,17 @@ class MogileFile:
         gcs_bucket = bucket_map[self.mogile_bucket]
         print(f"Migrating {self.fid} to " f"{gcs_bucket}/{self.make_contentrepo_key()}")
         md5 = self.contentrepo_exists_in_bucket(gcs_client, gcs_bucket)
-        try:
-            if md5 is not False:
-                # Migration done!
-                return True
-            if self.intermediary_exists_in_bucket(gcs_client, gcs_bucket):
-                print(f"  Copying from {gcs_bucket}/" f"{self.make_intermediary_key()}")
-                md5 = self.copy_from_intermediary(gcs_client, gcs_bucket)
-                return True
-            # Nothing is on GCS yet, copy content directly to the
-            # final location.
-            print(f"  Putting from mogile.")
-            md5 = self.put(mogile_client, gcs_client, gcs_bucket)
-        finally:
-            if md5 is not False:
-                self.save_to_firestore(collection, md5, gcs_bucket)
-
-    def save_to_firestore(self, collection, md5, gcs_bucket):
-        """Save record to firestore certifying successful migration."""
-        doc_ref = collection.document(str(self.fid))
-        return doc_ref.set(
-            {"fid": self.fid, "sha1": self.sha1sum, "md5": md5, "bucket": gcs_bucket}
-        )
+        if md5 is not False:
+            # Migration done!
+            return True
+        if self.intermediary_exists_in_bucket(gcs_client, gcs_bucket):
+            print(f"  Copying from {gcs_bucket}/" f"{self.make_intermediary_key()}")
+            md5 = self.copy_from_intermediary(gcs_client, gcs_bucket)
+            return True
+        # Nothing is on GCS yet, copy content directly to the
+        # final location.
+        print(f"  Putting from mogile.")
+        self.put(mogile_client, gcs_client, gcs_bucket)
 
     def to_json(self):
         """Serialize as JSON."""
