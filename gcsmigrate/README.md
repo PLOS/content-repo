@@ -8,7 +8,6 @@ This folder contains code for migrating from Mogile to GCS.
 
 1. Configure a `.env` file for use in the commands below. It should contain:
 - `BUCKETS` a comma separated list of colon based mappings from old bucket names to new ones. For example: `old-bucket:new-bucket,old-bucket2:new-bucket2`. There must be a mapping for every old bucket in mogile that contains data.
-- `COLLECTION_NAME` the firestore database to store results in
 - `CONTENTREPO_DATABASE_URL` database URL for contentrepo
 - `GCP_PROJECT` your GCP project
 - `GOOGLE_APPLICATION_CREDENTIALS` pointing to the location of your downloaded JSON credentials
