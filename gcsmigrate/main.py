@@ -34,6 +34,7 @@ def main(event, context):
         bucket_name = json_struct["bucket"]
         from_key = json_struct["from_key"]
         to_key = json_struct["to_key"]
-        copy_object(gcs_client, bucket_name, from_key, to_key)
+        download_name = json_struct.get("download_name")
+        copy_object(gcs_client, bucket_name, from_key, to_key, download_name)
     else:
         raise Exception(f"Bad action: {action}.")

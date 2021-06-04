@@ -137,6 +137,7 @@ def queue_lemur_final(buckets, state_db):
             sql = """
 SELECT id,
        objects.objKey,
+       objects.downloadName,
        checksum
   FROM (
         SELECT objKey,
@@ -155,12 +156,13 @@ SELECT id,
             cursor.execute(sql, (bucket_id, initial_id, bucket_id))
             row = cursor.fetchone()
             while row:
-                (crepo_file_id, obj_key, sha) = row
+                (crepo_file_id, obj_key, download_name, sha) = row
                 to_key = f"{obj_key}"
                 json = {
                     "bucket": gcs_bucket_name,
                     "from_key": sha,
                     "to_key": to_key,
+                    "download_name": download_name
                 }
                 yield CLIENT.publish(TOPIC_PATH, encode_json(json), action="copy")
                 maybe_update_max(state_db, LATEST_CREPO_ID_KEY, crepo_file_id)
