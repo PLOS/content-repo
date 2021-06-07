@@ -62,13 +62,15 @@ def make_db_connection(db_url):
     )
 
 
-def copy_object(gcs_client, bucket_name, from_key, to_key):
+def copy_object(gcs_client, bucket_name, from_key, to_key, download_name=None):
     bucket = gcs_client.bucket(bucket_name)
     source_blob = bucket.blob(from_key)
     bucket.copy_blob(source_blob, bucket, to_key)
     mimetype = guess_mimetype(to_key)
     target_blob = bucket.blob(to_key)
     target_blob.content_type = mimetype
+    if download_name:
+        target_blob.content_disposition = f"filename=\"{download_name}\""
     target_blob.patch()
 
 
