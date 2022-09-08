@@ -385,10 +385,11 @@ def load_bucket(bucket_name, dbpath, prefix="", delimiter="/"):
                 bucket_name,
                 prefix=prefix,
                 delimiter=delimiter,
-                fields="items(name),items(size),nextPageToken",
+                fields="items(name),items(crc32c),nextPageToken",
             ).pages:
                 n = 0
                 for blob in page:
                     n += 1
-                    db[blob.name] = blob.size.to_bytes(4, byteorder="little")
+                    db[blob.name] = blob.crc32c
                 pbar.update(n)
+                return
